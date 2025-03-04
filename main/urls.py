@@ -2,6 +2,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.views.decorators.csrf import csrf_exempt
 
 from main.graphql.schema import CustomAsyncGraphQLView
 from main.graphql.schema import schema as graphql_schema
@@ -13,7 +14,7 @@ urlpatterns = [
         "graphql/",
         CustomAsyncGraphQLView.as_view(
             schema=graphql_schema,
-            graphql_ide=False,
+            graphql_ide=None,
         ),
         name="graphql",
     ),
@@ -22,7 +23,16 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns.extend(
         [
-            path("graphiql/", CustomAsyncGraphQLView.as_view(schema=graphql_schema), name="graphiql"),
+            path(
+                "graphiql/",
+                csrf_exempt(  # TODO: Remove this
+                    CustomAsyncGraphQLView.as_view(
+                        schema=graphql_schema,
+                        graphql_ide="graphiql",
+                    ),
+                ),
+                name="graphiql",
+            ),
         ]
     )
 
