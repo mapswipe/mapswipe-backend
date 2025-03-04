@@ -110,6 +110,7 @@ INSTALLED_APPS = [
     "health_check.contrib.redis",  # requires Redis broker
     # Internal
     "apps.common",
+    "apps.user",
 ]
 
 MIDDLEWARE = [
@@ -176,6 +177,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = "user.User"
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -263,6 +265,9 @@ CACHES = {
         "LOCATION": CACHE_REDIS_URL,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+        "local-memory": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         },
     }
 }

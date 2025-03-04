@@ -25,6 +25,7 @@ x-server: &base_server_setup
     # Redis
     CELERY_REDIS_URL: ${CELERY_REDIS_URL:-redis://redis:6379/0}
     CACHE_REDIS_URL: ${CACHE_REDIS_URL:-redis://redis:6379/1}
+    TEST_CACHE_REDIS_URL: ${TEST_CACHE_REDIS_URL:-redis://redis:6379/10}
     # Email (Using mailpit)
     EMAIL_HOST: ${EMAIL_HOST:-mailpit}
     EMAIL_PORT: ${EMAIL_PORT:-1025}

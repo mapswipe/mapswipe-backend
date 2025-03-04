@@ -1,3 +1,15 @@
+"""
+Can only be resolved by authenticated users.
+
+When the condition fails, the following can be returned (following this priority):
+1) `OperationInfo`/`OperationMessage` if those types are allowed at the return type
+2) `null` in case the field is not mandatory (e.g. `String` or `[String]`)
+3) An empty list in case the field is a list (e.g. `[String]!`)
+4) An empty `Connection` in case the return type is a relay connection
+2) Otherwise, an error will be raised
+"""
+directive @isAuthenticated repeatable on FIELD_DEFINITION
+
 type AppEnumCollection {
   dummy: [AppEnumCollectiondummy!]!
 }
@@ -12,29 +24,141 @@ enum DummyEnum {
   VALUE_2
 }
 
+input IDBaseFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ID
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ID!]
+}
+
 type Mutation {
-  public: PublicMutation!
-  private: PrivateMutation!
+  login(username: String!, password: String!): UserMeType!
+  logout: Boolean!
 }
 
-type PrivateMutation {
-  id: ID!
+type OffsetPaginationInfo {
+  offset: Int!
+  limit: Int
 }
 
-type PrivateQuery {
-  id: ID!
+input OffsetPaginationInput {
+  offset: Int! = 0
+  limit: Int
 }
 
-type PublicMutation {
-  id: ID!
-}
-
-type PublicQuery {
-  id: ID!
+enum Ordering {
+  ASC
+  ASC_NULLS_FIRST
+  ASC_NULLS_LAST
+  DESC
+  DESC_NULLS_FIRST
+  DESC_NULLS_LAST
 }
 
 type Query {
-  public: PublicQuery!
-  private: PrivateQuery!
+  users(pagination: OffsetPaginationInput, filters: UserFilter, order: UserOrder): UserTypeOffsetPaginated! @isAuthenticated
+  me: UserMeType
   enums: AppEnumCollection!
+}
+
+input StrFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: String
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [String!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: String
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: String
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: String
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: String
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: String
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: String
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: String
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: String
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: String
+}
+
+"""
+User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name)
+"""
+input UserFilter {
+  id: IDBaseFilterLookup
+  displayName: StrFilterLookup
+  AND: UserFilter
+  OR: UserFilter
+  NOT: UserFilter
+  DISTINCT: Boolean
+}
+
+"""
+User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name)
+"""
+type UserMeType {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  displayName: String!
+  email: String!
+}
+
+input UserOrder {
+  id: Ordering
+  displayName: Ordering
+}
+
+"""
+User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name)
+"""
+type UserType {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  displayName: String!
+}
+
+type UserTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [UserType!]!
 }
