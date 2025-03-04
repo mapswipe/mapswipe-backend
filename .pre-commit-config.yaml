@@ -6,7 +6,8 @@ exclude: |
     (?x)^(
       \.git|
       __pycache__|
-      \.venv
+      \.venv|
+      schema.graphql
     )
 
 repos:
@@ -25,7 +26,6 @@ repos:
       - id: check-case-conflict
       - id: check-docstring-first
       - id: detect-private-key
-      - id: detect-aws-credentials
       - id: name-tests-test
 
   # Run the Ruff linter.

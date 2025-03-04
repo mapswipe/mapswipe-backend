@@ -24,7 +24,8 @@ dependencies = [
     "psycopg2-binary",
     "sentry-sdk",
     "strawberry-graphql~=0.261.1",
-    "strawberry-django-plus",
+    "strawberry-graphql-django",
+    "django-choices-field",  # Requird by strawberry-django
     "django-health-check",
 ]
 

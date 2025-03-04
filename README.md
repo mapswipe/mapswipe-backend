@@ -1,4 +1,5 @@
 # Mapswipe Backend
+[![codecov](https://codecov.io/gh/mapswipe/mapswipe-backend/graph/badge.svg?token=5ZAYZ89DWF)](https://codecov.io/gh/mapswipe/mapswipe-backend)
 
 ## Local development
 

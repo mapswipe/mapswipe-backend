@@ -34,6 +34,9 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Setup uv python environment
+        run: uv venv
+
       - name: uv lock check
         run: uv lock --locked --offline
 
@@ -126,7 +129,20 @@ jobs:
       - name: 🤞 Run Test 🧪 & Publish coverage to code climate
         env:
           DOCKER_IMAGE: ${{ steps.prep.outputs.tagged_image }}
-        run: docker compose run --rm web /code/scripts/run_tests.sh
+        run: docker compose run --rm web /code/misc/run_tests.sh
+
+      - name: Upload test coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+
+      - name: Upload test results to Codecov
+        uses: codecov/test-results-action@v1
+        if: ${{ !cancelled() }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
 
       - name: 🐳 Docker push
         if: ${{ inputs.push_docker_image }}

@@ -276,6 +276,19 @@ wheels = [
 ]
 
 [[package]]
+name = "django-choices-field"
+version = "2.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/05/a4/80cfa63a1232a74eae7e9e6aedb79582e825e58b3fa0563b51fd89a78a24/django_choices_field-2.3.0.tar.gz", hash = "sha256:bb0c85c79737ab98bfb9c0d9ddf98010d612c0585be767890e25fd192c3d1694", size = 6448 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/eb/e0/a6e14c493a8d9c0f4be2ed4390b008c723ee05c9e0f8271b4a0fea82b1bd/django_choices_field-2.3.0-py3-none-any.whl", hash = "sha256:4bdcccf802bff9065af19798810de494dd16337fa46dae01680ede12a10280d6", size = 6172 },
+]
+
+[[package]]
 name = "django-cors-headers"
 version = "4.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -573,6 +586,7 @@ dependencies = [
     { name = "celery", extra = ["redis"] },
     { name = "django" },
     { name = "django-celery-beat" },
+    { name = "django-choices-field" },
     { name = "django-cors-headers" },
     { name = "django-cte" },
     { name = "django-environ" },
@@ -584,8 +598,8 @@ dependencies = [
     { name = "gunicorn" },
     { name = "psycopg2-binary" },
     { name = "sentry-sdk" },
-    { name = "strawberry-django-plus" },
     { name = "strawberry-graphql" },
+    { name = "strawberry-graphql-django" },
 ]
 
 [package.dev-dependencies]
@@ -605,6 +619,7 @@ requires-dist = [
     { name = "celery", extras = ["redis"], specifier = "~=5.4.0" },
     { name = "django", specifier = "~=5.1.6" },
     { name = "django-celery-beat" },
+    { name = "django-choices-field" },
     { name = "django-cors-headers" },
     { name = "django-cte" },
     { name = "django-environ" },
@@ -616,8 +631,8 @@ requires-dist = [
     { name = "gunicorn", specifier = "~=20.1.0" },
     { name = "psycopg2-binary" },
     { name = "sentry-sdk" },
-    { name = "strawberry-django-plus" },
     { name = "strawberry-graphql", specifier = "~=0.261.1" },
+    { name = "strawberry-graphql-django" },
 ]
 
 [package.metadata.requires-dev]
@@ -903,21 +918,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e5/40/edede8dd6977b0d3da179a342c198ed100dd2aba4be081861ee5911e4da4/sqlparse-0.5.3.tar.gz", hash = "sha256:09f67787f56a0b16ecdbde1bfc7f5d9c3371ca683cfeaa8e6ff60b4807ec9272", size = 84999 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a9/5c/bfd6bd0bf979426d405cc6e71eceb8701b148b16c21d2dc3c261efc61c7b/sqlparse-0.5.3-py3-none-any.whl", hash = "sha256:cf2196ed3418f3ba5de6af7e82c694a9fbdbfecccdfc72e281548517081f16ca", size = 44415 },
-]
-
-[[package]]
-name = "strawberry-django-plus"
-version = "2.6.4"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "django" },
-    { name = "strawberry-graphql" },
-    { name = "strawberry-graphql-django" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/76/45/737c160ff1f3591c097de2d3a2f232ae992380c20f45816d0acd7614638c/strawberry_django_plus-2.6.4.tar.gz", hash = "sha256:4f6fb5cbece61437b5f89ebe4861ae13eed02f77c400f2b6bc356b65aae9fe36", size = 61732 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/aa/13/ed72ac7c75656487655f010c81156f187d07b3eb2d92889359792250028f/strawberry_django_plus-2.6.4-py3-none-any.whl", hash = "sha256:5cb32d9338009568687c1960bed3d48362b46c9dd543ad0cf28ede81bc36abd3", size = 72930 },
 ]
 
 [[package]]
