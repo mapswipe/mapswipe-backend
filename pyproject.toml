@@ -23,9 +23,8 @@ dependencies = [
     "gunicorn~=20.1.0",
     "psycopg2-binary",
     "sentry-sdk",
-    "strawberry-graphql~=0.261.1",
-    "strawberry-graphql-django",
-    "django-choices-field",  # Requird by strawberry-django
+    "strawberry-graphql-django~=0.57.0",
+    "django-choices-field",  # Required by strawberry-graphql-django
     "django-health-check",
 ]
 

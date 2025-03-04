@@ -598,7 +598,6 @@ dependencies = [
     { name = "gunicorn" },
     { name = "psycopg2-binary" },
     { name = "sentry-sdk" },
-    { name = "strawberry-graphql" },
     { name = "strawberry-graphql-django" },
 ]
 
@@ -631,8 +630,7 @@ requires-dist = [
     { name = "gunicorn", specifier = "~=20.1.0" },
     { name = "psycopg2-binary" },
     { name = "sentry-sdk" },
-    { name = "strawberry-graphql", specifier = "~=0.261.1" },
-    { name = "strawberry-graphql-django" },
+    { name = "strawberry-graphql-django", specifier = "~=0.57.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -936,15 +934,16 @@ wheels = [
 
 [[package]]
 name = "strawberry-graphql-django"
-version = "0.9.4"
+version = "0.57.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "asgiref" },
     { name = "django" },
     { name = "strawberry-graphql" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/84/8d/02584438b57b9d8c0141a779dd091b2f10126fe1f369ea1852d45afa3eec/strawberry_graphql_django-0.9.4.tar.gz", hash = "sha256:d3e20eb3106ca329270825aa14c14ecf1e0b3248cc8946dcf90c1ea23f8be8fd", size = 20409 }
+sdist = { url = "https://files.pythonhosted.org/packages/67/a3/84006840ae3b817732823a075f185990b768bdba2b49e4e8955839a336d7/strawberry_graphql_django-0.57.0.tar.gz", hash = "sha256:2fac0a7cd9fff6796d6eb0844fc128d83a2b768a7dc829b1d56d89530dd76878", size = 76662 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/90/cb/68ca25198ac0d7175cb887b9e525fa902eec6f3cac003cd87f9f927d54cd/strawberry_graphql_django-0.9.4-py3-none-any.whl", hash = "sha256:99ff77019ebb4f0c17beb64b86aff3257cefd5299269542830b52f48e7eafbfd", size = 27065 },
+    { url = "https://files.pythonhosted.org/packages/e4/33/bbf9cbf69cbbde87a496d5913d6b881a849ea2d3d4d98090ace53c88aaa1/strawberry_graphql_django-0.57.0-py3-none-any.whl", hash = "sha256:944d5a48a8c6e81b30eb89505981f42801023eea18bf8662150489129b2703ed", size = 95931 },
 ]
 
 [[package]]
