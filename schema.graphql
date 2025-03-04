@@ -1,0 +1,40 @@
+type AppEnumCollection {
+  dummy: [AppEnumCollectiondummy!]!
+}
+
+type AppEnumCollectiondummy {
+  key: DummyEnum!
+  label: String!
+}
+
+enum DummyEnum {
+  VALUE_1
+  VALUE_2
+}
+
+type Mutation {
+  public: PublicMutation!
+  private: PrivateMutation!
+}
+
+type PrivateMutation {
+  id: ID!
+}
+
+type PrivateQuery {
+  id: ID!
+}
+
+type PublicMutation {
+  id: ID!
+}
+
+type PublicQuery {
+  id: ID!
+}
+
+type Query {
+  public: PublicQuery!
+  private: PrivateQuery!
+  enums: AppEnumCollection!
+}

@@ -1,0 +1,78 @@
+[project]
+name = "mapswipe-backend"
+version = "0.1.0"
+description = "Backend for Mapswipe"
+authors = [
+  {name = "Mapswipe", email = "info@mapswipe.org"},
+]
+license = { text = "Apache-2.0" }
+readme = "README.md"
+requires-python = "~=3.13.2"
+
+dependencies = [
+    "Django~=5.1.6",
+    "celery[redis]~=5.4.0",
+    "flower",  # celery-dashboard
+    "django-celery-beat",
+    "django-cors-headers",
+    "django-cte",
+    "django-environ",
+    "django-premailer",
+    "django-redis",
+    "factory-boy~=3.2.1",
+    "gunicorn~=20.1.0",
+    "psycopg2-binary",
+    "sentry-sdk",
+    "strawberry-graphql~=0.261.1",
+    "strawberry-graphql-django",
+    "django-choices-field",  # Requird by strawberry-django
+    "django-health-check",
+]
+
+[dependency-groups]
+dev = [
+    "django-stubs",
+    "bpython",
+]
+test = [
+    "pytest-django",
+    "pytest-icdiff",
+    "pytest-ordering",
+    "pytest-profiling",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "main.settings"
+log_cli = true
+
+[tool.ruff]
+line-length = 125
+extend-exclude = [
+    ".git",
+    ".pytest_cache",
+    ".venv",
+    "venv",
+    "**/migrations/*",
+    "__pycache__",
+]
+
+[tool.ruff.lint]
+ignore = ["C901", "E701", "E203"]
+extend-select = ["I", "E", "F", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402"]
+"/**/tests/*_mock_data.py" = ["E501"]
+"**/snap_test_*.py" = ["E501"]
+
+[tool.pyright]
+exclude = [
+    "**/__pycache__",
+    "**/snap_test_*.py",
+    ".venv/",
+    "**/migrations/*.py",
+]
+reportMissingImports = true
+reportMissingTypeStubs = false
+venvPath = "."
+venv = ".venv"
