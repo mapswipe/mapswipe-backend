@@ -1,0 +1,13 @@
+apiVersion: v2
+name: mapswipe-backend-helm
+description: "Helm Chart to deploy the Mapswipe Backend (Alpha instances)"
+type: application
+version: 0.0.1-SET-BY-CICD
+sources:
+  - https://github.com/mapswipe/mapswipe-backend/
+
+dependencies:
+  - name: django-app
+    alias: app
+    version: 0.0.1
+    repository: oci://ghcr.io/toggle-corp/charts

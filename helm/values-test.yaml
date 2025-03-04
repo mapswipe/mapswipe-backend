@@ -1,0 +1,43 @@
+app:
+  image:
+    name: ghcr.io/mapswipe/mapswipe-backend
+    tag: latest
+
+  ingress:
+    host: api.example.com
+
+  postgresql:
+    primary:
+      persistence:
+        storageClass: my-storage-class
+
+  minio:
+    global:
+      defaultStorageClass: my-storage-class
+    auth:
+      rootPassword: very-secure-password
+
+  # NOTE: Check main/settings.py for all available options
+  env:
+    # AWS
+    AWS_S3_ENABLED: "true"
+    AWS_S3_ENDPOINT_URL: "https://{{ $.Values.minio.apiIngress.hostname }}/"
+    AWS_S3_STATIC_BUCKET_NAME: "static-data"
+    AWS_S3_MEDIA_BUCKET_NAME: "media-data"
+    # App Domain
+    SESSION_COOKIE_DOMAIN: .test.com
+    CSRF_COOKIE_DOMAIN: .test.com
+
+  # NOTE: Check main/settings.py for all available options
+  secrets:
+    SECRET_KEY: very-secret-key
+    # Postgres
+    POSTGRES_DB: "{{ $.Values.postgresql.auth.database }}"
+    POSTGRES_USER: "postgres"
+    POSTGRES_PASSWORD: "{{ $.Values.postgresql.auth.postgresPassword }}"
+    POSTGRES_HOST: "{{ include \"postgresql.v1.primary.fullname\" $.Subcharts.postgresql }}"
+    POSTGRES_PORT: "{{ include \"postgresql.v1.service.port\" $.Subcharts.postgresql }}"
+    # Minio (S3)
+    AWS_S3_ACCESS_KEY_ID: "{{ required \".Values.minio.auth.rootUser\" $.Values.minio.auth.rootUser }}"
+    AWS_S3_SECRET_ACCESS_KEY: "{{ required \".Values.minio.auth.rootPassword\" $.Values.minio.auth.rootPassword }}"
+    AWS_S3_REGION: "us-east-1"

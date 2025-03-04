@@ -1,0 +1,73 @@
+app:
+  image:
+    name: SET-BY-CICD-IMAGE
+    tag: SET-BY-CICD-TAG
+
+  ingress:
+    enabled: true
+    className: nginx
+
+  redis:
+    enabled: true
+
+  postgresql:
+    enabled: true
+    fullnameOverride: "mapswipe-postgres"
+    auth:
+      database: "mapswipe"
+    primary:
+      persistence:
+        storageClass:
+        size: "2Gi"
+
+  minio:
+    enabled: true
+    fullnameOverride: mapswipe-minio
+    global:
+      defaultStorageClass:
+    apiIngress:
+      ingressClassName: nginx
+    auth:
+      rootUser: mapswipe
+      rootPassword:
+    persistence:
+      size: "1Gi"
+    defaultBuckets: static-data,media-data
+    provisioning:
+      extraCommands:
+        - "mc anonymous set download provisioning/static-data"
+
+  api:
+    containerPort: 80
+    command: ["gunicorn", "config.wsgi:application", "--timeout=40", "--bind", "0.0.0.0:80"]
+    resources:
+      requests:
+        cpu: "0.2"
+
+  worker:
+    enabled: true
+
+  # NOTE: Check main/settings.py for all available options
+  env:
+    # AWS
+    AWS_S3_ENABLED: "true"
+    AWS_S3_ENDPOINT_URL: "https://{{ $.Values.minio.apiIngress.hostname }}/"
+    AWS_S3_STATIC_BUCKET_NAME: "static-data"
+    AWS_S3_MEDIA_BUCKET_NAME: "media-data"
+    # App Domain
+    SESSION_COOKIE_DOMAIN: "{{ required \".Values.env.SESSION_COOKIE_DOMAIN\" nil }}"
+    CSRF_COOKIE_DOMAIN: "{{ required \".Values.env.CSRF_COOKIE_DOMAIN\" nil }}"
+
+  # NOTE: Check main/settings.py for all available options
+  secrets:
+    SECRET_KEY: "{{ required \".Values.secrets.SECRET_KEY\" nil }}"
+    # Postgres
+    POSTGRES_DB: "{{ $.Values.postgresql.auth.database }}"
+    POSTGRES_USER: "postgres"
+    POSTGRES_PASSWORD: "{{ $.Values.postgresql.auth.postgresPassword }}"
+    POSTGRES_HOST: "{{ include \"postgresql.v1.primary.fullname\" $.Subcharts.postgresql }}"
+    POSTGRES_PORT: "{{ include \"postgresql.v1.service.port\" $.Subcharts.postgresql }}"
+    # Minio (S3)
+    AWS_S3_ACCESS_KEY_ID: "{{ required \".Values.minio.auth.rootUser\" $.Values.minio.auth.rootUser }}"
+    AWS_S3_SECRET_ACCESS_KEY: "{{ required \".Values.minio.auth.rootPassword\" $.Values.minio.auth.rootPassword }}"
+    AWS_S3_REGION: "us-east-1"
