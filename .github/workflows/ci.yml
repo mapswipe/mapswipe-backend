@@ -6,6 +6,9 @@ on:
       push_docker_image:
         type: string  # true or false
         default: "false"
+    secrets:
+      CODECOV_TOKEN:
+        required: true
     outputs:
       docker_image_name:
         description: "Only docker image name"

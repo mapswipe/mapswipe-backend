@@ -22,6 +22,8 @@ jobs:
     uses: ./.github/workflows/ci.yml
     with:
       push_docker_image: true
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   build:
     name: Publish Helm
@@ -73,7 +75,7 @@ jobs:
         OCI_REPO: oci://ghcr.io/${{ github.repository }}
       run: |
         OCI_REPO=$(echo $OCI_REPO | tr '[:upper:]' '[:lower:]')
-        PACKAGE_FILE=$(ls .helm/.helm-charts/*.tgz | head -n 1)
+        PACKAGE_FILE=$(ls ./helm/.helm-charts/*.tgz | head -n 1)
         echo "# Helm Chart" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo '```yaml' >> $GITHUB_STEP_SUMMARY
