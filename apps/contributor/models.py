@@ -1,0 +1,48 @@
+from django.db import models
+from django_choices_field import IntegerChoicesField
+
+from apps.common.models import UserResource
+from apps.user.models import User
+
+
+# NOTE: Users are created from Apps (Web/Mobile)
+class ContributorUser(models.Model):
+    # NOTE: Sync with firebase
+    user_id = models.CharField(max_length=30, db_index=True)
+    username = models.CharField(max_length=255)
+    created_at = models.DateTimeField(null=True)
+    modified_at = models.DateTimeField(null=True)
+
+
+class ContributorUserGroup(UserResource):
+    old_user_group_id = models.CharField(max_length=30, db_index=True, null=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+
+    is_archived = models.BooleanField(default=False)
+    archived_at = models.DateTimeField(null=True, blank=True)
+    archived_by = models.ForeignKey(
+        User,
+        related_name="+",
+        on_delete=models.PROTECT,
+    )
+
+
+class ContributorUserGroupMembership(models.Model):
+    user_group = models.ForeignKey(ContributorUserGroup, on_delete=models.CASCADE)
+    user = models.ForeignKey(ContributorUser, on_delete=models.CASCADE)
+    is_active = models.BooleanField()
+
+
+class ContributorUserGroupMembershipLogAction(models.IntegerChoices):
+    JOIN = 1, "Join"
+    LEAVE = 2, "Leave"
+
+
+class ContributorUserGroupMembershipLog(models.Model):
+    ACTION = ContributorUserGroupMembershipLogAction
+
+    membership = models.ForeignKey(ContributorUserGroupMembership, on_delete=models.CASCADE)
+    # Sync with firebase
+    action = IntegerChoicesField(choices_enum=ContributorUserGroupMembershipLogAction)
+    date = models.DateTimeField()

@@ -111,6 +111,10 @@ INSTALLED_APPS = [
     # Internal
     "apps.common",
     "apps.user",
+    "apps.project",
+    "apps.tutorial",
+    "apps.contributor",
+    "apps.mapping",
 ]
 
 MIDDLEWARE = [
