@@ -19,6 +19,7 @@ env = environ.Env(
     APP_ENVIRONMENT=str,  # DEV, STAGE, PROD
     APP_TYPE=str,  # WEB, WORKER, WORKER-BEAT
     APP_RELEASE=(str, None),  # As fallback we will try to use .git/HEAD
+    APP_LOG_LEVEL=(str, "INFO"),
     # Domain configs
     APP_DOMAIN=str,  # Eg: https://api.example.org
     FRONTEND_DOMAIN=str,  # Eg: https://web.example.org
@@ -73,6 +74,7 @@ env = environ.Env(
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
+APP_LOG_LEVEL = env("APP_LOG_LEVEL")
 APP_DOMAIN = env.url("APP_DOMAIN")
 FRONTEND_DOMAIN = env.url("FRONTEND_DOMAIN")
 APP_ENVIRONMENT = env("APP_ENVIRONMENT").upper()
@@ -374,3 +376,76 @@ STRAWBERRY_DJANGO = {
     "PAGINATION_DEFAULT_LIMIT": 20,
     "DEFAULT_PK_FIELD_NAME": "id",
 }
+
+
+# TODO: Handle file logs using gunicorn
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "simple": {
+            "format": ("%(asctime)s: - %(levelname)s - %(name)s - %(message)s"),
+            "datefmt": "%Y-%m-%dT%H:%M:%S",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": APP_LOG_LEVEL,
+    },
+    "loggers": {
+        **{
+            app: {
+                "handlers": ["console"],
+                "level": APP_LOG_LEVEL,
+            }
+            for app in ["apps", "helix", "utils", "celery", "django"]
+        },
+    },
+}
+
+if DEBUG:
+
+    def log_render_extra_context(record):
+        """
+        Append extra->context to logs
+        NOTE: This will appear in logs when used with logger.xxx(..., extra={'context': {..content}})
+        """
+        if hasattr(record, "context"):
+            record.context = f" - {str(record.context)}"
+        else:
+            record.context = ""
+        return True
+
+    LOGGING = {
+        **LOGGING,
+        "filters": {
+            "render_extra_context": {
+                "()": "django.utils.log.CallbackFilter",
+                "callback": log_render_extra_context,
+            }
+        },
+        "handlers": {
+            **LOGGING["handlers"],
+            "colored_console": {
+                "class": "rich.logging.RichHandler",
+                "rich_tracebacks": True,
+                "filters": ["render_extra_context"],
+            },
+        },
+        "loggers": {
+            **{
+                key: {
+                    "handlers": ["colored_console"],
+                    "level": APP_LOG_LEVEL,
+                    "propagate": False,
+                }
+                for key in LOGGING["loggers"].keys()
+            },
+        },
+    }

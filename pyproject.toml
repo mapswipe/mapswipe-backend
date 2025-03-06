@@ -33,6 +33,7 @@ dependencies = [
 dev = [
     "django-stubs",
     "bpython",
+    "rich",
 ]
 test = [
     "pytest-django",

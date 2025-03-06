@@ -8,6 +8,7 @@ x-server: &base_server_setup
   stdin_open: true
   tty: true
   environment: &base_server_environments
+    COLUMNS: ${COLUMNS:-200}  # NOTE: For using logging with rich
     DEBUG: ${DEBUG:-true}
     APP_ENVIRONMENT: ${APP_ENVIRONMENT:-DEV}
     SECRET_KEY: ${SECRET_KEY:?error}
