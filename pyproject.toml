@@ -27,6 +27,9 @@ dependencies = [
     "django-choices-field",  # Required by strawberry-graphql-django
     "django-health-check",
     "pillow",  # Required by django ImageField
+    # Geo (Used by utils/geo)
+    "gdal==3.6.2",  # NOTE: version depends on the available libgdal-dev version in debian
+    "ogr",
 ]
 
 [dependency-groups]
