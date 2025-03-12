@@ -34,6 +34,14 @@ x-server: &base_server_setup
     EMAIL_HOST_USER: ${EMAIL_HOST_USER:-mailpit}
     EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-mailpit}
     DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-Mapswipe Dev <dev@mapswipe.org>}
+    # Map Image keys (Dummy values)
+    MAP_IMAGE_BING_API_KEY: ${MAP_IMAGE_BING_API_KEY:-dummy-bing}
+    MAP_IMAGE_MAPBOX_API_KEY: ${MAP_IMAGE_MAPBOX_API_KEY:-dummy-mapbox}
+    MAP_IMAGE_MAXAR_STANDARD_API_KEY: ${MAP_IMAGE_MAXAR_STANDARD_API_KEY:-dummy-maxar-standard}
+    MAP_IMAGE_MAXAR_PREMIUM_API_KEY: ${MAP_IMAGE_MAXAR_PREMIUM_API_KEY:-dummy-maxar-premium}
+    MAP_IMAGE_ESRI_API_KEY: ${MAP_IMAGE_ESRI_API_KEY:-dummy-esri}
+    MAP_IMAGE_ESRI_BETA_API_KEY: ${MAP_IMAGE_ESRI_BETA_API_KEY:-dummy-esri-beta}
+    # MAP_IMAGE_DIGITAL_GLOBE_API_KEY: ${MAP_IMAGE_DIGITAL_GLOBE_API_KEY:-dummy-digital-globe}
   env_file:
     - path: .env
       required: false

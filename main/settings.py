@@ -37,6 +37,7 @@ env = environ.Env(
     # Storage
     MEDIA_URL=(str, "media/"),
     STATIC_URL=(str, "static/"),
+    TEMP_DIR=(str, "/tmp/"),
     # -- S3 storage
     AWS_S3_ENABLED=(bool, False),
     AWS_S3_ENDPOINT_URL=(str, None),
@@ -68,6 +69,14 @@ env = environ.Env(
     SENTRY_MONITOR_CELERY_BEAT_TASKS=(bool, True),
     SENTRY_TRACES_SAMPLE_RATE=(float, 0.2),
     SENTRY_PROFILE_SAMPLE_RATE=(float, 0.2),
+    # Map Image keys
+    MAP_IMAGE_BING_API_KEY=str,
+    MAP_IMAGE_MAPBOX_API_KEY=str,
+    MAP_IMAGE_MAXAR_STANDARD_API_KEY=str,
+    MAP_IMAGE_MAXAR_PREMIUM_API_KEY=str,
+    MAP_IMAGE_ESRI_API_KEY=str,
+    MAP_IMAGE_ESRI_BETA_API_KEY=str,
+    # MAP_IMAGE_DIGITAL_GLOBE_API_KEY=str,
 )
 
 
@@ -200,6 +209,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
+TEMP_DIR = env("TEMP_DIR")
 MEDIA_URL = env("MEDIA_URL")
 STATIC_URL = env("STATIC_URL")
 
@@ -377,6 +387,14 @@ STRAWBERRY_DJANGO = {
     "DEFAULT_PK_FIELD_NAME": "id",
 }
 
+# MAP_IMAGE_KEYs
+MAP_IMAGE_BING_API_KEY = env("MAP_IMAGE_BING_API_KEY")
+MAP_IMAGE_MAPBOX_API_KEY = env("MAP_IMAGE_MAPBOX_API_KEY")
+MAP_IMAGE_MAXAR_STANDARD_API_KEY = env("MAP_IMAGE_MAXAR_STANDARD_API_KEY")
+MAP_IMAGE_MAXAR_PREMIUM_API_KEY = env("MAP_IMAGE_MAXAR_PREMIUM_API_KEY")
+MAP_IMAGE_ESRI_API_KEY = env("MAP_IMAGE_ESRI_API_KEY")
+MAP_IMAGE_ESRI_BETA_API_KEY = env("MAP_IMAGE_ESRI_BETA_API_KEY")
+# MAP_IMAGE_DIGITAL_GLOBE_API_KEY = env("MAP_IMAGE_DIGITAL_GLOBE_API_KEY")
 
 # TODO: Handle file logs using gunicorn
 LOGGING = {

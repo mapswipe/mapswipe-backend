@@ -1,6 +1,7 @@
 """
 Copied from https://github.com/mapswipe/python-mapswipe-workers/blob/bf576a0/mapswipe_workers/mapswipe_workers/utils/tile_functions.py
 """
+
 import math
 
 from osgeo import ogr
@@ -76,57 +77,7 @@ def pixel_coords_to_tile_address(PixelX, PixelY):
     return t
 
 
-def tile_coords_zoom_and_tileserver_to_url(tile_x: int, tile_y: int, tile_z: int, tile_server: dict) -> str:
-    """Create a URL for a tile based on tile coordinates, zoom and given tile server."""
-
-    if tile_server["name"] == "bing":
-        quadKey = tile_coords_and_zoom_to_quadKey(tile_x, tile_y, tile_z)
-        url = quadKey_to_Bing_URL(quadKey, tile_server["apiKey"])
-    elif tile_server["name"] == "sinergise":
-        url = tile_server["url"].format(
-            key=tile_server["apiKey"],
-            x=tile_x,
-            y=tile_y,
-            z=tile_z,
-            layer=tile_server["wmtsLayerName"],
-        )
-    elif "maxar" in tile_server["name"]:
-        # maxar uses not the standard TMS tile y coordinate,
-        # but the Google tile y coordinate
-        # more information here:
-        # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/
-        tile_y = int(math.pow(2, tile_z) - tile_y) - 1
-        url = tile_server["url"].format(
-            key=tile_server["apiKey"],
-            x=tile_x,
-            y=tile_y,
-            z=tile_z,
-        )
-    elif "{-y}" in tile_server["url"]:
-        # this uses not the standard TMS tile y coordinate,
-        # but the Google tile y coordinate
-        # more information here:
-        # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/
-        tile_y = int(math.pow(2, tile_z) - tile_y) - 1
-        url = tile_server["url"].replace("{-y}", "{y}")
-        url = url.format(
-            key=tile_server["apiKey"],
-            x=tile_x,
-            y=tile_y,
-            z=tile_z,
-        )
-    else:
-        url = tile_server["url"].format(
-            key=tile_server["apiKey"],
-            x=tile_x,
-            y=tile_y,
-            z=tile_z,
-        )
-
-    return url
-
-
-def tile_coords_and_zoom_to_quadKey(TileX, TileY, zoom) -> str:
+def tile_coords_and_zoom_to_quadKey(TileX: int, TileY: int, zoom: int) -> str:
     """Create a quadkey for use with certain tileservers that use them, e.g. Bing."""
 
     quadKey = ""

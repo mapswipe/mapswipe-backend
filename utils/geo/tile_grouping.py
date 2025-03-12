@@ -1,66 +1,60 @@
 """
 Copied from https://github.com/mapswipe/python-mapswipe-workers/blob/bf576a0/mapswipe_workers/mapswipe_workers/utils/tile_grouping_functions.py
 """
+
 import logging
 import math
+import typing
 
-from osgeo import ogr
+from django.contrib.gis.gdal import DataSource
+from django.contrib.gis.geos import GeometryCollection, LinearRing, Polygon
 
 from . import tile_functions
 
 logger = logging.getLogger(__name__)
+
+# x_min, y_min, x_max, y_max
+GeoExtent: typing.TypeAlias = tuple[float, float, float, float]
+
+
+class HorizontalSliceInfo(typing.TypedDict):
+    tile_y_top: list[int]
+    tile_y_bottom: list[int]
+    slice_collection: GeometryCollection
+
+
+class RawGroup(typing.TypedDict):
+    xMin: int
+    xMax: int
+    yMin: int
+    yMax: int
+    group_polygon: Polygon  # XXX: Not used
 
 
 class UnSupportedGeoExtenstionException(Exception):
     pass
 
 
-def get_geometry_from_file(infile: str):
-    """
-    The function to load input geometries from an .shp, .kml or .geojson file
-
-    Parameters
-    ----------
-    infile : str
-        the path to the .shp, .kml or .geojson
-        file containing the input geometries
-
-    Returns
-    -------
-    extent : list
-        the extent of the layer as [x_min, x_max, y_min, y_max]
-    geomcol : ogr.Geometry(ogr.wkbGeometryCollection)
-        a geometry collection of all feature geometries for the given file
-    """
-
-    infile_extension = infile.split(".")[-1]
-
-    # Get the driver --> supported formats: Shapefiles, GeoJSON, kml
-    if infile_extension == "shp":
-        driver = ogr.GetDriverByName("ESRI Shapefile")
-    elif infile_extension == "geojson":
-        driver = ogr.GetDriverByName("GeoJSON")
-    elif infile_extension == "kml":
-        driver = ogr.GetDriverByName("KML")
-    else:
-        raise UnSupportedGeoExtenstionException(f"Unsupported extension {infile_extension}")
-
-    datasource = driver.Open(infile, 0)
+def get_geometry_from_file(infile: str) -> tuple[GeoExtent, list[Polygon]]:
+    data_source = DataSource(infile)
 
     # Get the data layer
-    layer = datasource.GetLayer()
+    assert data_source.layer_count == 1  # TODO: Proper validation
+    layer = data_source[0]
 
     # get feature geometry of all features of the input file
-    geomcol = ogr.Geometry(ogr.wkbGeometryCollection)
+    polygons = []
     for feature in layer:
-        geomcol.AddGeometry(feature.GetGeometryRef())
+        polygons.append(feature.geom.geos)
 
-    extent = layer.GetExtent()
-    logger.info("got geometry and extent from file")
-    return extent, geomcol
+    return layer.extent.tuple, polygons
 
 
-def get_horizontal_slice(extent: list, geomcol, zoom: int):
+def get_horizontal_slice(
+    extent: GeoExtent,
+    polygons: list[Polygon],
+    zoom: int,
+) -> HorizontalSliceInfo:
     """
     The function slices all input geometries vertically
     using a height of max 3 tiles per geometry.
@@ -68,41 +62,18 @@ def get_horizontal_slice(extent: list, geomcol, zoom: int):
     For each geometry tile coordinates are calculated.
     Then this geometry is split into several geometries using the min
     and max tile coordinates for the geometry.
-
-    Parameters
-    ----------
-    extent : list
-        the extent of the layer as [x_min, x_max, y_min, y_max]
-    geomcol : ogr.Geometry(ogr.wkbGeometryCollection)
-        a geometry collection of all feature geometries for the given file
-    zoom : int
-        the tile map service zoom level
-
-    Returns
-    -------
-    slice_infos : dict
-        a dictionary containing a list of "tile_y_top" coordinates,
-        a list of "tile_y_bottom" coordinates and a "slice_collection"
-        containing a ogr geometry collection
     """
 
-    slice_infos = {
-        "tile_y_top": [],
-        "tile_y_bottom": [],
-        "slice_collection": ogr.Geometry(ogr.wkbGeometryCollection),
-    }
+    tile_y_top = []
+    tile_y_bottom = []
+    slice_collection = GeometryCollection()
 
     xmin = extent[0]
-    xmax = extent[1]
-    ymin = extent[2]
+    ymin = extent[1]
+    xmax = extent[2]
     ymax = extent[3]
 
-    for i in range(0, geomcol.GetGeometryCount()):
-        polygon_to_slice = geomcol.GetGeometryRef(i)
-        # logging.info('polygon to slice: %s' % polygon_to_slice)'''
-
-        # polygon_to_slice = geomcol.GetGeometryRef(0)
-
+    for polygon_to_slice in polygons:
         # get upper left left tile coordinates
         pixel = tile_functions.lat_long_zoom_to_pixel_coords(ymax, xmin, zoom)
         tile = tile_functions.pixel_coords_to_tile_address(pixel.x, pixel.y)
@@ -124,7 +95,7 @@ def get_horizontal_slice(extent: list, geomcol, zoom: int):
 
         ############################################################
 
-        for i in range(0, rows + 1):
+        for _ in range(0, rows + 1):
             # Calculate lat, lon of upper left corner of tile
             PixelX = TileX_left * 256
             PixelY = TileY * 256
@@ -135,38 +106,43 @@ def get_horizontal_slice(extent: list, geomcol, zoom: int):
             lon_right, lat_bottom = tile_functions.pixel_coords_zoom_to_lat_lon(PixelX, PixelY, zoom)
 
             # Create Geometry
-            ring = ogr.Geometry(ogr.wkbLinearRing)
-            ring.AddPoint(lon_left, lat_top)
-            ring.AddPoint(lon_right, lat_top)
-            ring.AddPoint(lon_right, lat_bottom)
-            ring.AddPoint(lon_left, lat_bottom)
-            ring.AddPoint(lon_left, lat_top)
-            poly = ogr.Geometry(ogr.wkbPolygon)
-            poly.AddGeometry(ring)
+            poly = Polygon(
+                LinearRing(
+                    (lon_left, lat_top),
+                    (lon_right, lat_top),
+                    (lon_right, lat_bottom),
+                    (lon_left, lat_bottom),
+                    (lon_left, lat_top),
+                )
+            )
 
-            sliced_poly = poly.Intersection(polygon_to_slice)
+            sliced_poly = poly.intersection(polygon_to_slice)
 
             if sliced_poly:
-                if sliced_poly.GetGeometryName() == "POLYGON":
-                    slice_infos["tile_y_top"].append(TileY)
-                    slice_infos["tile_y_bottom"].append(TileY + 3)
-                    slice_infos["slice_collection"].AddGeometry(sliced_poly)
-                elif sliced_poly.GetGeometryName() == "MULTIPOLYGON":
+                if sliced_poly.geom_type.upper() == "POLYGON":
+                    tile_y_top.append(TileY)
+                    tile_y_bottom.append(TileY + 3)
+                    slice_collection.append(sliced_poly)
+                elif sliced_poly.geom_type.upper() == "MULTIPOLYGON":
                     for geom_part in sliced_poly:
-                        slice_infos["tile_y_top"].append(TileY)
-                        slice_infos["tile_y_bottom"].append(TileY + 3)
-                        slice_infos["slice_collection"].AddGeometry(geom_part)
-                else:
-                    pass
-            else:
-                pass
+                        tile_y_top.append(TileY)
+                        tile_y_bottom.append(TileY + 3)
+                        slice_collection.append(geom_part)
 
             TileY = TileY + 3
 
-    return slice_infos
+    return HorizontalSliceInfo(
+        tile_y_top=tile_y_top,
+        tile_y_bottom=tile_y_bottom,
+        slice_collection=slice_collection,
+    )
 
 
-def get_vertical_slice(slice_infos: dict, zoom: int, width_threshold: int = 40):
+def get_vertical_slice(
+    slice_infos: HorizontalSliceInfo,
+    zoom: int,
+    width_threshold: int = 40,
+) -> dict[str, RawGroup]:
     """
     The function slices the horizontal stripes vertically.
     Each input stripe has a height of three tiles
@@ -175,13 +151,10 @@ def get_vertical_slice(slice_infos: dict, zoom: int, width_threshold: int = 40):
 
     Parameters
     ----------
-    slice_infos : dict
-        a dictionary containing a list of "tile_y_top" coordinates,
-        a list of "tile_y_bottom" coordinates
-        and a "slice_collection" containing a ogr geometry collection
-    zoom : int
+    slice_infos: HorizontalSliceInfo
+    zoom: int
         the tile map service zoom level
-    width_threshold :  int
+    width_threshold:  int
         the number of vertical tiles for a group,
         this defines how "long" groups are.
 
@@ -189,32 +162,30 @@ def get_vertical_slice(slice_infos: dict, zoom: int, width_threshold: int = 40):
     -------
     raw_groups : dict
         a dictionary containing "xMin", "xMax", "yMin", "yMax"
-        ~~and a "group_polygon" as ogr.Geometry(ogr.wkbPolygon)~~
+        and a "group_polygon" as ogr.Geometry(ogr.wkbPolygon)
         and the "group_id" as key
     """
 
     # create an empty dict for the group ids
     # and TileY_min, TileY_may, TileX_min, TileX_max
-    raw_groups = {}
+    raw_groups: dict[str, RawGroup] = {}
     group_id = 100
 
     # add these variables to test, if groups are created correctly
     TileY_top = -1
 
-    geomcol = slice_infos["slice_collection"]
+    geom_collections: GeometryCollection = slice_infos["slice_collection"]
 
     # process each polygon individually
-    for p in range(0, geomcol.GetGeometryCount()):
-        horizontal_slice = geomcol.GetGeometryRef(p)
-
+    for p, horizontal_slice in enumerate(geom_collections):
         # sometimes we get really really small polygones, skip these
-        if horizontal_slice.GetArea() < 0.0000001:
+        if horizontal_slice.area < 0.0000001:
             continue
 
-        extent = horizontal_slice.GetEnvelope()
+        extent = horizontal_slice.extent
         xmin = extent[0]
-        xmax = extent[1]
-        ymin = extent[2]
+        ymin = extent[1]
+        xmax = extent[2]
         ymax = extent[3]
 
         # get upper left left tile coordinates
@@ -272,14 +243,16 @@ def get_vertical_slice(slice_infos: dict, zoom: int, width_threshold: int = 40):
             # TODO line 254-262 does exactly the same as in line 345-352,
             #  maybe put it in a function create_geom_from_group_coords
             # Create Geometry
-            ring = ogr.Geometry(ogr.wkbLinearRing)
-            ring.AddPoint(lon_left, lat_top)
-            ring.AddPoint(lon_right, lat_top)
-            ring.AddPoint(lon_right, lat_bottom)
-            ring.AddPoint(lon_left, lat_bottom)
-            ring.AddPoint(lon_left, lat_top)
-            group_poly = ogr.Geometry(ogr.wkbPolygon)
-            group_poly.AddGeometry(ring)
+
+            group_poly = Polygon(
+                LinearRing(
+                    (lon_left, lat_top),
+                    (lon_right, lat_top),
+                    (lon_right, lat_bottom),
+                    (lon_left, lat_bottom),
+                    (lon_left, lat_top),
+                )
+            )
 
             # add info to groups_dict
             group_id += 1
@@ -289,7 +262,7 @@ def get_vertical_slice(slice_infos: dict, zoom: int, width_threshold: int = 40):
                 "xMax": TileX + step_size - 1,
                 "yMin": TileY_top,
                 "yMax": TileY_bottom - 1,
-                # "group_polygon": group_poly,  # XXX: Not used
+                "group_polygon": group_poly,  # XXX: Not used
             }
 
             TileX = TileX + step_size
@@ -298,7 +271,7 @@ def get_vertical_slice(slice_infos: dict, zoom: int, width_threshold: int = 40):
     return raw_groups
 
 
-def groups_intersect(group_a: dict, group_b: dict):
+def groups_intersect(group_a: RawGroup, group_b: RawGroup) -> bool:
     """Check if groups intersect."""
     x_max = int(group_a["xMax"])
     x_min = int(group_a["xMin"])
@@ -313,7 +286,7 @@ def groups_intersect(group_a: dict, group_b: dict):
     return (x_min <= x_maxB) and (x_minB <= x_max) and (y_min <= y_maxB) and (y_minB <= y_max)
 
 
-def merge_groups(group_a: dict, group_b: dict, zoom: int):
+def merge_groups(group_a: RawGroup, group_b: RawGroup, zoom: int) -> RawGroup:
     """Merge two overlapping groups into a single group.
 
     This can result in groups that are "longer" than
@@ -350,27 +323,31 @@ def merge_groups(group_a: dict, group_b: dict, zoom: int):
     lon_right, lat_bottom = tile_functions.pixel_coords_zoom_to_lat_lon(PixelX, PixelY, zoom)
 
     # Create Geometry
-    ring = ogr.Geometry(ogr.wkbLinearRing)
-    ring.AddPoint(lon_left, lat_top)
-    ring.AddPoint(lon_right, lat_top)
-    ring.AddPoint(lon_right, lat_bottom)
-    ring.AddPoint(lon_left, lat_bottom)
-    ring.AddPoint(lon_left, lat_top)
-    poly = ogr.Geometry(ogr.wkbPolygon)
-    poly.AddGeometry(ring)
+    poly = Polygon(
+        LinearRing(
+            (lon_left, lat_top),
+            (lon_right, lat_top),
+            (lon_right, lat_bottom),
+            (lon_left, lat_bottom),
+            (lon_left, lat_top),
+        )
+    )
 
-    new_group = {
+    new_group: RawGroup = {
         "xMin": new_x_min,
         "xMax": new_x_max,
         "yMin": y_min,
         "yMax": y_max,
-        # "group_polygon": poly,  # XXX: Not used
+        "group_polygon": poly,  # XXX: Not used
     }
 
     return new_group
 
 
-def adjust_overlapping_groups(groups: dict, zoom: int):
+def adjust_overlapping_groups(
+    groups: dict[str, RawGroup],
+    zoom: int,
+) -> tuple[dict[str, RawGroup], int]:
     """Loop through groups dict and merge overlapping groups."""
 
     groups_without_overlap = {}
@@ -403,7 +380,7 @@ def adjust_overlapping_groups(groups: dict, zoom: int):
     return groups_without_overlap, overlaps_total
 
 
-def extent_to_groups(infile, zoom: int, groupSize):
+def extent_to_groups(infile: str, zoom: int, groupSize: int) -> dict[str, RawGroup]:
     """
     The function to polygon geometries of a given input file
     into horizontal slices and then vertical slices.
@@ -420,13 +397,13 @@ def extent_to_groups(infile, zoom: int, groupSize):
     -------
     raw_groups_dict : dict
         a dictionary containing "xMin", "xMax", "yMin", "yMax"
-        ~~and a "group_polygon" as ogr.Geometry(ogr.wkbPolygon)~~
+        and a "group_polygon" as ogr.Geometry(ogr.wkbPolygon)
         and the "group_id" as key
     """
-    extent, geomcol = get_geometry_from_file(infile)
+    extent, polygons = get_geometry_from_file(infile)
 
     # get horizontal slices --> rows
-    horizontal_slice_infos = get_horizontal_slice(extent, geomcol, zoom)
+    horizontal_slice_infos = get_horizontal_slice(extent, polygons, zoom)
 
     # then get vertical slices --> columns
     raw_groups_dict = get_vertical_slice(horizontal_slice_infos, zoom, groupSize)

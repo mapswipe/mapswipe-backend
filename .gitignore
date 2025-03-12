@@ -1,6 +1,7 @@
 # Python-generated files
 wheels/
 .ruff_cache
+tmp/
 
 # Virtual environments
 .venv

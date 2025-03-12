@@ -8,18 +8,19 @@ from django_choices_field import IntegerChoicesField
 
 from apps.common.models import UserResource
 from utils.fields import PercentageField
+from utils.geo.tile_server.tile_server import TileServerName
 
 if typing.TYPE_CHECKING:
     from apps.tutorial.models import Tutorial
 
 
 class ProjectType(models.IntegerChoices):
-    BUILD_AREA = 1, "Find"
+    BUILD_AREA = 1, "Find"  # Classification
     FOOTPRINT = 2, "Validate"
     CHANGE_DETECTION = 3, "Compare"
     COMPLETENESS = 4, "Completeness"
-    MEDIA = 5, "Media"
-    DIGITIZATION = 6, "Digitization"
+    # MEDIA = 5, "Media"
+    # DIGITIZATION = 6, "Digitization"
     STREET = 7, "Street"
     # TODO: Confirm if we have more/less
 
@@ -34,6 +35,10 @@ class ProjectStatus(models.IntegerChoices):
 
 
 class UploadHelper:
+    @staticmethod
+    def project_geometry(instance: "Project", filename):
+        return "project/{0}/geometry/{1}".format(instance.pk, filename)
+
     @staticmethod
     def project_image(instance: "Project", filename):
         return "project/{0}/image/{1}".format(instance.pk, filename)
@@ -70,29 +75,53 @@ class Project(UserResource):
         related_name="+",
         help_text=gettext_lazy("Which group, institution or community is requesting this project?"),
     )
-    project_type = IntegerChoicesField(choices_enum=ProjectType)
+    project_type: ProjectType = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=ProjectType,
+    )
     image = models.FileField(upload_to=UploadHelper.project_image)
+
+    tile_server_name: TileServerName = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=TileServerName,
+    )
+    tile_server_override = models.JSONField(null=True, blank=True)  # NOTE: Mostly for custom tile_server
 
     # TODO: Currently this field collects any data not stored by another fields, pulled from firebase.
     # Also, used in SQL queries
     # FIXME: Refactor this
     project_type_specifics = models.JSONField()
 
+    zoom_level = models.PositiveSmallIntegerField()
+    # TODO:t raise CustomError(f"zoom level is too large (max: 22): {zoomLevel}.")
+    group_size = models.PositiveSmallIntegerField()
     is_featured = models.BooleanField(default=False)
     look_for = models.CharField(max_length=255, help_text=gettext_lazy("eg: Buildings and Roads"))
     description = models.TextField(null=True, blank=True)  # NOTE: project_details before
-    geometry = gid_models.GeometryField(
-        null=True,
-        blank=True,
-        default=None,
-    )  # TODO: < 4 are null in production, change to not nullable?
+    geometry_file = models.FileField(upload_to=UploadHelper.project_geometry)
 
     progress = PercentageField()
     required_results = models.IntegerField()
     result_count = models.IntegerField()  # NOTE: All project have 0 in production database
-    status = IntegerChoicesField(choices_enum=ProjectStatus)  # TODO: default?
+    status: ProjectStatus = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=ProjectStatus,
+    )  # TODO: default?
 
     verification_number = models.PositiveSmallIntegerField()  # TODO: More detail required?
+
+    def clean(self):
+        ...
+        # if not self.teamId:
+        #     self.status = "inactive"  # this is a public project
+        # else:
+        #     self.status = (
+        #         "private_inactive"  # private project visible only for team members
+        #     )
+        #
+        # if max_tasks_per_user is not None:
+        #     self.maxTasksPerUser = int(max_tasks_per_user)
+
+        # for group in self.groups.values():
+        #     group.requiredCount = self.verificationNumber
+        #     self.requiredResults += group.requiredCount * group.numberOfTasks
 
 
 class ProjectTaskGroup(models.Model):
