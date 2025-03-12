@@ -34,15 +34,15 @@ class ContributorUserGroupMembership(models.Model):
     is_active = models.BooleanField()
 
 
-class ContributorUserGroupMembershipLogAction(models.IntegerChoices):
+class ContributorUserGroupMembershipLogActionEnum(models.IntegerChoices):
     JOIN = 1, "Join"
     LEAVE = 2, "Leave"
 
 
 class ContributorUserGroupMembershipLog(models.Model):
-    ACTION = ContributorUserGroupMembershipLogAction
+    ACTION = ContributorUserGroupMembershipLogActionEnum
 
     membership = models.ForeignKey(ContributorUserGroupMembership, on_delete=models.CASCADE)
     # Sync with firebase
-    action = IntegerChoicesField(choices_enum=ContributorUserGroupMembershipLogAction)
+    action = IntegerChoicesField(choices_enum=ContributorUserGroupMembershipLogActionEnum)
     date = models.DateTimeField()

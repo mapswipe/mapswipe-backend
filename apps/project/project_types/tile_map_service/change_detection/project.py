@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectType
+from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
 from main.bulk_managers import BulkCreateManager
 from utils.geo import tile_functions, tile_grouping
 from utils.geo.tile_server.models import TileServerConfigAlias
@@ -21,7 +21,7 @@ class ChangeDetectionProject(TileMapServiceBaseProject):
 
     def __init__(self, project: Project):
         super().__init__(project)
-        assert project.project_type == ProjectType.CHANGE_DETECTION, f"{type(self)} is defined for CHANGE_DETECTION"
+        assert project.project_type == ProjectTypeEnum.CHANGE_DETECTION, f"{type(self)} is defined for CHANGE_DETECTION"
         self.tile_server_b = get_tile_server(self.project_type_specifics.tile_server_b_property)
 
     def _create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:

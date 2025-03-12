@@ -59,7 +59,7 @@ class Migration(migrations.Migration):
             name='ContributorUserGroupMembershipLog',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', django_choices_field.fields.IntegerChoicesField(choices=[(1, 'Join'), (2, 'Leave')], choices_enum=apps.contributor.models.ContributorUserGroupMembershipLogAction)),
+                ('action', django_choices_field.fields.IntegerChoicesField(choices=[(1, 'Join'), (2, 'Leave')], choices_enum=apps.contributor.models.ContributorUserGroupMembershipLogActionEnum)),
                 ('date', models.DateTimeField()),
                 ('membership', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contributor.contributorusergroupmembership')),
             ],

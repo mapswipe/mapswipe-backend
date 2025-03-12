@@ -8,24 +8,24 @@ from django_choices_field import IntegerChoicesField
 
 from apps.common.models import UserResource
 from utils.fields import PercentageField
-from utils.geo.tile_server.tile_server import TileServerName
+from utils.geo.tile_server.tile_server import TileServerNameEnum
 
 if typing.TYPE_CHECKING:
     from apps.tutorial.models import Tutorial
 
 
-class ProjectType(models.IntegerChoices):
+class ProjectTypeEnum(models.IntegerChoices):
     BUILD_AREA = 1, "Find"  # Classification
     FOOTPRINT = 2, "Validate"
     CHANGE_DETECTION = 3, "Compare"
     COMPLETENESS = 4, "Completeness"
     # MEDIA = 5, "Media"
     # DIGITIZATION = 6, "Digitization"
-    STREET = 7, "Street"
+    # STREET = 7, "Street"
     # TODO: Confirm if we have more/less
 
 
-class ProjectStatus(models.IntegerChoices):
+class ProjectStatusEnum(models.IntegerChoices):
     INACTIVE = 1, "Inactive"
     ACTIVE = 2, "Active"
     PRIVATE_FINISHED = 3, "Private finished"
@@ -55,8 +55,8 @@ class Organization(UserResource):
 
 
 class Project(UserResource):
-    Type = ProjectType
-    Status = ProjectStatus
+    Type = ProjectTypeEnum
+    Status = ProjectStatusEnum
 
     name = models.CharField(max_length=255)
     old_project_id = models.CharField(max_length=30, db_index=True, null=True)
@@ -75,13 +75,13 @@ class Project(UserResource):
         related_name="+",
         help_text=gettext_lazy("Which group, institution or community is requesting this project?"),
     )
-    project_type: ProjectType = IntegerChoicesField(  # type: ignore[reportAssignmentType]
-        choices_enum=ProjectType,
+    project_type: ProjectTypeEnum = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=ProjectTypeEnum,
     )
     image = models.FileField(upload_to=UploadHelper.project_image)
 
-    tile_server_name: TileServerName = IntegerChoicesField(  # type: ignore[reportAssignmentType]
-        choices_enum=TileServerName,
+    tile_server_name: TileServerNameEnum = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=TileServerNameEnum,
     )
     tile_server_override = models.JSONField(null=True, blank=True)  # NOTE: Mostly for custom tile_server
 
@@ -101,8 +101,8 @@ class Project(UserResource):
     progress = PercentageField()
     required_results = models.IntegerField()
     result_count = models.IntegerField()  # NOTE: All project have 0 in production database
-    status: ProjectStatus = IntegerChoicesField(  # type: ignore[reportAssignmentType]
-        choices_enum=ProjectStatus,
+    status: ProjectStatusEnum = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=ProjectStatusEnum,
     )  # TODO: default?
 
     verification_number = models.PositiveSmallIntegerField()  # TODO: More detail required?

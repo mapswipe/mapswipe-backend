@@ -11,12 +11,53 @@ When the condition fails, the following can be returned (following this priority
 directive @isAuthenticated repeatable on FIELD_DEFINITION
 
 type AppEnumCollection {
-  dummy: [AppEnumCollectiondummy!]!
+  DummyEnum: [AppEnumCollectionDummyEnum!]!
+  TileServerNameEnum: [AppEnumCollectionTileServerNameEnum!]!
+  ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
+  ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
+  TutorialInformationPageBlockTypeEnum: [AppEnumCollectionTutorialInformationPageBlockTypeEnum!]!
+  MappingSessionClientTypeEnum: [AppEnumCollectionMappingSessionClientTypeEnum!]!
+  ContributorUserGroupMembershipLogActionEnum: [AppEnumCollectionContributorUserGroupMembershipLogActionEnum!]!
 }
 
-type AppEnumCollectiondummy {
+type AppEnumCollectionContributorUserGroupMembershipLogActionEnum {
+  key: ContributorUserGroupMembershipLogActionEnum!
+  label: String!
+}
+
+type AppEnumCollectionDummyEnum {
   key: DummyEnum!
   label: String!
+}
+
+type AppEnumCollectionMappingSessionClientTypeEnum {
+  key: MappingSessionClientTypeEnum!
+  label: String!
+}
+
+type AppEnumCollectionProjectStatusEnum {
+  key: ProjectStatusEnum!
+  label: String!
+}
+
+type AppEnumCollectionProjectTypeEnum {
+  key: ProjectTypeEnum!
+  label: String!
+}
+
+type AppEnumCollectionTileServerNameEnum {
+  key: TileServerNameEnum!
+  label: String!
+}
+
+type AppEnumCollectionTutorialInformationPageBlockTypeEnum {
+  key: TutorialInformationPageBlockTypeEnum!
+  label: String!
+}
+
+enum ContributorUserGroupMembershipLogActionEnum {
+  JOIN
+  LEAVE
 }
 
 enum DummyEnum {
@@ -35,6 +76,13 @@ input IDBaseFilterLookup {
   Exact match of items in a given list. Filter will be skipped on `null` value
   """
   inList: [ID!]
+}
+
+enum MappingSessionClientTypeEnum {
+  UNKNOWN
+  MOBILE_ANDROID
+  MOBILE_IOS
+  WEB
 }
 
 type Mutation {
@@ -59,6 +107,21 @@ enum Ordering {
   DESC
   DESC_NULLS_FIRST
   DESC_NULLS_LAST
+}
+
+enum ProjectStatusEnum {
+  INACTIVE
+  ACTIVE
+  PRIVATE_FINISHED
+  ARCHIVED
+  FINISHED
+}
+
+enum ProjectTypeEnum {
+  BUILD_AREA
+  FOOTPRINT
+  CHANGE_DETECTION
+  COMPLETENESS
 }
 
 type Query {
@@ -113,6 +176,21 @@ input StrFilterLookup {
   Case-insensitive regular expression match. Filter will be skipped on `null` value
   """
   iRegex: String
+}
+
+enum TileServerNameEnum {
+  CUSTOM
+  BING
+  MAPBOX
+  MAXAR_STANDARD
+  MAXAR_PREMIUM
+  ESRI
+  ESRI_BETA
+}
+
+enum TutorialInformationPageBlockTypeEnum {
+  TEXT
+  IMAGE
 }
 
 """

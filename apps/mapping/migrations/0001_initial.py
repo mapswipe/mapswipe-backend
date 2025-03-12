@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('app_version', models.CharField(max_length=10)),
-                ('client_type', django_choices_field.fields.IntegerChoicesField(choices=[(0, 'Unknown'), (1, 'Mobile (Android)'), (2, 'Mobile (IOS)'), (3, 'Web')], choices_enum=apps.mapping.models.MappingSessionClientType)),
+                ('client_type', django_choices_field.fields.IntegerChoicesField(choices=[(0, 'Unknown'), (1, 'Mobile (Android)'), (2, 'Mobile (IOS)'), (3, 'Web')], choices_enum=apps.mapping.models.MappingSessionClientTypeEnum)),
                 ('items_count', models.IntegerField()),
                 ('start_time', models.DateTimeField(blank=True, null=True)),
                 ('end_time', models.DateTimeField(blank=True, null=True)),

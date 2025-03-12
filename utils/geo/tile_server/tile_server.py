@@ -4,7 +4,7 @@ from abc import ABC
 
 from utils.geo.tile_functions import tile_coords_and_zoom_to_quadKey
 
-from .config import Config, TileServerName
+from .config import Config, TileServerNameEnum
 from .models import CommonTileServerConfig, CustomTileServerConfig, TileServerConfigAlias
 
 
@@ -14,13 +14,13 @@ class BaseTileServerException(Exception): ...
 CUSTOM_TILE_SERVER = "custom"
 
 
-def get_api_key(name: TileServerName) -> str | None:
+def get_api_key(name: TileServerNameEnum) -> str | None:
     if name == CUSTOM_TILE_SERVER:
         return None
     return Config.IMAGE_API_KEYS[name]
 
 
-def get_tile_server_url(name: TileServerName) -> str | None:
+def get_tile_server_url(name: TileServerNameEnum) -> str | None:
     if name == CUSTOM_TILE_SERVER:
         return None
     return Config.IMAGE_URLS[name]
@@ -29,7 +29,7 @@ def get_tile_server_url(name: TileServerName) -> str | None:
 class BaseTileServer(ABC):
     """Create a tile server class."""
 
-    name: TileServerName
+    name: TileServerNameEnum
     url: str
     api_key: str
     credits: str | None
@@ -58,7 +58,7 @@ class BaseTileServer(ABC):
 
 
 class CustomTileServer(BaseTileServer):
-    name = TileServerName.CUSTOM
+    name = TileServerNameEnum.CUSTOM
 
     def __init__(
         self,
@@ -96,9 +96,9 @@ class CommonTileServer(BaseTileServer):
 
 
 class BingTileServer(CommonTileServer):
-    name = TileServerName.BING
-    url = Config.IMAGE_URLS[TileServerName.BING]
-    api_key = Config.IMAGE_API_KEYS[TileServerName.BING]
+    name = TileServerNameEnum.BING
+    url = Config.IMAGE_URLS[TileServerNameEnum.BING]
+    api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.BING]
 
     @classmethod
     def generate_url(cls, tile_x: int, tile_y: int, tile_z: int) -> str:
@@ -110,15 +110,15 @@ class BingTileServer(CommonTileServer):
 
 
 class MapboxTileServer(CommonTileServer):
-    name = TileServerName.MAPBOX
-    url = Config.IMAGE_URLS[TileServerName.MAPBOX]
-    api_key = Config.IMAGE_API_KEYS[TileServerName.MAPBOX]
+    name = TileServerNameEnum.MAPBOX
+    url = Config.IMAGE_URLS[TileServerNameEnum.MAPBOX]
+    api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.MAPBOX]
 
 
 class MaxarStandardTileServer(CommonTileServer):
-    name = TileServerName.MAXAR_STANDARD
-    url = Config.IMAGE_URLS[TileServerName.MAXAR_STANDARD]
-    api_key = Config.IMAGE_API_KEYS[TileServerName.MAXAR_STANDARD]
+    name = TileServerNameEnum.MAXAR_STANDARD
+    url = Config.IMAGE_URLS[TileServerNameEnum.MAXAR_STANDARD]
+    api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.MAXAR_STANDARD]
 
     @classmethod
     def generate_url(cls, tile_x: int, tile_y: int, tile_z: int) -> str:
@@ -136,30 +136,30 @@ class MaxarStandardTileServer(CommonTileServer):
 
 
 class MaxarPremiumTileServer(MaxarStandardTileServer):
-    name = TileServerName.MAXAR_PREMIUM
-    url = Config.IMAGE_URLS[TileServerName.MAXAR_PREMIUM]
-    api_key = Config.IMAGE_API_KEYS[TileServerName.MAXAR_PREMIUM]
+    name = TileServerNameEnum.MAXAR_PREMIUM
+    url = Config.IMAGE_URLS[TileServerNameEnum.MAXAR_PREMIUM]
+    api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.MAXAR_PREMIUM]
 
 
 class EsriTileServer(CommonTileServer):
-    name = TileServerName.ESRI
-    url = Config.IMAGE_URLS[TileServerName.ESRI]
-    api_key = Config.IMAGE_API_KEYS[TileServerName.ESRI]
+    name = TileServerNameEnum.ESRI
+    url = Config.IMAGE_URLS[TileServerNameEnum.ESRI]
+    api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.ESRI]
 
 
 class EsriBetaTileServer(EsriTileServer):
-    name = TileServerName.ESRI_BETA
-    url = Config.IMAGE_URLS[TileServerName.ESRI_BETA]
-    api_key = Config.IMAGE_API_KEYS[TileServerName.ESRI_BETA]
+    name = TileServerNameEnum.ESRI_BETA
+    url = Config.IMAGE_URLS[TileServerNameEnum.ESRI_BETA]
+    api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.ESRI_BETA]
 
 
 AvailableTileServerNameTypeAlias: typing.TypeAlias = typing.Literal[
-    TileServerName.BING,
-    TileServerName.MAPBOX,
-    TileServerName.MAXAR_STANDARD,
-    TileServerName.MAXAR_PREMIUM,
-    TileServerName.ESRI,
-    TileServerName.ESRI_BETA,
+    TileServerNameEnum.BING,
+    TileServerNameEnum.MAPBOX,
+    TileServerNameEnum.MAXAR_STANDARD,
+    TileServerNameEnum.MAXAR_PREMIUM,
+    TileServerNameEnum.ESRI,
+    TileServerNameEnum.ESRI_BETA,
 ]
 
 AvailableTileServerTypeAlias: typing.TypeAlias = (
@@ -173,20 +173,20 @@ AvailableTileServerTypeAlias: typing.TypeAlias = (
 )
 
 
-def get_tile_server_type(server_name: TileServerName) -> type[AvailableTileServerTypeAlias | CustomTileServer]:
-    if server_name == TileServerName.BING:
+def get_tile_server_type(server_name: TileServerNameEnum) -> type[AvailableTileServerTypeAlias | CustomTileServer]:
+    if server_name == TileServerNameEnum.BING:
         return BingTileServer
-    elif server_name == TileServerName.MAPBOX:
+    elif server_name == TileServerNameEnum.MAPBOX:
         return MapboxTileServer
-    elif server_name == TileServerName.MAXAR_STANDARD:
+    elif server_name == TileServerNameEnum.MAXAR_STANDARD:
         return MaxarStandardTileServer
-    elif server_name == TileServerName.MAXAR_PREMIUM:
+    elif server_name == TileServerNameEnum.MAXAR_PREMIUM:
         return MaxarPremiumTileServer
-    elif server_name == TileServerName.ESRI:
+    elif server_name == TileServerNameEnum.ESRI:
         return EsriTileServer
-    elif server_name == TileServerName.ESRI_BETA:
+    elif server_name == TileServerNameEnum.ESRI_BETA:
         return EsriBetaTileServer
-    elif server_name == TileServerName.CUSTOM:
+    elif server_name == TileServerNameEnum.CUSTOM:
         return CustomTileServer
 
 

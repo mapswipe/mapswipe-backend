@@ -5,14 +5,14 @@ from apps.contributor.models import ContributorUser
 from apps.project.models import ProjectTask, ProjectTaskGroup
 
 
-class MappingSessionClientType(models.IntegerChoices):
+class MappingSessionClientTypeEnum(models.IntegerChoices):
     UNKNOWN = 0, "Unknown"
     MOBILE_ANDROID = 1, "Mobile (Android)"
     MOBILE_IOS = 2, "Mobile (IOS)"
     WEB = 3, "Web"
 
     @classmethod
-    def get_client_type(cls, value: str) -> "MappingSessionClientType":
+    def get_client_type(cls, value: str) -> "MappingSessionClientTypeEnum":
         return {
             "mobile-android": cls.MOBILE_ANDROID,
             "mobile-ios": cls.MOBILE_IOS,
@@ -25,7 +25,7 @@ class MappingSession(models.Model):
     contributor_user = models.ForeignKey(ContributorUser, on_delete=models.PROTECT)
 
     app_version = models.CharField(max_length=10)
-    client_type = IntegerChoicesField(choices_enum=MappingSessionClientType)
+    client_type = IntegerChoicesField(choices_enum=MappingSessionClientTypeEnum)
     items_count = models.IntegerField()  # TODO: Rename or just use task_group.number_of_tasks?
     start_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null
     end_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null

@@ -47,7 +47,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('block_number', models.PositiveSmallIntegerField()),
-                ('block_type', django_choices_field.fields.IntegerChoicesField(choices=[(1, 'Text'), (2, 'Image')], choices_enum=apps.tutorial.models.TutorialInformationPageBlockType)),
+                ('block_type', django_choices_field.fields.IntegerChoicesField(choices=[(1, 'Text'), (2, 'Image')], choices_enum=apps.tutorial.models.TutorialInformationPageBlockTypeEnum)),
                 ('text', models.TextField(blank=True, null=True)),
                 ('image', models.ImageField(blank=True, null=True, upload_to=apps.tutorial.models.UploadHelper.information_page_block_image)),
                 ('page', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='tutorial.tutorialinformationpage')),

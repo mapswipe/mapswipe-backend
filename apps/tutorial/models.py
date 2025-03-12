@@ -41,13 +41,13 @@ class TutorialInformationPage(models.Model):
     tutorial_id: int
 
 
-class TutorialInformationPageBlockType(models.IntegerChoices):
+class TutorialInformationPageBlockTypeEnum(models.IntegerChoices):
     TEXT = 1, "Text"
     IMAGE = 2, "Image"
 
 
 class TutorialInformationPageBlock(models.Model):
-    Type = TutorialInformationPageBlockType
+    Type = TutorialInformationPageBlockTypeEnum
 
     page: TutorialInformationPage = models.ForeignKey(  # type: ignore[reportAssignmentType]
         TutorialInformationPage,
@@ -56,7 +56,7 @@ class TutorialInformationPageBlock(models.Model):
     )
 
     block_number = models.PositiveSmallIntegerField()
-    block_type = IntegerChoicesField(choices_enum=TutorialInformationPageBlockType)
+    block_type = IntegerChoicesField(choices_enum=TutorialInformationPageBlockTypeEnum)
     text = models.TextField(null=True, blank=True)
     image = models.ImageField(upload_to=UploadHelper.information_page_block_image, null=True, blank=True)
 
@@ -64,7 +64,7 @@ class TutorialInformationPageBlock(models.Model):
     page_id: int
 
     def clean(self):
-        if self.block_type == TutorialInformationPageBlockType.TEXT and (self.text is None or self.text == ""):
+        if self.block_type == TutorialInformationPageBlockTypeEnum.TEXT and (self.text is None or self.text == ""):
             raise ValidationError(gettext("Text should be provided for text block"))
-        elif self.block_type == TutorialInformationPageBlockType.IMAGE and self.image.name is None:
+        elif self.block_type == TutorialInformationPageBlockTypeEnum.IMAGE and self.image.name is None:
             raise ValidationError(gettext("Image should be provided for image block"))

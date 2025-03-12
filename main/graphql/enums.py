@@ -3,7 +3,11 @@ from enum import Enum
 
 import strawberry
 
-# from apps.example.enums import enum_map as example_enum_map
+from apps.contributor import models as contributor_enums
+from apps.mapping import models as mapping_enums
+from apps.project import models as project_enums
+from apps.tutorial import models as tutorial_enums
+from utils.geo.tile_server.config import TileServerNameEnum
 
 
 @strawberry.enum
@@ -12,10 +16,15 @@ class DummyEnum(Enum):
     VALUE_2 = "Value 2"
 
 
-ENUM_TO_STRAWBERRY_ENUM_MAP: dict[str, type] = {
-    "dummy": DummyEnum,
-    # **example_enum_map,
-}
+ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
+    DummyEnum,
+    TileServerNameEnum,
+    project_enums.ProjectTypeEnum,
+    project_enums.ProjectStatusEnum,
+    tutorial_enums.TutorialInformationPageBlockTypeEnum,
+    mapping_enums.MappingSessionClientTypeEnum,
+    contributor_enums.ContributorUserGroupMembershipLogActionEnum,
+]
 
 
 class AppEnumData:
@@ -36,8 +45,8 @@ def generate_app_enum_collection_data(name):
         name,
         (),
         {
-            field_name: [AppEnumData(e) for e in enum]  # type: ignore[reportGeneralTypeIssues]
-            for field_name, enum in ENUM_TO_STRAWBERRY_ENUM_MAP.items()
+            enum.__name__: [AppEnumData(e) for e in enum]  # type: ignore[reportGeneralTypeIssues]
+            for enum in ENUM_TO_STRAWBERRY_ENUMS
         },
     )
 
@@ -76,10 +85,10 @@ def _enum_type(name, Enum):
 def generate_type_for_enums():
     enum_fields = [
         (
-            enum_field_name,
-            *_enum_type(enum_field_name, enum),
+            enum.__name__,
+            *_enum_type(enum.__name__, enum),
         )
-        for enum_field_name, enum in ENUM_TO_STRAWBERRY_ENUM_MAP.items()
+        for enum in ENUM_TO_STRAWBERRY_ENUMS
     ]
     return strawberry.type(
         dataclasses.make_dataclass(
