@@ -10,7 +10,7 @@ from apps.project.models import Project
 class UploadHelper:
     @staticmethod
     def information_page_block_image(instance: "TutorialInformationPageBlock", filename):
-        return "tutorial/{0}/block-image/{1}".format(instance.page.tutorial_id, filename)
+        return f"tutorial/{instance.page.tutorial_id}/block-image/{filename}"
 
 
 class Tutorial(UserResource):

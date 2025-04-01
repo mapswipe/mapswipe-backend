@@ -16,5 +16,5 @@ CustomErrorType = strawberry.scalar(
 @strawberry.type
 class MutationResponseType(typing.Generic[ResultTypeVar]):
     ok: bool = True
-    errors: typing.Optional[CustomErrorType] = None
-    result: typing.Optional[ResultTypeVar] = None
+    errors: CustomErrorType | None = None
+    result: ResultTypeVar | None = None

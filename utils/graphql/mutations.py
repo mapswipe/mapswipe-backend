@@ -1,5 +1,4 @@
 import logging
-import typing
 
 from asgiref.sync import sync_to_async
 from django.db import models, transaction
@@ -14,7 +13,7 @@ from .types import CustomErrorType, MutationResponseType
 logger = logging.getLogger(__name__)
 
 
-def get_serializer_context(info: Info, extra_context: typing.Optional[dict]):
+def get_serializer_context(info: Info, extra_context: dict | None):
     return {
         "graphql_info": info,
         "request": info.context.request,
@@ -28,7 +27,7 @@ class ModelMutation:
 
     def __init__(
         self,
-        serializer_class: typing.Type[serializers.Serializer],
+        serializer_class: type[serializers.Serializer],
     ):
         self.serializer_class = serializer_class
 
@@ -38,7 +37,7 @@ class ModelMutation:
         serializer_class,
         data,
         info,
-        extra_context: typing.Optional[dict],
+        extra_context: dict | None,
         **kwargs,
     ) -> tuple[CustomErrorType | None, models.Model | None]:
         serializer = serializer_class(
@@ -60,7 +59,7 @@ class ModelMutation:
         self,
         data,
         info: Info,
-        extra_context: typing.Optional[dict] = None,
+        extra_context: dict | None = None,
     ) -> MutationResponseType:
         errors, saved_instance = await self.handle_mutation(
             self.serializer_class,
@@ -77,7 +76,7 @@ class ModelMutation:
         data,
         info: Info,
         instance: models.Model,
-        extra_context: typing.Optional[dict] = None,
+        extra_context: dict | None = None,
     ) -> MutationResponseType:
         errors, saved_instance = await self.handle_mutation(
             self.serializer_class,

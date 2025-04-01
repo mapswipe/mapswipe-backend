@@ -20,6 +20,7 @@ class Query:
         user = info.context.request.user
         if user.is_authenticated:
             return user  # type: ignore[reportGeneralTypeIssues]
+        return None
 
     # Private --------------------
     # --- Paginated

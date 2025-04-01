@@ -1,5 +1,4 @@
 import re
-import typing
 
 import strawberry
 
@@ -27,7 +26,7 @@ ARRAY_NON_MEMBER_ERRORS = "nonMemberErrors"
 class ArrayNestedErrorType:
     client_id: str
     messages: str | None
-    object_errors: typing.Optional[list[typing.Optional[CustomErrorType]]]
+    object_errors: list[CustomErrorType | None] | None
 
     def keys(self):
         return ["client_id", "messages", "object_errors"]
@@ -43,9 +42,10 @@ class ArrayNestedErrorType:
 class _CustomErrorType:
     field: str
     client_id: str | None = None
-    messages: typing.Optional[str]
-    object_errors: typing.Optional[list[typing.Optional[CustomErrorType]]]
-    array_errors: typing.Optional[list[typing.Optional[ArrayNestedErrorType]]]
+    messages: str | None
+    object_errors: list[CustomErrorType | None] | None
+    array_errors: list[ArrayNestedErrorType | None] | None
+    pydantic_errors: list[CustomErrorType] | None = None
 
     DEFAULT_ERROR_MESSAGE = "Something unexpected has occurred. Please contact an admin to fix this issue."
 
@@ -58,8 +58,8 @@ class _CustomErrorType:
                     messages=message,
                     object_errors=None,
                     array_errors=None,
-                )
-            ]
+                ),
+            ],
         )
 
     def keys(self):
@@ -85,7 +85,7 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
                     object_errors=value,  # type: ignore[reportGeneralTypeIssues]
                     array_errors=None,
                     messages=None,
-                )
+                ),
             )
         elif isinstance(value, list):
             if isinstance(value[0], str):
@@ -100,11 +100,11 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
                                     client_id=ARRAY_NON_MEMBER_ERRORS,
                                     messages="".join(str(msg) for msg in value),
                                     object_errors=None,
-                                )
+                                ),
                             ],
                             messages=None,
                             object_errors=None,
-                        )
+                        ),
                     )
                 else:
                     error_types.append(
@@ -114,7 +114,7 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
                             messages=", ".join(str(msg) for msg in value),
                             object_errors=None,
                             array_errors=None,
-                        )
+                        ),
                     )
             elif isinstance(value[0], dict):
                 array_errors = []
@@ -129,7 +129,7 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
                             client_id=array_client_id,
                             object_errors=serializer_error_to_error_types(array_item, initial_data[field][pos]),
                             messages=None,
-                        )
+                        ),
                     )
                 error_types.append(
                     _CustomErrorType(
@@ -138,7 +138,7 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
                         array_errors=array_errors,
                         object_errors=None,
                         messages=None,
-                    )
+                    ),
                 )
         else:
             # fallback
@@ -148,7 +148,7 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
                     messages=" ".join(str(msg) for msg in value),
                     array_errors=None,
                     object_errors=None,
-                )
+                ),
             )
     return error_types
 

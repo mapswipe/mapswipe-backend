@@ -1,6 +1,7 @@
 import logging
 import os
 from logging.config import dictConfig
+from typing import TYPE_CHECKING
 
 import celery
 from celery import signals
@@ -8,7 +9,8 @@ from celery.schedules import crontab
 from django.conf import settings
 from kombu import Queue
 
-from main.sentry import SentryConfig
+if TYPE_CHECKING:
+    from main.sentry import SentryConfig
 
 logger = logging.getLogger(__name__)
 

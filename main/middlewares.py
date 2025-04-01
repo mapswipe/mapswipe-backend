@@ -19,15 +19,13 @@ def sentry_middleware(get_response):
         async def amiddleware(request):
             if settings.SENTRY_ENABLED:
                 await SentryTransactionMiddlewareHelper.atrack_transaction(graphql_urls, request)
-            response = await get_response(request)
-            return response
+            return await get_response(request)
 
         return amiddleware
 
     def middleware(request):
         if settings.SENTRY_ENABLED:
             SentryTransactionMiddlewareHelper.track_transaction(graphql_urls, request)
-        response = get_response(request)
-        return response
+        return get_response(request)
 
     return middleware

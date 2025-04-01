@@ -121,5 +121,4 @@ def geometry_from_tile_coords(TileX, TileY, zoom):
     poly = ogr.Geometry(ogr.wkbPolygon)
     poly.AddGeometry(ring)
 
-    wkt_geom = poly.ExportToWkt()
-    return wkt_geom
+    return poly.ExportToWkt()

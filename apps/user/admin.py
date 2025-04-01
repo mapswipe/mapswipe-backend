@@ -19,7 +19,7 @@ class UserAdmin(DjangoUserAdmin):
                 "fields": (
                     "email",
                     "password",
-                )
+                ),
             },
         ),
         (
@@ -28,7 +28,7 @@ class UserAdmin(DjangoUserAdmin):
                 "fields": (
                     "first_name",
                     "last_name",
-                )
+                ),
             },
         ),
         (

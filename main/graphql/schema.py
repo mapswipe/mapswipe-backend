@@ -30,7 +30,7 @@ class Query(
     project_queries.Query,
 ):
     enums: AppEnumCollection = strawberry.field(  # type: ignore[reportGeneralTypeIssues]
-        resolver=lambda: AppEnumCollectionData()
+        resolver=lambda: AppEnumCollectionData(),
     )
 
 

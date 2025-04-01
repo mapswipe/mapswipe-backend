@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Dict
 
 from django.conf import settings
 from django.db import models
@@ -63,7 +62,7 @@ class TestCase(BaseTestCase):
         variables: dict | None = None,
         files: dict | None = None,
         **kwargs,
-    ) -> Dict:
+    ) -> dict:
         import json
 
         if files:
@@ -75,7 +74,7 @@ class TestCase(BaseTestCase):
                         {
                             "query": query,
                             "variables": variables,
-                        }
+                        },
                     ),
                     **files,
                     "map": json.dumps(kwargs.pop("map")),
@@ -126,14 +125,17 @@ class TestCase(BaseTestCase):
         """
         if _enum:
             return _enum.name
+        return None
 
     def gdatetime(self, _datetime):
         if _datetime:
             return _datetime.isoformat()
+        return None
 
     def gID(self, pk):
         if pk:
             return str(pk)
+        return None
 
     def g_pagination(self, *, offset, limit, total_count, results):
         return {

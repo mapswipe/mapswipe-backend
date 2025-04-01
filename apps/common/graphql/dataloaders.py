@@ -7,7 +7,7 @@ DjangoModel = typing.TypeVar("DjangoModel", bound=models.Model)
 
 # -- Helper
 def load_model_objects(
-    Model: typing.Type[DjangoModel],
+    Model: type[DjangoModel],
     keys: list[int],
 ) -> list[DjangoModel]:
     qs = Model.objects.filter(id__in=keys)

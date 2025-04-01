@@ -64,7 +64,7 @@ class ChangeDetectionProject(
                             # Additional
                             url_b=url_b,
                         ).model_dump(),
-                    )
+                    ),
                 )
                 tasks_count += 1
         bulk_mgr.done()

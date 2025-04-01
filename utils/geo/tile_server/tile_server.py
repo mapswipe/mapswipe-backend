@@ -1,5 +1,4 @@
 import math
-import typing
 from abc import ABC
 
 from utils.geo.tile_functions import tile_coords_and_zoom_to_quadKey
@@ -24,12 +23,12 @@ class BaseTileServer(ABC):
         """Check if imagery url contains xyz or quad key placeholders."""
         if all([substring in url for substring in ["{x}", "{y}", "{z}"]]):
             return True
-        elif all([substring in url for substring in ["{x}", "{-y}", "{z}"]]):
+        if all([substring in url for substring in ["{x}", "{-y}", "{z}"]]):
             return True
-        elif "{quad_key}" in url:
+        if "{quad_key}" in url:
             return True
         raise BaseTileServerException(
-            f"The imagery url {url} must contain {{x}}, {{y}} (or {{-y}}) and {{{{z}}}} or the {{quad_key}} placeholders."
+            f"The imagery url {url} must contain {{x}}, {{y}} (or {{-y}}) and {{{{z}}}} or the {{quad_key}} placeholders.",
         )
 
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
@@ -85,10 +84,7 @@ class BingTileServer(CommonTileServer):
 
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
         quadKey = tile_coords_and_zoom_to_quadKey(tile_x, tile_y, tile_z)
-        return "https://ecn.t0.tiles.virtualearth.net/tiles/a{}.jpeg?g=7505&mkt=en-US&token={}".format(
-            quadKey,
-            self.api_key,
-        )
+        return f"https://ecn.t0.tiles.virtualearth.net/tiles/a{quadKey}.jpeg?g=7505&mkt=en-US&token={self.api_key}"
 
 
 class MapboxTileServer(CommonTileServer):
@@ -134,7 +130,7 @@ class EsriBetaTileServer(EsriTileServer):
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.ESRI_BETA]
 
 
-AvailableTileServerTypeAlias: typing.TypeAlias = (
+type AvailableTileServerTypeAlias = (
     CustomTileServer
     | BingTileServer
     | MapboxTileServer

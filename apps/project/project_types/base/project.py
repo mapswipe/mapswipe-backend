@@ -33,9 +33,9 @@ class BaseProject(
         ProjectTaskPropertyTypeVar,
     ],
 ):
-    project_property_class: typing.Type[ProjectPropertyTypeVar]
-    project_task_group_property_class: typing.Type[ProjectTaskGroupPropertyTypeVar]
-    project_task_property_class: typing.Type[ProjectTaskPropertyTypeVar]
+    project_property_class: type[ProjectPropertyTypeVar]
+    project_task_group_property_class: type[ProjectTaskGroupPropertyTypeVar]
+    project_task_property_class: type[ProjectTaskPropertyTypeVar]
 
     raw_groups: dict[str, tile_grouping.RawGroup]
 
@@ -74,8 +74,8 @@ class BaseProject(
             number_of_tasks=models.Subquery(
                 ProjectTask.objects.filter(task_group_id=models.OuterRef("id"))
                 .annotate(total_tasks=models.Count("*"))
-                .values("total_tasks")[:1]
-            )
+                .values("total_tasks")[:1],
+            ),
         )
 
         # TODO: Calculate: total_area, time_spent_max_allowed

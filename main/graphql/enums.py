@@ -62,7 +62,7 @@ def generate_type_for_enum(name, Enum):
                 ("key", Enum),
                 ("label", str),
             ],
-        )
+        ),
     )
 
 
@@ -94,7 +94,7 @@ def generate_type_for_enums():
         dataclasses.make_dataclass(
             "AppEnumCollection",
             enum_fields,
-        )
+        ),
     )
 
 

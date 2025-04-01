@@ -100,5 +100,5 @@ class SentryTransactionMiddlewareHelper:
                         "id": user.pk,
                         "email": user.email,
                         "is_superuser": user.is_superuser,
-                    }
+                    },
                 )

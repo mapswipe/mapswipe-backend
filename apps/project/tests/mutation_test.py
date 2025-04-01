@@ -131,7 +131,7 @@ class TestProjectMutation(TestCase):
                 "field": "createProject",
                 "kind": "PERMISSION",
                 "message": "User is not authenticated.",
-            }
+            },
         ], content
 
         # With authentication -----
@@ -284,7 +284,7 @@ class TestProjectTypeMutation(TestCase):
                 "messages": "Configuration not provided for: Compare",
                 "object_errors": None,
                 "array_errors": None,
-            }
+            },
         ], content
 
         content = self._query(project_data, empty_geo_file=True)
@@ -296,7 +296,7 @@ class TestProjectTypeMutation(TestCase):
                 "messages": "The submitted file is empty.",
                 "object_errors": None,
                 "array_errors": None,
-            }
+            },
         ], content
 
         # GraphQL error (without projectTypeSpecifics)

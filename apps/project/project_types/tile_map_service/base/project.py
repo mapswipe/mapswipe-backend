@@ -78,7 +78,7 @@ class TileMapServiceBaseProject(
                             tile_y=tile_y,
                             url=url,
                         ).model_dump(),
-                    )
+                    ),
                 )
                 tasks_count += 1
         bulk_mgr.done()

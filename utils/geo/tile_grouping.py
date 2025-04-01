@@ -14,7 +14,7 @@ from . import tile_functions
 logger = logging.getLogger(__name__)
 
 # x_min, y_min, x_max, y_max
-GeoExtent: typing.TypeAlias = tuple[float, float, float, float]
+type GeoExtent = tuple[float, float, float, float]
 
 
 class HorizontalSliceInfo(typing.TypedDict):
@@ -113,7 +113,7 @@ def get_horizontal_slice(
                     (lon_right, lat_bottom),
                     (lon_left, lat_bottom),
                     (lon_left, lat_top),
-                )
+                ),
             )
 
             sliced_poly = poly.intersection(polygon_to_slice)
@@ -251,7 +251,7 @@ def get_vertical_slice(
                     (lon_right, lat_bottom),
                     (lon_left, lat_bottom),
                     (lon_left, lat_top),
-                )
+                ),
             )
 
             # add info to groups_dict
@@ -330,7 +330,7 @@ def merge_groups(group_a: RawGroup, group_b: RawGroup, zoom: int) -> RawGroup:
             (lon_right, lat_bottom),
             (lon_left, lat_bottom),
             (lon_left, lat_top),
-        )
+        ),
     )
 
     new_group: RawGroup = {
@@ -355,7 +355,7 @@ def adjust_overlapping_groups(
 
     for group_id in list(groups.keys()):
         # skip if groups has been removed already
-        if group_id not in groups.keys():
+        if group_id not in groups:
             continue
 
         overlap_count = 0

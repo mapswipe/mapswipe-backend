@@ -47,7 +47,7 @@ class TestProjectQuery(TestCase):
                     "pagination": {
                         "limit": 10,
                         "offset": 0,
-                    }
+                    },
                 },
             )
 

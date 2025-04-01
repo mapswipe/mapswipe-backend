@@ -117,7 +117,7 @@ IS_TESTING = (
                 "/usr/local/lib/python3.6/dist-packages/py/test.py",
             ]
             # Provided by pytest-xdist
-        ]
+        ],
     )
     or env("PYTEST_XDIST_WORKER") is not None
 )
@@ -196,7 +196,7 @@ DATABASES = {
         "PASSWORD": env("POSTGRES_PASSWORD"),
         "HOST": env("POSTGRES_HOST"),
         "PORT": env("POSTGRES_PORT"),
-    }
+    },
 }
 
 
@@ -311,7 +311,7 @@ CACHES = {
         "local-memory": {
             "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         },
-    }
+    },
 }
 
 # Celery

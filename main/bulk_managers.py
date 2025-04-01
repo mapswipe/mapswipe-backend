@@ -1,12 +1,11 @@
 import abc
-import typing
 from collections import defaultdict
 
 from django.apps import apps
 from django.db import models
 
 
-class BaseBulkManager(object):
+class BaseBulkManager:
     """
     This helper class keeps track of ORM objects to be action for multiple
     model classes, and automatically creates those objects with `bulk_create`
@@ -22,7 +21,7 @@ class BaseBulkManager(object):
         self._summary = defaultdict(int)
 
     @abc.abstractmethod
-    def _commit(self, model_class: typing.Type[models.Model]):
+    def _commit(self, model_class: type[models.Model]):
         raise NotImplementedError
 
     def _process_obj(self, obj: models.Model):
@@ -55,14 +54,14 @@ class BaseBulkManager(object):
 
 
 class BulkCreateManager(BaseBulkManager):
-    def _commit(self, model_class: typing.Type[models.Model]):
+    def _commit(self, model_class: type[models.Model]):
         model_key = model_class._meta.label
         model_class.objects.bulk_create(self._queues[model_key])
         self._queues[model_key] = []
 
 
 class BulkUpdateManager(BaseBulkManager):
-    def __init__(self, update_fields: typing.List[str], *args, **kwargs):
+    def __init__(self, update_fields: list[str], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.update_fields = update_fields
 
@@ -71,7 +70,7 @@ class BulkUpdateManager(BaseBulkManager):
             raise Exception(f"Only object with pk is allowed: {obj}")
         return obj
 
-    def _commit(self, model_class: typing.Type[models.Model]):
+    def _commit(self, model_class: type[models.Model]):
         model_key = model_class._meta.label
         model_class.objects.bulk_update(self._queues[model_key], self.update_fields)
         self._summary[model_key] += len(self._queues[model_key])

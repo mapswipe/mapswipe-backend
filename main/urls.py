@@ -39,7 +39,7 @@ if settings.DEBUG:
                 ),
                 name="graphiql",
             ),
-        ]
+        ],
     )
 
     # Static and media file URLs

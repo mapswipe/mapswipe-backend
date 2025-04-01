@@ -1,7 +1,10 @@
+from typing import TYPE_CHECKING
+
 import strawberry_django.mutations.resolvers
 from strawberry_django.mutations.resolvers import prepare_create_update
 
-from main.graphql.context import Info
+if TYPE_CHECKING:
+    from main.graphql.context import Info
 
 
 def custom_prepare_create_update(*args, **kwargs):

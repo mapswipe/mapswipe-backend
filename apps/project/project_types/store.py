@@ -5,25 +5,25 @@ from apps.project.models import ProjectTypeEnum
 from .tile_map_service.change_detection.project import ChangeDetectionProject
 from .tile_map_service.classification.project import ClassificationProject
 
-ProjectTypeHandlers: typing.TypeAlias = typing.Type[ChangeDetectionProject | ClassificationProject]
+type ProjectTypeHandlers = type[ChangeDetectionProject | ClassificationProject]
 
 
 @typing.overload
 def get_project_type_handler(
     project_type: typing.Literal[ProjectTypeEnum.BUILD_AREA],
-) -> typing.Type[ClassificationProject]: ...
+) -> type[ClassificationProject]: ...
 
 
 @typing.overload
 def get_project_type_handler(
     project_type: typing.Literal[ProjectTypeEnum.CHANGE_DETECTION],
-) -> typing.Type[ChangeDetectionProject]: ...
+) -> type[ChangeDetectionProject]: ...
 
 
 @typing.overload
 def get_project_type_handler(
     project_type: typing.Literal[ProjectTypeEnum.COMPLETENESS],
-) -> typing.Type[ChangeDetectionProject]: ...
+) -> type[ChangeDetectionProject]: ...
 
 
 def get_project_type_handler(project_type: ProjectTypeEnum) -> ProjectTypeHandlers:

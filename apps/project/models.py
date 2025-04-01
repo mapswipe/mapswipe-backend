@@ -42,11 +42,11 @@ class ProjectStatusEnum(models.IntegerChoices):
 class UploadHelper:
     @staticmethod
     def project_geometry(instance: "Project", filename):
-        return "project/{0}/geometry/{1}".format(instance.pk, filename)
+        return f"project/{instance.pk}/geometry/{filename}"
 
     @staticmethod
     def project_image(instance: "Project", filename):
-        return "project/{0}/image/{1}".format(instance.pk, filename)
+        return f"project/{instance.pk}/image/{filename}"
 
 
 class Organization(UserResource):

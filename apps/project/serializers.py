@@ -42,8 +42,8 @@ class ProjectSerializer(UserResourceSerializer):
         if project_type not in ENUM_FIELD_MAP:
             raise serializers.ValidationError(
                 {
-                    "project_type_specifics": gettext("Given project type is not handled: %s" % project_type_label),
-                }
+                    "project_type_specifics": gettext("Given project type is not handled: %s") % project_type_label,
+                },
             )
 
         field_name, pydantic_model = ENUM_FIELD_MAP[project_type]
@@ -52,7 +52,7 @@ class ProjectSerializer(UserResourceSerializer):
 
         if project_type_specifics is None:
             raise serializers.ValidationError(
-                {"project_type_specifics": gettext("Configuration not provided for: %s" % project_type_label)}
+                {"project_type_specifics": gettext("Configuration not provided for: %s") % project_type_label},
             )
 
         # XXX: Clean up nullable keys
