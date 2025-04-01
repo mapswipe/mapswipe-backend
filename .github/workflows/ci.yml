@@ -37,6 +37,10 @@ jobs:
         with:
           enable-cache: true
 
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: gdal-bin libgdal-dev
+
       - name: Setup uv python environment
         run: uv venv
 
