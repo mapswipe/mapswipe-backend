@@ -1,43 +1,65 @@
 import logging
 import os
 import tempfile
+import typing
 from abc import ABC
 
 from django.conf import settings
-from pydantic import Field
 
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup
 from main.bulk_managers import BulkCreateManager
 from utils.geo import tile_functions, tile_grouping
-from utils.geo.tile_server.models import TileServerConfigAlias
+from utils.geo.tile_server.models import TileServerConfig
 from utils.geo.tile_server.tile_server import AvailableTileServerTypeAlias, get_tile_server
 
-from ...base.project import BaseProject
+from ...base import project as base_project
 
 logger = logging.getLogger(__name__)
 
 
-class TileMapServiceBaseProject(BaseProject, ABC):
-    class ProjectProperty(BaseProject.ProjectProperty):
-        tile_server_property: TileServerConfigAlias = Field(discriminator="name")
+class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
+    tile_server_property: TileServerConfig
 
-    class ProjectTaskGroupProperty(BaseProject.ProjectTaskGroupProperty):
-        x_max: int
-        x_min: int
-        y_max: int
-        y_min: int
 
-    class ProjectTaskProperty(BaseProject.ProjectTaskProperty):
-        url: str
-        tile_x: int
-        tile_y: int
+class TileMapServiceProjectTaskGroupProperty(base_project.BaseProjectTaskGroupProperty):
+    x_max: int
+    x_min: int
+    y_max: int
+    y_min: int
 
+
+class TileMapServiceProjectTaskProperty(base_project.BaseProjectTaskProperty):
+    url: str
+    tile_x: int
+    tile_y: int
+
+
+TileMapServiceProjectPropertyTypeVar = typing.TypeVar(
+    "TileMapServiceProjectPropertyTypeVar",
+    bound=TileMapServiceProjectProperty,
+)
+TileMapServiceProjectTaskGroupPropertyTypeVar = typing.TypeVar(
+    "TileMapServiceProjectTaskGroupPropertyTypeVar",
+    bound=TileMapServiceProjectTaskGroupProperty,
+)
+TileMapServiceProjectTaskPropertyTypeVar = typing.TypeVar(
+    "TileMapServiceProjectTaskPropertyTypeVar",
+    bound=TileMapServiceProjectTaskProperty,
+)
+
+
+class TileMapServiceBaseProject(
+    base_project.BaseProject[
+        TileMapServiceProjectPropertyTypeVar,
+        TileMapServiceProjectTaskGroupPropertyTypeVar,
+        TileMapServiceProjectTaskPropertyTypeVar,
+    ],
+    ABC,
+):
     tile_server: AvailableTileServerTypeAlias
-    project_type_specifics: ProjectProperty
 
     def __init__(self, project: Project):
-        self.project = project
-        self.project_type_specifics = project.project_type_specifics
+        super().__init__(project)
         self.tile_server = get_tile_server(self.project_type_specifics.tile_server_property)
 
     def _create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:
@@ -52,11 +74,11 @@ class TileMapServiceBaseProject(BaseProject, ABC):
                     ProjectTask(
                         task_group_id=group.pk,
                         geometry=geometry,
-                        project_type_specifics=self.ProjectTaskProperty(
+                        project_type_specifics=self.project_task_property_class(
                             tile_x=tile_x,
                             tile_y=tile_y,
                             url=url,
-                        ),
+                        ).model_dump(),
                     )
                 )
                 tasks_count += 1
@@ -74,12 +96,12 @@ class TileMapServiceBaseProject(BaseProject, ABC):
                 progress=0,
                 finished_count=0,
                 required_count=0,
-                project_type_specifics=self.ProjectTaskGroupProperty(
+                project_type_specifics=self.project_task_group_property_class(
                     x_max=raw_group["xMax"],
                     x_min=raw_group["xMin"],
                     y_max=raw_group["yMax"],
                     y_min=raw_group["yMin"],
-                ),
+                ).model_dump(),
             )
             # Create new tasks for this group
             total_tasks = self._create_tasks(new_group, raw_group)

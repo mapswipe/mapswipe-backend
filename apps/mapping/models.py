@@ -30,6 +30,9 @@ class MappingSession(models.Model):
     start_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null
     end_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null
 
+    def __str__(self):
+        return str(self.pk)
+
 
 class MappingSessionResult(models.Model):
     session = models.ForeignKey(MappingSession, on_delete=models.PROTECT)
@@ -37,6 +40,9 @@ class MappingSessionResult(models.Model):
     result = models.PositiveSmallIntegerField()
 
     # TODO: Add constrant to make sure we have non-duplicate row with task_id, .session.user_id
+
+    def __str__(self):
+        return str(self.pk)
 
 
 # TODO: mapping_sessions_results_geometry

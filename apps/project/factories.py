@@ -30,6 +30,8 @@ class ProjectFactory(DjangoModelFactory):
     look_for = "Buildings and Roads"
     description = "Buildings and Roads"
 
+    zoom_level = 15
+    group_size = 15
     progress = 0
     required_results = 100
     result_count = 0

@@ -40,6 +40,9 @@ class TutorialInformationPage(models.Model):
     # Type hints
     tutorial_id: int
 
+    def __str__(self):
+        return self.title
+
 
 class TutorialInformationPageBlockTypeEnum(models.IntegerChoices):
     TEXT = 1, "Text"
@@ -62,6 +65,9 @@ class TutorialInformationPageBlock(models.Model):
 
     # Type hints
     page_id: int
+
+    def __str__(self):
+        return f"page_id={self.page_id}, block_number={self.block_number}, block_type={self.block_type}"
 
     def clean(self):
         if self.block_type == TutorialInformationPageBlockTypeEnum.TEXT and (self.text is None or self.text == ""):

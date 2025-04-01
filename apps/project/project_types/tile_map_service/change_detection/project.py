@@ -1,23 +1,35 @@
-from pydantic import Field
-
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
 from main.bulk_managers import BulkCreateManager
 from utils.geo import tile_functions, tile_grouping
-from utils.geo.tile_server.models import TileServerConfigAlias
+from utils.geo.tile_server.models import TileServerConfig
 from utils.geo.tile_server.tile_server import AvailableTileServerTypeAlias, get_tile_server
 
-from ..base.project import TileMapServiceBaseProject
+from ..base import project as base_project
 
 
-class ChangeDetectionProject(TileMapServiceBaseProject):
-    class ProjectProperty(TileMapServiceBaseProject.ProjectProperty):
-        tile_server_b_property: TileServerConfigAlias = Field(discriminator="name")
+class ChangeDetectionProjectProperty(base_project.TileMapServiceProjectProperty):
+    tile_server_b_property: TileServerConfig
 
-    class ProjectTaskProperty(TileMapServiceBaseProject.ProjectTaskProperty):
-        url_b: str
 
+class ChangeDetectionProjectTaskGroupProperty(base_project.TileMapServiceProjectTaskGroupProperty): ...
+
+
+class ChangeDetectionProjectTaskProperty(base_project.TileMapServiceProjectTaskProperty):
+    url_b: str
+
+
+class ChangeDetectionProject(
+    base_project.TileMapServiceBaseProject[
+        ChangeDetectionProjectProperty,
+        ChangeDetectionProjectTaskGroupProperty,
+        ChangeDetectionProjectTaskProperty,
+    ],
+):
     tile_server_b: AvailableTileServerTypeAlias
-    project_type_specifics: ProjectProperty  # type: ignore[reportIncompatibleVariableOverride]
+
+    project_property_class = ChangeDetectionProjectProperty
+    project_task_group_property_class = ChangeDetectionProjectTaskGroupProperty
+    project_task_property_class = ChangeDetectionProjectTaskProperty
 
     def __init__(self, project: Project):
         super().__init__(project)
@@ -46,13 +58,13 @@ class ChangeDetectionProject(TileMapServiceBaseProject):
                     ProjectTask(
                         task_group_id=group.pk,
                         geometry=geometry,
-                        project_type_specifics=self.ProjectTaskProperty(
+                        project_type_specifics=self.project_task_property_class(
                             tile_x=tile_x,
                             tile_y=tile_y,
                             url=url,
                             # Additional
                             url_b=url_b,
-                        ),
+                        ).model_dump(),
                     )
                 )
                 tasks_count += 1

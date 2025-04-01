@@ -20,6 +20,17 @@ for _logger in IGNORED_LOGGERS:
     ignore_logger(_logger)
 
 
+# TODO: Not tested
+def sentry_before_send(event, hint):
+    # Check if the exception is a GraphQLError
+    if "exception" in event and isinstance(event["exception"], dict):
+        for value in event["exception"].get("values", []):
+            if value.get("type") == "GraphQLError":
+                # Return None to prevent sending the GraphQLError to Sentry
+                return None
+    return event
+
+
 @dataclasses.dataclass
 class SentryConfig:
     dsn: str
@@ -50,6 +61,7 @@ class SentryConfig:
             send_default_pii=self.send_default_pii,
             traces_sample_rate=self.traces_sample_rate,
             profiles_sample_rate=self.profiles_sample_rate,
+            before_send=sentry_before_send,
             debug=self.debug,
         )
         with sentry_sdk.configure_scope() as scope:

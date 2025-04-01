@@ -2,14 +2,14 @@ from django.conf import settings
 from django.db import models
 
 
-class TileServerNameEnum(models.IntegerChoices):
-    CUSTOM = 1, "Custom"
-    BING = 2, "Bing"
-    MAPBOX = 3, "Mapbox"
-    MAXAR_STANDARD = 4, "Maxar Standard"
-    MAXAR_PREMIUM = 5, "Maxar Premium"
-    ESRI = 6, "ESRI World Imagery"
-    ESRI_BETA = 7, "ESRI World Imagery (Clarity) Beta"
+class TileServerNameEnum(models.TextChoices):
+    CUSTOM = "CUSTOM", "Custom"
+    BING = "BING", "Bing"
+    MAPBOX = "MAPBOX", "Mapbox"
+    MAXAR_STANDARD = "MAXAR_STANDARD", "Maxar Standard"
+    MAXAR_PREMIUM = "MAXAR_PREMIUM", "Maxar Premium"
+    ESRI = "ESRI", "ESRI World Imagery"
+    ESRI_BETA = "ESRI_BETA", "ESRI World Imagery (Clarity) Beta"
     # TODO: Confirm if we have more/less
 
 

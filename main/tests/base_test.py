@@ -40,6 +40,7 @@ FILE_SYSTEM_TEST_STORAGES_CONFIGS = dict(
     STORAGES=FILE_SYSTEM_TEST_STORAGES_CONFIGS["STORAGES"],
     CACHES=TEST_CACHES,
     CELERY_TASK_ALWAYS_EAGER=True,
+    CELERY_TASK_EAGER_PROPAGATES=True,
 )
 class TestCase(BaseTestCase):
     def setUp(self):
@@ -118,7 +119,8 @@ class TestCase(BaseTestCase):
         content = resp.json()
         self.assertIn("errors", list(content.keys()), msg or content)
 
-    def genum(self, _enum: models.TextChoices | models.IntegerChoices | Enum):
+    @staticmethod
+    def genum(_enum: models.TextChoices | models.IntegerChoices | Enum):
         """
         Return appropriate enum value.
         """
@@ -132,6 +134,20 @@ class TestCase(BaseTestCase):
     def gID(self, pk):
         if pk:
             return str(pk)
+
+    def g_pagination(self, *, offset, limit, total_count, results):
+        return {
+            "totalCount": total_count,
+            "pageInfo": {"offset": offset, "limit": limit},
+            "results": results,
+        }
+
+    def g_mutation_response(self, *, errors=None, ok, result):
+        return {
+            "errors": errors,
+            "ok": ok,
+            "result": result,
+        }
 
     def get_media_url(self, path):
         return f"http://testserver/media/{path}"

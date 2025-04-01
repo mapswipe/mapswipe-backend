@@ -8,8 +8,8 @@ x-server: &base_server_setup
   stdin_open: true
   tty: true
   environment: &base_server_environments
-    COLUMNS: ${COLUMNS:-200}  # NOTE: For using logging with rich
     DEBUG: ${DEBUG:-true}
+    ENABLE_DEBUG_TOOLBAR: ${ENABLE_DEBUG_TOOLBAR:-true}
     APP_ENVIRONMENT: ${APP_ENVIRONMENT:-DEV}
     SECRET_KEY: ${SECRET_KEY:?error}
     # Domain configs
@@ -26,7 +26,7 @@ x-server: &base_server_setup
     # Redis
     CELERY_REDIS_URL: ${CELERY_REDIS_URL:-redis://redis:6379/0}
     CACHE_REDIS_URL: ${CACHE_REDIS_URL:-redis://redis:6379/1}
-    TEST_CACHE_REDIS_URL: ${TEST_CACHE_REDIS_URL:-redis://redis:6379/10}
+    TEST_CACHE_REDIS_URL: ${TEST_CACHE_REDIS_URL:-redis://redis:6379/11}
     # Email (Using mailpit)
     EMAIL_HOST: ${EMAIL_HOST:-mailpit}
     EMAIL_PORT: ${EMAIL_PORT:-1025}
@@ -45,6 +45,8 @@ x-server: &base_server_setup
   env_file:
     - path: .env
       required: false
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
   volumes:
     - ./:/code/
     - bpython_local:/root/bpython/   # persist bpython history
@@ -95,7 +97,7 @@ services:
       <<: *base_server_environments
       APP_TYPE: "WEB"
     ports:
-      - 8000:8000
+      - 127.0.0.1:8000:8000
     depends_on:
       - db
       - redis

@@ -1,9 +1,12 @@
 # type: ignore[reportAttributeAccessIssue]
 import os
+import socket
+import sys
 from pathlib import Path
 
 import environ
 
+from main.logging import log_render_extra_context
 from main.sentry import SentryConfig
 from utils.git import fetch_git_sha
 
@@ -14,6 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(
     # Django
     DEBUG=(bool, False),
+    ENABLE_DEBUG_TOOLBAR=(bool, False),
     SECRET_KEY=str,
     ADDITIONAL_ALLOWED_HOSTS=(list, []),  # Eg: api.example.org
     APP_ENVIRONMENT=str,  # DEV, STAGE, PROD
@@ -77,6 +81,8 @@ env = environ.Env(
     MAP_IMAGE_ESRI_API_KEY=str,
     MAP_IMAGE_ESRI_BETA_API_KEY=str,
     # MAP_IMAGE_DIGITAL_GLOBE_API_KEY=str,
+    # Pytest
+    PYTEST_XDIST_WORKER=(str, None),
 )
 
 
@@ -98,6 +104,25 @@ ALLOWED_HOSTS = [
     *env("ADDITIONAL_ALLOWED_HOSTS"),
 ]
 
+# See if we are inside a test environment (pytest)
+IS_TESTING = (
+    any(
+        [
+            arg in sys.argv
+            for arg in [
+                "test",
+                "pytest",
+                "/usr/local/bin/pytest",
+                "py.test",
+                "/usr/local/bin/py.test",
+                "/usr/local/lib/python3.6/dist-packages/py/test.py",
+            ]
+            # Provided by pytest-xdist
+        ]
+    )
+    or env("PYTEST_XDIST_WORKER") is not None
+)
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -109,9 +134,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # External
+    "strawberry_django",
     "corsheaders",
     "django_premailer",
     "django_celery_beat",
+    "djangoql",
     # - Health-check
     "health_check",  # required
     "health_check.db",
@@ -383,6 +410,7 @@ if SENTRY_ENABLED:
 STRAWBERRY_DJANGO = {
     "FIELD_DESCRIPTION_FROM_HELP_TEXT": True,
     "TYPE_DESCRIPTION_FROM_MODEL_DOCSTRING": True,
+    "MUTATIONS_DEFAULT_HANDLE_ERRORS": True,
     "PAGINATION_DEFAULT_LIMIT": 20,
     "DEFAULT_PK_FIELD_NAME": "id",
 }
@@ -400,9 +428,15 @@ MAP_IMAGE_ESRI_BETA_API_KEY = env("MAP_IMAGE_ESRI_BETA_API_KEY")
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "filters": {
+        "render_extra_context": {
+            "()": "django.utils.log.CallbackFilter",
+            "callback": log_render_extra_context,
+        },
+    },
     "formatters": {
         "simple": {
-            "format": ("%(asctime)s: - %(levelname)s - %(name)s - %(message)s"),
+            "format": ("%(asctime)s: - %(threadName)s/%(levelname)s - %(name)s - %(message)s %(context)s"),
             "datefmt": "%Y-%m-%dT%H:%M:%S",
         },
     },
@@ -410,60 +444,69 @@ LOGGING = {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "simple",
+            "filters": ["render_extra_context"],
         },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": APP_LOG_LEVEL,
     },
     "loggers": {
         **{
             app: {
+                "level": env("APP_LOG_LEVEL"),
                 "handlers": ["console"],
-                "level": APP_LOG_LEVEL,
+                "propagate": False,
             }
-            for app in ["apps", "helix", "utils", "celery", "django"]
+            for app in ["apps", "main", "utils", "celery", "django"]
         },
+    },
+    "root": {
+        "level": env("APP_LOG_LEVEL"),
+        "handlers": ["console"],
     },
 }
 
 if DEBUG:
-
-    def log_render_extra_context(record):
-        """
-        Append extra->context to logs
-        NOTE: This will appear in logs when used with logger.xxx(..., extra={'context': {..content}})
-        """
-        if hasattr(record, "context"):
-            record.context = f" - {str(record.context)}"
-        else:
-            record.context = ""
-        return True
-
     LOGGING = {
         **LOGGING,
-        "filters": {
-            "render_extra_context": {
-                "()": "django.utils.log.CallbackFilter",
-                "callback": log_render_extra_context,
-            }
+        "formatters": {
+            **LOGGING["formatters"],
+            "colored_verbose": {
+                "()": "colorlog.ColoredFormatter",
+                "format": (
+                    "%(log_color)s%(asctime)s: %(threadName)s - %(levelname)-s%(red)s %(module)-s%(reset)s "
+                    "%(blue)s%(message)s %(context)s"
+                ),
+            },
         },
         "handlers": {
             **LOGGING["handlers"],
             "colored_console": {
-                "class": "rich.logging.RichHandler",
-                "rich_tracebacks": True,
+                "class": "logging.StreamHandler",
+                "formatter": "colored_verbose",
                 "filters": ["render_extra_context"],
             },
         },
         "loggers": {
             **{
                 key: {
+                    **logger,
                     "handlers": ["colored_console"],
-                    "level": APP_LOG_LEVEL,
-                    "propagate": False,
                 }
-                for key in LOGGING["loggers"].keys()
+                for key, logger in LOGGING["loggers"].items()
             },
         },
+        "root": {
+            "level": env("APP_LOG_LEVEL"),
+            "handlers": ["colored_console"],
+        },
     }
+
+
+# Django toolbar
+ENABLE_DEBUG_TOOLBAR = env("ENABLE_DEBUG_TOOLBAR")
+
+if ENABLE_DEBUG_TOOLBAR and not IS_TESTING:
+    INSTALLED_APPS.append("debug_toolbar")
+    MIDDLEWARE.append("strawberry_django.middlewares.debug_toolbar.DebugToolbarMiddleware")
+    INTERNAL_IPS = [
+        "127.0.0.1",
+        ".".join(socket.gethostbyname(socket.gethostname()).rsplit(".")[:-1]) + ".1",
+    ]

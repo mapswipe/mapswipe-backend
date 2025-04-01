@@ -19,6 +19,8 @@ dependencies = [
     "django-environ",
     "django-premailer",
     "django-redis",
+    "djangoql",  # Admin panel query search
+    "djangorestframework",
     "factory-boy~=3.2.1",
     "gunicorn~=20.1.0",
     "psycopg2-binary",
@@ -27,6 +29,7 @@ dependencies = [
     "django-choices-field",  # Required by strawberry-graphql-django
     "django-health-check",
     "pillow",  # Required by django ImageField
+    "pydantic==2.10.6",
     # Geo (Used by utils/geo)
     "gdal==3.6.2",  # NOTE: version depends on the available libgdal-dev version in debian
     "ogr",
@@ -34,9 +37,11 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "django-debug-toolbar",
     "django-stubs",
+    "celery-types",
     "bpython",
-    "rich",
+    "colorlog",
 ]
 test = [
     "pytest-django",
@@ -61,8 +66,14 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
-ignore = ["C901", "E701", "E203"]
-extend-select = ["I", "E", "F", "W"]
+ignore = [
+    "C901",
+    "E701",
+    "E203",
+    "DJ001",
+]
+extend-select = ["I", "E", "F", "W", "DJ", "AIR"]
+# TODO: Use this instead `select = ["ALL"]` and add rules to ignore
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]

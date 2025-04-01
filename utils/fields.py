@@ -1,13 +1,10 @@
-from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext
 
 
-class PercentageField(models.PositiveSmallIntegerField):
-    def __init__(self, *args, **kwargs):
-        kwargs["default"] = kwargs.get("default", 0)
-        kwargs["validators"] = [
-            MinValueValidator(0),
-            MaxValueValidator(100),
-            *kwargs.get("validators", []),
-        ]
-        super().__init__(*args, **kwargs)
+def validate_percentage(value):
+    if not (0 <= value <= 100):
+        raise ValidationError(
+            gettext("The value %(value)s is not a valid percentage. It should be between 0 and 100."),
+            params={"value": value},
+        )

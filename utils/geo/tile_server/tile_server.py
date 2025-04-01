@@ -5,25 +5,10 @@ from abc import ABC
 from utils.geo.tile_functions import tile_coords_and_zoom_to_quadKey
 
 from .config import Config, TileServerNameEnum
-from .models import CommonTileServerConfig, CustomTileServerConfig, TileServerConfigAlias
+from .models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
 
 
 class BaseTileServerException(Exception): ...
-
-
-CUSTOM_TILE_SERVER = "custom"
-
-
-def get_api_key(name: TileServerNameEnum) -> str | None:
-    if name == CUSTOM_TILE_SERVER:
-        return None
-    return Config.IMAGE_API_KEYS[name]
-
-
-def get_tile_server_url(name: TileServerNameEnum) -> str | None:
-    if name == CUSTOM_TILE_SERVER:
-        return None
-    return Config.IMAGE_URLS[name]
 
 
 class BaseTileServer(ABC):
@@ -47,10 +32,9 @@ class BaseTileServer(ABC):
             f"The imagery url {url} must contain {{x}}, {{y}} (or {{-y}}) and {{{{z}}}} or the {{quad_key}} placeholders."
         )
 
-    @classmethod
-    def generate_url(cls, tile_x: int, tile_y: int, tile_z: int) -> str:
-        return cls.url.format(
-            key=cls.api_key,
+    def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
+        return self.url.format(
+            key=self.api_key,
             x=tile_x,
             y=tile_y,
             z=tile_z,
@@ -62,15 +46,14 @@ class CustomTileServer(BaseTileServer):
 
     def __init__(
         self,
-        config: CustomTileServerConfig,
+        config: TileServerCustomConfig,
     ):
         self.url = config.url
         self.credits = config.credits
         self.check_imagery_url(self.url)
 
-    @classmethod
-    def generate_url(cls, tile_x: int, tile_y: int, tile_z: int) -> str:
-        return cls.url.format(
+    def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
+        return self.url.format(
             x=tile_x,
             y=tile_y,
             z=tile_z,
@@ -80,7 +63,7 @@ class CustomTileServer(BaseTileServer):
 class CommonTileServer(BaseTileServer):
     def __init__(
         self,
-        config: CommonTileServerConfig,
+        config: TileServerCommonConfig,
     ):
         self.credits = config.credits
 
@@ -100,12 +83,11 @@ class BingTileServer(CommonTileServer):
     url = Config.IMAGE_URLS[TileServerNameEnum.BING]
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.BING]
 
-    @classmethod
-    def generate_url(cls, tile_x: int, tile_y: int, tile_z: int) -> str:
+    def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
         quadKey = tile_coords_and_zoom_to_quadKey(tile_x, tile_y, tile_z)
         return "https://ecn.t0.tiles.virtualearth.net/tiles/a{}.jpeg?g=7505&mkt=en-US&token={}".format(
             quadKey,
-            cls.api_key,
+            self.api_key,
         )
 
 
@@ -120,15 +102,14 @@ class MaxarStandardTileServer(CommonTileServer):
     url = Config.IMAGE_URLS[TileServerNameEnum.MAXAR_STANDARD]
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.MAXAR_STANDARD]
 
-    @classmethod
-    def generate_url(cls, tile_x: int, tile_y: int, tile_z: int) -> str:
+    def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
         # maxar uses not the standard TMS tile y coordinate,
         # but the Google tile y coordinate
         # more information here:
         # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/
         tile_y = int(math.pow(2, tile_z) - tile_y) - 1
-        return cls.url.format(
-            key=cls.api_key,
+        return self.url.format(
+            key=self.api_key,
             x=tile_x,
             y=tile_y,
             z=tile_z,
@@ -153,15 +134,6 @@ class EsriBetaTileServer(EsriTileServer):
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.ESRI_BETA]
 
 
-AvailableTileServerNameTypeAlias: typing.TypeAlias = typing.Literal[
-    TileServerNameEnum.BING,
-    TileServerNameEnum.MAPBOX,
-    TileServerNameEnum.MAXAR_STANDARD,
-    TileServerNameEnum.MAXAR_PREMIUM,
-    TileServerNameEnum.ESRI,
-    TileServerNameEnum.ESRI_BETA,
-]
-
 AvailableTileServerTypeAlias: typing.TypeAlias = (
     CustomTileServer
     | BingTileServer
@@ -173,23 +145,28 @@ AvailableTileServerTypeAlias: typing.TypeAlias = (
 )
 
 
-def get_tile_server_type(server_name: TileServerNameEnum) -> type[AvailableTileServerTypeAlias | CustomTileServer]:
-    if server_name == TileServerNameEnum.BING:
-        return BingTileServer
-    elif server_name == TileServerNameEnum.MAPBOX:
-        return MapboxTileServer
-    elif server_name == TileServerNameEnum.MAXAR_STANDARD:
-        return MaxarStandardTileServer
-    elif server_name == TileServerNameEnum.MAXAR_PREMIUM:
-        return MaxarPremiumTileServer
-    elif server_name == TileServerNameEnum.ESRI:
-        return EsriTileServer
-    elif server_name == TileServerNameEnum.ESRI_BETA:
-        return EsriBetaTileServer
-    elif server_name == TileServerNameEnum.CUSTOM:
-        return CustomTileServer
-
-
-def get_tile_server(config: TileServerConfigAlias) -> AvailableTileServerTypeAlias | CustomTileServer:
-    server_type = get_tile_server_type(config.name)
-    return server_type(config)  # type: ignore[reportArgumentType]
+def get_tile_server(config: TileServerConfig) -> AvailableTileServerTypeAlias:
+    match config.name:
+        # Custom
+        case TileServerNameEnum.CUSTOM:
+            assert config.custom is not None, "config.custom should be not none"
+            return CustomTileServer(config.custom)
+        # Pre-defined
+        case TileServerNameEnum.BING:
+            assert config.bing is not None, "config.bing should be not none"
+            return BingTileServer(config.bing)
+        case TileServerNameEnum.MAPBOX:
+            assert config.mapbox is not None, "config.mapbox should be not none"
+            return MapboxTileServer(config.mapbox)
+        case TileServerNameEnum.MAXAR_STANDARD:
+            assert config.maxar_standard is not None, "config.maxar_standard should be not none"
+            return MaxarStandardTileServer(config.maxar_standard)
+        case TileServerNameEnum.MAXAR_PREMIUM:
+            assert config.maxar_premium is not None, "config.maxar_premium should be not none"
+            return MaxarPremiumTileServer(config.maxar_premium)
+        case TileServerNameEnum.ESRI:
+            assert config.esri is not None, "config.esri should be not none"
+            return EsriTileServer(config.esri)
+        case TileServerNameEnum.ESRI_BETA:
+            assert config.esri_beta is not None, "config.esri_beta should be not none"
+            return EsriBetaTileServer(config.esri_beta)

@@ -13,6 +13,9 @@ class ContributorUser(models.Model):
     created_at = models.DateTimeField(null=True)
     modified_at = models.DateTimeField(null=True)
 
+    def __str__(self):
+        return self.username
+
 
 class ContributorUserGroup(UserResource):
     old_user_group_id = models.CharField(max_length=30, db_index=True, null=True)
@@ -27,11 +30,21 @@ class ContributorUserGroup(UserResource):
         on_delete=models.PROTECT,
     )
 
+    def __str__(self):
+        return self.name
+
 
 class ContributorUserGroupMembership(models.Model):
     user_group = models.ForeignKey(ContributorUserGroup, on_delete=models.CASCADE)
     user = models.ForeignKey(ContributorUser, on_delete=models.CASCADE)
     is_active = models.BooleanField()
+
+    # Type hints
+    user_group_id: int
+    user_id: int
+
+    def __str__(self):
+        return f"user_group_id={self.user_group_id}, user_id={self.user_id}, is_active={self.is_active}"
 
 
 class ContributorUserGroupMembershipLogActionEnum(models.IntegerChoices):
@@ -46,3 +59,9 @@ class ContributorUserGroupMembershipLog(models.Model):
     # Sync with firebase
     action = IntegerChoicesField(choices_enum=ContributorUserGroupMembershipLogActionEnum)
     date = models.DateTimeField()
+
+    # Type hints
+    membership_id: int
+
+    def __str__(self):
+        return f"membership={self.membership_id}, action={self.action}"
