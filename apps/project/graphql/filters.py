@@ -1,7 +1,7 @@
 import strawberry
 import strawberry_django
 
-from ..models import Project
+from apps.project.models import Project
 
 
 @strawberry_django.filters.filter(Project, lookups=True)

@@ -1,10 +1,9 @@
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
+from apps.project.project_types.tile_map_service.base import project as base_project
 from main.bulk_managers import BulkCreateManager
 from utils.geo import tile_functions, tile_grouping
 from utils.geo.tile_server.models import TileServerConfig
 from utils.geo.tile_server.tile_server import AvailableTileServerTypeAlias, get_tile_server
-
-from ..base import project as base_project
 
 
 class ChangeDetectionProjectProperty(base_project.TileMapServiceProjectProperty):

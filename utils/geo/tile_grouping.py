@@ -376,7 +376,7 @@ def adjust_overlapping_groups(
         del groups[group_id]
         overlaps_total += overlap_count
 
-    logger.info(f"overlaps_total: {overlaps_total}")
+    logger.info("overlaps_total: %s", overlaps_total)
     return groups_without_overlap, overlaps_total
 
 

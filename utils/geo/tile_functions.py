@@ -95,11 +95,7 @@ def tile_coords_and_zoom_to_quadKey(TileX: int, TileY: int, zoom: int) -> str:
 def quadKey_to_Bing_URL(quadKey, api_key):
     """Create a tile image URL linking to a Bing tile server."""
 
-    tile_url = "https://ecn.t0.tiles.virtualearth.net/tiles/a{}.jpeg?g=7505&mkt=en-US&token={}".format(  # noqa: E501
-        quadKey, api_key
-    )
-
-    return tile_url
+    return f"https://ecn.t0.tiles.virtualearth.net/tiles/a{quadKey}.jpeg?g=7505&mkt=en-US&token={api_key}"
 
 
 def geometry_from_tile_coords(TileX, TileY, zoom):

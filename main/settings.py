@@ -1,5 +1,4 @@
 # type: ignore[reportAttributeAccessIssue]
-import os
 import socket
 import sys
 from pathlib import Path
@@ -51,8 +50,8 @@ env = environ.Env(
     AWS_S3_MEDIA_BUCKET_NAME=str,
     AWS_S3_STATIC_BUCKET_NAME=str,
     # -- Filesystem (default) XXX: Don't use in production
-    MEDIA_ROOT=(str, os.path.join(BASE_DIR, "data/media")),
-    STATIC_ROOT=(str, os.path.join(BASE_DIR, "data/static")),
+    MEDIA_ROOT=(str, BASE_DIR / "data/media"),
+    STATIC_ROOT=(str, BASE_DIR / "data/static"),
     # Email
     EMAIL_HOST=str,
     EMAIL_SUBJECT_PREFIX=(str, "Mapswipe:"),

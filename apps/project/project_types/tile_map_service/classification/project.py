@@ -1,6 +1,5 @@
 from apps.project.models import Project, ProjectTypeEnum
-
-from ..base import project as tile_map_service_project
+from apps.project.project_types.tile_map_service.base import project as tile_map_service_project
 
 
 class ClassificationProjectProperty(tile_map_service_project.TileMapServiceProjectProperty): ...

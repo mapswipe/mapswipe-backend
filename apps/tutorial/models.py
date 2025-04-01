@@ -72,5 +72,5 @@ class TutorialInformationPageBlock(models.Model):
     def clean(self):
         if self.block_type == TutorialInformationPageBlockTypeEnum.TEXT and (self.text is None or self.text == ""):
             raise ValidationError(gettext("Text should be provided for text block"))
-        elif self.block_type == TutorialInformationPageBlockTypeEnum.IMAGE and self.image.name is None:
+        if self.block_type == TutorialInformationPageBlockTypeEnum.IMAGE and self.image.name is None:
             raise ValidationError(gettext("Image should be provided for image block"))

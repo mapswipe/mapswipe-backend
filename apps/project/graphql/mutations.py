@@ -2,11 +2,11 @@ import strawberry
 import strawberry_django
 from strawberry_django.permissions import IsAuthenticated
 
+from apps.project.serializers import ProjectSerializer
 from main.graphql.context import Info
 from utils.graphql.mutations import ModelMutation
 from utils.graphql.types import MutationResponseType
 
-from ..serializers import ProjectSerializer
 from .inputs import ProjectInput, ProjectInputPartial
 from .types import ProjectType
 

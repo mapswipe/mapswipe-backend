@@ -21,15 +21,15 @@ class Config:
         ),
         TileServerNameEnum.MAXAR_PREMIUM: (
             "https://services.digitalglobe.com"
-            + "/earthservice/tmsaccess/tms/1.0.0/"
-            + "DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg/"
-            + "{z}/{x}/{y}.jpg?connectId={key}"
+            "/earthservice/tmsaccess/tms/1.0.0/"
+            "DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg/"
+            "{z}/{x}/{y}.jpg?connectId={key}"
         ),
         TileServerNameEnum.MAXAR_STANDARD: (
             "https://services.digitalglobe.com"
-            + "/earthservice/tmsaccess/tms/1.0.0/"
-            + "DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg/"
-            + "{z}/{x}/{y}.jpg?connectId={key}"
+            "/earthservice/tmsaccess/tms/1.0.0/"
+            "DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg/"
+            "{z}/{x}/{y}.jpg?connectId={key}"
         ),
         TileServerNameEnum.ESRI: (
             "https://services.arcgisonline.com" + "/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"

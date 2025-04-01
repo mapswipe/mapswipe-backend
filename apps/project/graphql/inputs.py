@@ -2,11 +2,10 @@ import strawberry
 import strawberry_django
 from strawberry.file_uploads import Upload
 
+from apps.project.models import Project
 from apps.project.project_types.tile_map_service.change_detection import project as change_detection_project
 from apps.project.project_types.tile_map_service.classification import project as classification_project
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
-
-from ..models import Project
 
 
 # Tile server

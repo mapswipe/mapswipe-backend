@@ -1,7 +1,7 @@
 import strawberry
 import strawberry_django
 
-from ..models import User
+from apps.user.models import User
 
 
 @strawberry_django.filters.filter(User, lookups=True)

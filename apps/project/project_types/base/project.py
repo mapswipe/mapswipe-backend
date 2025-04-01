@@ -97,7 +97,7 @@ class BaseProject(
         ------
             Boolean: True = Successful
         """
-        logger.info(f"{self.project.pk} - start creating a project")
+        logger.info("%s - start creating a project", self.project.pk)
 
         self.validate_geometries()
         self.create_groups()

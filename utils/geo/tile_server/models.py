@@ -64,5 +64,5 @@ class TileServerConfig(BaseModel):
         try:
             get_tile_server(self)
         except BaseTileServerException as e:
-            raise ValueError(e)
+            raise ValueError(e) from None
         return self

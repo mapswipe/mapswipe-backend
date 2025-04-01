@@ -107,8 +107,8 @@ class TestCase(BaseTestCase):
         :resp HttpResponse: Response
         """
         content = resp.json()
-        self.assertEqual(resp.status_code, 200, msg or content)
-        self.assertNotIn("errors", list(content.keys()), msg or content)
+        assert resp.status_code == 200, msg or content
+        assert "errors" not in list(content.keys()), msg or content
 
     def assertResponseHasErrors(self, resp, msg=None):
         """
@@ -117,7 +117,7 @@ class TestCase(BaseTestCase):
         :resp HttpResponse: Response
         """
         content = resp.json()
-        self.assertIn("errors", list(content.keys()), msg or content)
+        assert "errors" in list(content.keys()), msg or content
 
     @staticmethod
     def genum(_enum: models.TextChoices | models.IntegerChoices | Enum):
@@ -175,10 +175,8 @@ class TestCase(BaseTestCase):
         ignore_keys: list[str] | None = None,
         include_keys: list[str] | None = None,
     ):
-        self.assertEqual(
-            [self._dict_with_keys(item, ignore_keys=ignore_keys, include_keys=include_keys) for item in left],
-            [self._dict_with_keys(item, ignore_keys=ignore_keys, include_keys=include_keys) for item in right],
-            messages,
-        )
+        assert [self._dict_with_keys(item, ignore_keys=ignore_keys, include_keys=include_keys) for item in left] == [
+            self._dict_with_keys(item, ignore_keys=ignore_keys, include_keys=include_keys) for item in right
+        ], messages
 
     def no_op(*args, **_): ...

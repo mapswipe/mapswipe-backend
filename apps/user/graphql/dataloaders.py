@@ -5,8 +5,7 @@ from django.utils.functional import cached_property
 from strawberry.dataloader import DataLoader
 
 from apps.common.graphql.dataloaders import load_model_objects
-
-from ..models import User
+from apps.user.models import User
 
 if typing.TYPE_CHECKING:
     from .types import UserType

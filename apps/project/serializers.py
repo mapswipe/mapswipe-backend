@@ -62,7 +62,7 @@ class ProjectSerializer(UserResourceSerializer):
             pydantic_model.model_validate(project_type_specifics)
         except pydantic.ValidationError as pydantic_error:
             # TODO: Convert this to structured error
-            raise serializers.ValidationError({"project_type_specifics": str(pydantic_error.errors())})
+            raise serializers.ValidationError({"project_type_specifics": str(pydantic_error.errors())}) from None
 
         attrs["project_type_specifics"] = project_type_specifics
 

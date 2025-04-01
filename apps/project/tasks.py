@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def load_project_geometry(project_id: int):
     with CeleryLock.redis_lock(CeleryLock.Key.PROJECT_LOAD_GEOMETRY.format(project_id)) as acquired:
         if not acquired:
-            logger.warning(f"Project(id: {project_id}) geometry load is already running")
+            logger.warning("Project(id: %s) geometry load is already running", project_id)
             return
 
     project = Project.objects.get(pk=project_id)

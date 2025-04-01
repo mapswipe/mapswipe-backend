@@ -1,18 +1,17 @@
 import logging
-import os
 import tempfile
 import typing
 from abc import ABC
+from pathlib import Path
 
 from django.conf import settings
 
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup
+from apps.project.project_types.base import project as base_project
 from main.bulk_managers import BulkCreateManager
 from utils.geo import tile_functions, tile_grouping
 from utils.geo.tile_server.models import TileServerConfig
 from utils.geo.tile_server.tile_server import AvailableTileServerTypeAlias, get_tile_server
-
-from ...base import project as base_project
 
 logger = logging.getLogger(__name__)
 
@@ -105,12 +104,12 @@ class TileMapServiceBaseProject(
             )
             # Create new tasks for this group
             total_tasks = self._create_tasks(new_group, raw_group)
-            logger.info(f"Created {total_tasks} tasks for group: {new_group.pk}")
+            logger.info("Created %s tasks for group: %s", total_tasks, new_group.pk)
 
     def validate_geometries(self):
         """Create groups for project extent."""
         # first step get properties of each group from extent
-        _, extension = os.path.splitext(self.project.geometry_file.file.name)
+        extension = Path(self.project.geometry_file.file.name).suffix
         with tempfile.NamedTemporaryFile(suffix=extension, dir=settings.TEMP_DIR) as temp_file:
             # FIXME: self.project.geometry is not a file
             temp_file.write(self.project.geometry_file.file.read())

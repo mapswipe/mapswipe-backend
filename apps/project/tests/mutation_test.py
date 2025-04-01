@@ -1,5 +1,5 @@
-import os
 import typing
+from pathlib import Path
 
 from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
@@ -11,7 +11,7 @@ from apps.user.factories import UserFactory
 from main.tests import TestCase
 from utils.geo.tile_server.config import TileServerNameEnum
 
-BASE_DIR = os.path.join(os.path.dirname(__file__))
+BASE_DIR = Path(__file__).resolve().parent
 
 
 def create_project_query(
@@ -24,7 +24,7 @@ def create_project_query(
 ) -> dict:
     with (
         NamedTemporaryFile(dir=settings.TEMP_DIR) as image_file,
-        open(os.path.join(BASE_DIR, "data/ring-road.geojson")) as geo_file,
+        Path(BASE_DIR / "data/ring-road.geojson").open() as geo_file,
     ):
         # Fake image
         image_file.write(b"base64image")

@@ -1,14 +1,11 @@
-import typing
-
 import strawberry
 import strawberry_django
 
 from apps.common.graphql.types import UserResourceTypeMixin
+from apps.project.models import Organization, Project
 from apps.project.project_types.tile_map_service.change_detection import project as change_detection_project
 from apps.project.project_types.tile_map_service.classification import project as classification_project
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
-
-from ..models import Organization, Project
 
 
 @strawberry_django.type(Organization)
@@ -39,9 +36,6 @@ class ChangeDetectionProjectPropertyType: ...
 class ClassificationProjectPropertyType: ...
 
 
-ProjectTypeSpecificAlias: typing.TypeAlias = ChangeDetectionProjectPropertyType | ClassificationProjectPropertyType
-
-
 @strawberry_django.type(Project)
 class ProjectType:
     id: strawberry.ID
@@ -51,4 +45,4 @@ class ProjectType:
     organization: OrganizationType
     project_type: strawberry.auto
 
-    project_type_specifics: ProjectTypeSpecificAlias
+    project_type_specifics: ChangeDetectionProjectPropertyType | ClassificationProjectPropertyType
