@@ -284,6 +284,7 @@ class TestProjectTypeMutation(TestCase):
                 "messages": "Configuration not provided for: Compare",
                 "object_errors": None,
                 "array_errors": None,
+                "pydantic_errors": None,
             },
         ], content
 
@@ -296,6 +297,7 @@ class TestProjectTypeMutation(TestCase):
                 "messages": "The submitted file is empty.",
                 "object_errors": None,
                 "array_errors": None,
+                "pydantic_errors": None,
             },
         ], content
 

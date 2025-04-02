@@ -1,6 +1,8 @@
 import re
 
 import strawberry
+from pydantic import ValidationError as PydanticValidationError
+from rest_framework import serializers
 
 from .types import CustomErrorType
 
@@ -63,7 +65,7 @@ class _CustomErrorType:
         )
 
     def keys(self):
-        return ["field", "client_id", "messages", "object_errors", "array_errors"]
+        return ["field", "client_id", "messages", "object_errors", "array_errors", "pydantic_errors"]
 
     def __getitem__(self, key):
         key = to_snake_case(key)
@@ -72,11 +74,39 @@ class _CustomErrorType:
         return getattr(self, key)
 
 
+# TODO: Check again on the error structure
+def handle_pydantic_validation_error(
+    key: str,
+    pydantic_error: PydanticValidationError,
+) -> serializers.ValidationError:
+    return serializers.ValidationError(
+        {
+            f"{key}-pydantic": pydantic_error.errors(
+                include_context=False,
+                include_url=False,
+            ),
+        },
+    )
+
+
 def serializer_error_to_error_types(errors: dict, initial_data: dict | None = None) -> list:
     initial_data = initial_data or {}
     node_client_id = initial_data.get("client_id")
     error_types = []
     for field, value in errors.items():
+        if field.endswith("-pydantic"):
+            error_types.append(
+                _CustomErrorType(
+                    client_id=node_client_id,
+                    field=to_camel_case(field.replace("-pydantic", "")),
+                    object_errors=None,
+                    array_errors=None,
+                    messages=None,
+                    # NOTE: Error from handle_pydantic_validation_error
+                    pydantic_errors=value,  # type: ignore[reportGeneralTypeIssues]
+                ),
+            )
+            continue
         if isinstance(value, dict):
             error_types.append(
                 _CustomErrorType(

@@ -7,6 +7,7 @@ from apps.common.serializers import UserResourceSerializer
 from apps.project.project_types.tile_map_service.change_detection import project as change_detection_project
 from apps.project.project_types.tile_map_service.classification import project as classification_project
 from utils.common import clean_up_none_keys
+from utils.graphql.drf import handle_pydantic_validation_error
 
 from .models import Project, ProjectTypeEnum
 from .tasks import load_project_geometry
@@ -61,8 +62,7 @@ class ProjectSerializer(UserResourceSerializer):
         try:
             pydantic_model.model_validate(project_type_specifics)
         except pydantic.ValidationError as pydantic_error:
-            # TODO: Convert this to structured error
-            raise serializers.ValidationError({"project_type_specifics": str(pydantic_error.errors())}) from None
+            raise handle_pydantic_validation_error("project_type_specifics", pydantic_error) from None
 
         attrs["project_type_specifics"] = project_type_specifics
 
