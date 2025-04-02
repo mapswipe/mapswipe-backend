@@ -40,7 +40,7 @@ dev = [
     "django-debug-toolbar",
     "django-stubs",
     "celery-types",
-    "bpython",
+    "ipython",
     "colorlog",
 ]
 test = [

@@ -49,7 +49,7 @@ x-server: &base_server_setup
     - "host.docker.internal:host-gateway"
   volumes:
     - ./:/code/
-    - bpython_local:/root/bpython/   # persist bpython history
+    - ipython_data_local:/root/.ipython/profile_default   # persist ipython data, including ipython history
   depends_on:
     - db
     - redis
@@ -120,4 +120,4 @@ volumes:
   postgres_data17:
   redis_data:
   mailpit_data:
-  bpython_local:
+  ipython_data_local:

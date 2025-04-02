@@ -31,7 +31,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     && rm -rf /var/lib/apt/lists/*
 
 
-RUN mkdir -p /root/.config/bpython \
-    && ln -fs /code/misc/bpython.config /root/.config/bpython/config
-
 COPY . /code/
