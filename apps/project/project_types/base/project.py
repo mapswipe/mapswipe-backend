@@ -73,6 +73,7 @@ class BaseProject(
         ).update(
             number_of_tasks=models.Subquery(
                 ProjectTask.objects.filter(task_group_id=models.OuterRef("id"))
+                .values("task_group_id")
                 .annotate(total_tasks=models.Count("*"))
                 .values("total_tasks")[:1],
             ),

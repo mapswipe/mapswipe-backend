@@ -21,11 +21,15 @@ class BaseTileServer(ABC):
     @staticmethod
     def check_imagery_url(url: str) -> bool:
         """Check if imagery url contains xyz or quad key placeholders."""
-        if all([substring in url for substring in ["{x}", "{y}", "{z}"]]):
+        if all([substring in url for substring in ["{x}", "{y}", "{z}"]]) and not any(
+            [substring in url for substring in ["{{x}}", "{{y}}", "{{z}}"]],
+        ):
             return True
-        if all([substring in url for substring in ["{x}", "{-y}", "{z}"]]):
+        if all([substring in url for substring in ["{x}", "{-y}", "{z}"]]) and not any(
+            [substring in url for substring in ["{{x}}", "{{-y}}", "{{z}}"]],
+        ):
             return True
-        if "{quad_key}" in url:
+        if "{quad_key}" in url and "{{quad_key}}" not in url:
             return True
         raise BaseTileServerException(
             f"The imagery url {url} must contain {{x}}, {{y}} (or {{-y}}) and {{{{z}}}} or the {{quad_key}} placeholders.",

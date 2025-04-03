@@ -108,7 +108,7 @@ class TestProjectMutation(TestCase):
                     "tileServerProperty": {
                         "name": self.genum(TileServerNameEnum.CUSTOM),
                         "custom": {
-                            "url": "https://hi-there/{{x}}/{{y}}/{{z}}",
+                            "url": "https://hi-there/{x}/{y}/{z}",
                             "credits": "My Map",
                         },
                     },
@@ -172,7 +172,7 @@ class TestProjectMutation(TestCase):
                 "name": TileServerNameEnum.CUSTOM.value,
                 "custom": {
                     "credits": "My Map",
-                    "url": "https://hi-there/{{x}}/{{y}}/{{z}}",
+                    "url": "https://hi-there/{x}/{y}/{z}",
                 },
             },
         }
@@ -233,7 +233,14 @@ class TestProjectTypeMutation(TestCase):
             "valid_custom": {
                 "name": cls.genum(TileServerNameEnum.CUSTOM),
                 "custom": {
-                    "url": "https://hi-there/{{x}}/{{y}}/{{z}}",
+                    "url": "https://hi-there/{x}/{y}/{z}",
+                    "credits": "My Map",
+                },
+            },
+            "valid_custom_02": {
+                "name": cls.genum(TileServerNameEnum.CUSTOM),
+                "custom": {
+                    "url": "https://hi-here/{x}/{y}/{z}",
                     "credits": "My Map",
                 },
             },
@@ -241,6 +248,13 @@ class TestProjectTypeMutation(TestCase):
                 "name": cls.genum(TileServerNameEnum.CUSTOM),
                 "custom": {
                     "url": "https://hi-there",
+                    "credits": "My Map",
+                },
+            },
+            "invalid_custom_02": {
+                "name": cls.genum(TileServerNameEnum.CUSTOM),
+                "custom": {
+                    "url": "https://hi-there/{{x}}/{{y}}/{{z}}",
                     "credits": "My Map",
                 },
             },
@@ -357,13 +371,27 @@ class TestProjectTypeMutation(TestCase):
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] is not None, content
 
+        # Pydantic validation error
+        project_data = {
+            **project_data,
+            "projectTypeSpecifics": {
+                "changeDetection": {
+                    "tileServerProperty": self.tile_server_property["invalid_custom_02"],
+                    "tileServerBProperty": self.tile_server_property["valid_custom"],
+                },
+            },
+        }
+        content = self._query(project_data)
+        resp_data = content["data"]["createProject"]
+        assert resp_data["errors"] is not None, content
+
         # Success
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
                 "changeDetection": {
                     "tileServerProperty": self.tile_server_property["valid_custom"],
-                    "tileServerBProperty": self.tile_server_property["valid_custom"],
+                    "tileServerBProperty": self.tile_server_property["valid_custom_02"],
                 },
             },
         }
@@ -377,8 +405,112 @@ class TestProjectTypeMutation(TestCase):
         assert latest_project.modified_by_id == self.user.pk
         assert latest_project.project_type_specifics == {
             "tile_server_property": self.tile_server_property_internal["valid_custom"],
-            "tile_server_b_property": self.tile_server_property_internal["valid_custom"],
+            "tile_server_b_property": self.tile_server_property_internal["valid_custom_02"],
         }
         change_detection_project.ChangeDetectionProjectProperty.model_validate(latest_project.project_type_specifics)
-        assert ProjectTaskGroup.objects.filter(project=latest_project).count() == 4
-        assert ProjectTask.objects.filter(task_group__project=latest_project).count() == 72
+
+        expected_task_groups = [
+            {
+                "number_of_tasks": 18,
+                "project_type_specifics": {
+                    "x_max": 24152,
+                    "x_min": 24147,
+                    "y_max": 13755,
+                    "y_min": 13753,
+                },
+            },
+            {
+                "number_of_tasks": 24,
+                "project_type_specifics": {
+                    "x_max": 24153,
+                    "x_min": 24146,
+                    "y_max": 13758,
+                    "y_min": 13756,
+                },
+            },
+            {
+                "number_of_tasks": 24,
+                "project_type_specifics": {
+                    "x_max": 24153,
+                    "x_min": 24146,
+                    "y_max": 13761,
+                    "y_min": 13759,
+                },
+            },
+            {
+                "number_of_tasks": 6,
+                "project_type_specifics": {
+                    "x_max": 24150,
+                    "x_min": 24149,
+                    "y_max": 13764,
+                    "y_min": 13762,
+                },
+            },
+        ]
+
+        expected_last_5_tasks = [
+            {
+                "project_type_specifics": {
+                    "tile_x": 24147,
+                    "tile_y": 13753,
+                    "url": "https://hi-there/24147/13753/15",
+                    "url_b": "https://hi-here/24147/13753/15",
+                },
+            },
+            {
+                "project_type_specifics": {
+                    "tile_x": 24147,
+                    "tile_y": 13754,
+                    "url": "https://hi-there/24147/13754/15",
+                    "url_b": "https://hi-here/24147/13754/15",
+                },
+            },
+            {
+                "project_type_specifics": {
+                    "tile_x": 24147,
+                    "tile_y": 13755,
+                    "url": "https://hi-there/24147/13755/15",
+                    "url_b": "https://hi-here/24147/13755/15",
+                },
+            },
+            {
+                "project_type_specifics": {
+                    "tile_x": 24148,
+                    "tile_y": 13753,
+                    "url": "https://hi-there/24148/13753/15",
+                    "url_b": "https://hi-here/24148/13753/15",
+                },
+            },
+            {
+                "project_type_specifics": {
+                    "tile_x": 24148,
+                    "tile_y": 13754,
+                    "url": "https://hi-there/24148/13754/15",
+                    "url_b": "https://hi-here/24148/13754/15",
+                },
+            },
+        ]
+
+        project_task_group_qs = ProjectTaskGroup.objects.filter(project=latest_project)
+        project_task_qs = ProjectTask.objects.filter(task_group__project=latest_project)
+
+        assert {
+            "tasks_groups_count": project_task_group_qs.count(),
+            "tasks_groups": list(
+                project_task_group_qs.order_by("id").values(
+                    "number_of_tasks",
+                    "project_type_specifics",
+                ),
+            ),
+            "tasks_count": project_task_qs.count(),
+            "tasks": list(
+                project_task_qs.order_by("id").values(
+                    "project_type_specifics",
+                )[:5],
+            ),
+        } == {
+            "tasks_groups_count": len(expected_task_groups),
+            "tasks_count": 72,
+            "tasks_groups": expected_task_groups,
+            "tasks": expected_last_5_tasks,
+        }
