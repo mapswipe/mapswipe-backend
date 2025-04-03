@@ -22,7 +22,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         gdal-bin build-essential gcc libc-dev libgdal-dev libproj-dev \
         # Helper packages
         procps \
-        wait-for-it \
     && uv lock --locked --offline \
         && uv sync --frozen --no-install-project --all-groups \
     # Clean-up
