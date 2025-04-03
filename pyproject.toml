@@ -19,6 +19,7 @@ dependencies = [
     "django-environ",
     "django-premailer",
     "django-redis",
+    "django-storages",
     "djangoql",  # Admin panel query search
     "djangorestframework",
     "factory-boy~=3.2.1",
