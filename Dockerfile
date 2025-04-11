@@ -1,4 +1,4 @@
-FROM python:3.13-slim-bullseye AS base
+FROM python:3.13-slim-bookworm AS base
 COPY --from=ghcr.io/astral-sh/uv:0.6.2 /uv /uvx /bin/
 
 LABEL maintainer="Mapswipe Dev"
@@ -19,19 +19,15 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     # FIXME: Check and clean up not required packages from here
     && apt-get install -y --no-install-recommends \
         # Build required packages
-        gcc libc-dev gdal-bin libproj-dev \
+        gdal-bin build-essential gcc libc-dev libgdal-dev libproj-dev \
         # Helper packages
         procps \
-        wait-for-it \
     && uv lock --locked --offline \
         && uv sync --frozen --no-install-project --all-groups \
     # Clean-up
-    && apt-get remove -y gcc libc-dev libproj-dev \
+    && apt-get remove -y build-essential gcc libc-dev libgdal-dev libproj-dev \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
-
-RUN mkdir -p /root/.config/bpython \
-    && ln -fs /code/misc/bpython.config /root/.config/bpython/config
 
 COPY . /code/

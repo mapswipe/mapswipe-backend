@@ -9,6 +9,7 @@ x-server: &base_server_setup
   tty: true
   environment: &base_server_environments
     DEBUG: ${DEBUG:-true}
+    ENABLE_DEBUG_TOOLBAR: ${ENABLE_DEBUG_TOOLBAR:-true}
     APP_ENVIRONMENT: ${APP_ENVIRONMENT:-DEV}
     SECRET_KEY: ${SECRET_KEY:?error}
     # Domain configs
@@ -25,6 +26,7 @@ x-server: &base_server_setup
     # Redis
     CELERY_REDIS_URL: ${CELERY_REDIS_URL:-redis://redis:6379/0}
     CACHE_REDIS_URL: ${CACHE_REDIS_URL:-redis://redis:6379/1}
+    TEST_CACHE_REDIS_URL: ${TEST_CACHE_REDIS_URL:-redis://redis:6379/11}
     # Email (Using mailpit)
     EMAIL_HOST: ${EMAIL_HOST:-mailpit}
     EMAIL_PORT: ${EMAIL_PORT:-1025}
@@ -32,12 +34,22 @@ x-server: &base_server_setup
     EMAIL_HOST_USER: ${EMAIL_HOST_USER:-mailpit}
     EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-mailpit}
     DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-Mapswipe Dev <dev@mapswipe.org>}
+    # Map Image keys (Dummy values)
+    MAP_IMAGE_BING_API_KEY: ${MAP_IMAGE_BING_API_KEY:-dummy-bing}
+    MAP_IMAGE_MAPBOX_API_KEY: ${MAP_IMAGE_MAPBOX_API_KEY:-dummy-mapbox}
+    MAP_IMAGE_MAXAR_STANDARD_API_KEY: ${MAP_IMAGE_MAXAR_STANDARD_API_KEY:-dummy-maxar-standard}
+    MAP_IMAGE_MAXAR_PREMIUM_API_KEY: ${MAP_IMAGE_MAXAR_PREMIUM_API_KEY:-dummy-maxar-premium}
+    MAP_IMAGE_ESRI_API_KEY: ${MAP_IMAGE_ESRI_API_KEY:-dummy-esri}
+    MAP_IMAGE_ESRI_BETA_API_KEY: ${MAP_IMAGE_ESRI_BETA_API_KEY:-dummy-esri-beta}
+    # MAP_IMAGE_DIGITAL_GLOBE_API_KEY: ${MAP_IMAGE_DIGITAL_GLOBE_API_KEY:-dummy-digital-globe}
   env_file:
     - path: .env
       required: false
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
   volumes:
     - ./:/code/
-    - bpython_local:/root/bpython/   # persist bpython history
+    - ipython_data_local:/root/.ipython/profile_default   # persist ipython data, including ipython history
   depends_on:
     - db
     - redis
@@ -85,7 +97,7 @@ services:
       <<: *base_server_environments
       APP_TYPE: "WEB"
     ports:
-      - 8000:8000
+      - 127.0.0.1:8000:8000
     depends_on:
       - db
       - redis
@@ -108,4 +120,4 @@ volumes:
   postgres_data17:
   redis_data:
   mailpit_data:
-  bpython_local:
+  ipython_data_local:

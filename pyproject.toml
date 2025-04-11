@@ -19,20 +19,30 @@ dependencies = [
     "django-environ",
     "django-premailer",
     "django-redis",
+    "django-storages",
+    "djangoql",  # Admin panel query search
+    "djangorestframework",
     "factory-boy~=3.2.1",
     "gunicorn~=20.1.0",
     "psycopg2-binary",
     "sentry-sdk",
-    "strawberry-graphql~=0.261.1",
-    "strawberry-graphql-django",
-    "django-choices-field",  # Requird by strawberry-django
+    "strawberry-graphql-django~=0.57.0",
+    "django-choices-field",  # Required by strawberry-graphql-django
     "django-health-check",
+    "pillow",  # Required by django ImageField
+    "pydantic==2.10.6",
+    # Geo (Used by utils/geo)
+    "gdal==3.6.2",  # NOTE: version depends on the available libgdal-dev version in debian
+    "ogr",
 ]
 
 [dependency-groups]
 dev = [
+    "django-debug-toolbar",
     "django-stubs",
-    "bpython",
+    "celery-types",
+    "ipython",
+    "colorlog",
 ]
 test = [
     "pytest-django",
@@ -50,6 +60,8 @@ line-length = 125
 extend-exclude = [
     ".git",
     ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
     ".venv",
     "venv",
     "**/migrations/*",
@@ -57,8 +69,17 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
-ignore = ["C901", "E701", "E203"]
-extend-select = ["I", "E", "F", "W"]
+flake8-builtins.builtins-strict-checking = false
+ignore = [
+    "C901",
+    "E701",
+    "E203",
+    "DJ001",
+    "G201", # FIXME: Check if we can enable this and keep sending logs to sentry
+]
+extend-select = ["I", "E", "F", "B", "A", "W", "DJ", "AIR", "COM", "INT", "ISC", "ICN", "LOG", "G", "T20", "TID", "PT", "Q", "RET", "SIM", "TC", "PTH", "UP"]
+# TODO: Use this instead `select = ["ALL"]` and add rules to ignore
+#   ruff check --statistics ./
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]

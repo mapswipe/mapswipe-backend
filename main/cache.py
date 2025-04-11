@@ -11,6 +11,7 @@ cache: DefaultClient = caches["default"]  # type: ignore[reportAssignmentType]
 class CeleryLock:
     class Key:
         CLEAR_EXPIRED_DJANGO_SESSIONS = "CLEAR_EXPIRED_DJANGO_SESSIONS"
+        PROJECT_LOAD_GEOMETRY = "PROJECT_LOAD_GEOMETRY_{0}"
 
     @staticmethod
     @contextmanager

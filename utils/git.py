@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -8,33 +8,33 @@ class InvalidGitRepository(Exception):
     pass
 
 
-def fetch_git_sha(path: str, head: str | None = None, raise_on_error: bool = True) -> str | None:
+def fetch_git_sha(path: Path, head: str | None = None, raise_on_error: bool = True) -> str | None:
     """
     Source: https://github.com/getsentry/raven-python/blob/03559bb05fd963e2be96372ae89fb0bce751d26d/raven/versioning.py
     >>> fetch_git_sha(os.path.dirname(__file__))
     """
     if not head:
-        head_path = os.path.join(path, ".git", "HEAD")
-        if not os.path.exists(head_path):
+        head_path = path / ".git/HEAD"
+        if not head_path.exists():
             error_message = f"Cannot identify HEAD for git repository at {path}"
             if raise_on_error:
                 raise InvalidGitRepository(error_message)
             logger.warning(error_message)
             return None
 
-        with open(head_path, "r") as fp:
+        with head_path.open("r") as fp:
             head = str(fp.read()).strip()
 
         if head.startswith("ref: "):
             head = head[5:]
-            revision_file = os.path.join(path, ".git", *head.split("/"))
+            revision_file = path.joinpath(".git", *head.split("/"))
         else:
             return head
     else:
-        revision_file = os.path.join(path, ".git", "refs", "heads", head)
+        revision_file = path / ".git/refs/heads" / head
 
-    if not os.path.exists(revision_file):
-        if not os.path.exists(os.path.join(path, ".git")):
+    if not revision_file.exists():
+        if not (path / ".git").exists():
             error_message = f"{path} does not seem to be the root of a git repository"
             if raise_on_error:
                 raise InvalidGitRepository(error_message)
@@ -43,9 +43,9 @@ def fetch_git_sha(path: str, head: str | None = None, raise_on_error: bool = Tru
 
         # Check for our .git/packed-refs' file since a `git gc` may have run
         # https://git-scm.com/book/en/v2/Git-Internals-Maintenance-and-Data-Recovery
-        packed_file = os.path.join(path, ".git", "packed-refs")
-        if os.path.exists(packed_file):
-            with open(packed_file) as fh:
+        packed_file = path / ".git/packed-refs"
+        if packed_file.exists():
+            with packed_file.open() as fh:
                 for line in fh:
                     line = line.rstrip()
                     if line and line[:1] not in ("#", "^"):
@@ -62,5 +62,5 @@ def fetch_git_sha(path: str, head: str | None = None, raise_on_error: bool = Tru
         logger.warning(error_message)
         return None
 
-    with open(revision_file) as fh:
+    with revision_file.open() as fh:
         return str(fh.read()).strip()

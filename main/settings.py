@@ -1,9 +1,11 @@
 # type: ignore[reportAttributeAccessIssue]
-import os
+import socket
+import sys
 from pathlib import Path
 
 import environ
 
+from main.logging import log_render_extra_context
 from main.sentry import SentryConfig
 from utils.git import fetch_git_sha
 
@@ -14,11 +16,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(
     # Django
     DEBUG=(bool, False),
+    ENABLE_DEBUG_TOOLBAR=(bool, False),
     SECRET_KEY=str,
     ADDITIONAL_ALLOWED_HOSTS=(list, []),  # Eg: api.example.org
     APP_ENVIRONMENT=str,  # DEV, STAGE, PROD
     APP_TYPE=str,  # WEB, WORKER, WORKER-BEAT
     APP_RELEASE=(str, None),  # As fallback we will try to use .git/HEAD
+    APP_LOG_LEVEL=(str, "INFO"),
     # Domain configs
     APP_DOMAIN=str,  # Eg: https://api.example.org
     FRONTEND_DOMAIN=str,  # Eg: https://web.example.org
@@ -36,6 +40,7 @@ env = environ.Env(
     # Storage
     MEDIA_URL=(str, "media/"),
     STATIC_URL=(str, "static/"),
+    TEMP_DIR=(str, "/tmp/"),
     # -- S3 storage
     AWS_S3_ENABLED=(bool, False),
     AWS_S3_ENDPOINT_URL=(str, None),
@@ -45,8 +50,8 @@ env = environ.Env(
     AWS_S3_MEDIA_BUCKET_NAME=str,
     AWS_S3_STATIC_BUCKET_NAME=str,
     # -- Filesystem (default) XXX: Don't use in production
-    MEDIA_ROOT=(str, os.path.join(BASE_DIR, "data/media")),
-    STATIC_ROOT=(str, os.path.join(BASE_DIR, "data/static")),
+    MEDIA_ROOT=(str, BASE_DIR / "data/media"),
+    STATIC_ROOT=(str, BASE_DIR / "data/static"),
     # Email
     EMAIL_HOST=str,
     EMAIL_SUBJECT_PREFIX=(str, "Mapswipe:"),
@@ -67,12 +72,23 @@ env = environ.Env(
     SENTRY_MONITOR_CELERY_BEAT_TASKS=(bool, True),
     SENTRY_TRACES_SAMPLE_RATE=(float, 0.2),
     SENTRY_PROFILE_SAMPLE_RATE=(float, 0.2),
+    # Map Image keys
+    MAP_IMAGE_BING_API_KEY=str,
+    MAP_IMAGE_MAPBOX_API_KEY=str,
+    MAP_IMAGE_MAXAR_STANDARD_API_KEY=str,
+    MAP_IMAGE_MAXAR_PREMIUM_API_KEY=str,
+    MAP_IMAGE_ESRI_API_KEY=str,
+    MAP_IMAGE_ESRI_BETA_API_KEY=str,
+    # MAP_IMAGE_DIGITAL_GLOBE_API_KEY=str,
+    # Pytest
+    PYTEST_XDIST_WORKER=(str, None),
 )
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
+APP_LOG_LEVEL = env("APP_LOG_LEVEL")
 APP_DOMAIN = env.url("APP_DOMAIN")
 FRONTEND_DOMAIN = env.url("FRONTEND_DOMAIN")
 APP_ENVIRONMENT = env("APP_ENVIRONMENT").upper()
@@ -83,9 +99,28 @@ SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = [
-    APP_DOMAIN.netloc,
+    APP_DOMAIN.hostname,
     *env("ADDITIONAL_ALLOWED_HOSTS"),
 ]
+
+# See if we are inside a test environment (pytest)
+IS_TESTING = (
+    any(
+        [
+            arg in sys.argv
+            for arg in [
+                "test",
+                "pytest",
+                "/usr/local/bin/pytest",
+                "py.test",
+                "/usr/local/bin/py.test",
+                "/usr/local/lib/python3.6/dist-packages/py/test.py",
+            ]
+            # Provided by pytest-xdist
+        ],
+    )
+    or env("PYTEST_XDIST_WORKER") is not None
+)
 
 # Application definition
 
@@ -98,9 +133,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # External
+    "strawberry_django",
     "corsheaders",
     "django_premailer",
     "django_celery_beat",
+    "djangoql",
     # - Health-check
     "health_check",  # required
     "health_check.db",
@@ -110,6 +147,11 @@ INSTALLED_APPS = [
     "health_check.contrib.redis",  # requires Redis broker
     # Internal
     "apps.common",
+    "apps.user",
+    "apps.project",
+    "apps.tutorial",
+    "apps.contributor",
+    "apps.mapping",
 ]
 
 MIDDLEWARE = [
@@ -154,7 +196,7 @@ DATABASES = {
         "PASSWORD": env("POSTGRES_PASSWORD"),
         "HOST": env("POSTGRES_HOST"),
         "PORT": env("POSTGRES_PORT"),
-    }
+    },
 }
 
 
@@ -176,6 +218,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = "user.User"
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -192,6 +235,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
+TEMP_DIR = env("TEMP_DIR")
 MEDIA_URL = env("MEDIA_URL")
 STATIC_URL = env("STATIC_URL")
 
@@ -264,7 +308,10 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
-    }
+        "local-memory": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        },
+    },
 }
 
 # Celery
@@ -286,8 +333,8 @@ MAPSWIPE_TRUSTED_ORIGINS = [
     *env("MAPSWIPE_ADDITIONAL_TRUSTED_ORIGINS"),
 ]
 
-SESSION_COOKIE_NAME = f"mapswipe-{APP_ENVIRONMENT}-sessionid"
-CSRF_COOKIE_NAME = f"mapswipe-{APP_ENVIRONMENT}-csrftoken"
+SESSION_COOKIE_NAME = f"MAPSWIPE-{APP_ENVIRONMENT}-SESSIONID"
+CSRF_COOKIE_NAME = f"MAPSWIPE-{APP_ENVIRONMENT}-CSRFTOKEN"
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
@@ -357,3 +404,108 @@ if SENTRY_ENABLED:
         monitor_celery_beat_tasks=env("SENTRY_MONITOR_CELERY_BEAT_TASKS"),
     )
     SENTRY_CONFIG.init_sentry()
+
+# Strawberry
+STRAWBERRY_DJANGO = {
+    "FIELD_DESCRIPTION_FROM_HELP_TEXT": True,
+    "TYPE_DESCRIPTION_FROM_MODEL_DOCSTRING": True,
+    "MUTATIONS_DEFAULT_HANDLE_ERRORS": True,
+    "PAGINATION_DEFAULT_LIMIT": 20,
+    "DEFAULT_PK_FIELD_NAME": "id",
+}
+
+# MAP_IMAGE_KEYs
+MAP_IMAGE_BING_API_KEY = env("MAP_IMAGE_BING_API_KEY")
+MAP_IMAGE_MAPBOX_API_KEY = env("MAP_IMAGE_MAPBOX_API_KEY")
+MAP_IMAGE_MAXAR_STANDARD_API_KEY = env("MAP_IMAGE_MAXAR_STANDARD_API_KEY")
+MAP_IMAGE_MAXAR_PREMIUM_API_KEY = env("MAP_IMAGE_MAXAR_PREMIUM_API_KEY")
+MAP_IMAGE_ESRI_API_KEY = env("MAP_IMAGE_ESRI_API_KEY")
+MAP_IMAGE_ESRI_BETA_API_KEY = env("MAP_IMAGE_ESRI_BETA_API_KEY")
+# MAP_IMAGE_DIGITAL_GLOBE_API_KEY = env("MAP_IMAGE_DIGITAL_GLOBE_API_KEY")
+
+# TODO: Handle file logs using gunicorn
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "render_extra_context": {
+            "()": "django.utils.log.CallbackFilter",
+            "callback": log_render_extra_context,
+        },
+    },
+    "formatters": {
+        "simple": {
+            "format": ("%(asctime)s: - %(threadName)s/%(levelname)s - %(name)s - %(message)s %(context)s"),
+            "datefmt": "%Y-%m-%dT%H:%M:%S",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+            "filters": ["render_extra_context"],
+        },
+    },
+    "loggers": {
+        **{
+            app: {
+                "level": env("APP_LOG_LEVEL"),
+                "handlers": ["console"],
+                "propagate": False,
+            }
+            for app in ["apps", "main", "utils", "celery", "django"]
+        },
+    },
+    "root": {
+        "level": env("APP_LOG_LEVEL"),
+        "handlers": ["console"],
+    },
+}
+
+if DEBUG:
+    LOGGING = {
+        **LOGGING,
+        "formatters": {
+            **LOGGING["formatters"],
+            "colored_verbose": {
+                "()": "colorlog.ColoredFormatter",
+                "format": (
+                    "%(log_color)s%(asctime)s: %(threadName)s - %(levelname)-s%(red)s %(module)-s%(reset)s "
+                    "%(blue)s%(message)s %(context)s"
+                ),
+            },
+        },
+        "handlers": {
+            **LOGGING["handlers"],
+            "colored_console": {
+                "class": "logging.StreamHandler",
+                "formatter": "colored_verbose",
+                "filters": ["render_extra_context"],
+            },
+        },
+        "loggers": {
+            **{
+                key: {
+                    **logger,
+                    "handlers": ["colored_console"],
+                }
+                for key, logger in LOGGING["loggers"].items()
+            },
+        },
+        "root": {
+            "level": env("APP_LOG_LEVEL"),
+            "handlers": ["colored_console"],
+        },
+    }
+
+
+# Django toolbar
+ENABLE_DEBUG_TOOLBAR = env("ENABLE_DEBUG_TOOLBAR")
+
+if ENABLE_DEBUG_TOOLBAR and not IS_TESTING:
+    INSTALLED_APPS.append("debug_toolbar")
+    MIDDLEWARE.append("strawberry_django.middlewares.debug_toolbar.DebugToolbarMiddleware")
+    INTERNAL_IPS = [
+        "127.0.0.1",
+        ".".join(socket.gethostbyname(socket.gethostname()).rsplit(".")[:-1]) + ".1",
+    ]

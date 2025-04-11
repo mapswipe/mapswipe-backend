@@ -2,7 +2,7 @@
 
 CODE_DIR=${CODE_DIR:-/code}
 
-wait-for-it "$POSTGRES_HOST:$POSTGRES_PORT"
+./manage.py wait_for_resources --db
 
 if [ "$CI" == "true" ]; then
     pip3 install pytest-cov
