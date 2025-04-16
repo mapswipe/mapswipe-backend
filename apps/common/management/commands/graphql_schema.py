@@ -19,7 +19,7 @@ class Command(BaseCommand):
         )
 
     @typing.override
-    def handle(self, *args, **options):
+    def handle(self, *args: typing.Any, **options: typing.Any):
         file = options["out"]
         file.write(print_schema(schema))
         file.close()

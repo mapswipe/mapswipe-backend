@@ -58,6 +58,7 @@ class CustomTileServer(BaseTileServer):
 
     @typing.override
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
+        # FIXME: We might need to add support for quad_key for custom tile servers
         return self.url.format(
             x=tile_x,
             y=tile_y,
@@ -91,7 +92,10 @@ class BingTileServer(CommonTileServer):
     @typing.override
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
         quadKey = tile_coords_and_zoom_to_quadKey(tile_x, tile_y, tile_z)
-        return f"https://ecn.t0.tiles.virtualearth.net/tiles/a{quadKey}.jpeg?g=7505&mkt=en-US&token={self.api_key}"
+        return self.url.format(
+            key=self.api_key,
+            quadKey=quadKey,
+        )
 
 
 class MapboxTileServer(CommonTileServer):

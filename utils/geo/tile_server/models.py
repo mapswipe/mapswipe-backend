@@ -6,11 +6,16 @@ from .config import TileServerNameEnum
 
 
 class TileServerCustomConfig(BaseModel):
+    # TODO: Max length should be 1000
+    # TODO: Validation is currently defined in BaseTileServer.check_imagery_url
     url: str
+
+    # TODO: Max length should be 1000
     credits: str | None = None
 
 
 class TileServerCommonConfig(BaseModel):
+    # TODO: Max length should be 1000
     credits: str | None = None
 
 

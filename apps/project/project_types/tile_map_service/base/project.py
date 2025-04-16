@@ -5,6 +5,7 @@ from abc import ABC
 from pathlib import Path
 
 from django.conf import settings
+from pydantic import field_validator
 
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup
 from apps.project.project_types.base import project as base_project
@@ -17,7 +18,17 @@ logger = logging.getLogger(__name__)
 
 
 class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
+    zoom_level: int
     tile_server_property: TileServerConfig
+
+    @field_validator("zoom_level")
+    @classmethod
+    def zoom_level_range(cls, v: int):
+        if v < 14:
+            raise ValueError("Zoom level should at least be 14")
+        if v > 22:
+            raise ValueError("Zoom level should at most be 22")
+        return v
 
 
 class TileMapServiceProjectTaskGroupProperty(base_project.BaseProjectTaskGroupProperty):

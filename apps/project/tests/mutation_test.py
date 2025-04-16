@@ -106,6 +106,7 @@ class TestProjectMutation(TestCase):
             "lookFor": "Buildings",
             "projectTypeSpecifics": {
                 "classification": {
+                    "zoomLevel": 15,
                     "tileServerProperty": {
                         "name": self.genum(TileServerNameEnum.CUSTOM),
                         "custom": {
@@ -169,6 +170,7 @@ class TestProjectMutation(TestCase):
         assert latest_project.created_by_id == self.user.pk
         assert latest_project.modified_by_id == self.user.pk
         assert latest_project.project_type_specifics == {
+            "zoom_level": 15,
             "tile_server_property": {
                 "name": TileServerNameEnum.CUSTOM.value,
                 "custom": {
@@ -286,6 +288,7 @@ class TestProjectTypeMutation(TestCase):
             **project_data,
             "projectTypeSpecifics": {
                 "classification": {  # NOTE: Different project type
+                    "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["valid_custom"],
                 },
             },
@@ -342,6 +345,7 @@ class TestProjectTypeMutation(TestCase):
             **project_data,
             "projectTypeSpecifics": {
                 "classification": {
+                    "zoomLevel": 15,
                     "tileServerProperty": {},
                 },
             },
@@ -353,6 +357,7 @@ class TestProjectTypeMutation(TestCase):
             **project_data,
             "projectTypeSpecifics": {
                 "changeDetection": {
+                    "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["valid_custom"],
                 },
             },
@@ -364,6 +369,7 @@ class TestProjectTypeMutation(TestCase):
             **project_data,
             "projectTypeSpecifics": {
                 "changeDetection": {
+                    "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["invalid_custom"],
                     "tileServerBProperty": self.tile_server_property["valid_custom"],
                 },
@@ -378,6 +384,7 @@ class TestProjectTypeMutation(TestCase):
             **project_data,
             "projectTypeSpecifics": {
                 "changeDetection": {
+                    "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["invalid_custom_02"],
                     "tileServerBProperty": self.tile_server_property["valid_custom"],
                 },
@@ -392,6 +399,7 @@ class TestProjectTypeMutation(TestCase):
             **project_data,
             "projectTypeSpecifics": {
                 "changeDetection": {
+                    "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["valid_custom"],
                     "tileServerBProperty": self.tile_server_property["valid_custom_02"],
                 },
@@ -406,6 +414,7 @@ class TestProjectTypeMutation(TestCase):
         assert latest_project.created_by_id == self.user.pk
         assert latest_project.modified_by_id == self.user.pk
         assert latest_project.project_type_specifics == {
+            "zoom_level": 15,
             "tile_server_property": self.tile_server_property_internal["valid_custom"],
             "tile_server_b_property": self.tile_server_property_internal["valid_custom_02"],
         }

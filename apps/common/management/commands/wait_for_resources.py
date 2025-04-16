@@ -96,7 +96,7 @@ class Command(BaseCommand):
         parser.add_argument("--all", action="store_true", help="Wait for all to be available")
 
     @typing.override
-    def handle(self, **kwargs):
+    def handle(self, **kwargs: typing.Any):
         timeout = kwargs["timeout"]
         _all = kwargs["all"]
 

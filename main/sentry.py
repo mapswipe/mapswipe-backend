@@ -5,7 +5,8 @@ import typing
 import sentry_sdk
 from asgiref.sync import sync_to_async
 from sentry_sdk import Scope, set_user
-from sentry_sdk._types import Event, Hint
+
+# from sentry_sdk._types import Event, Hint
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import ignore_logger
@@ -22,8 +23,9 @@ for _logger in IGNORED_LOGGERS:
     ignore_logger(_logger)
 
 
-# TODO: Not tested
-def sentry_before_send(event: Event, hint: Hint):
+# TODO: figure out way to import Event and Hint or extract from sentry_sdk.init
+# def sentry_before_send(event: Event, hint: Hint):
+def sentry_before_send(event: typing.Any, hint: typing.Any):
     # Check if the exception is a GraphQLError
     if "exception" in event and isinstance(event["exception"], dict):
         for value in event["exception"].get("values", []):

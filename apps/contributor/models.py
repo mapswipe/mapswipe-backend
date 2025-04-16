@@ -21,7 +21,7 @@ class ContributorUser(models.Model):
 
 
 class ContributorUserGroup(UserResource):
-    old_user_group_id = models.CharField(max_length=30, db_index=True, null=True)
+    old_id = models.CharField(max_length=30, db_index=True, null=True)
     name = models.CharField(max_length=255)
     description = models.TextField()
 

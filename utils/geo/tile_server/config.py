@@ -15,10 +15,8 @@ class TileServerNameEnum(models.TextChoices):
 
 class Config:
     IMAGE_URLS = {
-        TileServerNameEnum.BING: ("https://ecn.t0.tiles.virtualearth.net" + "/tiles/a{quad_key}.jpeg?g=7505&token={key}"),
-        TileServerNameEnum.MAPBOX: (
-            "https://d.tiles.mapbox.com" + "/v4/mapbox.satellite/{z}/{x}/{y}.jpg?access_token={key}"
-        ),
+        TileServerNameEnum.BING: ("https://ecn.t0.tiles.virtualearth.net/tiles/a{quad_key}.jpeg?g=7505&token={key}"),
+        TileServerNameEnum.MAPBOX: ("https://d.tiles.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg?access_token={key}"),
         TileServerNameEnum.MAXAR_PREMIUM: (
             "https://services.digitalglobe.com"
             "/earthservice/tmsaccess/tms/1.0.0/"
@@ -32,10 +30,10 @@ class Config:
             "{z}/{x}/{y}.jpg?connectId={key}"
         ),
         TileServerNameEnum.ESRI: (
-            "https://services.arcgisonline.com" + "/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         ),
         TileServerNameEnum.ESRI_BETA: (
-            "https://clarity.maptiles.arcgis.com" + "/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            "https://clarity.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         ),
         # "sinergise": (
         #     "https://services.sentinel-hub.com"

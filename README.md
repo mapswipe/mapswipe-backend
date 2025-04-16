@@ -70,6 +70,14 @@ docker compose run --rm web ./manage.py graphql_schema --out schema.graphql
 docker compose exec web ./manage.py graphql_schema --out schema.graphql
 ```
 
+### Run tests
+
+```bash
+docker compose run --rm web pytest
+# OR
+docker compose exec web pytest
+```
+
 ## Tips
 You can use django `run` command if there are no running instance for temporary commands
 
