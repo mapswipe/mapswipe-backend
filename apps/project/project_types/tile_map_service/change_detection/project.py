@@ -1,3 +1,5 @@
+import typing
+
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
 from apps.project.project_types.tile_map_service.base import project as base_project
 from main.bulk_managers import BulkCreateManager
@@ -35,6 +37,7 @@ class ChangeDetectionProject(
         assert project.project_type == ProjectTypeEnum.CHANGE_DETECTION, f"{type(self)} is defined for CHANGE_DETECTION"
         self.tile_server_b = get_tile_server(self.project_type_specifics.tile_server_b_property)
 
+    @typing.override
     def _create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:
         bulk_mgr = BulkCreateManager(chunk_size=1000)
 

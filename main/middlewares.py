@@ -1,3 +1,5 @@
+import typing
+
 from asgiref.sync import iscoroutinefunction
 from django.urls import reverse
 from django.utils.decorators import sync_and_async_middleware
@@ -6,7 +8,7 @@ from main.sentry import SentryTransactionMiddlewareHelper
 
 
 @sync_and_async_middleware
-def sentry_middleware(get_response):
+def sentry_middleware(get_response: typing.Any):
     from django.conf import settings
 
     # One-time configuration and initialization goes here.

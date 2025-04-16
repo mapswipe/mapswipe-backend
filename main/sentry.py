@@ -1,9 +1,11 @@
 import dataclasses
 import json
+import typing
 
 import sentry_sdk
 from asgiref.sync import sync_to_async
 from sentry_sdk import Scope, set_user
+from sentry_sdk._types import Event, Hint
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import ignore_logger
@@ -21,7 +23,7 @@ for _logger in IGNORED_LOGGERS:
 
 
 # TODO: Not tested
-def sentry_before_send(event, hint):
+def sentry_before_send(event: Event, hint: Hint):
     # Check if the exception is a GraphQLError
     if "exception" in event and isinstance(event["exception"], dict):
         for value in event["exception"].get("values", []):
@@ -73,11 +75,11 @@ class SentryConfig:
 class SentryTransactionMiddlewareHelper:
     @classmethod
     @sync_to_async
-    def atrack_transaction(cls, graphql_urls: set[str], request):
+    def atrack_transaction(cls, graphql_urls: set[str], request: typing.Any):
         return cls.track_transaction(graphql_urls, request)
 
     @staticmethod
-    def track_transaction(graphql_urls: set[str], request):
+    def track_transaction(graphql_urls: set[str], request: typing.Any):
         if request.path in graphql_urls:
             operation_type = "Query"
             operation_name = "Unknown"

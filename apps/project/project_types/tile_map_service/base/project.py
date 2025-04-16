@@ -61,6 +61,7 @@ class TileMapServiceBaseProject(
         super().__init__(project)
         self.tile_server = get_tile_server(self.project_type_specifics.tile_server_property)
 
+    @typing.override
     def _create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:
         bulk_mgr = BulkCreateManager(chunk_size=1000)
 
@@ -84,6 +85,7 @@ class TileMapServiceBaseProject(
         bulk_mgr.done()
         return tasks_count
 
+    @typing.override
     def create_groups(self):
         """Create groups for project extent."""
         for _, raw_group in self.raw_groups.items():
@@ -106,6 +108,7 @@ class TileMapServiceBaseProject(
             total_tasks = self._create_tasks(new_group, raw_group)
             logger.info("Created %s tasks for group: %s", total_tasks, new_group.pk)
 
+    @typing.override
     def validate_geometries(self):
         """Create groups for project extent."""
         # first step get properties of each group from extent

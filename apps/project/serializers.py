@@ -1,3 +1,5 @@
+import typing
+
 import pydantic
 from django.db import transaction
 from django.utils.translation import gettext
@@ -15,7 +17,7 @@ from .tasks import load_project_geometry
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class ProjectSerializer(UserResourceSerializer):
-    class Meta:
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
             "name",
@@ -66,11 +68,13 @@ class ProjectSerializer(UserResourceSerializer):
 
         attrs["project_type_specifics"] = project_type_specifics
 
+    @typing.override
     def validate(self, attrs: dict):
         self._validate_project_type_specifics(attrs)
         return attrs
 
-    def create(self, validated_data):
+    @typing.override
+    def create(self, validated_data: dict):
         new_project = super().create(validated_data)
         transaction.on_commit(lambda: load_project_geometry.delay(new_project.pk))
         return new_project

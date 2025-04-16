@@ -14,10 +14,18 @@ if typing.TYPE_CHECKING:
 
 
 class ProjectTypeEnum(models.IntegerChoices):
-    BUILD_AREA = 1, "Find"  # Classification
+    BUILD_AREA = 1, "Find"
+    """ Find project type. Previously known as Classification / Build Area. """
+
     # FOOTPRINT = 2, "Validate"
+    # """ Validate project type. Previously known as Footprint """
+
     CHANGE_DETECTION = 3, "Compare"
+    """ Compare project type. Previously known as Change Detection. """
+
     COMPLETENESS = 4, "Completeness"
+    """ Completeness project type. """
+
     # MEDIA = 5, "Media"
     # DIGITIZATION = 6, "Digitization"
     # STREET = 7, "Street"
@@ -41,11 +49,11 @@ class ProjectStatusEnum(models.IntegerChoices):
 
 class UploadHelper:
     @staticmethod
-    def project_geometry(instance: "Project", filename):
+    def project_geometry(instance: "Project", filename: str):
         return f"project/{instance.pk}/geometry/{filename}"
 
     @staticmethod
-    def project_image(instance: "Project", filename):
+    def project_image(instance: "Project", filename: str):
         return f"project/{instance.pk}/image/{filename}"
 
 
@@ -58,7 +66,8 @@ class Organization(UserResource):
         unique=True,
     )
 
-    def __str__(self):
+    @typing.override
+    def __str__(self) -> str:
         return self.name
 
 
@@ -66,7 +75,10 @@ class Project(UserResource):
     Type = ProjectTypeEnum
     Status = ProjectStatusEnum
 
+    # The name is generated on the manager dashboard based on other inputs
     name = models.CharField(max_length=255)
+
+    # FIXME: rename this to old_id
     old_project_id = models.CharField(max_length=30, db_index=True, null=True, blank=True)  # noqa: DJ001
     tutorial: "Tutorial" = models.ForeignKey(  # type: ignore[reportAssignmentType]
         "tutorial.Tutorial",
@@ -94,7 +106,7 @@ class Project(UserResource):
     project_type_specifics = models.JSONField(blank=True)
 
     zoom_level = models.PositiveSmallIntegerField()
-    # TODO:t raise CustomError(f"zoom level is too large (max: 22): {zoomLevel}.")
+    # TODO: raise CustomError(f"zoom level is too large (max: 22): {zoomLevel}.")
     group_size = models.PositiveSmallIntegerField()
     is_featured = models.BooleanField(default=False)
     look_for = models.CharField(max_length=255, help_text=gettext_lazy("eg: Buildings and Roads"))
@@ -111,6 +123,7 @@ class Project(UserResource):
 
     verification_number = models.PositiveSmallIntegerField()  # TODO: More detail required?
 
+    @typing.override
     def __str__(self):
         return self.name
 
@@ -119,6 +132,7 @@ class Project(UserResource):
         if commit:
             self.save(update_fields=("status",))
 
+    @typing.override
     def clean(self):
         ...
         # if not self.teamId:
@@ -161,6 +175,7 @@ class ProjectTaskGroup(models.Model):
     # Type hints
     project_id: int
 
+    @typing.override
     def __str__(self):
         return f"(project={self.project_id}, id={self.pk})"
 
@@ -183,5 +198,6 @@ class ProjectTask(models.Model):
     # Type hints
     task_group_id: int
 
+    @typing.override
     def __str__(self):
         return f"task_group_id={self.task_group_id}, id={self.pk}"

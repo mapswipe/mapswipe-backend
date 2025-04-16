@@ -1,3 +1,5 @@
+import typing
+
 from django.db import models
 from django_choices_field import IntegerChoicesField
 
@@ -30,6 +32,7 @@ class MappingSession(models.Model):
     start_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null
     end_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null
 
+    @typing.override
     def __str__(self):
         return str(self.pk)
 
@@ -41,6 +44,7 @@ class MappingSessionResult(models.Model):
 
     # TODO: Add constrant to make sure we have non-duplicate row with task_id, .session.user_id
 
+    @typing.override
     def __str__(self):
         return str(self.pk)
 

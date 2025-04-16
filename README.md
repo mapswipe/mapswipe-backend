@@ -5,7 +5,7 @@
 
 ### Setup
 
-**Clone**
+**Clone repository**
 ```bash
 git clone git@github.com:mapswipe/mapswipe-backend.git mapswipe-backend
 cd mapswipe-backend
@@ -13,12 +13,11 @@ cd mapswipe-backend
 
 **Create a `.env` file**
 > [!IMPORTANT]
-> NOTE: Overwrite/Set variables using .env
+> NOTE: Overwrite/set variables using .env
 >
-> Available options are defined in docker-compose.yml and main/settings.py (env = environ.Env)
+> Available options are defined in ./docker-compose.yaml:10 (environment) and ./main/settings.py:16 (env = environ.Env)
 
-
-**Build and pull images**
+**Pull and build images**
 ```bash
 docker compose pull
 docker compose build
@@ -26,17 +25,18 @@ docker compose build
 
 ### Run
 
-**Essentials**
+**Run Essentials**
 ```bash
 docker compose up
 ```
 
-**Web & Workers**
+**Run Web & Workers**
 ```bash
 docker compose up web worker worker-beat
 ```
 
-### Django migration commansd
+### Django migration commands
+
 ```bash
 # Create new migrations if required
 docker compose exec web ./manage.py makemigrations
@@ -49,6 +49,7 @@ docker compose exec web ./manage.py migrate
 ```
 
 ### User management commands
+
 ```bash
 # Create new user
 docker compose exec web ./manage.py createsuperuser
@@ -56,18 +57,22 @@ docker compose exec web ./manage.py createsuperuser
 # Change existing user's password
 docker compose exec web ./manage.py changepassword mapswipe-user-1
 ```
+
 > https://docs.djangoproject.com/en/latest/ref/django-admin/#createsuperuser
 >
 > https://docs.djangoproject.com/en/5.1/ref/django-admin/#changepassword
 
 ### Generate latest GraphQl schema
+
 ```bash
 docker compose run --rm web ./manage.py graphql_schema --out schema.graphql
+# OR
 docker compose exec web ./manage.py graphql_schema --out schema.graphql
 ```
 
 ## Tips
 You can use django `run` command if there are no running instance for temporary commands
+
 ```bash
 # If you want to generate latest GraphQl schema
 # You can replace this command

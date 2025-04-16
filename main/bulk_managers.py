@@ -1,4 +1,5 @@
 import abc
+import typing
 from collections import defaultdict
 
 from django.apps import apps
@@ -21,7 +22,7 @@ class BaseBulkManager:
         self._summary = defaultdict(int)
 
     @abc.abstractmethod
-    def _commit(self, model_class: type[models.Model]):
+    def _commit(self, model_class: type[models.Model]) -> None:
         raise NotImplementedError
 
     def _process_obj(self, obj: models.Model):
@@ -49,11 +50,12 @@ class BaseBulkManager:
                 self._commit(apps.get_model(model_name))
 
     @abc.abstractmethod
-    def summary(self):
+    def summary(self) -> dict[typing.Any, typing.Any]:
         raise NotImplementedError
 
 
 class BulkCreateManager(BaseBulkManager):
+    @typing.override
     def _commit(self, model_class: type[models.Model]):
         model_key = model_class._meta.label
         model_class.objects.bulk_create(self._queues[model_key])
@@ -65,17 +67,20 @@ class BulkUpdateManager(BaseBulkManager):
         super().__init__(*args, **kwargs)
         self.update_fields = update_fields
 
+    @typing.override
     def _process_obj(self, obj: models.Model):
         if obj.pk is None:
             raise Exception(f"Only object with pk is allowed: {obj}")
         return obj
 
+    @typing.override
     def _commit(self, model_class: type[models.Model]):
         model_key = model_class._meta.label
         model_class.objects.bulk_update(self._queues[model_key], self.update_fields)
         self._summary[model_key] += len(self._queues[model_key])
         self._queues[model_key] = []
 
+    @typing.override
     @abc.abstractmethod
     def summary(self):
         return {"updated": dict(self._summary)}

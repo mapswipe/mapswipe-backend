@@ -12,7 +12,7 @@ requires-python = "~=3.13.2"
 dependencies = [
     "Django~=5.1.6",
     "celery[redis]~=5.4.0",
-    "flower",  # celery-dashboard
+    "flower", # celery-dashboard
     "django-celery-beat",
     "django-cors-headers",
     "django-cte",
@@ -20,19 +20,19 @@ dependencies = [
     "django-premailer",
     "django-redis",
     "django-storages",
-    "djangoql",  # Admin panel query search
+    "djangoql", # Admin panel query search
     "djangorestframework",
     "factory-boy~=3.2.1",
     "gunicorn~=20.1.0",
     "psycopg2-binary",
     "sentry-sdk",
     "strawberry-graphql-django~=0.57.0",
-    "django-choices-field",  # Required by strawberry-graphql-django
+    "django-choices-field", # Required by strawberry-graphql-django
     "django-health-check",
-    "pillow",  # Required by django ImageField
+    "pillow", # Required by django ImageField
     "pydantic==2.10.6",
     # Geo (Used by utils/geo)
-    "gdal==3.6.2",  # NOTE: version depends on the available libgdal-dev version in debian
+    "gdal==3.6.2", # NOTE: version depends on the available libgdal-dev version in debian
     "ogr",
 ]
 
@@ -40,7 +40,9 @@ dependencies = [
 dev = [
     "django-debug-toolbar",
     "django-stubs",
+    "djangorestframework-stubs>=3.15.3",
     "celery-types",
+    "types-factory-boy>=0.4.1",
     "ipython",
     "colorlog",
 ]
@@ -87,13 +89,53 @@ extend-select = ["I", "E", "F", "B", "A", "W", "DJ", "AIR", "COM", "INT", "ISC",
 "**/snap_test_*.py" = ["E501"]
 
 [tool.pyright]
+venvPath = "."
+venv = ".venv"
 exclude = [
     "**/__pycache__",
     "**/snap_test_*.py",
     ".venv/",
     "**/migrations/*.py",
 ]
-reportMissingImports = true
-reportMissingTypeStubs = false
-venvPath = "."
-venv = ".venv"
+typeCheckingMode = "standard"
+analyzeUnannotatedFunctions = true
+enableReachabilityAnalysis = true
+strictDictionaryInference = true
+strictListInteference = true
+strictSetInference = true
+reportCallInDefaultInitializer = "information"
+reportConstantRedefinition = "error"
+reportDeprecated = "information"
+reportDuplicateImport = "warning"
+reportImplicitOverride = "error"
+reportImplicitStringConcatenation = "none"
+reportImportCycles = "warning"
+reportInconsistentConstructor = "warning"
+reportMatchNotExhaustive = "warning"
+reportMissingImports = "error"
+reportMissingParameterType = "warning"
+reportMissingTypeArgument = "warning"
+reportMissingTypeStubs = "warning"
+reportPrivateUsage = "warning"
+reportPropertyTypeMismatch = "error"
+reportShadowedImports = "error"
+reportUninitializedInstanceVariable = "warning"
+reportUnknownArgumentType = "none"
+reportUnknownLambdaType = "none"
+reportUnknownMemberType = "none"
+reportUnknownParameterType = "none"
+reportUnknownVariableType = "none"
+reportUnnecessaryCast = "warning"
+reportUnnecessaryComparison = "warning"
+reportUnnecessaryContains = "warning"
+reportUnnecessaryIsInstance = "warning"
+reportUntypedBaseClass = "warning"
+reportUntypedClassDecorator = "warning"
+reportUntypedFunctionDecorator = "warning"
+reportUntypedNamedTuple = "warning"
+reportUnusedClass = "warning"
+reportUnusedExpression = "warning"
+reportUnusedFunction = "warning"
+reportUnusedImport = "warning"
+reportUnusedVariable = "warning"
+reportPrivateImportUsage = "warning"

@@ -1,3 +1,5 @@
+import typing
+
 from django.db import models
 from django_choices_field import IntegerChoicesField
 
@@ -13,6 +15,7 @@ class ContributorUser(models.Model):
     created_at = models.DateTimeField(null=True)
     modified_at = models.DateTimeField(null=True)
 
+    @typing.override
     def __str__(self):
         return self.username
 
@@ -30,6 +33,7 @@ class ContributorUserGroup(UserResource):
         on_delete=models.PROTECT,
     )
 
+    @typing.override
     def __str__(self):
         return self.name
 
@@ -43,6 +47,7 @@ class ContributorUserGroupMembership(models.Model):
     user_group_id: int
     user_id: int
 
+    @typing.override
     def __str__(self):
         return f"user_group_id={self.user_group_id}, user_id={self.user_id}, is_active={self.is_active}"
 
@@ -63,5 +68,6 @@ class ContributorUserGroupMembershipLog(models.Model):
     # Type hints
     membership_id: int
 
+    @typing.override
     def __str__(self):
         return f"membership={self.membership_id}, action={self.action}"

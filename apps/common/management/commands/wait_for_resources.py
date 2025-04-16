@@ -1,11 +1,12 @@
 import signal
 import time
+import typing
 from urllib.parse import urljoin
 
 import requests
 from django.conf import settings
 from django.core.cache import cache
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandParser
 from django.db import connections
 from django.db.utils import OperationalError
 from redis.exceptions import ConnectionError as RedisConnectionError
@@ -79,7 +80,8 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"Minio is available after {time.time() - start_time} seconds"))
 
-    def add_arguments(self, parser):
+    @typing.override
+    def add_arguments(self, parser: CommandParser):
         parser.add_argument(
             "--timeout",
             "--timeout",
@@ -93,6 +95,7 @@ class Command(BaseCommand):
         parser.add_argument("--minio", action="store_true", help="Wait for MinIO (S3) storage to be available")
         parser.add_argument("--all", action="store_true", help="Wait for all to be available")
 
+    @typing.override
     def handle(self, **kwargs):
         timeout = kwargs["timeout"]
         _all = kwargs["all"]

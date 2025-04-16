@@ -83,6 +83,7 @@ class TestProjectMutation(TestCase):
             }
         """
 
+    @typing.override
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -210,6 +211,7 @@ class TestProjectTypeMutation(TestCase):
             }
         """
 
+    @typing.override
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

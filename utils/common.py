@@ -1,7 +1,9 @@
 import copy
+import typing
 
 
-def clean_up_none_keys(data):
+# TODO: We might also need to support iterating in lists
+def clean_up_none_keys(data: dict[typing.Any, typing.Any]):
     """
     Remove keys with none values (Also supports nested dict)
     Input:

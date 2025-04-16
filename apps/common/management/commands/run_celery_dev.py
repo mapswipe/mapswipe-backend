@@ -1,5 +1,6 @@
 import shlex
 import subprocess
+import typing
 from pathlib import Path
 
 from django.core.management.base import BaseCommand
@@ -17,6 +18,7 @@ def restart_celery(*args, **kwargs):
 
 
 class Command(BaseCommand):
+    @typing.override
     def handle(self, *args, **options):
         self.stdout.write("Starting celery worker with autoreload...")
         if not Path.exists(WORKER_STATE_DIR):

@@ -16,7 +16,7 @@ class CeleryLock:
     @staticmethod
     @contextmanager
     def redis_lock(lock_id: str):
-        timeout_at = time.monotonic() + settings.REDIS_LOCK_EXPIRE - 3
+        timeout_at: float = time.monotonic() + settings.REDIS_LOCK_EXPIRE - 3
         # cache.add fails if the key already exists
         status = cache.add(lock_id, 1, settings.REDIS_LOCK_EXPIRE)
         try:
