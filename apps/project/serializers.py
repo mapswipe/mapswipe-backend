@@ -7,7 +7,7 @@ from rest_framework import serializers
 
 from apps.common.serializers import UserResourceSerializer
 from apps.project.project_types.tile_map_service.change_detection import project as change_detection_project
-from apps.project.project_types.tile_map_service.classification import project as classification_project
+from apps.project.project_types.tile_map_service.find import project as find_project
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
@@ -37,7 +37,7 @@ class ProjectSerializer(UserResourceSerializer):
 
         ENUM_FIELD_MAP = {
             ProjectTypeEnum.CHANGE_DETECTION: ("change_detection", change_detection_project.ChangeDetectionProjectProperty),
-            ProjectTypeEnum.BUILD_AREA: ("classification", classification_project.ClassificationProjectProperty),
+            ProjectTypeEnum.FIND: ("find", find_project.FindProjectProperty),
         }
 
         project_type_label = ProjectTypeEnum.get_display(project_type)

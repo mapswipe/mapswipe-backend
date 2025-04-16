@@ -4,7 +4,7 @@ import strawberry_django
 from apps.common.graphql.types import UserResourceTypeMixin
 from apps.project.models import Organization, Project
 from apps.project.project_types.tile_map_service.change_detection import project as change_detection_project
-from apps.project.project_types.tile_map_service.classification import project as classification_project
+from apps.project.project_types.tile_map_service.find import project as find_project
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
 
 
@@ -32,8 +32,8 @@ class ProjectTileServerConfig: ...
 class ChangeDetectionProjectPropertyType: ...
 
 
-@strawberry.experimental.pydantic.type(model=classification_project.ClassificationProjectProperty, all_fields=True)
-class ClassificationProjectPropertyType: ...
+@strawberry.experimental.pydantic.type(model=find_project.FindProjectProperty, all_fields=True)
+class FindProjectPropertyType: ...
 
 
 @strawberry_django.type(Project)
@@ -45,4 +45,4 @@ class ProjectType:
     organization: OrganizationType
     project_type: strawberry.auto
 
-    project_type_specifics: ChangeDetectionProjectPropertyType | ClassificationProjectPropertyType
+    project_type_specifics: ChangeDetectionProjectPropertyType | FindProjectPropertyType

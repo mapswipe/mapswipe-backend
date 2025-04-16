@@ -104,7 +104,7 @@ class TestProjectMutation(TestCase):
             "verificationNumber": 1,
             "lookFor": "Buildings",
             "projectTypeSpecifics": {
-                "classification": {
+                "find": {
                     "zoomLevel": 15,
                     "tileServerProperty": {
                         "name": self.genum(TileServerNameEnum.CUSTOM),
@@ -142,7 +142,7 @@ class TestProjectMutation(TestCase):
         assert resp_data["errors"] is not None, content
 
         # Fix the error and try again
-        project_data["projectType"] = self.genum(ProjectTypeEnum.BUILD_AREA)
+        project_data["projectType"] = self.genum(ProjectTypeEnum.FIND)
         content = _query()
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] is None, content
@@ -161,7 +161,7 @@ class TestProjectMutation(TestCase):
                     name=latest_project.organization.name,
                 ),
                 organizationId=self.gID(latest_project.organization.pk),
-                projectType=self.genum(ProjectTypeEnum.BUILD_AREA),
+                projectType=self.genum(ProjectTypeEnum.FIND),
             ),
         ), content
 
@@ -285,7 +285,7 @@ class TestProjectTypeMutation(TestCase):
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
-                "classification": {  # NOTE: Different project type
+                "find": {  # NOTE: Different project type
                     "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["valid_custom"],
                 },
@@ -333,7 +333,7 @@ class TestProjectTypeMutation(TestCase):
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
-                "classification": {},
+                "find": {},
             },
         }
         content = self._query(project_data, assert_errors=True)
@@ -342,7 +342,7 @@ class TestProjectTypeMutation(TestCase):
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
-                "classification": {
+                "find": {
                     "zoomLevel": 15,
                     "tileServerProperty": {},
                 },

@@ -23,7 +23,7 @@ class ProjectFactory(DjangoModelFactory):
     name = factory.Sequence(lambda n: f"Project {n}")
     organization = factory.SubFactory(OrganizationFactory)
 
-    project_type = Project.Type.BUILD_AREA
+    project_type = Project.Type.FIND
     image = factory.django.ImageField(filename="preview.png")
     project_type_specifics = factory.LazyAttribute(lambda _: {})
 

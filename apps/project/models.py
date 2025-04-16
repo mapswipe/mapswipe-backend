@@ -14,7 +14,7 @@ if typing.TYPE_CHECKING:
 
 
 class ProjectTypeEnum(models.IntegerChoices):
-    BUILD_AREA = 1, "Find"
+    FIND = 1, "Find"
     """ Find project type. Previously known as Classification / Build Area. """
 
     # FOOTPRINT = 2, "Validate"
