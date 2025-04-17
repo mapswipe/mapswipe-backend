@@ -6,7 +6,7 @@ from django.core.files.temp import NamedTemporaryFile
 
 from apps.project.factories import OrganizationFactory
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
-from apps.project.project_types.tile_map_service.change_detection import project as change_detection_project
+from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.user.factories import UserFactory
 from main.tests import TestCase
 from utils.geo.tile_server.config import TileServerNameEnum
@@ -99,7 +99,7 @@ class TestProjectMutation(TestCase):
         project_data = {
             "name": "New Project 101",
             "organization": self.organization.pk,
-            "projectType": self.genum(ProjectTypeEnum.CHANGE_DETECTION),
+            "projectType": self.genum(ProjectTypeEnum.COMPARE),
             "groupSize": 15,
             "verificationNumber": 1,
             "lookFor": "Buildings",
@@ -274,11 +274,11 @@ class TestProjectTypeMutation(TestCase):
                 **kwargs,
             )
 
-    def test_project_change_detection(self):
+    def test_project_compare(self):
         self.force_login(self.user)
         project_data = {
             **self.project_data,
-            "projectType": self.genum(ProjectTypeEnum.CHANGE_DETECTION),
+            "projectType": self.genum(ProjectTypeEnum.COMPARE),
         }
 
         # Pydantic error (with valid projectTypeSpecifics type but invalid data)
@@ -354,7 +354,7 @@ class TestProjectTypeMutation(TestCase):
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
-                "changeDetection": {
+                "compare": {
                     "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["valid_custom"],
                 },
@@ -366,7 +366,7 @@ class TestProjectTypeMutation(TestCase):
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
-                "changeDetection": {
+                "compare": {
                     "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["invalid_custom"],
                     "tileServerBProperty": self.tile_server_property["valid_custom"],
@@ -381,7 +381,7 @@ class TestProjectTypeMutation(TestCase):
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
-                "changeDetection": {
+                "compare": {
                     "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["invalid_custom_02"],
                     "tileServerBProperty": self.tile_server_property["valid_custom"],
@@ -396,7 +396,7 @@ class TestProjectTypeMutation(TestCase):
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
-                "changeDetection": {
+                "compare": {
                     "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["valid_custom"],
                     "tileServerBProperty": self.tile_server_property["valid_custom_02"],
@@ -416,7 +416,7 @@ class TestProjectTypeMutation(TestCase):
             "tile_server_property": self.tile_server_property_internal["valid_custom"],
             "tile_server_b_property": self.tile_server_property_internal["valid_custom_02"],
         }
-        change_detection_project.ChangeDetectionProjectProperty.model_validate(latest_project.project_type_specifics)
+        compare_project.CompareProjectProperty.model_validate(latest_project.project_type_specifics)
 
         expected_task_groups = [
             {

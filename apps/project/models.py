@@ -20,7 +20,7 @@ class ProjectTypeEnum(models.IntegerChoices):
     # FOOTPRINT = 2, "Validate"
     # """ Validate project type. Previously known as Footprint """
 
-    CHANGE_DETECTION = 3, "Compare"
+    COMPARE = 3, "Compare"
     """ Compare project type. Previously known as Change Detection. """
 
     COMPLETENESS = 4, "Completeness"

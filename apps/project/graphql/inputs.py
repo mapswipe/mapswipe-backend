@@ -3,7 +3,7 @@ import strawberry_django
 from strawberry.file_uploads import Upload
 
 from apps.project.models import Project
-from apps.project.project_types.tile_map_service.change_detection import project as change_detection_project
+from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.project_types.tile_map_service.find import project as find_project
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
 
@@ -22,8 +22,8 @@ class ProjectTileServerConfigInput: ...
 
 
 # Project Properties
-@strawberry.experimental.pydantic.input(model=change_detection_project.ChangeDetectionProjectProperty, all_fields=True)
-class ChangeDetectionProjectPropertyInput: ...
+@strawberry.experimental.pydantic.input(model=compare_project.CompareProjectProperty, all_fields=True)
+class CompareProjectPropertyInput: ...
 
 
 @strawberry.experimental.pydantic.input(model=find_project.FindProjectProperty, all_fields=True)
@@ -32,7 +32,7 @@ class FindProjectPropertyInput: ...
 
 @strawberry.input(one_of=True)
 class ProjectTypeSpecificInput:
-    change_detection: ChangeDetectionProjectPropertyInput | None = strawberry.UNSET
+    compare: CompareProjectPropertyInput | None = strawberry.UNSET
     find: FindProjectPropertyInput | None = strawberry.UNSET
 
 
