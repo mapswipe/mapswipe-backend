@@ -10,7 +10,11 @@ from apps.user.models import User
 # NOTE: Users are created from Apps (Web/Mobile)
 class ContributorUser(models.Model):
     # NOTE: Sync with firebase
-    user_id = models.CharField(max_length=30, db_index=True)
+    user_id = models.CharField(
+        max_length=30,
+        db_index=True,
+        help_text="Firebase User ID",
+    )
     username = models.CharField(max_length=255)
     created_at = models.DateTimeField(null=True)
     modified_at = models.DateTimeField(null=True)

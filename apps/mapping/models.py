@@ -23,6 +23,9 @@ class MappingSessionClientTypeEnum(models.IntegerChoices):
 
 
 class MappingSession(models.Model):
+    # FIXME(tnagorra): We might need to skip the indexing
+    old_id = models.CharField(max_length=30, db_index=True, null=True)
+
     project_task_group = models.ForeignKey(ProjectTaskGroup, on_delete=models.PROTECT)
     contributor_user = models.ForeignKey(ContributorUser, on_delete=models.PROTECT)
 
@@ -38,6 +41,9 @@ class MappingSession(models.Model):
 
 
 class MappingSessionResult(models.Model):
+    # FIXME(tnagorra): We might need to skip the indexing
+    old_id = models.CharField(max_length=30, db_index=True, null=True)
+
     session = models.ForeignKey(MappingSession, on_delete=models.PROTECT)
     project_task = models.ForeignKey(ProjectTask, on_delete=models.PROTECT)
     result = models.PositiveSmallIntegerField()

@@ -75,7 +75,7 @@ class Project(UserResource):
     Type = ProjectTypeEnum
     Status = ProjectStatusEnum
 
-    old_id = models.CharField(max_length=30, db_index=True, null=True, blank=True)  # noqa: DJ001
+    old_id = models.CharField(max_length=30, db_index=True, null=True, blank=True)
 
     project_type: ProjectTypeEnum = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=ProjectTypeEnum,
@@ -88,6 +88,8 @@ class Project(UserResource):
         related_name="+",
         help_text=gettext_lazy("Which group, institution or community is requesting this project?"),
     )
+
+    # TODO: Add uniqueness on project topic? Discuss with PM
 
     # Generate in manager dashboard based on topic, region, project number, requesting org
     name = models.CharField(max_length=255)
@@ -201,6 +203,9 @@ class Project(UserResource):
 
 
 class ProjectTaskGroup(models.Model):
+    # FIXME(tnagorra): We might need to skip the indexing
+    old_id = models.CharField(max_length=30, db_index=True, null=True)
+
     project: Project = models.ForeignKey(  # type: ignore[reportAssignmentType]
         Project,
         on_delete=models.CASCADE,
@@ -231,6 +236,9 @@ class ProjectTaskGroup(models.Model):
 
 
 class ProjectTask(models.Model):
+    # FIXME(tnagorra): We might need to skip the indexing
+    old_id = models.CharField(max_length=30, db_index=True, null=True)
+
     task_group: ProjectTaskGroup = models.ForeignKey(  # type: ignore[reportAssignmentType]
         ProjectTaskGroup,
         on_delete=models.CASCADE,
