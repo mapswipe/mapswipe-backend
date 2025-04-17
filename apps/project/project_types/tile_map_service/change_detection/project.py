@@ -44,17 +44,21 @@ class ChangeDetectionProject(
         tasks_count = 0
         for tile_x in range(raw_group["xMin"], raw_group["xMax"] + 1):
             for tile_y in range(raw_group["yMin"], raw_group["yMax"] + 1):
-                geometry = tile_functions.geometry_from_tile_coords(tile_x, tile_y, self.project.zoom_level)
+                geometry = tile_functions.geometry_from_tile_coords(
+                    tile_x,
+                    tile_y,
+                    self.project_type_specifics.zoom_level,
+                )
                 url = self.tile_server.generate_url(
                     tile_x,
                     tile_y,
-                    self.project.zoom_level,
+                    self.project_type_specifics.zoom_level,
                 )
                 # Additional
                 url_b = self.tile_server_b.generate_url(
                     tile_x,
                     tile_y,
-                    self.project.zoom_level,
+                    self.project_type_specifics.zoom_level,
                 )
                 bulk_mgr.add(
                     ProjectTask(

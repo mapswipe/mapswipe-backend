@@ -25,7 +25,6 @@ class ProjectSerializer(UserResourceSerializer):
             "organization",
             "image",
             "geometry_file",
-            "zoom_level",
             "group_size",
             "verification_number",
             "look_for",

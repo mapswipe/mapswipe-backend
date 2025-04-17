@@ -45,7 +45,6 @@ class ProjectInput:
     image: Upload
     geometry_file: Upload
 
-    zoom_level: strawberry.auto
     group_size: strawberry.auto
     verification_number: strawberry.auto
     look_for: strawberry.auto
@@ -61,7 +60,6 @@ class ProjectInputPartial:
     image: Upload
     geometry_file: Upload
 
-    zoom_level: strawberry.auto
     group_size: strawberry.auto
     verification_number: strawberry.auto
     look_for: strawberry.auto

@@ -164,10 +164,6 @@ class Project(UserResource):
 
     # DEPRECATED
 
-    # TODO: Move this inside project_type_specifics
-    # TODO: This should be an integer from 14 to 22
-    zoom_level = models.PositiveSmallIntegerField()
-
     # TODO: It's not always possible to have geometry during project creation.
     geometry_file = models.FileField(upload_to=UploadHelper.project_geometry, null=True, blank=True)
 

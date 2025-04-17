@@ -100,7 +100,6 @@ class TestProjectMutation(TestCase):
             "name": "New Project 101",
             "organization": self.organization.pk,
             "projectType": self.genum(ProjectTypeEnum.CHANGE_DETECTION),
-            "zoomLevel": 15,
             "groupSize": 15,
             "verificationNumber": 1,
             "lookFor": "Buildings",
@@ -227,7 +226,6 @@ class TestProjectTypeMutation(TestCase):
         cls.project_data = {
             "name": "New Project 101",
             "organization": cls.organization.pk,
-            "zoomLevel": 15,
             "groupSize": 15,
             "verificationNumber": 1,
             "lookFor": "Buildings",
