@@ -86,7 +86,7 @@ def handle_pydantic_validation_error(
                 include_context=False,
                 include_url=False,
             ),
-        },
+        },  # type: ignore[reportArgumentType]
     )
 
 
@@ -161,7 +161,7 @@ def serializer_error_to_error_types(
                     array_errors.append(
                         ArrayNestedErrorType(
                             client_id=array_client_id,
-                            object_errors=serializer_error_to_error_types(array_item, initial_data[field][pos]),
+                            object_errors=serializer_error_to_error_types(array_item, initial_data[field][pos]),  # type: ignore[reportArgumentType]
                             messages=None,
                         ),
                     )
@@ -179,7 +179,7 @@ def serializer_error_to_error_types(
             error_types.append(
                 _CustomErrorType(
                     field=to_camel_case(field),
-                    messages=" ".join(str(msg) for msg in value),
+                    messages=" ".join(str(msg) for msg in value or []),
                     array_errors=None,
                     object_errors=None,
                 ),
