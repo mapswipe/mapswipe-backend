@@ -10,7 +10,7 @@ class TileServerNameEnum(models.TextChoices):
     MAXAR_PREMIUM = "MAXAR_PREMIUM", "Maxar Premium"
     ESRI = "ESRI", "ESRI World Imagery"
     ESRI_BETA = "ESRI_BETA", "ESRI World Imagery (Clarity) Beta"
-    # TODO: Confirm if we have more/less
+    # TODO(thenav56): Confirm if we have more/less
 
 
 class Config:

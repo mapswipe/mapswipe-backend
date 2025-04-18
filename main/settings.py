@@ -344,7 +344,7 @@ if APP_DOMAIN.scheme == "https":
     SESSION_COOKIE_NAME = f"__Secure-{SESSION_COOKIE_NAME}"
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
-    SECURE_HSTS_SECONDS = 30  # TODO: Increase this slowly
+    SECURE_HSTS_SECONDS = 30  # TODO(thenav56): Increase this slowly
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -423,7 +423,7 @@ MAP_IMAGE_ESRI_API_KEY = env("MAP_IMAGE_ESRI_API_KEY")
 MAP_IMAGE_ESRI_BETA_API_KEY = env("MAP_IMAGE_ESRI_BETA_API_KEY")
 # MAP_IMAGE_DIGITAL_GLOBE_API_KEY = env("MAP_IMAGE_DIGITAL_GLOBE_API_KEY")
 
-# TODO: Handle file logs using gunicorn
+# TODO(thenav56): Handle file logs using gunicorn
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

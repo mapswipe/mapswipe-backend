@@ -35,11 +35,12 @@ class UnSupportedGeoExtenstionException(Exception):
     pass
 
 
+# FIXME(tnagorra): Create a TypedDict
 def get_geometry_from_file(infile: str) -> tuple[GeoExtent, list[Polygon]]:
     data_source = DataSource(infile)
 
     # Get the data layer
-    # TODO: Proper validation
+    # TODO(tnagorra): Proper validation
     assert data_source.layer_count == 1
     layer = data_source[0]
 
@@ -241,8 +242,8 @@ def get_vertical_slice(
             PixelY = TileY_bottom * 256
             lon_right, lat_bottom = tile_functions.pixel_coords_zoom_to_lat_lon(PixelX, PixelY, zoom)
 
-            # TODO line 254-262 does exactly the same as in line 345-352,
-            #  maybe put it in a function create_geom_from_group_coords
+            # TODO(thenav56): line 254-262 does exactly the same as in line 345-352,
+            # maybe put it in a function create_geom_from_group_coords
             # Create Geometry
 
             group_poly = Polygon(

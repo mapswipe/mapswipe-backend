@@ -109,7 +109,7 @@ class TileMapServiceBaseProject(
         """Create groups for project extent."""
         for _, raw_group in self.raw_groups.items():
             # Create new group
-            # TODO: Bulk create here as well?
+            # TODO(thenav56): Bulk create here as well?
             new_group = ProjectTaskGroup.objects.create(
                 project_id=self.project.pk,
                 number_of_tasks=0,
@@ -133,9 +133,12 @@ class TileMapServiceBaseProject(
         # first step get properties of each group from extent
         extension = Path(self.project.geometry_file.file.name).suffix
         with tempfile.NamedTemporaryFile(suffix=extension, dir=settings.TEMP_DIR) as temp_file:
-            # FIXME: self.project.geometry is not a file
             temp_file.write(self.project.geometry_file.file.read())
+            # FIXME(thenav56): self.project.geometry is not a file
             temp_file.flush()
+
+            # TODO(tnagorra): Add validation on area
+
             self.raw_groups = tile_grouping.extent_to_groups(
                 temp_file.name,
                 self.project_type_specifics.zoom_level,

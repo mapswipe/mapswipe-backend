@@ -29,7 +29,7 @@ class ProjectTypeEnum(models.IntegerChoices):
     # MEDIA = 5, "Media"
     # DIGITIZATION = 6, "Digitization"
     # STREET = 7, "Street"
-    # TODO: Confirm if we have more/less
+    # TODO(thenav56): Confirm if we have more/less
 
     @classmethod
     def get_display(cls, value: typing.Self | int) -> str:
@@ -44,7 +44,7 @@ class ProjectStatusEnum(models.IntegerChoices):
     PRIVATE_FINISHED = 3, "Private finished"
     ARCHIVED = 4, "Archived"
     FINISHED = 5, "Finished"
-    # TODO: Paused?
+    # TODO(thenav56): Paused?
 
 
 class UploadHelper:
@@ -89,12 +89,12 @@ class Project(UserResource):
         help_text=gettext_lazy("Which group, institution or community is requesting this project?"),
     )
 
-    # TODO: Add uniqueness on project topic? Discuss with PM
+    # TODO(tnagorra): Add uniqueness on project topic? Discuss with PM
 
     # Generate in manager dashboard based on topic, region, project number, requesting org
     name = models.CharField(max_length=255)
 
-    # TODO: Max length is 25 in manager dashboard.
+    # TODO(tnagorra): Max length is 25 in manager dashboard.
     look_for = models.CharField(
         max_length=255,
         help_text=gettext_lazy("What should the users look for (e.g. buildings, cars, trees)"),
@@ -106,8 +106,8 @@ class Project(UserResource):
         help_text=gettext_lazy("Provide an optional link to a resource with additional information on the project"),
     )  # NOTE: manual_url before
 
-    # TODO: Max length is 10000 in manager dashboard.
-    # TODO: This should be required.
+    # TODO(tnagorra): Max length is 10000 in manager dashboard.
+    # TODO(tnagorra): This should be required.
     # NOTE: Markdown syntax is supported.
     description = models.TextField(
         null=True,
@@ -115,7 +115,7 @@ class Project(UserResource):
     )  # NOTE: project_details before
 
     # NOTE: JPG and PNG should be supported.
-    # TODO: We might need to further validation for image.
+    # TODO(tnagorra): We might need to further validation for image.
     image = models.FileField(
         upload_to=UploadHelper.project_image,
     )  # NOTE: project_image before
@@ -130,29 +130,29 @@ class Project(UserResource):
         help_text=gettext_lazy("Tutorial used for this project."),
     )  # NOTE: tutorial_id before
 
-    # TODO: This should be an integer from 3 to 10000
+    # TODO(tnagorra): This should be an integer from 3 to 10000
     verification_number = models.PositiveSmallIntegerField(
         help_text=gettext_lazy("How many people do you want to see every tile before you consider it finished?"),
     )
 
-    # TODO: This should be an integer from 10 to 25
+    # TODO(tnagorra): This should be an integer from 10 to 25
     group_size = models.PositiveSmallIntegerField(
         help_text=gettext_lazy(
             "How big should a mapping session be? Group size refers to the number of tasks per mapping session.",
         ),
     )
 
-    # TODO: This should be an integer from 10 to 250
-    # TODO: Empty indicates that no limit is set. But, this field is required in manager dashboard.
+    # TODO(tnagorra): This should be an integer from 10 to 250
+    # TODO(tnagorra): Empty indicates that no limit is set. But, this field is required in manager dashboard.
     max_tasks_per_user = models.PositiveSmallIntegerField(
         help_text=gettext_lazy("How many tasks each user is allowed to work on for this project"),
         null=True,
         blank=True,
     )
 
-    # TODO: Currently this field collects any data not stored by another fields, pulled from firebase.
+    # TODO(tnagorra): Currently this field collects any data not stored by another fields, pulled from firebase.
     # Also, used in SQL queries
-    # FIXME: Refactor this
+    # FIXME(thenav56): Refactor this
     project_type_specifics = models.JSONField(blank=True)
 
     # STATUS
@@ -218,9 +218,9 @@ class ProjectTaskGroup(models.Model):
     finished_count = models.IntegerField(default=0)
     progress = models.PositiveSmallIntegerField(default=0, validators=[validate_percentage])
 
-    # TODO: Currently this field collects any data not stored by another fields, pulled from firebase.
+    # TODO(thenav56): Currently this field collects any data not stored by another fields, pulled from firebase.
     # Also, used in SQL queries
-    # FIXME: Refactor this
+    # FIXME(thenav56): Refactor this
     project_type_specifics = models.JSONField()
 
     # NOTE: Maintained by Aggregator (Community Dashboard)
@@ -245,12 +245,12 @@ class ProjectTask(models.Model):
         related_name="+",
     )
 
-    # FIXME: Existing gid_models.MultiPolygonField(srid=4326, blank=True, null=True)
+    # FIXME(thenav56): Existing gid_models.MultiPolygonField(srid=4326, blank=True, null=True)
     geometry = gid_models.GeometryField(null=True, blank=True, default=None, dim=3)
 
-    # TODO: Currently this field collects any data not stored by another fields, pulled from firebase.
+    # TODO(thenav56): Currently this field collects any data not stored by another fields, pulled from firebase.
     # Also, used in SQL queries
-    # FIXME: Refactor this
+    # FIXME(thenav56): Refactor this
     project_type_specifics = models.JSONField()
 
     # Type hints

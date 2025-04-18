@@ -2,7 +2,7 @@ import copy
 import typing
 
 
-# TODO: We might also need to support iterating in lists
+# TODO(tnagorra): We might also need to support iterating in lists
 def clean_up_none_keys(data: dict[typing.Any, typing.Any]):
     """
     Remove keys with none values (Also supports nested dict)

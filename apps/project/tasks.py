@@ -20,9 +20,9 @@ def load_project_geometry(project_id: int):
     try:
         project_type_handler = get_project_type_handler(project.project_type)(project)
         project_type_handler.save_project()
-        # TODO: project.update_status(ProjectStatusEnum.GEOMETRY_LOADED)
+        # TODO(thenav56): project.update_status(ProjectStatusEnum.GEOMETRY_LOADED)
         return True
     except Exception:
         logger.error("Project geometry load failed", exc_info=True)
-        # TODO: project.update_status(ProjectStatusEnum.FAILED)
+        # TODO(thenav56): project.update_status(ProjectStatusEnum.FAILED)
         return False

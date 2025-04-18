@@ -31,7 +31,7 @@ if settings.DEBUG:
         [
             path(
                 "graphiql/",
-                csrf_exempt(  # TODO: Remove this
+                csrf_exempt(  # TODO(thenav56): Remove this
                     CustomAsyncGraphQLView.as_view(
                         **base_graphql_kwargs,
                         graphql_ide="graphiql",

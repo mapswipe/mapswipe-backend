@@ -31,7 +31,7 @@ class MappingSession(models.Model):
 
     app_version = models.CharField(max_length=10)
     client_type = IntegerChoicesField(choices_enum=MappingSessionClientTypeEnum)
-    items_count = models.IntegerField()  # TODO: Rename or just use task_group.number_of_tasks?
+    items_count = models.IntegerField()  # TODO(thenav56): Rename or just use task_group.number_of_tasks?
     start_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null
     end_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null
 
@@ -48,14 +48,14 @@ class MappingSessionResult(models.Model):
     project_task = models.ForeignKey(ProjectTask, on_delete=models.PROTECT)
     result = models.PositiveSmallIntegerField()
 
-    # TODO: Add constrant to make sure we have non-duplicate row with task_id, .session.user_id
+    # TODO(thenav56): Add constrant to make sure we have non-duplicate row with task_id, .session.user_id
 
     @typing.override
     def __str__(self):
         return str(self.pk)
 
 
-# TODO: mapping_sessions_results_geometry
+# TODO(thenav56): mapping_sessions_results_geometry
 #
 # CREATE TABLE IF NOT EXISTS mapping_sessions_results_geometry (
 #     mapping_session_id int8,

@@ -16,7 +16,7 @@ def load_user(keys: list[int]) -> list["UserType"]:
 
 
 class UserDataLoader:
-    # FIXME: Not used
+    # FIXME(thenav56): Not used
     @cached_property
     def load_user(self):
         return DataLoader(load_fn=sync_to_async(load_user))
