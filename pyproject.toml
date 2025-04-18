@@ -11,7 +11,7 @@ requires-python = "~=3.13.2"
 
 dependencies = [
     "Django~=5.1.6",
-    "celery[redis]~=5.4.0",
+    "celery[redis]~=5.5.1",
     "flower", # celery-dashboard
     "django-celery-beat",
     "django-cors-headers",
