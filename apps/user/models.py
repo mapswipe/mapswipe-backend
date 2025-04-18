@@ -1,3 +1,5 @@
+import typing
+
 # from __future__ import annotations
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -17,6 +19,7 @@ class User(AbstractUser):
 
     pk: int
 
+    @typing.override
     def save(self, *args, **kwargs):
         # Make sure email are same and lowercase
         self.email = self.email.lower()

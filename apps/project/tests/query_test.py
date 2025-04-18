@@ -1,3 +1,5 @@
+import typing
+
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.user.factories import UserFactory
 from main.tests import TestCase
@@ -22,6 +24,7 @@ class TestProjectQuery(TestCase):
             }
         """
 
+    @typing.override
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

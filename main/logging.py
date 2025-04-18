@@ -1,4 +1,5 @@
 import logging
+import typing
 
 import requests
 
@@ -14,7 +15,7 @@ def log_render_extra_context(record: logging.LogRecord):
     return True
 
 
-def log_extra(extra: dict):
+def log_extra(extra: dict[typing.Any, typing.Any]):
     """Basic helper function to view extra argument in logs using log_render_extra_context"""
     return {
         "context": extra,

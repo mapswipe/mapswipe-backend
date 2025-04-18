@@ -14,7 +14,7 @@ class UserFactory(DjangoModelFactory):
         model = User
 
     @factory.post_generation
-    def password(obj, create, password, **_):
+    def password(obj, create: bool, password, **_):
         if not create:
             return
         password_text = password or fuzzy.FuzzyText(length=15).fuzz()

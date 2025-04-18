@@ -39,7 +39,8 @@ def get_geometry_from_file(infile: str) -> tuple[GeoExtent, list[Polygon]]:
     data_source = DataSource(infile)
 
     # Get the data layer
-    assert data_source.layer_count == 1  # TODO: Proper validation
+    # TODO: Proper validation
+    assert data_source.layer_count == 1
     layer = data_source[0]
 
     # get feature geometry of all features of the input file
@@ -64,8 +65,8 @@ def get_horizontal_slice(
     and max tile coordinates for the geometry.
     """
 
-    tile_y_top = []
-    tile_y_bottom = []
+    tile_y_top: list[int] = []
+    tile_y_bottom: list[int] = []
     slice_collection = GeometryCollection()
 
     xmin = extent[0]
@@ -350,7 +351,7 @@ def adjust_overlapping_groups(
 ) -> tuple[dict[str, RawGroup], int]:
     """Loop through groups dict and merge overlapping groups."""
 
-    groups_without_overlap = {}
+    groups_without_overlap: dict[str, RawGroup] = {}
     overlaps_total = 0
 
     for group_id in list(groups.keys()):

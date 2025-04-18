@@ -3,8 +3,8 @@ import strawberry_django
 from strawberry.file_uploads import Upload
 
 from apps.project.models import Project
-from apps.project.project_types.tile_map_service.change_detection import project as change_detection_project
-from apps.project.project_types.tile_map_service.classification import project as classification_project
+from apps.project.project_types.tile_map_service.compare import project as compare_project
+from apps.project.project_types.tile_map_service.find import project as find_project
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
 
 
@@ -22,18 +22,18 @@ class ProjectTileServerConfigInput: ...
 
 
 # Project Properties
-@strawberry.experimental.pydantic.input(model=change_detection_project.ChangeDetectionProjectProperty, all_fields=True)
-class ChangeDetectionProjectPropertyInput: ...
+@strawberry.experimental.pydantic.input(model=compare_project.CompareProjectProperty, all_fields=True)
+class CompareProjectPropertyInput: ...
 
 
-@strawberry.experimental.pydantic.input(model=classification_project.ClassificationProjectProperty, all_fields=True)
-class ClassificationProjectPropertyInput: ...
+@strawberry.experimental.pydantic.input(model=find_project.FindProjectProperty, all_fields=True)
+class FindProjectPropertyInput: ...
 
 
 @strawberry.input(one_of=True)
 class ProjectTypeSpecificInput:
-    change_detection: ChangeDetectionProjectPropertyInput | None = strawberry.UNSET
-    classification: ClassificationProjectPropertyInput | None = strawberry.UNSET
+    compare: CompareProjectPropertyInput | None = strawberry.UNSET
+    find: FindProjectPropertyInput | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
@@ -45,7 +45,6 @@ class ProjectInput:
     image: Upload
     geometry_file: Upload
 
-    zoom_level: strawberry.auto
     group_size: strawberry.auto
     verification_number: strawberry.auto
     look_for: strawberry.auto
@@ -61,7 +60,6 @@ class ProjectInputPartial:
     image: Upload
     geometry_file: Upload
 
-    zoom_level: strawberry.auto
     group_size: strawberry.auto
     verification_number: strawberry.auto
     look_for: strawberry.auto

@@ -1,3 +1,5 @@
+import typing
+
 from django.db import models
 from django_choices_field import IntegerChoicesField
 
@@ -21,6 +23,9 @@ class MappingSessionClientTypeEnum(models.IntegerChoices):
 
 
 class MappingSession(models.Model):
+    # FIXME(tnagorra): We might need to skip the indexing
+    old_id = models.CharField(max_length=30, db_index=True, null=True)
+
     project_task_group = models.ForeignKey(ProjectTaskGroup, on_delete=models.PROTECT)
     contributor_user = models.ForeignKey(ContributorUser, on_delete=models.PROTECT)
 
@@ -30,17 +35,22 @@ class MappingSession(models.Model):
     start_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null
     end_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null
 
+    @typing.override
     def __str__(self):
         return str(self.pk)
 
 
 class MappingSessionResult(models.Model):
+    # FIXME(tnagorra): We might need to skip the indexing
+    old_id = models.CharField(max_length=30, db_index=True, null=True)
+
     session = models.ForeignKey(MappingSession, on_delete=models.PROTECT)
     project_task = models.ForeignKey(ProjectTask, on_delete=models.PROTECT)
     result = models.PositiveSmallIntegerField()
 
     # TODO: Add constrant to make sure we have non-duplicate row with task_id, .session.user_id
 
+    @typing.override
     def __str__(self):
         return str(self.pk)
 

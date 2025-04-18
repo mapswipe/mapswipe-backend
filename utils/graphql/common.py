@@ -1,9 +1,10 @@
+import typing
 from dataclasses import is_dataclass
 
 import strawberry
 
 
-def parse_input_data(data) -> dict | list:
+def parse_input_data(data: typing.Any) -> dict[typing.Any, typing.Any] | list[typing.Any]:
     """
     Return dict from Strawberry Input Object
     NOTE: strawberry.asdict doesn't handle nested and strawberry.UNSET

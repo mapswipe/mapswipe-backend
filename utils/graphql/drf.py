@@ -1,4 +1,5 @@
 import re
+import typing
 
 import strawberry
 from pydantic import ValidationError as PydanticValidationError
@@ -9,14 +10,14 @@ from .types import CustomErrorType
 
 # Adapted from this response in Stackoverflow
 # http://stackoverflow.com/a/19053800/1072990
-def to_camel_case(snake_str):
+def to_camel_case(snake_str: str):
     components = snake_str.split("_")
     # We capitalize the first letter of each component except the first one
     # with the 'capitalize' method and join them together.
     return components[0] + "".join(x.capitalize() if x else "_" for x in components[1:])
 
 
-def to_snake_case(name):
+def to_snake_case(name: str):
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
@@ -33,7 +34,7 @@ class ArrayNestedErrorType:
     def keys(self):
         return ["client_id", "messages", "object_errors"]
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str):
         key = to_snake_case(key)
         if key in ("object_errors",) and getattr(self, key):
             return [dict(each) for each in getattr(self, key)]
@@ -49,7 +50,7 @@ class _CustomErrorType:
     array_errors: list[ArrayNestedErrorType | None] | None
     pydantic_errors: list[CustomErrorType] | None = None
 
-    DEFAULT_ERROR_MESSAGE = "Something unexpected has occurred. Please contact an admin to fix this issue."
+    DEFAULT_ERROR_MESSAGE: str = "Something unexpected has occurred. Please contact an admin to fix this issue."
 
     @staticmethod
     def generate_message(message: str = DEFAULT_ERROR_MESSAGE) -> CustomErrorType:
@@ -67,7 +68,7 @@ class _CustomErrorType:
     def keys(self):
         return ["field", "client_id", "messages", "object_errors", "array_errors", "pydantic_errors"]
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str):
         key = to_snake_case(key)
         if key in ("object_errors", "array_errors") and getattr(self, key):
             return [dict(each) for each in getattr(self, key)]
@@ -85,14 +86,17 @@ def handle_pydantic_validation_error(
                 include_context=False,
                 include_url=False,
             ),
-        },
+        },  # type: ignore[reportArgumentType]
     )
 
 
-def serializer_error_to_error_types(errors: dict, initial_data: dict | None = None) -> list:
+def serializer_error_to_error_types(
+    errors: dict[str, list[CustomErrorType] | None],
+    initial_data: dict[typing.Any, typing.Any] | None = None,
+) -> list[typing.Any]:
     initial_data = initial_data or {}
     node_client_id = initial_data.get("client_id")
-    error_types = []
+    error_types: list[_CustomErrorType] = []
     for field, value in errors.items():
         if field.endswith("-pydantic"):
             error_types.append(
@@ -157,7 +161,7 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
                     array_errors.append(
                         ArrayNestedErrorType(
                             client_id=array_client_id,
-                            object_errors=serializer_error_to_error_types(array_item, initial_data[field][pos]),
+                            object_errors=serializer_error_to_error_types(array_item, initial_data[field][pos]),  # type: ignore[reportArgumentType]
                             messages=None,
                         ),
                     )
@@ -175,7 +179,7 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
             error_types.append(
                 _CustomErrorType(
                     field=to_camel_case(field),
-                    messages=" ".join(str(msg) for msg in value),
+                    messages=" ".join(str(msg) for msg in value or []),
                     array_errors=None,
                     object_errors=None,
                 ),

@@ -18,7 +18,7 @@ class Point:
         y coordinate
     """
 
-    def __init__(self, x=0.0, y=0.0):
+    def __init__(self, x: float = 0.0, y: float = 0.0):
         self.x = x
         self.y = y
 
@@ -35,12 +35,12 @@ class Tile:
         y coordinate
     """
 
-    def __init__(self, x=0, y=0):
+    def __init__(self, x: int = 0, y: int = 0):
         self.x = x
         self.y = y
 
 
-def lat_long_zoom_to_pixel_coords(lat, lon, zoom):
+def lat_long_zoom_to_pixel_coords(lat: float, lon: float, zoom: int):
     """Compute pixel coordinates from lat-long point at a given zoom level."""
 
     p = Point()
@@ -56,8 +56,8 @@ def lat_long_zoom_to_pixel_coords(lat, lon, zoom):
     return p
 
 
-def pixel_coords_zoom_to_lat_lon(PixelX, PixelY, zoom):
-    """Compute latitude, longituted from pixel coordinates at a given zoom level."""
+def pixel_coords_zoom_to_lat_lon(PixelX: float, PixelY: float, zoom: int):
+    """Compute latitude, longitude from pixel coordinates at a given zoom level."""
 
     MapSize = 256 * math.pow(2, zoom)
     x = (PixelX / MapSize) - 0.5
@@ -68,7 +68,7 @@ def pixel_coords_zoom_to_lat_lon(PixelX, PixelY, zoom):
     return lon, lat
 
 
-def pixel_coords_to_tile_address(PixelX, PixelY):
+def pixel_coords_to_tile_address(PixelX: float, PixelY: float):
     """Compute a tile address from pixel coordinates of point within tile."""
 
     t = Tile()
@@ -92,13 +92,14 @@ def tile_coords_and_zoom_to_quadKey(TileX: int, TileY: int, zoom: int) -> str:
     return quadKey
 
 
-def quadKey_to_Bing_URL(quadKey, api_key):
+def quadKey_to_Bing_URL(quadKey: str, api_key: str):
     """Create a tile image URL linking to a Bing tile server."""
-
+    # FIXME: We should not hardcode the urls
     return f"https://ecn.t0.tiles.virtualearth.net/tiles/a{quadKey}.jpeg?g=7505&mkt=en-US&token={api_key}"
 
 
-def geometry_from_tile_coords(TileX, TileY, zoom):
+# FIXME: Add typings for osgeo
+def geometry_from_tile_coords(TileX: float, TileY: float, zoom: int):
     """Compute the polygon geometry of a tile map service tile."""
 
     # Calculate lat, lon of upper left corner of tile

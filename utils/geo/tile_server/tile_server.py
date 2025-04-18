@@ -1,4 +1,5 @@
 import math
+import typing
 from abc import ABC
 
 from utils.geo.tile_functions import tile_coords_and_zoom_to_quadKey
@@ -55,7 +56,9 @@ class CustomTileServer(BaseTileServer):
         self.credits = config.credits
         self.check_imagery_url(self.url)
 
+    @typing.override
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
+        # FIXME: We might need to add support for quad_key for custom tile servers
         return self.url.format(
             x=tile_x,
             y=tile_y,
@@ -86,9 +89,13 @@ class BingTileServer(CommonTileServer):
     url = Config.IMAGE_URLS[TileServerNameEnum.BING]
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.BING]
 
+    @typing.override
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
         quadKey = tile_coords_and_zoom_to_quadKey(tile_x, tile_y, tile_z)
-        return f"https://ecn.t0.tiles.virtualearth.net/tiles/a{quadKey}.jpeg?g=7505&mkt=en-US&token={self.api_key}"
+        return self.url.format(
+            key=self.api_key,
+            quadKey=quadKey,
+        )
 
 
 class MapboxTileServer(CommonTileServer):
@@ -102,6 +109,7 @@ class MaxarStandardTileServer(CommonTileServer):
     url = Config.IMAGE_URLS[TileServerNameEnum.MAXAR_STANDARD]
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.MAXAR_STANDARD]
 
+    @typing.override
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
         # maxar uses not the standard TMS tile y coordinate,
         # but the Google tile y coordinate

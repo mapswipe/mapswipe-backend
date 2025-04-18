@@ -1,3 +1,5 @@
+import typing
+from datetime import datetime
 from enum import Enum
 
 from django.conf import settings
@@ -42,6 +44,7 @@ FILE_SYSTEM_TEST_STORAGES_CONFIGS = dict(
     CELERY_TASK_EAGER_PROPAGATES=True,
 )
 class TestCase(BaseTestCase):
+    @typing.override
     def setUp(self):
         from django.core.cache import cache
 
@@ -59,10 +62,10 @@ class TestCase(BaseTestCase):
         self,
         query: str,
         assert_errors: bool = False,
-        variables: dict | None = None,
-        files: dict | None = None,
+        variables: dict[typing.Any, typing.Any] | None = None,
+        files: dict[typing.Any, typing.Any] | None = None,
         **kwargs,
-    ) -> dict:
+    ) -> dict[typing.Any, typing.Any]:
         import json
 
         if files:
@@ -98,7 +101,7 @@ class TestCase(BaseTestCase):
             self.assertResponseNoErrors(response)
         return response.json()
 
-    def assertResponseNoErrors(self, resp, msg=None):
+    def assertResponseNoErrors(self, resp: typing.Any, msg=None):
         """
         Assert that the call went through correctly. 200 means the syntax is ok,
         if there are no `errors`,
@@ -109,7 +112,7 @@ class TestCase(BaseTestCase):
         assert resp.status_code == 200, msg or content
         assert "errors" not in list(content.keys()), msg or content
 
-    def assertResponseHasErrors(self, resp, msg=None):
+    def assertResponseHasErrors(self, resp: typing.Any, msg=None):
         """
         Assert that the call was failing. Take care: Even with errors,
         GraphQL returns status 200!
@@ -127,38 +130,38 @@ class TestCase(BaseTestCase):
             return _enum.name
         return None
 
-    def gdatetime(self, _datetime):
+    def gdatetime(self, _datetime: datetime | None):
         if _datetime:
             return _datetime.isoformat()
         return None
 
-    def gID(self, pk):
+    def gID(self, pk: typing.Any):
         if pk:
             return str(pk)
         return None
 
-    def g_pagination(self, *, offset, limit, total_count, results):
+    def g_pagination(self, *, offset: int, limit: int, total_count: int, results: list[typing.Any]):
         return {
             "totalCount": total_count,
             "pageInfo": {"offset": offset, "limit": limit},
             "results": results,
         }
 
-    def g_mutation_response(self, *, errors=None, ok, result):
+    def g_mutation_response(self, *, errors: typing.Any = None, ok: bool, result: typing.Any):
         return {
             "errors": errors,
             "ok": ok,
             "result": result,
         }
 
-    def get_media_url(self, path):
+    def get_media_url(self, path: str):
         return f"http://testserver/media/{path}"
 
     def _dict_with_keys(
         self,
-        data: dict,
-        include_keys=None,
-        ignore_keys=None,
+        data: dict[typing.Any, typing.Any],
+        include_keys: list[str] | None = None,
+        ignore_keys: list[str] | None = None,
     ):
         # TODO: Use self.assertDictEqual instead?
         if all([ignore_keys, include_keys]):
@@ -171,9 +174,9 @@ class TestCase(BaseTestCase):
 
     def assertListDictEqual(
         self,
-        left,
-        right,
-        messages=None,
+        left: dict[typing.Any, typing.Any],
+        right: dict[typing.Any, typing.Any],
+        messages: str | None = None,
         ignore_keys: list[str] | None = None,
         include_keys: list[str] | None = None,
     ):

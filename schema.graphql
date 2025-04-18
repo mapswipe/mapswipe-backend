@@ -57,25 +57,19 @@ type AppEnumCollectionTutorialInformationPageBlockTypeEnum {
   label: String!
 }
 
-input ChangeDetectionProjectPropertyInput {
+input CompareProjectPropertyInput {
+  zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfigInput!
   tileServerBProperty: ProjectTileServerConfigInput!
 }
 
-type ChangeDetectionProjectPropertyType {
+type CompareProjectPropertyType {
+  zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfig!
   tileServerBProperty: ProjectTileServerConfig!
 }
 
-union ChangeDetectionProjectPropertyTypeClassificationProjectPropertyType = ChangeDetectionProjectPropertyType | ClassificationProjectPropertyType
-
-input ClassificationProjectPropertyInput {
-  tileServerProperty: ProjectTileServerConfigInput!
-}
-
-type ClassificationProjectPropertyType {
-  tileServerProperty: ProjectTileServerConfig!
-}
+union CompareProjectPropertyTypeFindProjectPropertyType = CompareProjectPropertyType | FindProjectPropertyType
 
 enum ContributorUserGroupMembershipLogActionEnum {
   JOIN
@@ -95,6 +89,16 @@ union DeleteProjectPayload = ProjectType | OperationInfo
 enum DummyEnum {
   VALUE_1
   VALUE_2
+}
+
+input FindProjectPropertyInput {
+  zoomLevel: Int!
+  tileServerProperty: ProjectTileServerConfigInput!
+}
+
+type FindProjectPropertyType {
+  zoomLevel: Int!
+  tileServerProperty: ProjectTileServerConfig!
 }
 
 input IDBaseFilterLookup {
@@ -186,7 +190,7 @@ type OrganizationType implements UserResourceTypeMixin {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, name, old_project_id, tutorial, is_draft, organization, project_type, image, project_type_specifics, zoom_level, group_size, is_featured, look_for, description, geometry_file, progress, required_results, result_count, status, verification_number)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, geometry_file, progress, required_results, result_count)
 """
 input ProjectFilter {
   id: IDBaseFilterLookup
@@ -198,7 +202,7 @@ input ProjectFilter {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, name, old_project_id, tutorial, is_draft, organization, project_type, image, project_type_specifics, zoom_level, group_size, is_featured, look_for, description, geometry_file, progress, required_results, result_count, status, verification_number)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, geometry_file, progress, required_results, result_count)
 """
 input ProjectInput {
   name: String!
@@ -208,17 +212,24 @@ input ProjectInput {
   organization: ID!
   image: Upload!
   geometryFile: Upload!
-  zoomLevel: Int!
+
+  """
+  How big should a mapping session be? Group size refers to the number of tasks per mapping session.
+  """
   groupSize: Int!
+
+  """
+  How many people do you want to see every tile before you consider it finished?
+  """
   verificationNumber: Int!
 
-  """eg: Buildings and Roads"""
+  """What should the users look for (e.g. buildings, cars, trees)"""
   lookFor: String!
   projectTypeSpecifics: ProjectTypeSpecificInput!
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, name, old_project_id, tutorial, is_draft, organization, project_type, image, project_type_specifics, zoom_level, group_size, is_featured, look_for, description, geometry_file, progress, required_results, result_count, status, verification_number)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, geometry_file, progress, required_results, result_count)
 """
 input ProjectInputPartial {
   name: String
@@ -228,11 +239,18 @@ input ProjectInputPartial {
   organization: ID!
   image: Upload!
   geometryFile: Upload!
-  zoomLevel: Int
+
+  """
+  How big should a mapping session be? Group size refers to the number of tasks per mapping session.
+  """
   groupSize: Int
+
+  """
+  How many people do you want to see every tile before you consider it finished?
+  """
   verificationNumber: Int
 
-  """eg: Buildings and Roads"""
+  """What should the users look for (e.g. buildings, cars, trees)"""
   lookFor: String
 }
 
@@ -281,7 +299,7 @@ type ProjectTileServerCustomConfig {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, name, old_project_id, tutorial, is_draft, organization, project_type, image, project_type_specifics, zoom_level, group_size, is_featured, look_for, description, geometry_file, progress, required_results, result_count, status, verification_number)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, geometry_file, progress, required_results, result_count)
 """
 type ProjectType {
   id: ID!
@@ -293,12 +311,12 @@ type ProjectType {
   """Which group, institution or community is requesting this project?"""
   organization: OrganizationType!
   projectType: ProjectTypeEnum!
-  projectTypeSpecifics: ChangeDetectionProjectPropertyTypeClassificationProjectPropertyType!
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyType!
 }
 
 enum ProjectTypeEnum {
-  BUILD_AREA
-  CHANGE_DETECTION
+  FIND
+  COMPARE
   COMPLETENESS
 }
 
@@ -319,8 +337,8 @@ type ProjectTypeOffsetPaginated {
 }
 
 input ProjectTypeSpecificInput @oneOf {
-  changeDetection: ChangeDetectionProjectPropertyInput
-  classification: ClassificationProjectPropertyInput
+  compare: CompareProjectPropertyInput
+  find: FindProjectPropertyInput
 }
 
 type Query {

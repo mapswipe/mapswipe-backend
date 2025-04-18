@@ -1,11 +1,13 @@
+import typing
+
 import pydantic
 from django.db import transaction
 from django.utils.translation import gettext
 from rest_framework import serializers
 
 from apps.common.serializers import UserResourceSerializer
-from apps.project.project_types.tile_map_service.change_detection import project as change_detection_project
-from apps.project.project_types.tile_map_service.classification import project as classification_project
+from apps.project.project_types.tile_map_service.compare import project as compare_project
+from apps.project.project_types.tile_map_service.find import project as find_project
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
@@ -15,7 +17,7 @@ from .tasks import load_project_geometry
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class ProjectSerializer(UserResourceSerializer):
-    class Meta:
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
             "name",
@@ -23,7 +25,6 @@ class ProjectSerializer(UserResourceSerializer):
             "organization",
             "image",
             "geometry_file",
-            "zoom_level",
             "group_size",
             "verification_number",
             "look_for",
@@ -35,8 +36,8 @@ class ProjectSerializer(UserResourceSerializer):
         raw_project_type_specifics = attrs["project_type_specifics"]
 
         ENUM_FIELD_MAP = {
-            ProjectTypeEnum.CHANGE_DETECTION: ("change_detection", change_detection_project.ChangeDetectionProjectProperty),
-            ProjectTypeEnum.BUILD_AREA: ("classification", classification_project.ClassificationProjectProperty),
+            ProjectTypeEnum.COMPARE: ("compare", compare_project.CompareProjectProperty),
+            ProjectTypeEnum.FIND: ("find", find_project.FindProjectProperty),
         }
 
         project_type_label = ProjectTypeEnum.get_display(project_type)
@@ -66,11 +67,13 @@ class ProjectSerializer(UserResourceSerializer):
 
         attrs["project_type_specifics"] = project_type_specifics
 
+    @typing.override
     def validate(self, attrs: dict):
         self._validate_project_type_specifics(attrs)
         return attrs
 
-    def create(self, validated_data):
+    @typing.override
+    def create(self, validated_data: dict):
         new_project = super().create(validated_data)
         transaction.on_commit(lambda: load_project_geometry.delay(new_project.pk))
         return new_project

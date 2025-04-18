@@ -1,3 +1,5 @@
+import typing
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext, gettext_lazy
@@ -40,6 +42,7 @@ class TutorialInformationPage(models.Model):
     # Type hints
     tutorial_id: int
 
+    @typing.override
     def __str__(self):
         return self.title
 
@@ -66,9 +69,11 @@ class TutorialInformationPageBlock(models.Model):
     # Type hints
     page_id: int
 
+    @typing.override
     def __str__(self):
         return f"page_id={self.page_id}, block_number={self.block_number}, block_type={self.block_type}"
 
+    @typing.override
     def clean(self):
         if self.block_type == TutorialInformationPageBlockTypeEnum.TEXT and (self.text is None or self.text == ""):
             raise ValidationError(gettext("Text should be provided for text block"))

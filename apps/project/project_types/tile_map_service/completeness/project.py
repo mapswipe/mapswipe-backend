@@ -1,4 +1,4 @@
-from apps.project.project_types.tile_map_service.change_detection.project import ChangeDetectionProject
+from apps.project.project_types.tile_map_service.compare.project import CompareProject
 
 
-class CompletenessProject(ChangeDetectionProject): ...
+class CompletenessProject(CompareProject): ...

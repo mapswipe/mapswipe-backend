@@ -2,35 +2,35 @@ import typing
 
 from apps.project.models import ProjectTypeEnum
 
-from .tile_map_service.change_detection.project import ChangeDetectionProject
-from .tile_map_service.classification.project import ClassificationProject
+from .tile_map_service.compare.project import CompareProject
+from .tile_map_service.find.project import FindProject
 
-type ProjectTypeHandlers = type[ChangeDetectionProject | ClassificationProject]
-
-
-@typing.overload
-def get_project_type_handler(
-    project_type: typing.Literal[ProjectTypeEnum.BUILD_AREA],
-) -> type[ClassificationProject]: ...
+type ProjectTypeHandlers = type[CompareProject | FindProject]
 
 
 @typing.overload
 def get_project_type_handler(
-    project_type: typing.Literal[ProjectTypeEnum.CHANGE_DETECTION],
-) -> type[ChangeDetectionProject]: ...
+    project_type: typing.Literal[ProjectTypeEnum.FIND],
+) -> type[FindProject]: ...
+
+
+@typing.overload
+def get_project_type_handler(
+    project_type: typing.Literal[ProjectTypeEnum.COMPARE],
+) -> type[CompareProject]: ...
 
 
 @typing.overload
 def get_project_type_handler(
     project_type: typing.Literal[ProjectTypeEnum.COMPLETENESS],
-) -> type[ChangeDetectionProject]: ...
+) -> type[CompareProject]: ...
 
 
 def get_project_type_handler(project_type: ProjectTypeEnum) -> ProjectTypeHandlers:
     match project_type:
-        case ProjectTypeEnum.BUILD_AREA:
-            return ClassificationProject
-        case ProjectTypeEnum.CHANGE_DETECTION:
-            return ChangeDetectionProject
+        case ProjectTypeEnum.FIND:
+            return FindProject
+        case ProjectTypeEnum.COMPARE:
+            return CompareProject
         case ProjectTypeEnum.COMPLETENESS:
-            return ClassificationProject
+            return FindProject

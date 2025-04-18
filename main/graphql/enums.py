@@ -40,7 +40,7 @@ class AppEnumData:
         return str(self.enum.label)
 
 
-def generate_app_enum_collection_data(name):
+def generate_app_enum_collection_data(name: str):
     return type(
         name,
         (),
@@ -54,7 +54,7 @@ def generate_app_enum_collection_data(name):
 AppEnumCollectionData = generate_app_enum_collection_data("AppEnumCollectionData")
 
 
-def generate_type_for_enum(name, Enum):
+def generate_type_for_enum(name: str, Enum):
     return strawberry.type(
         dataclasses.make_dataclass(
             f"AppEnumCollection{name}",
@@ -66,7 +66,7 @@ def generate_type_for_enum(name, Enum):
     )
 
 
-def _enum_type(name, Enum):
+def _enum_type(name: str, Enum):
     EnumType = generate_type_for_enum(name, Enum)
 
     @strawberry.field

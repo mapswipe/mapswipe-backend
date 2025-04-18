@@ -1,3 +1,5 @@
+import typing
+
 from django.db import models
 from django_choices_field import IntegerChoicesField
 
@@ -8,17 +10,22 @@ from apps.user.models import User
 # NOTE: Users are created from Apps (Web/Mobile)
 class ContributorUser(models.Model):
     # NOTE: Sync with firebase
-    user_id = models.CharField(max_length=30, db_index=True)
+    user_id = models.CharField(
+        max_length=30,
+        db_index=True,
+        help_text="Firebase User ID",
+    )
     username = models.CharField(max_length=255)
     created_at = models.DateTimeField(null=True)
     modified_at = models.DateTimeField(null=True)
 
+    @typing.override
     def __str__(self):
         return self.username
 
 
 class ContributorUserGroup(UserResource):
-    old_user_group_id = models.CharField(max_length=30, db_index=True, null=True)
+    old_id = models.CharField(max_length=30, db_index=True, null=True)
     name = models.CharField(max_length=255)
     description = models.TextField()
 
@@ -30,6 +37,7 @@ class ContributorUserGroup(UserResource):
         on_delete=models.PROTECT,
     )
 
+    @typing.override
     def __str__(self):
         return self.name
 
@@ -43,6 +51,7 @@ class ContributorUserGroupMembership(models.Model):
     user_group_id: int
     user_id: int
 
+    @typing.override
     def __str__(self):
         return f"user_group_id={self.user_group_id}, user_id={self.user_id}, is_active={self.is_active}"
 
@@ -63,5 +72,6 @@ class ContributorUserGroupMembershipLog(models.Model):
     # Type hints
     membership_id: int
 
+    @typing.override
     def __str__(self):
         return f"membership={self.membership_id}, action={self.action}"
