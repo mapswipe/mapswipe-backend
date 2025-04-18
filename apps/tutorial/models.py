@@ -24,7 +24,7 @@ class Tutorial(UserResource):
     )
     is_draft = models.BooleanField(default=True, help_text=gettext_lazy("Draft tutorial can be modified"))
 
-    # TODO: Scenario Pages
+    # TODO(thenav56): Scenario Pages
 
     # Type hints
     project_id: int

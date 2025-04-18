@@ -77,10 +77,10 @@ ignore = [
     "E701",
     "E203",
     "DJ001",
-    "G201", # FIXME: Check if we can enable this and keep sending logs to sentry
+    "G201", # FIXME(thenav56): Check if we can enable this and keep sending logs to sentry
 ]
 extend-select = ["I", "E", "F", "B", "A", "W", "DJ", "AIR", "COM", "INT", "ISC", "ICN", "LOG", "G", "T20", "TID", "PT", "Q", "RET", "SIM", "TC", "PTH", "UP"]
-# TODO: Use this instead `select = ["ALL"]` and add rules to ignore
+# TODO(thenav56): Use this instead `select = ["ALL"]` and add rules to ignore
 #   ruff check --statistics ./
 
 [tool.ruff.lint.per-file-ignores]

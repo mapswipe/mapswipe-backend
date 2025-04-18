@@ -58,7 +58,7 @@ class CustomTileServer(BaseTileServer):
 
     @typing.override
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
-        # FIXME: We might need to add support for quad_key for custom tile servers
+        # FIXME(tnagorra): We might need to add support for quad_key for custom tile servers
         return self.url.format(
             x=tile_x,
             y=tile_y,

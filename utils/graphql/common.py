@@ -12,7 +12,7 @@ def parse_input_data(data: typing.Any) -> dict[typing.Any, typing.Any] | list[ty
     https://github.com/strawberry-graphql/strawberry/blob/d2c0fb4d2d363929c9ac10161884d004ab9cf555/strawberry/object_type.py#L395
 
     """
-    # TODO: Write test
+    # TODO(thenav56): Write test
     if type(data) in [tuple, list]:
         return [parse_input_data(datum) for datum in data]
     native_dict = {}

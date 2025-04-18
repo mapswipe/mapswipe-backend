@@ -45,7 +45,7 @@ class BaseProject(
 
     @classmethod
     def _inheritance_checks(cls):
-        # TODO: Find a better way to skip for base classes
+        # TODO(thenav56): Find a better way to skip for base classes
         if cls.__name__.endswith("BaseProject"):
             # Skip check for the abstract class
             return
@@ -79,7 +79,9 @@ class BaseProject(
             ),
         )
 
-        # TODO: Calculate: total_area, time_spent_max_allowed
+        # TODO(tnagorra): Create a geojson, attach metadata.ProjectId, TaskId and GroupId
+
+        # TODO(thenav56): Calculate: total_area, time_spent_max_allowed
 
     @abstractmethod
     def validate_geometries(self): ...
