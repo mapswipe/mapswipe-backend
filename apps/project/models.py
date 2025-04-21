@@ -39,12 +39,52 @@ class ProjectTypeEnum(models.IntegerChoices):
 
 
 class ProjectStatusEnum(models.IntegerChoices):
-    INACTIVE = 1, "Inactive"
-    ACTIVE = 2, "Active"
-    PRIVATE_FINISHED = 3, "Private finished"
-    ARCHIVED = 4, "Archived"
-    FINISHED = 5, "Finished"
-    # TODO(thenav56): Paused?
+    DRAFT = 10, "Draft"
+    """
+    Background processes and validations will not be triggered for a "Draft" project.
+    """
+
+    MARKED_AS_READY = 20, "Marked as Ready"
+    """
+    Background processes and validations will be triggered
+    once a project is "Marked as Ready".
+    """
+
+    FAILED = 30, "Failed"
+    """
+    If there are validation errors or issues with background processes,
+    then creation of project has "Failed"
+    """
+
+    READY = 40, "Ready"
+    """
+    If there are no validation errors or issues with background processes,
+    then the project is "Ready"
+    These projects are not be yet visible to the contributors.
+    """
+
+    PUBLISHED = 50, "Published"
+    """
+    "Published" projects is be visible to the contributors.
+    """
+
+    PAUSED = 60, "Paused"
+    """
+    "Paused" projects are visible to the contributors.
+    "Paused" projects can be "un-paused".
+    """
+
+    ARCHIVED = 70, "Archived"
+    """
+    "Archived" projects are visible to the contributors.
+    "Archived" projects cannot be "un-archived".
+    """
+
+    DISCARDED = 80, "Discarded"
+    """
+    "Discarded" projects are visible to the contributors.
+    "Discarded" projects cannot be "un-discarded".
+    """
 
 
 class UploadHelper:
@@ -160,7 +200,7 @@ class Project(UserResource):
     is_featured = models.BooleanField(default=False)
     status: ProjectStatusEnum = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=ProjectStatusEnum,
-        default=ProjectStatusEnum.INACTIVE,
+        default=ProjectStatusEnum.DRAFT,
     )
 
     # TODO(tnagorra): Add area-based validations
@@ -194,7 +234,8 @@ class Project(UserResource):
     def __str__(self):
         return self.name
 
-    def update_status(self, status: ProjectStatusEnum, commit=True):
+    def update_status(self, status: ProjectStatusEnum, commit: bool = True):
+        # TODO(tnagorra): Add a validation here
         self.status = status
         if commit:
             self.save(update_fields=("status",))

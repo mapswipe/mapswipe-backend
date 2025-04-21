@@ -34,7 +34,7 @@ class ProjectFactory(DjangoModelFactory):
     progress = 0
     required_results = 100
     result_count = 0
-    status = Project.Status.ACTIVE
+    status = Project.Status.READY
     verification_number = 1
 
 
