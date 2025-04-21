@@ -55,7 +55,6 @@ class ProjectSerializer(UserResourceSerializer[Project]):
             "group_size",
             "max_tasks_per_user",
             "project_type_specifics",
-            "aoi_geometry_file",
             "status",
         )
 

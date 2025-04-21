@@ -21,20 +21,20 @@ def create_project_query(
     query_check_func: typing.Callable,
     query: str,
     project_data: dict,
-    empty_geo_file=False,
     **kwargs,
 ) -> dict:
+    # with (
+    #     NamedTemporaryFile(dir=settings.TEMP_DIR) as image_file,
+    #     Path(BASE_DIR / "data/ring-road.geojson").open() as geo_file,
+    # ):
+    #     geo_file.seek(0, 2)
+
     with (
         NamedTemporaryFile(dir=settings.TEMP_DIR) as image_file,
-        Path(BASE_DIR / "data/ring-road.geojson").open() as geo_file,
     ):
-        # Fake image
+        # Mock image
         image_file.write(b"base64image")
         image_file.seek(0)
-
-        if empty_geo_file:
-            # Empty file
-            geo_file.seek(0, 2)
 
         return query_check_func(
             query,
@@ -43,11 +43,9 @@ def create_project_query(
             },
             files={
                 "imageFile": image_file,
-                "geoFile": geo_file,
             },
             map={
                 "imageFile": ["variables.data.image"],
-                "geoFile": ["variables.data.aoiGeometryFile"],
             },
             **kwargs,
         )
@@ -371,13 +369,12 @@ class TestProjectTypeMutation(TestCase):
         # NOTE: _internal is for snake_case attributes, currently its same
         cls.tile_server_property_internal = cls.tile_server_property
 
-    def _create_project_mutation(self, project_data: dict, empty_geo_file: bool = False, **kwargs):
+    def _create_project_mutation(self, project_data: dict, **kwargs):
         with self.captureOnCommitCallbacks(execute=True):
             return create_project_query(
                 query_check_func=self.query_check,
                 query=self.Mutation.CREATE_PROJECT,
                 project_data=project_data,
-                empty_geo_file=empty_geo_file,
                 **kwargs,
             )
 
@@ -434,18 +431,18 @@ class TestProjectTypeMutation(TestCase):
         ], content
 
         # Creating Project: Test for pydantic error (with valid projectTypeSpecifics type but invalid data)
-        content = self._create_project_mutation(project_data, empty_geo_file=True)
-        resp_data = content["data"]["createProject"]
-        assert resp_data["errors"] == [
-            {
-                "field": "aoiGeometryFile",
-                "client_id": None,
-                "messages": "The submitted file is empty.",
-                "object_errors": None,
-                "array_errors": None,
-                "pydantic_errors": None,
-            },
-        ], content
+        # content = self._create_project_mutation(project_data, empty_geo_file=True)
+        # resp_data = content["data"]["createProject"]
+        # assert resp_data["errors"] == [
+        #     {
+        #         "field": "aoiGeometryFile",
+        #         "client_id": None,
+        #         "messages": "The submitted file is empty.",
+        #         "object_errors": None,
+        #         "array_errors": None,
+        #         "pydantic_errors": None,
+        #     },
+        # ], content
 
         # Creating Project: Test for GraphQL error (without projectTypeSpecifics)
         project_data.pop("projectTypeSpecifics")

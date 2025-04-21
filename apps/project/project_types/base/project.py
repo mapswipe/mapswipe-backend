@@ -125,10 +125,8 @@ class BaseProject(
                 cls=DjangoJSONEncoder,
             ).encode("utf-8"),
         )
-        self.project.processed_geometry_file.save(
-            "processed-geometry.geojson",
-            file,
-        )
+
+        # TODO: Create an asset using "file"
 
         # TODO(thenav56): Calculate centroid, bounding box, etc.
         # TODO(thenav56): Calculate: total_area, time_spent_max_allowed

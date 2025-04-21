@@ -52,9 +52,7 @@ class ProjectType:
     group_size: strawberry.auto
     max_tasks_per_user: strawberry.auto
     project_type_specifics: CompareProjectPropertyType | FindProjectPropertyType
-    # TODO(tnagorra): Add aoi_geometry_file
     is_featured: strawberry.auto
     status: strawberry.auto
     processing_status: strawberry.auto
     progress: strawberry.auto
-    # TODO(tnagorra): Add processed_geometry_file

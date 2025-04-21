@@ -7,7 +7,7 @@ from pathlib import Path
 from django.conf import settings
 from pydantic import field_validator
 
-from apps.project.models import Project, ProjectTask, ProjectTaskGroup
+from apps.project.models import Project, ProjectAsset, ProjectAssetTypeEnum, ProjectTask, ProjectTaskGroup
 from apps.project.project_types.base import project as base_project
 from main.bulk_managers import BulkCreateManager
 from utils.geo import tile_functions, tile_grouping
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
     zoom_level: int
     tile_server_property: TileServerConfig
+    aoi_geometry: int | None
 
     @field_validator("zoom_level")
     @classmethod
@@ -142,9 +143,16 @@ class TileMapServiceBaseProject(
         """Validate project before creating groups"""
         self.project.update_processing_status(Project.ProcessingStatus.VALIDATING_GEOMETRY, True)
 
-        extension = Path(self.project.aoi_geometry_file.file.name).suffix
+        # TODO(tnagorra): Let's read the asset_id from project specifics
+        aoi_asset = ProjectAsset.objects.get(
+            project_id=self.project.id,
+            asset_type=ProjectAssetTypeEnum.GEOMETRY_AOI,
+        )
+        file = aoi_asset.file
+
+        extension = Path(file.name).suffix
         with tempfile.NamedTemporaryFile(suffix=extension, dir=settings.TEMP_DIR) as temp_file:
-            temp_file.write(self.project.aoi_geometry_file.file.read())
+            temp_file.write(file.read())
             temp_file.flush()
 
             aoi_geometry = tile_grouping.get_geometry_from_file(temp_file.name)

@@ -13,6 +13,37 @@ if typing.TYPE_CHECKING:
     from apps.tutorial.models import Tutorial
 
 
+class ProjectAssetMimeTypeEnum(models.IntegerChoices):
+    GEOJSON = 100, "application/geo+json"
+
+    IMAGE_JPEG = 201, "image/jpeg"
+    IMAGE_PNG = 202, "image/png"
+    IMAGE_GIF = 203, "image/gif"
+
+    @classmethod
+    def get_display(cls, value: typing.Self | int) -> str:
+        if value in cls:
+            return cls(value).label
+        return "Unknown"
+
+
+class ProjectAssetTypeEnum(models.IntegerChoices):
+    GEOMETRY_AOI = 100, "AOI Geometry"
+    """ Area of interest. This should be OGR-supported vector geospatial file format """
+
+    GEOMETRY_TILES = 101, "Tiles Geometry"
+    """ Valid GeoJSON containing area of interest broken down into tiles """
+
+    IMAGE = 200, "Image"
+    """ Image """
+
+    @classmethod
+    def get_display(cls, value: typing.Self | int) -> str:
+        if value in cls:
+            return cls(value).label
+        return "Unknown"
+
+
 class ProjectTypeEnum(models.IntegerChoices):
     FIND = 1, "Find"
     """ Find project type. Previously known as Classification / Build Area. """
@@ -204,6 +235,11 @@ class Project(UserResource):
     # FIXME(thenav56): Refactor this
     project_type_specifics = models.JSONField(blank=True)
 
+    project_type_specific_output: "ProjectAsset" = models.ForeignKey(  # type: ignore[reportAssignmentType]
+        "project.ProjectAsset",
+        related_name="+",
+    )
+
     # STATUS
 
     # TODO(tnagorra): Remove is_draft
@@ -217,27 +253,6 @@ class Project(UserResource):
         choices_enum=ProjectProcessingStatusEnum,
         null=True,
         blank=True,
-    )
-
-    # TODO(tnagorra): Add area-based validations
-    aoi_geometry_file = models.FileField(
-        upload_to=UploadHelper.project_geometry,
-        null=True,
-        blank=True,
-        help_text=gettext_lazy(
-            "The area of interest for this project uploaded by the user. "
-            "This should be OGR-supported vector geospatial file format",
-        ),
-    )
-
-    # TODO(tnagorra): It's not always possible to have geometry during project creation.
-    processed_geometry_file = models.FileField(
-        upload_to=UploadHelper.project_geometry,
-        null=True,
-        blank=True,
-        help_text=gettext_lazy(
-            "Eg. For TileMapService, this includes the AOI broken down into tiles.",
-        ),
     )
 
     # CALCULATED FIELDS
@@ -280,6 +295,30 @@ class Project(UserResource):
         # for group in self.groups.values():
         #     group.requiredCount = self.verificationNumber
         #     self.requiredResults += group.requiredCount * group.numberOfTasks
+
+
+class ProjectAsset(UserResource):
+    Type = ProjectAssetTypeEnum
+    MimeType = ProjectAssetMimeTypeEnum
+
+    type = IntegerChoicesField(
+        choices_enum=ProjectAssetTypeEnum,
+    )
+
+    mimetype = IntegerChoicesField(
+        choices_enum=ProjectAssetMimeTypeEnum,
+    )
+
+    file = models.FileField(
+        upload_to=UploadHelper.project_geometry,
+        help_text=gettext_lazy("The file associated with the asset"),
+    )
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.PROTECT,
+        related_name="+",
+    )
 
 
 class ProjectTaskGroup(models.Model):
