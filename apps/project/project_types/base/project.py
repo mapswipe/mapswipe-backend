@@ -111,10 +111,12 @@ class BaseProject(
             "features": features,
         }
 
-        file = ContentFile(json.dumps(
-            feature_collection,
-            cls=DjangoJSONEncoder,
-        ).encode("utf-8"))
+        file = ContentFile(
+            json.dumps(
+                feature_collection,
+                cls=DjangoJSONEncoder,
+            ).encode("utf-8"),
+        )
         self.project.processed_geometry_file.save(
             "processed-geometry.geojson",
             file,

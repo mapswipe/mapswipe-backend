@@ -2,13 +2,12 @@ import logging
 import tempfile
 import typing
 from abc import ABC
-from pathlib import Path
 from functools import reduce
+from pathlib import Path
 
 from django.conf import settings
 from pydantic import field_validator
 
-from django.contrib.gis.geos import Polygon
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup
 from apps.project.project_types.base import project as base_project
 from main.bulk_managers import BulkCreateManager

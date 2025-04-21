@@ -42,7 +42,7 @@ class ArrayNestedErrorType:
 
 
 @strawberry.type
-class _CustomErrorType:
+class MutationCustomErrorType:
     field: str
     client_id: str | None = None
     messages: str | None
@@ -96,11 +96,11 @@ def serializer_error_to_error_types(
 ) -> list[typing.Any]:
     initial_data = initial_data or {}
     node_client_id = initial_data.get("client_id")
-    error_types: list[_CustomErrorType] = []
+    error_types: list[MutationCustomErrorType] = []
     for field, value in errors.items():
         if field.endswith("-pydantic"):
             error_types.append(
-                _CustomErrorType(
+                MutationCustomErrorType(
                     client_id=node_client_id,
                     field=to_camel_case(field.replace("-pydantic", "")),
                     object_errors=None,
@@ -113,7 +113,7 @@ def serializer_error_to_error_types(
             continue
         if isinstance(value, dict):
             error_types.append(
-                _CustomErrorType(
+                MutationCustomErrorType(
                     client_id=node_client_id,
                     field=to_camel_case(field),
                     object_errors=value,  # type: ignore[reportGeneralTypeIssues]
@@ -126,7 +126,7 @@ def serializer_error_to_error_types(
                 if isinstance(initial_data.get(field), list):
                     # we have found an array input with top level error
                     error_types.append(
-                        _CustomErrorType(
+                        MutationCustomErrorType(
                             client_id=node_client_id,
                             field=to_camel_case(field),
                             array_errors=[
@@ -142,7 +142,7 @@ def serializer_error_to_error_types(
                     )
                 else:
                     error_types.append(
-                        _CustomErrorType(
+                        MutationCustomErrorType(
                             client_id=node_client_id,
                             field=to_camel_case(field),
                             messages=", ".join(str(msg) for msg in value),
@@ -166,7 +166,7 @@ def serializer_error_to_error_types(
                         ),
                     )
                 error_types.append(
-                    _CustomErrorType(
+                    MutationCustomErrorType(
                         client_id=node_client_id,
                         field=to_camel_case(field),
                         array_errors=array_errors,
@@ -177,7 +177,7 @@ def serializer_error_to_error_types(
         else:
             # fallback
             error_types.append(
-                _CustomErrorType(
+                MutationCustomErrorType(
                     field=to_camel_case(field),
                     messages=" ".join(str(msg) for msg in value or []),
                     array_errors=None,
