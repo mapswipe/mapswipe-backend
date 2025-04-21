@@ -41,8 +41,8 @@ class ProjectType:
     id: strawberry.ID
     name: strawberry.auto
 
-    organization_id: strawberry.ID
-    organization: OrganizationType
+    requesting_organization_id: strawberry.ID
+    requesting_organization: OrganizationType
     project_type: strawberry.auto
 
     project_type_specifics: CompareProjectPropertyType | FindProjectPropertyType

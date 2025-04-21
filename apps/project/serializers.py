@@ -22,9 +22,9 @@ class ProjectSerializer(UserResourceSerializer):
         fields = (
             "name",
             "project_type",
-            "organization",
+            "requesting_organization",
             "image",
-            "geometry_file",
+            "aoi_geometry_file",
             "group_size",
             "verification_number",
             "look_for",

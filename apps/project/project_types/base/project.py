@@ -1,7 +1,11 @@
+import json
 import logging
 import typing
 from abc import ABC, abstractmethod
 
+from django.contrib.gis.geos import GEOSGeometry
+from django.core.files.base import ContentFile
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from pydantic import BaseModel
 
@@ -79,8 +83,44 @@ class BaseProject(
             ),
         )
 
-        # TODO(tnagorra): Create a geojson, attach metadata.ProjectId, TaskId and GroupId
+        # NOTE: Create a geojson from the tasks (useful for tutorial creation)
+        tasks_qs = ProjectTask.objects.filter(task_group__project_id=self.project.pk)
+        features = []
+        for task in tasks_qs:
+            geom = GEOSGeometry(task.geometry)
+            geojson = json.loads(geom.geojson)
+            feature = {
+                "type": "Feature",
+                "geometry": geojson,
+                "properties": {
+                    "group_id": task.task_group_id,
+                    "task_id": task.id,
+                    # FIXME(tnagorra): We might need the following values to create tutorial
+                    # "tile_x": None,
+                    # "tile_y": None,
+                    # "tile_z": None,
+                },
+            }
+            features.append(feature)
 
+        feature_collection = {
+            "type": "FeatureCollection",
+            "metadata": {
+                "project_id": self.project.pk,
+            },
+            "features": features,
+        }
+
+        file = ContentFile(json.dumps(
+            feature_collection,
+            cls=DjangoJSONEncoder,
+        ).encode("utf-8"))
+        self.project.processed_geometry_file.save(
+            "processed-geometry.geojson",
+            file,
+        )
+
+        # TODO(thenav56): Calculate centroid, bounding box, etc.
         # TODO(thenav56): Calculate: total_area, time_spent_max_allowed
 
     @abstractmethod

@@ -6,8 +6,8 @@ from .config import TileServerNameEnum
 
 
 class TileServerCustomConfig(BaseModel):
+    # NOTE: Validation is currently defined in BaseTileServer.check_imagery_url
     # TODO(tnagorra): Max length should be 1000
-    # TODO(tnagorra): Validation is currently defined in BaseTileServer.check_imagery_url
     url: str
 
     # TODO(tnagorra): Max length should be 1000

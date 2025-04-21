@@ -39,7 +39,7 @@ class TestProjectQuery(TestCase):
         cls.projects = ProjectFactory.create_batch(
             3,
             **cls.user_resource_kwargs,
-            organization=cls.organization,
+            requesting_organization=cls.organization,
         )
 
     def test_projects(self):
