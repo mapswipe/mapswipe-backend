@@ -63,6 +63,7 @@ class TileMapServiceBaseProject(
         TileMapServiceProjectPropertyTypeVar,
         TileMapServiceProjectTaskGroupPropertyTypeVar,
         TileMapServiceProjectTaskPropertyTypeVar,
+        tile_grouping.AoiGeometry,
     ],
     ABC,
 ):
@@ -74,6 +75,7 @@ class TileMapServiceBaseProject(
 
     @typing.override
     def _create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:
+        """Create tasks for a group."""
         bulk_mgr = BulkCreateManager(chunk_size=1000)
 
         tasks_count = 0
@@ -105,9 +107,15 @@ class TileMapServiceBaseProject(
         return tasks_count
 
     @typing.override
-    def create_groups(self):
+    def create_groups(self, resp: tile_grouping.AoiGeometry):
         """Create groups for project extent."""
-        for _, raw_group in self.raw_groups.items():
+        raw_groups = tile_grouping.extent_to_groups(
+            resp,
+            self.project_type_specifics.zoom_level,
+            self.project.group_size,
+        )
+
+        for _, raw_group in raw_groups.items():
             # Create new group
             # TODO(thenav56): Bulk create here as well?
             new_group = ProjectTaskGroup.objects.create(
@@ -128,34 +136,26 @@ class TileMapServiceBaseProject(
             logger.info("Created %s tasks for group: %s", total_tasks, new_group.pk)
 
     @typing.override
-    def validate_geometries(self):
-        """Create groups for project extent."""
-        # first step get properties of each group from extent
+    def validate(self):
+        """Validate project before creating groups"""
         extension = Path(self.project.aoi_geometry_file.file.name).suffix
         with tempfile.NamedTemporaryFile(suffix=extension, dir=settings.TEMP_DIR) as temp_file:
-            # FIXME(thenav56): self.project.geometry is not a file
             temp_file.write(self.project.aoi_geometry_file.file.read())
             temp_file.flush()
 
-            # TODO(tnagorra): Add validation on area
             aoi_geometry = tile_grouping.get_geometry_from_file(temp_file.name)
-
             aoi_polygons = aoi_geometry["polygons"]
+
             POLYGON_COUNT_LIMIT = 20
             if len(aoi_polygons) > POLYGON_COUNT_LIMIT:
                 # FIXME(tnagorra): Properly handle error
                 raise base_project.ValidateException(f"No more than {POLYGON_COUNT_LIMIT} polygons please")
 
-            aoi_area = sum([polygon.area for polygon in aoi_polygons])
-
             # NOTE: The formula was copied from the validation in manager dashboard
+            aoi_area = sum([polygon.area for polygon in aoi_polygons])
             allowed_area = 5 * (4 ** (23 - self.project_type_specifics.zoom_level))
             if aoi_area > allowed_area:
                 # FIXME(tnagorra): Properly handle error
                 raise base_project.ValidateException(f"No more than {allowed_area} area please")
 
-            self.raw_groups = tile_grouping.extent_to_groups(
-                aoi_geometry,
-                self.project_type_specifics.zoom_level,
-                self.project.group_size,
-            )
+            return aoi_geometry

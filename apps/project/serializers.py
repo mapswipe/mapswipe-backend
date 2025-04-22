@@ -12,7 +12,7 @@ from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
 from .models import Project, ProjectTypeEnum
-from .tasks import load_project_geometry
+from .tasks import process_project_task
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
@@ -75,5 +75,5 @@ class ProjectSerializer(UserResourceSerializer):
     @typing.override
     def create(self, validated_data: dict):
         new_project = super().create(validated_data)
-        transaction.on_commit(lambda: load_project_geometry.delay(new_project.pk))
+        transaction.on_commit(lambda: process_project_task.delay(new_project.pk))
         return new_project

@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task
-def load_project_geometry(project_id: int):
+def process_project_task(project_id: int):
     with CeleryLock.redis_lock(CeleryLock.Key.PROJECT_LOAD_GEOMETRY.format(project_id)) as acquired:
         if not acquired:
             logger.warning("Project(id: %s) geometry load is already running", project_id)
@@ -19,9 +19,7 @@ def load_project_geometry(project_id: int):
     project = Project.objects.get(pk=project_id)
     try:
         project_type_handler = get_project_type_handler(project.project_type)(project)
-        project_type_handler.save_project()
-        # TODO(thenav56): project.update_status(ProjectStatusEnum.GEOMETRY_LOADED)
-        # FIXME(tnagorra): Project status and processing_status should be updated inside project_type_handler
+        project_type_handler.process_project()
         return True
     except Exception:
         logger.error("Project geometry load failed", exc_info=True)
