@@ -2,7 +2,6 @@ import logging
 import tempfile
 import typing
 from abc import ABC
-from functools import reduce
 from pathlib import Path
 
 from django.conf import settings
@@ -145,18 +144,15 @@ class TileMapServiceBaseProject(
             POLYGON_COUNT_LIMIT = 20
             if len(aoi_polygons) > POLYGON_COUNT_LIMIT:
                 # FIXME(tnagorra): Properly handle error
-                raise Exception(f"No more than {POLYGON_COUNT_LIMIT} polygons please")
+                raise base_project.ValidateException(f"No more than {POLYGON_COUNT_LIMIT} polygons please")
 
-            aoi_area = reduce(
-                lambda acc, val: acc + val,
-                [polygon.area for polygon in aoi_polygons],
-            )
+            aoi_area = sum([polygon.area for polygon in aoi_polygons])
 
             # NOTE: The formula was copied from the validation in manager dashboard
             allowed_area = 5 * (4 ** (23 - self.project_type_specifics.zoom_level))
             if aoi_area > allowed_area:
                 # FIXME(tnagorra): Properly handle error
-                raise Exception(f"No more than {allowed_area} area please")
+                raise base_project.ValidateException(f"No more than {allowed_area} area please")
 
             self.raw_groups = tile_grouping.extent_to_groups(
                 aoi_geometry,

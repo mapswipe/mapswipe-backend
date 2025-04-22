@@ -24,6 +24,9 @@ class BaseProjectTaskGroupProperty(BaseModel, ABC): ...
 class BaseProjectTaskProperty(BaseModel, ABC): ...
 
 
+class ValidateException(Exception): ...
+
+
 ProjectPropertyTypeVar = typing.TypeVar("ProjectPropertyTypeVar", bound=BaseProjectProperty)
 ProjectTaskGroupPropertyTypeVar = typing.TypeVar("ProjectTaskGroupPropertyTypeVar", bound=BaseProjectTaskGroupProperty)
 ProjectTaskPropertyTypeVar = typing.TypeVar("ProjectTaskPropertyTypeVar", bound=BaseProjectTaskProperty)
@@ -144,7 +147,12 @@ class BaseProject(
         """
         logger.info("%s - start creating a project", self.project.pk)
 
-        self.validate_geometries()
-        self.create_groups()
-        self.post_create_groups()
-        return True
+        try:
+            self.validate_geometries()
+            self.create_groups()
+            self.post_create_groups()
+            return True
+        except ValidateException as ex:
+            logger.error(ex)
+            # TODO(tnagorra): handle this properly
+            return False
