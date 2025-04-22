@@ -190,7 +190,7 @@ type OrganizationType implements UserResourceTypeMixin {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
 """
 input ProjectFilter {
   id: IDBaseFilterLookup
@@ -202,16 +202,20 @@ input ProjectFilter {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
 """
 input ProjectInput {
   name: String!
   projectType: ProjectTypeEnum!
 
   """Which group, institution or community is requesting this project?"""
-  organization: ID!
+  requestingOrganization: ID!
   image: Upload!
-  geometryFile: Upload!
+
+  """
+  The area of interest for this project uploaded by the user. This should be OGR-supported vector geospatial file format
+  """
+  aoiGeometryFile: Upload!
 
   """
   How big should a mapping session be? Group size refers to the number of tasks per mapping session.
@@ -229,16 +233,20 @@ input ProjectInput {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
 """
 input ProjectInputPartial {
   name: String
   projectType: ProjectTypeEnum
 
   """Which group, institution or community is requesting this project?"""
-  organization: ID!
+  requestingOrganization: ID!
   image: Upload!
-  geometryFile: Upload!
+
+  """
+  The area of interest for this project uploaded by the user. This should be OGR-supported vector geospatial file format
+  """
+  aoiGeometryFile: Upload!
 
   """
   How big should a mapping session be? Group size refers to the number of tasks per mapping session.
@@ -299,17 +307,17 @@ type ProjectTileServerCustomConfig {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
 """
 type ProjectType {
   id: ID!
   name: String!
 
   """Which group, institution or community is requesting this project?"""
-  organizationId: ID!
+  requestingOrganizationId: ID!
 
   """Which group, institution or community is requesting this project?"""
-  organization: OrganizationType!
+  requestingOrganization: OrganizationType!
   projectType: ProjectTypeEnum!
   projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyType!
 }
