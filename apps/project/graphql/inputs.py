@@ -58,19 +58,19 @@ class ProjectCreateInput:
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.partial(Project)
 class ProjectUpdateInput:
-    requesting_organization: strawberry.ID
     name: strawberry.auto
     look_for: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
-    image: Upload
     # TODO(tnagorra): Add tutorial
     verification_number: strawberry.auto
     group_size: strawberry.auto
     max_tasks_per_user: strawberry.auto
-    project_type_specifics: ProjectTypeSpecificInput
-    aoi_geometry_file: Upload
     status: strawberry.auto
+    requesting_organization: strawberry.ID | None = strawberry.UNSET
+    image: Upload | None = strawberry.UNSET
+    project_type_specifics: ProjectTypeSpecificInput | None = strawberry.UNSET
+    aoi_geometry_file: Upload | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py

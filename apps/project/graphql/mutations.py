@@ -24,7 +24,7 @@ class Mutation:
     async def update_project(
         self, info: Info, data: ProjectUpdateInput, pk: strawberry.ID,
     ) -> MutationResponseType[ProjectType]:
-        project = Project.objects.get(pk=pk)
+        project = await Project.objects.aget(pk=pk)
         return await ModelMutation(ProjectSerializer).handle_update_mutation(data, info, project)
 
     @strawberry_django.mutation(extensions=[IsAuthenticated()])

@@ -36,6 +36,7 @@ class ProjectFactory(DjangoModelFactory):
     result_count = 0
     status = Project.Status.READY
     verification_number = 1
+    max_tasks_per_user = 30
 
 
 class TaskGroupFactory(DjangoModelFactory):

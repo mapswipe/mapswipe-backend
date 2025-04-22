@@ -68,14 +68,22 @@ class ProjectSerializer(UserResourceSerializer[Project]):
                 raise serializers.ValidationError(
                     gettext("Project status cannot be changed from %s to %s") % (self.instance.status, new_status),
                 )
+        return new_status
 
     def _validate_editable(self):
         if self.instance and self.instance.status != Project.Status.DRAFT and self.instance.status != Project.Status.FAILED:
             raise serializers.ValidationError(gettext("Cannot update project with status %s") % self.instance.status)
 
     def _validate_project_type_specifics(self, attrs: dict[str, typing.Any]):
-        project_type = attrs["project_type"]
-        raw_project_type_specifics = attrs["project_type_specifics"]
+        project_type = attrs.get("project_type") or (self.instance and self.instance.project_type_enum)
+        raw_project_type_specifics = attrs.get("project_type_specifics")
+
+        if project_type is None:
+            raise serializers.ValidationError(
+                {
+                    "project_type": gettext("Project type is required."),
+                },
+            )
 
         ENUM_FIELD_MAP = {
             # FIXME(tnagorra): Handle completeness
@@ -93,11 +101,16 @@ class ProjectSerializer(UserResourceSerializer[Project]):
 
         field_name, pydantic_model = ENUM_FIELD_MAP[project_type]
 
-        project_type_specifics = raw_project_type_specifics.get(field_name)
+        if raw_project_type_specifics is not None:
+            project_type_specifics = raw_project_type_specifics.get(field_name)
+        else:
+            project_type_specifics = self.instance and self.instance.project_type_specifics
 
         if project_type_specifics is None:
             raise serializers.ValidationError(
-                {"project_type_specifics": gettext("Configuration not provided for: %s") % project_type_label},
+                {
+                    "project_type_specifics": gettext("Configuration not provided for: %s") % project_type_label,
+                },
             )
 
         # XXX: Clean up nullable keys
