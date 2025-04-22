@@ -196,6 +196,7 @@ class Project(UserResource):
 
     # STATUS
 
+    # TODO(tnagorra): Remove is_draft
     is_draft = models.BooleanField(default=True, help_text=gettext_lazy("Draft project can be modified"))
     is_featured = models.BooleanField(default=False)
     status: ProjectStatusEnum = IntegerChoicesField(  # type: ignore[reportAssignmentType]

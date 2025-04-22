@@ -14,28 +14,71 @@ from utils.graphql.drf import handle_pydantic_validation_error
 from .models import Project, ProjectTypeEnum
 from .tasks import process_project_task
 
+VALID_PROJECT_STATUS_TRANSITIONS = set(
+    [
+        (Project.Status.DRAFT, Project.Status.MARKED_AS_READY),
+        (Project.Status.DRAFT, Project.Status.DISCARDED),
+        (Project.Status.FAILED, Project.Status.MARKED_AS_READY),
+        (Project.Status.FAILED, Project.Status.DISCARDED),
+    ],
+)
+
+VALID_READY_PROJECT_STATUS_TRANSITIONS = set(
+    [
+        # NOTE: Transition from MARKED_AS_READY are updated by the system
+        # (Project.Status.MARKED_AS_READY, Project.Status.FAILED),
+        # (Project.Status.MARKED_AS_READY, Project.Status.READY),
+        (Project.Status.READY, Project.Status.PUBLISHED),
+        (Project.Status.READY, Project.Status.DISCARDED),
+        (Project.Status.PUBLISHED, Project.Status.ARCHIVED),
+        (Project.Status.PUBLISHED, Project.Status.PAUSED),
+        (Project.Status.PUBLISHED, Project.Status.DISCARDED),
+        (Project.Status.PAUSED, Project.Status.DISCARDED),
+        (Project.Status.PAUSED, Project.Status.PUBLISHED),
+    ],
+)
+
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
-class ProjectSerializer(UserResourceSerializer):
+class ProjectSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
-            "name",
             "project_type",
             "requesting_organization",
-            "image",
-            "aoi_geometry_file",
-            "group_size",
-            "verification_number",
+            "name",
             "look_for",
+            "additional_info_url",
+            "description",
+            "image",
+            "verification_number",
+            "group_size",
+            "max_tasks_per_user",
             "project_type_specifics",
+            "aoi_geometry_file",
+            "status",
         )
 
-    def _validate_project_type_specifics(self, attrs: dict):
+    def validate_status(self, new_status: Project.Status):
+        if not self.instance:
+            if new_status != Project.Status.DRAFT:
+                raise serializers.ValidationError(gettext("During project creation, project status should be Draft"))
+        else:
+            if (self.instance.status, new_status) not in VALID_PROJECT_STATUS_TRANSITIONS:
+                raise serializers.ValidationError(
+                    gettext("Project status cannot be changed from %s to %s") % (self.instance.status, new_status),
+                )
+
+    def _validate_editable(self):
+        if self.instance and self.instance.status != Project.Status.DRAFT and self.instance.status != Project.Status.FAILED:
+            raise serializers.ValidationError(gettext("Cannot update project with status %s") % self.instance.status)
+
+    def _validate_project_type_specifics(self, attrs: dict[str, typing.Any]):
         project_type = attrs["project_type"]
         raw_project_type_specifics = attrs["project_type_specifics"]
 
         ENUM_FIELD_MAP = {
+            # FIXME(tnagorra): Handle completeness
             ProjectTypeEnum.COMPARE: ("compare", compare_project.CompareProjectProperty),
             ProjectTypeEnum.FIND: ("find", find_project.FindProjectProperty),
         }
@@ -68,12 +111,39 @@ class ProjectSerializer(UserResourceSerializer):
         attrs["project_type_specifics"] = project_type_specifics
 
     @typing.override
-    def validate(self, attrs: dict):
+    def validate(self, attrs: dict[str, typing.Any]):
+        self._validate_editable()
         self._validate_project_type_specifics(attrs)
-        return attrs
+        return super().validate(attrs)
 
     @typing.override
-    def create(self, validated_data: dict):
-        new_project = super().create(validated_data)
-        transaction.on_commit(lambda: process_project_task.delay(new_project.pk))
+    def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:
+        new_project = super().update(instance, validated_data)
+
+        if new_project.status == Project.Status.MARKED_AS_READY:
+            transaction.on_commit(lambda: process_project_task.delay(new_project.pk))
+
         return new_project
+
+
+# NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
+class ReadyProjectSerializer(UserResourceSerializer[Project]):
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        model = Project
+        fields = (
+            "requesting_organization",
+            "name",
+            "look_for",
+            "additional_info_url",
+            "description",
+            "image",
+            "status",
+        )
+
+    def validate_status(self, new_status: Project.Status):
+        if not self.instance:
+            raise Exception("Project does not exist")
+        if (self.instance.status, new_status) not in VALID_READY_PROJECT_STATUS_TRANSITIONS:
+            raise serializers.ValidationError(
+                gettext("Project status cannot be changed from %s to %s") % (self.instance.status, new_status),
+            )

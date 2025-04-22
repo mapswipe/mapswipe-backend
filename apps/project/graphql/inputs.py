@@ -38,28 +38,49 @@ class ProjectTypeSpecificInput:
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.input(Project)
-class ProjectInput:
-    name: strawberry.auto
+class ProjectCreateInput:
     project_type: strawberry.auto
     requesting_organization: strawberry.ID
-    image: Upload
-    aoi_geometry_file: Upload
-
-    group_size: strawberry.auto
-    verification_number: strawberry.auto
+    name: strawberry.auto
     look_for: strawberry.auto
-
+    additional_info_url: strawberry.auto
+    description: strawberry.auto
+    image: Upload
+    # TODO(tnagorra): Add tutorial
+    verification_number: strawberry.auto
+    group_size: strawberry.auto
+    max_tasks_per_user: strawberry.auto
     project_type_specifics: ProjectTypeSpecificInput
-
-
-@strawberry_django.partial(Project)
-class ProjectInputPartial:
-    name: strawberry.auto
-    project_type: strawberry.auto
-    requesting_organization: strawberry.ID
-    image: Upload
     aoi_geometry_file: Upload
+    status: strawberry.auto
 
-    group_size: strawberry.auto
-    verification_number: strawberry.auto
+
+# NOTE: Make sure this matches with the serializers ../serializers.py
+@strawberry_django.partial(Project)
+class ProjectUpdateInput:
+    requesting_organization: strawberry.ID
+    name: strawberry.auto
     look_for: strawberry.auto
+    additional_info_url: strawberry.auto
+    description: strawberry.auto
+    image: Upload
+    # TODO(tnagorra): Add tutorial
+    verification_number: strawberry.auto
+    group_size: strawberry.auto
+    max_tasks_per_user: strawberry.auto
+    project_type_specifics: ProjectTypeSpecificInput
+    aoi_geometry_file: Upload
+    status: strawberry.auto
+
+
+# NOTE: Make sure this matches with the serializers ../serializers.py
+@strawberry_django.partial(Project)
+class ReadyProjectUpdateInput:
+    requesting_organization: strawberry.ID
+    name: strawberry.auto
+    look_for: strawberry.auto
+    additional_info_url: strawberry.auto
+    description: strawberry.auto
+    image: Upload
+    # TODO(tnagorra): Add tutorial
+    status: strawberry.auto
