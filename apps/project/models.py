@@ -117,7 +117,7 @@ class Project(UserResource):
 
     old_id = models.CharField(max_length=30, db_index=True, null=True, blank=True)
 
-    project_type: ProjectTypeEnum = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+    project_type: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=ProjectTypeEnum,
     )
 
@@ -196,9 +196,10 @@ class Project(UserResource):
 
     # STATUS
 
+    # TODO(tnagorra): Remove is_draft
     is_draft = models.BooleanField(default=True, help_text=gettext_lazy("Draft project can be modified"))
     is_featured = models.BooleanField(default=False)
-    status: ProjectStatusEnum = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+    status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=ProjectStatusEnum,
         default=ProjectStatusEnum.DRAFT,
     )
@@ -233,6 +234,10 @@ class Project(UserResource):
     @typing.override
     def __str__(self):
         return self.name
+
+    @property
+    def project_type_enum(self):
+        return ProjectTypeEnum(self.project_type)
 
     def update_status(self, status: ProjectStatusEnum, commit: bool = True):
         # TODO(tnagorra): Add a validation here
