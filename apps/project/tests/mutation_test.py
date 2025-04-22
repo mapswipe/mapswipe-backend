@@ -45,7 +45,7 @@ def create_project_query(
             },
             map={
                 "imageFile": ["variables.data.image"],
-                "geoFile": ["variables.data.geometryFile"],
+                "geoFile": ["variables.data.aoiGeometryFile"],
             },
             **kwargs,
         )
@@ -72,8 +72,8 @@ class TestProjectMutation(TestCase):
                     id
                     name
                     projectType
-                    organizationId
-                    organization {
+                    requestingOrganizationId
+                    requestingOrganization {
                       id
                       name
                     }
@@ -98,7 +98,7 @@ class TestProjectMutation(TestCase):
     def test_project_create(self):
         project_data = {
             "name": "New Project 101",
-            "organization": self.organization.pk,
+            "requestingOrganization": self.organization.pk,
             "projectType": self.genum(ProjectTypeEnum.COMPARE),
             "groupSize": 15,
             "verificationNumber": 1,
@@ -156,11 +156,11 @@ class TestProjectMutation(TestCase):
             result=dict(
                 id=self.gID(latest_project.pk),
                 name=latest_project.name,
-                organization=dict(
-                    id=self.gID(latest_project.organization.pk),
-                    name=latest_project.organization.name,
+                requestingOrganization=dict(
+                    id=self.gID(latest_project.requesting_organization.pk),
+                    name=latest_project.requesting_organization.name,
                 ),
-                organizationId=self.gID(latest_project.organization.pk),
+                requestingOrganizationId=self.gID(latest_project.requesting_organization.pk),
                 projectType=self.genum(ProjectTypeEnum.FIND),
             ),
         ), content
@@ -201,8 +201,8 @@ class TestProjectTypeMutation(TestCase):
                     id
                     name
                     projectType
-                    organizationId
-                    organization {
+                    requestingOrganizationId
+                    requestingOrganization {
                       id
                       name
                     }
@@ -225,7 +225,7 @@ class TestProjectTypeMutation(TestCase):
         cls.organization = OrganizationFactory.create(**cls.user_resource_kwargs)
         cls.project_data = {
             "name": "New Project 101",
-            "organization": cls.organization.pk,
+            "requestingOrganization": cls.organization.pk,
             "groupSize": 15,
             "verificationNumber": 1,
             "lookFor": "Buildings",
@@ -309,7 +309,7 @@ class TestProjectTypeMutation(TestCase):
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] == [
             {
-                "field": "geometryFile",
+                "field": "aoiGeometryFile",
                 "client_id": None,
                 "messages": "The submitted file is empty.",
                 "object_errors": None,

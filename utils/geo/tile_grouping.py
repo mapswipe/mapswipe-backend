@@ -13,7 +13,7 @@ from . import tile_functions
 
 logger = logging.getLogger(__name__)
 
-# x_min, y_min, x_max, y_max
+# NOTE: x_min, y_min, x_max, y_max
 type GeoExtent = tuple[float, float, float, float]
 
 
@@ -28,19 +28,25 @@ class RawGroup(typing.TypedDict):
     xMax: int
     yMin: int
     yMax: int
-    group_polygon: Polygon  # XXX: Not used
+    # FIXME(tnagorra): This seems to be unused. This might still be used in exports
+    group_polygon: Polygon
 
 
+# FIXME(tnagorra): This seems to be unused
 class UnSupportedGeoExtenstionException(Exception):
     pass
 
 
-# FIXME(tnagorra): Create a TypedDict
-def get_geometry_from_file(infile: str) -> tuple[GeoExtent, list[Polygon]]:
+class AoiGeometry(typing.TypedDict):
+    extent: GeoExtent
+    polygons: list[Polygon]
+
+
+def get_geometry_from_file(infile: str) -> AoiGeometry:
     data_source = DataSource(infile)
 
     # Get the data layer
-    # TODO(tnagorra): Proper validation
+    # TODO(thenav56): Proper validation
     assert data_source.layer_count == 1
     layer = data_source[0]
 
@@ -49,10 +55,13 @@ def get_geometry_from_file(infile: str) -> tuple[GeoExtent, list[Polygon]]:
     for feature in layer:
         polygons.append(feature.geom.geos)
 
-    return layer.extent.tuple, polygons
+    return {
+        "extent": layer.extent.tuple,
+        "polygons": polygons,
+    }
 
 
-def get_horizontal_slice(
+def _get_horizontal_slice(
     extent: GeoExtent,
     polygons: list[Polygon],
     zoom: int,
@@ -140,7 +149,7 @@ def get_horizontal_slice(
     )
 
 
-def get_vertical_slice(
+def _get_vertical_slice(
     slice_infos: HorizontalSliceInfo,
     zoom: int,
     width_threshold: int = 40,
@@ -273,7 +282,7 @@ def get_vertical_slice(
     return raw_groups
 
 
-def groups_intersect(group_a: RawGroup, group_b: RawGroup) -> bool:
+def _groups_intersect(group_a: RawGroup, group_b: RawGroup) -> bool:
     """Check if groups intersect."""
     x_max = int(group_a["xMax"])
     x_min = int(group_a["xMin"])
@@ -288,7 +297,7 @@ def groups_intersect(group_a: RawGroup, group_b: RawGroup) -> bool:
     return (x_min <= x_maxB) and (x_minB <= x_max) and (y_min <= y_maxB) and (y_minB <= y_max)
 
 
-def merge_groups(group_a: RawGroup, group_b: RawGroup, zoom: int) -> RawGroup:
+def _merge_groups(group_a: RawGroup, group_b: RawGroup, zoom: int) -> RawGroup:
     """Merge two overlapping groups into a single group.
 
     This can result in groups that are "longer" than
@@ -346,7 +355,7 @@ def merge_groups(group_a: RawGroup, group_b: RawGroup, zoom: int) -> RawGroup:
     return new_group
 
 
-def adjust_overlapping_groups(
+def _adjust_overlapping_groups(
     groups: dict[str, RawGroup],
     zoom: int,
 ) -> tuple[dict[str, RawGroup], int]:
@@ -366,9 +375,9 @@ def adjust_overlapping_groups(
             if group_id_b == group_id:
                 continue
 
-            if groups_intersect(groups[group_id], groups[group_id_b]):
+            if _groups_intersect(groups[group_id], groups[group_id_b]):
                 overlap_count += 1
-                new_group = merge_groups(groups[group_id], groups[group_id_b], zoom)
+                new_group = _merge_groups(groups[group_id], groups[group_id_b], zoom)
                 del groups[group_id_b]
                 groups_without_overlap[group_id] = new_group
 
@@ -382,7 +391,7 @@ def adjust_overlapping_groups(
     return groups_without_overlap, overlaps_total
 
 
-def extent_to_groups(infile: str, zoom: int, groupSize: int) -> dict[str, RawGroup]:
+def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, groupSize: int) -> dict[str, RawGroup]:
     """
     The function to polygon geometries of a given input file
     into horizontal slices and then vertical slices.
@@ -402,16 +411,17 @@ def extent_to_groups(infile: str, zoom: int, groupSize: int) -> dict[str, RawGro
         and a "group_polygon" as ogr.Geometry(ogr.wkbPolygon)
         and the "group_id" as key
     """
-    extent, polygons = get_geometry_from_file(infile)
+    extent = aoi_geometry["extent"]
+    polygons = aoi_geometry["polygons"]
 
     # get horizontal slices --> rows
-    horizontal_slice_infos = get_horizontal_slice(extent, polygons, zoom)
+    horizontal_slice_infos = _get_horizontal_slice(extent, polygons, zoom)
 
     # then get vertical slices --> columns
-    raw_groups_dict = get_vertical_slice(horizontal_slice_infos, zoom, groupSize)
+    raw_groups_dict = _get_vertical_slice(horizontal_slice_infos, zoom, groupSize)
 
     # finally remove overlapping groups
-    groups_dict, overlaps_total = adjust_overlapping_groups(raw_groups_dict, zoom)
+    groups_dict, overlaps_total = _adjust_overlapping_groups(raw_groups_dict, zoom)
 
     # check if there are still overlaps
     c = 0
@@ -421,6 +431,6 @@ def extent_to_groups(infile: str, zoom: int, groupSize: int) -> dict[str, RawGro
         if c == 5:
             break
 
-        groups_dict, overlaps_total = adjust_overlapping_groups(groups_dict.copy(), zoom)
+        groups_dict, overlaps_total = _adjust_overlapping_groups(groups_dict.copy(), zoom)
 
     return groups_dict

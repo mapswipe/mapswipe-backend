@@ -99,7 +99,7 @@ def quadKey_to_Bing_URL(quadKey: str, api_key: str):
 
 
 # FIXME(tnagorra): Add typings for osgeo
-def geometry_from_tile_coords(TileX: float, TileY: float, zoom: int):
+def geometry_from_tile_coords(TileX: float, TileY: float, zoom: int) -> str:
     """Compute the polygon geometry of a tile map service tile."""
 
     # Calculate lat, lon of upper left corner of tile

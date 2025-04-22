@@ -81,8 +81,7 @@ class Project(UserResource):
         choices_enum=ProjectTypeEnum,
     )
 
-    # TODO: Should we rename this to requesting_organization
-    organization: Organization = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    requesting_organization: Organization = models.ForeignKey(  # type: ignore[reportAssignmentType]
         Organization,
         on_delete=models.PROTECT,
         related_name="+",
@@ -164,10 +163,26 @@ class Project(UserResource):
         default=ProjectStatusEnum.INACTIVE,
     )
 
-    # DEPRECATED
+    # TODO(tnagorra): Add area-based validations
+    aoi_geometry_file = models.FileField(
+        upload_to=UploadHelper.project_geometry,
+        null=True,
+        blank=True,
+        help_text=gettext_lazy(
+            "The area of interest for this project uploaded by the user. "
+            "This should be OGR-supported vector geospatial file format",
+        ),
+    )
 
-    # TODO: It's not always possible to have geometry during project creation.
-    geometry_file = models.FileField(upload_to=UploadHelper.project_geometry, null=True, blank=True)
+    # TODO(tnagorra): It's not always possible to have geometry during project creation.
+    processed_geometry_file = models.FileField(
+        upload_to=UploadHelper.project_geometry,
+        null=True,
+        blank=True,
+        help_text=gettext_lazy(
+            "Eg. For TileMapService, this includes the AOI broken down into tiles.",
+        ),
+    )
 
     # CALCULATED FIELDS
 
@@ -255,6 +270,7 @@ class ProjectTask(models.Model):
 
     # Type hints
     task_group_id: int
+    id: int
 
     @typing.override
     def __str__(self):

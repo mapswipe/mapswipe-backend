@@ -8,7 +8,7 @@ from rest_framework import serializers
 from main.graphql.context import Info
 
 from .common import parse_input_data
-from .drf import _CustomErrorType, mutation_is_not_valid
+from .drf import MutationCustomErrorType, mutation_is_not_valid
 from .types import CustomErrorType, MutationResponseType
 
 logger = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ class ModelMutation:
                 instance = serializer.save()
         except Exception:
             logger.error("Failed to handle mutation", exc_info=True)
-            return _CustomErrorType.generate_message(), None
+            return MutationCustomErrorType.generate_message(), None
         return None, instance
 
     async def handle_create_mutation(

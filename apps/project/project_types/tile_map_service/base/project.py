@@ -131,16 +131,31 @@ class TileMapServiceBaseProject(
     def validate_geometries(self):
         """Create groups for project extent."""
         # first step get properties of each group from extent
-        extension = Path(self.project.geometry_file.file.name).suffix
+        extension = Path(self.project.aoi_geometry_file.file.name).suffix
         with tempfile.NamedTemporaryFile(suffix=extension, dir=settings.TEMP_DIR) as temp_file:
-            temp_file.write(self.project.geometry_file.file.read())
             # FIXME(thenav56): self.project.geometry is not a file
+            temp_file.write(self.project.aoi_geometry_file.file.read())
             temp_file.flush()
 
             # TODO(tnagorra): Add validation on area
+            aoi_geometry = tile_grouping.get_geometry_from_file(temp_file.name)
+
+            aoi_polygons = aoi_geometry["polygons"]
+            POLYGON_COUNT_LIMIT = 20
+            if len(aoi_polygons) > POLYGON_COUNT_LIMIT:
+                # FIXME(tnagorra): Properly handle error
+                raise base_project.ValidateException(f"No more than {POLYGON_COUNT_LIMIT} polygons please")
+
+            aoi_area = sum([polygon.area for polygon in aoi_polygons])
+
+            # NOTE: The formula was copied from the validation in manager dashboard
+            allowed_area = 5 * (4 ** (23 - self.project_type_specifics.zoom_level))
+            if aoi_area > allowed_area:
+                # FIXME(tnagorra): Properly handle error
+                raise base_project.ValidateException(f"No more than {allowed_area} area please")
 
             self.raw_groups = tile_grouping.extent_to_groups(
-                temp_file.name,
+                aoi_geometry,
                 self.project_type_specifics.zoom_level,
                 self.project.group_size,
             )

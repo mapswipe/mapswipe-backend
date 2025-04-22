@@ -41,9 +41,9 @@ class ProjectTypeSpecificInput:
 class ProjectInput:
     name: strawberry.auto
     project_type: strawberry.auto
-    organization: strawberry.ID
+    requesting_organization: strawberry.ID
     image: Upload
-    geometry_file: Upload
+    aoi_geometry_file: Upload
 
     group_size: strawberry.auto
     verification_number: strawberry.auto
@@ -56,9 +56,9 @@ class ProjectInput:
 class ProjectInputPartial:
     name: strawberry.auto
     project_type: strawberry.auto
-    organization: strawberry.ID
+    requesting_organization: strawberry.ID
     image: Upload
-    geometry_file: Upload
+    aoi_geometry_file: Upload
 
     group_size: strawberry.auto
     verification_number: strawberry.auto

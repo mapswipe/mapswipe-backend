@@ -21,7 +21,7 @@ class ProjectFactory(DjangoModelFactory):
         model = Project
 
     name = factory.Sequence(lambda n: f"Project {n}")
-    organization = factory.SubFactory(OrganizationFactory)
+    requesting_organization = factory.SubFactory(OrganizationFactory)
 
     project_type = Project.Type.FIND
     image = factory.django.ImageField(filename="preview.png")
