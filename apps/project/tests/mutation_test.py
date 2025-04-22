@@ -1,12 +1,14 @@
 import typing
 from pathlib import Path
+from unittest.mock import call, patch
 
 from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 
-from apps.project.factories import OrganizationFactory, ProjectFactory
+from apps.project.factories import OrganizationFactory
 from apps.project.models import Project, ProjectStatusEnum, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
 from apps.project.project_types.tile_map_service.compare import project as compare_project
+from apps.project.tasks import process_project_task
 from apps.user.factories import UserFactory
 from main.tests import TestCase
 from utils.geo.tile_server.config import TileServerNameEnum
@@ -245,6 +247,7 @@ class TestProjectTypeMutation(TestCase):
                       id
                       name
                     }
+                    status
                   }
                 }
               }
@@ -274,6 +277,7 @@ class TestProjectTypeMutation(TestCase):
                       id
                       name
                     }
+                    status
                   }
                 }
               }
@@ -352,7 +356,8 @@ class TestProjectTypeMutation(TestCase):
                 **kwargs,
             )
 
-    def test_project_compare(self):
+    @patch("apps.project.serializers.process_project_task.delay")
+    def test_project_compare(self, mock_requests):
         self.force_login(self.user)
         project_data = {
             **self.project_data,
@@ -505,7 +510,12 @@ class TestProjectTypeMutation(TestCase):
         )
         resp_data = content["data"]["updateProject"]
         assert resp_data["errors"] is None, content
+        assert resp_data["result"]["status"] == self.genum(ProjectStatusEnum.MARKED_AS_READY)
 
+        mock_requests.assert_called_once()
+        mock_requests.assert_has_calls([call(latest_project.id)])
+
+        process_project_task(latest_project.id)
         expected_task_groups = [
             {
                 "number_of_tasks": 18,
@@ -588,6 +598,9 @@ class TestProjectTypeMutation(TestCase):
             },
         ]
 
+        # TODO: Clear out tasks and groups when editing project
+
+        latest_project.refresh_from_db()
         project_task_group_qs = ProjectTaskGroup.objects.filter(project=latest_project)
         project_task_qs = ProjectTask.objects.filter(task_group__project=latest_project)
 
@@ -605,9 +618,11 @@ class TestProjectTypeMutation(TestCase):
                     "project_type_specifics",
                 )[:5],
             ),
+            "status": latest_project.status,
         } == {
             "tasks_groups_count": len(expected_task_groups),
             "tasks_count": 72,
             "tasks_groups": expected_task_groups,
             "tasks": expected_last_5_tasks,
+            "status": ProjectStatusEnum.READY,
         }

@@ -145,8 +145,8 @@ class BaseProject(
         """
 
         if self.project.status not in [
-            self.project.Status.MARKED_AS_READY,
-            self.project.Status.FAILED,
+            Project.Status.MARKED_AS_READY,
+            Project.Status.FAILED,
         ]:
             raise Exception("Status should either be 'Marked as ready' or 'Failed'")
 
@@ -156,8 +156,11 @@ class BaseProject(
             resp = self.validate()
             self.create_groups(resp)
             self.post_create_groups()
+            self.project.status = Project.Status.READY
+            self.project.save(update_fields=["status"])
             return True
         except ValidateException as ex:
             logger.error(ex)
-            # TODO(tnagorra): handle this properly
+            self.project.status = Project.Status.FAILED
+            self.project.save(update_fields=["status"])
             return False

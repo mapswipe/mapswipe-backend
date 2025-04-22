@@ -18,7 +18,7 @@ def process_project_task(project_id: int):
 
     project = Project.objects.get(pk=project_id)
     try:
-        project_type_handler = get_project_type_handler(project.project_type)(project)
+        project_type_handler = get_project_type_handler(project.project_type_enum)(project)
         project_type_handler.process_project()
         return True
     except Exception:

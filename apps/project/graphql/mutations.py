@@ -22,14 +22,20 @@ class Mutation:
 
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
     async def update_project(
-        self, info: Info, data: ProjectUpdateInput, pk: strawberry.ID,
+        self,
+        info: Info,
+        data: ProjectUpdateInput,
+        pk: strawberry.ID,
     ) -> MutationResponseType[ProjectType]:
         project = await Project.objects.aget(pk=pk)
         return await ModelMutation(ProjectSerializer).handle_update_mutation(data, info, project)
 
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
     async def update_ready_project(
-        self, info: Info, data: ReadyProjectUpdateInput, pk: strawberry.ID,
+        self,
+        info: Info,
+        data: ReadyProjectUpdateInput,
+        pk: strawberry.ID,
     ) -> MutationResponseType[ProjectType]:
         project = Project.objects.get(pk=pk)
         return await ModelMutation(ReadyProjectSerializer).handle_update_mutation(data, info, project)
