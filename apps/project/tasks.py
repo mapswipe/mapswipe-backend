@@ -23,6 +23,5 @@ def process_project_task(project_id: int):
         return True
     except Exception:
         logger.error("Project geometry load failed", exc_info=True)
-        project.status = Project.Status.FAILED
-        project.save(update_fields=["status"])
+        project.update_status(Project.Status.FAILED, True)
         return False

@@ -203,7 +203,7 @@ class TestProjectMutation(TestCase):
                 maxTasksPerUser=latest_project.max_tasks_per_user,
                 isFeatured=latest_project.is_featured,
                 status=self.genum(Project.Status.DRAFT),
-                processingStatus=self.genum(Project.ProcessingStatus.WAITING),
+                processingStatus=None,
                 progress=0,
             ),
         ), content
@@ -557,7 +557,7 @@ class TestProjectTypeMutation(TestCase):
         resp_data = content["data"]["updateProject"]
         assert resp_data["errors"] is None, content
         assert resp_data["result"]["status"] == self.genum(Project.Status.MARKED_AS_READY)
-        assert resp_data["result"]["processingStatus"] == self.genum(Project.ProcessingStatus.WAITING)
+        assert resp_data["result"]["processingStatus"] is None
 
         mock_requests.assert_called_once()
         mock_requests.assert_has_calls([call(latest_project.id)])
