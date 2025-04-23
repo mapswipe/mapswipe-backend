@@ -241,6 +241,7 @@ class Project(UserResource):
 
     def update_status(self, status: ProjectStatusEnum, commit: bool = True):
         # TODO(tnagorra): Add a validation here
+        # FIXME(tnagorra): This is not used anywhere.
         self.status = status
         if commit:
             self.save(update_fields=("status",))
