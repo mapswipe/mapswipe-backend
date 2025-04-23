@@ -160,3 +160,4 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             raise serializers.ValidationError(
                 gettext("Project status cannot be changed from %s to %s") % (self.instance.status, new_status),
             )
+        return new_status
