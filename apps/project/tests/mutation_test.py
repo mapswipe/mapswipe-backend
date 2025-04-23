@@ -1,5 +1,6 @@
 import typing
 from pathlib import Path
+from unittest.mock import call, patch
 
 from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
@@ -7,6 +8,7 @@ from django.core.files.temp import NamedTemporaryFile
 from apps.project.factories import OrganizationFactory
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
 from apps.project.project_types.tile_map_service.compare import project as compare_project
+from apps.project.tasks import process_project_task
 from apps.user.factories import UserFactory
 from main.tests import TestCase
 from utils.geo.tile_server.config import TileServerNameEnum
@@ -51,10 +53,28 @@ def create_project_query(
         )
 
 
+def update_project_query(
+    *,
+    query_check_func: typing.Callable,
+    query: str,
+    pk: str,
+    project_data: dict,
+    **kwargs,
+) -> dict:
+    return query_check_func(
+        query,
+        variables={
+            "pk": pk,
+            "data": project_data,
+        },
+        **kwargs,
+    )
+
+
 class TestProjectMutation(TestCase):
     class Mutation:
         CREATE_PROJECT = """
-            mutation CreateProject($data: ProjectInput!) {
+            mutation CreateProject($data: ProjectCreateInput!) {
               createProject(data: $data) {
                 ... on OperationInfo {
                   __typename
@@ -70,13 +90,23 @@ class TestProjectMutation(TestCase):
                   ok
                   result {
                     id
-                    name
                     projectType
                     requestingOrganizationId
                     requestingOrganization {
                       id
                       name
                     }
+                    name
+                    lookFor
+                    additionalInfoUrl
+                    description
+                    verificationNumber
+                    groupSize
+                    maxTasksPerUser
+                    isFeatured
+                    status
+                    processingStatus
+                    progress
                   }
                 }
               }
@@ -97,12 +127,15 @@ class TestProjectMutation(TestCase):
 
     def test_project_create(self):
         project_data = {
-            "name": "New Project 101",
-            "requestingOrganization": self.organization.pk,
             "projectType": self.genum(ProjectTypeEnum.COMPARE),
-            "groupSize": 15,
-            "verificationNumber": 1,
+            "requestingOrganization": self.organization.pk,
+            "name": "New Project 101",
             "lookFor": "Buildings",
+            "additionalInfoUrl": "https://hi-there/about.html",
+            "description": "The new **project** from hi-there.",
+            "verificationNumber": 1,
+            "groupSize": 15,
+            "maxTasksPerUser": 10,
             "projectTypeSpecifics": {
                 "find": {
                     "zoomLevel": 15,
@@ -155,13 +188,23 @@ class TestProjectMutation(TestCase):
             ok=True,
             result=dict(
                 id=self.gID(latest_project.pk),
-                name=latest_project.name,
+                projectType=self.genum(ProjectTypeEnum.FIND),
+                requestingOrganizationId=self.gID(latest_project.requesting_organization.pk),
                 requestingOrganization=dict(
                     id=self.gID(latest_project.requesting_organization.pk),
                     name=latest_project.requesting_organization.name,
                 ),
-                requestingOrganizationId=self.gID(latest_project.requesting_organization.pk),
-                projectType=self.genum(ProjectTypeEnum.FIND),
+                name=latest_project.name,
+                lookFor=latest_project.look_for,
+                additionalInfoUrl=latest_project.additional_info_url,
+                description=latest_project.description,
+                verificationNumber=latest_project.verification_number,
+                groupSize=latest_project.group_size,
+                maxTasksPerUser=latest_project.max_tasks_per_user,
+                isFeatured=latest_project.is_featured,
+                status=self.genum(Project.Status.DRAFT),
+                processingStatus=None,
+                progress=0,
             ),
         ), content
 
@@ -183,7 +226,7 @@ class TestProjectMutation(TestCase):
 class TestProjectTypeMutation(TestCase):
     class Mutation:
         CREATE_PROJECT = """
-            mutation CreateProject($data: ProjectInput!) {
+            mutation CreateProject($data: ProjectCreateInput!) {
               createProject(data: $data) {
                 ... on OperationInfo {
                   __typename
@@ -206,6 +249,70 @@ class TestProjectTypeMutation(TestCase):
                       id
                       name
                     }
+                    status
+                    processingStatus
+                  }
+                }
+              }
+            }
+        """
+        UPDATE_PROJECT = """
+            mutation UpdateProject($pk: ID!, $data: ProjectUpdateInput!) {
+              updateProject(pk: $pk, data: $data) {
+                ... on OperationInfo {
+                  __typename
+                  messages {
+                    code
+                    field
+                    kind
+                    message
+                  }
+                }
+                ... on ProjectTypeMutationResponseType {
+                  errors
+                  ok
+                  result {
+                    id
+                    name
+                    projectType
+                    requestingOrganizationId
+                    requestingOrganization {
+                      id
+                      name
+                    }
+                    status
+                    processingStatus
+                  }
+                }
+              }
+            }
+        """
+        UPDATE_PROCESSED_PROJECT = """
+            mutation UpdateProcessedProject($pk: ID!, $data: ProcessedProjectUpdateInput!) {
+              updateProcessedProject(pk: $pk, data: $data) {
+                ... on OperationInfo {
+                  __typename
+                  messages {
+                    code
+                    field
+                    kind
+                    message
+                  }
+                }
+                ... on ProjectTypeMutationResponseType {
+                  errors
+                  ok
+                  result {
+                    id
+                    name
+                    projectType
+                    requestingOrganizationId
+                    requestingOrganization {
+                      id
+                      name
+                    }
+                    status
+                    processingStatus
                   }
                 }
               }
@@ -264,7 +371,7 @@ class TestProjectTypeMutation(TestCase):
         # NOTE: _internal is for snake_case attributes, currently its same
         cls.tile_server_property_internal = cls.tile_server_property
 
-    def _query(self, project_data, empty_geo_file=False, **kwargs):
+    def _create_project_mutation(self, project_data: dict, empty_geo_file: bool = False, **kwargs):
         with self.captureOnCommitCallbacks(execute=True):
             return create_project_query(
                 query_check_func=self.query_check,
@@ -274,14 +381,36 @@ class TestProjectTypeMutation(TestCase):
                 **kwargs,
             )
 
-    def test_project_compare(self):
+    def _update_project_mutation(self, pk: str, project_data: dict, **kwargs):
+        with self.captureOnCommitCallbacks(execute=True):
+            return update_project_query(
+                query_check_func=self.query_check,
+                query=self.Mutation.UPDATE_PROJECT,
+                pk=pk,
+                project_data=project_data,
+                **kwargs,
+            )
+
+    def _update_processed_project_mutation(self, pk: str, project_data: dict, **kwargs):
+        with self.captureOnCommitCallbacks(execute=True):
+            return update_project_query(
+                query_check_func=self.query_check,
+                query=self.Mutation.UPDATE_PROCESSED_PROJECT,
+                pk=pk,
+                project_data=project_data,
+                **kwargs,
+            )
+
+    @patch("apps.project.serializers.process_project_task.delay")
+    def test_project_compare(self, mock_requests):
+        # Defining user and base project data
         self.force_login(self.user)
         project_data = {
             **self.project_data,
             "projectType": self.genum(ProjectTypeEnum.COMPARE),
         }
 
-        # Pydantic error (with valid projectTypeSpecifics type but invalid data)
+        # Creating Project: Test for pydantic error (with valid projectTypeSpecifics type but invalid data)
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
@@ -291,8 +420,7 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
         }
-
-        content = self._query(project_data)
+        content = self._create_project_mutation(project_data)
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] == [
             {
@@ -305,7 +433,8 @@ class TestProjectTypeMutation(TestCase):
             },
         ], content
 
-        content = self._query(project_data, empty_geo_file=True)
+        # Creating Project: Test for pydantic error (with valid projectTypeSpecifics type but invalid data)
+        content = self._create_project_mutation(project_data, empty_geo_file=True)
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] == [
             {
@@ -318,27 +447,27 @@ class TestProjectTypeMutation(TestCase):
             },
         ], content
 
-        # GraphQL error (without projectTypeSpecifics)
+        # Creating Project: Test for GraphQL error (without projectTypeSpecifics)
         project_data.pop("projectTypeSpecifics")
-        content = self._query(project_data, assert_errors=True)
+        content = self._create_project_mutation(project_data, assert_errors=True)
 
-        # GraphQL error (with invalid projectTypeSpecifics)
+        # Creating Project: Test for GraphQL error (with empty projectTypeSpecifics)
         project_data = {
             **project_data,
             "projectTypeSpecifics": {},
         }
-        content = self._query(project_data, assert_errors=True)
+        content = self._create_project_mutation(project_data, assert_errors=True)
 
-        # GraphQL error (with invalid projectTypeSpecifics) - Try 1
+        # Creating Project: Test for GraphQL error (with invalid projectTypeSpecifics: Try 1)
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
                 "find": {},
             },
         }
-        content = self._query(project_data, assert_errors=True)
+        content = self._create_project_mutation(project_data, assert_errors=True)
 
-        # GraphQL error (with invalid projectTypeSpecifics) - Try 2
+        # Creating Project: Test for GraphQL error (with invalid projectTypeSpecifics: Try 2)
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
@@ -348,9 +477,9 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
         }
-        content = self._query(project_data, assert_errors=True)
+        content = self._create_project_mutation(project_data, assert_errors=True)
 
-        # GraphQL error (Partial data)
+        # Creating Project: Test for GraphQL error (with invalid projectTypeSpecifics: Partial Data)
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
@@ -360,9 +489,9 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
         }
-        content = self._query(project_data, assert_errors=True)
+        content = self._create_project_mutation(project_data, assert_errors=True)
 
-        # Pydantic validation error
+        # Creating Project: Test for Pydantic validation error
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
@@ -373,11 +502,11 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
         }
-        content = self._query(project_data)
+        content = self._create_project_mutation(project_data)
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] is not None, content
 
-        # Pydantic validation error
+        # Creating Project: Test for Pydantic validation error
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
@@ -388,11 +517,11 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
         }
-        content = self._query(project_data)
+        content = self._create_project_mutation(project_data)
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] is not None, content
 
-        # Success
+        # Creating Project: Test for valid data
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
@@ -403,11 +532,11 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
         }
-
-        content = self._query(project_data)
+        content = self._create_project_mutation(project_data)
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] is None, content
-        # -- Compare with DB
+
+        # Creating Project: Test for comparing with database
         latest_project = Project.objects.get(pk=resp_data["result"]["id"])
         assert latest_project.created_by_id == self.user.pk
         assert latest_project.modified_by_id == self.user.pk
@@ -417,6 +546,23 @@ class TestProjectTypeMutation(TestCase):
             "tile_server_b_property": self.tile_server_property_internal["valid_custom_02"],
         }
         compare_project.CompareProjectProperty.model_validate(latest_project.project_type_specifics)
+
+        # Updating Project: Test project processing
+        content = self._update_project_mutation(
+            str(latest_project.id),
+            {
+                "status": self.genum(Project.Status.MARKED_AS_READY),
+            },
+        )
+        resp_data = content["data"]["updateProject"]
+        assert resp_data["errors"] is None, content
+        assert resp_data["result"]["status"] == self.genum(Project.Status.MARKED_AS_READY)
+        assert resp_data["result"]["processingStatus"] is None
+
+        mock_requests.assert_called_once()
+        mock_requests.assert_has_calls([call(latest_project.id)])
+
+        process_project_task(latest_project.id)
 
         expected_task_groups = [
             {
@@ -456,7 +602,6 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
         ]
-
         expected_last_5_tasks = [
             {
                 "project_type_specifics": {
@@ -500,6 +645,7 @@ class TestProjectTypeMutation(TestCase):
             },
         ]
 
+        latest_project.refresh_from_db()
         project_task_group_qs = ProjectTaskGroup.objects.filter(project=latest_project)
         project_task_qs = ProjectTask.objects.filter(task_group__project=latest_project)
 
@@ -517,9 +663,25 @@ class TestProjectTypeMutation(TestCase):
                     "project_type_specifics",
                 )[:5],
             ),
+            "status": latest_project.status,
+            "processing_status": latest_project.processing_status,
         } == {
             "tasks_groups_count": len(expected_task_groups),
             "tasks_count": 72,
             "tasks_groups": expected_task_groups,
             "tasks": expected_last_5_tasks,
+            "status": Project.Status.READY,
+            "processing_status": Project.ProcessingStatus.COMPLETED,
         }
+
+        # Updating Processed Project: Test project publishing
+        content = self._update_processed_project_mutation(
+            str(latest_project.id),
+            {
+                "status": self.genum(Project.Status.PUBLISHED),
+            },
+        )
+        resp_data = content["data"]["updateProcessedProject"]
+        assert resp_data["errors"] is None, content
+        assert resp_data["result"]["status"] == self.genum(Project.Status.PUBLISHED)
+        assert resp_data["result"]["processingStatus"] == self.genum(Project.ProcessingStatus.COMPLETED)

@@ -31,6 +31,8 @@ ProjectPropertyTypeVar = typing.TypeVar("ProjectPropertyTypeVar", bound=BaseProj
 ProjectTaskGroupPropertyTypeVar = typing.TypeVar("ProjectTaskGroupPropertyTypeVar", bound=BaseProjectTaskGroupProperty)
 ProjectTaskPropertyTypeVar = typing.TypeVar("ProjectTaskPropertyTypeVar", bound=BaseProjectTaskProperty)
 
+ValidateResponse = typing.TypeVar("ValidateResponse")
+
 
 class BaseProject(
     ABC,
@@ -38,13 +40,12 @@ class BaseProject(
         ProjectPropertyTypeVar,
         ProjectTaskGroupPropertyTypeVar,
         ProjectTaskPropertyTypeVar,
+        ValidateResponse,
     ],
 ):
     project_property_class: type[ProjectPropertyTypeVar]
     project_task_group_property_class: type[ProjectTaskGroupPropertyTypeVar]
     project_task_property_class: type[ProjectTaskPropertyTypeVar]
-
-    raw_groups: dict[str, tile_grouping.RawGroup]
 
     def __init__(self, project: Project):
         self.project = project
@@ -75,6 +76,8 @@ class BaseProject(
 
     def post_create_groups(self):
         # Update number_of_tasks
+        self.project.update_processing_status(Project.ProcessingStatus.ANALYZING_GROUPS_AND_TASK, True)
+
         ProjectTaskGroup.objects.filter(
             project_id=self.project.pk,
         ).update(
@@ -87,6 +90,8 @@ class BaseProject(
         )
 
         # NOTE: Create a geojson from the tasks (useful for tutorial creation)
+        self.project.update_processing_status(Project.ProcessingStatus.GENERATING_TASKS_GEOJSON, True)
+
         tasks_qs = ProjectTask.objects.filter(task_group__project_id=self.project.pk)
         features = []
         for task in tasks_qs:
@@ -129,30 +134,42 @@ class BaseProject(
         # TODO(thenav56): Calculate: total_area, time_spent_max_allowed
 
     @abstractmethod
-    def validate_geometries(self): ...
+    def validate(self) -> ValidateResponse: ...
 
+    # FIXME(tnagorra): This is not generic enough
     @abstractmethod
     def _create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int: ...
 
     @abstractmethod
-    def create_groups(self): ...
+    def create_groups(self, resp: ValidateResponse): ...
 
-    def save_project(self):
+    def process_project(self) -> bool:
         """
         Save all project info with groups and tasks in postgres.
-
-        Returns
-        ------
-            Boolean: True = Successful
         """
+
+        if self.project.status not in [
+            Project.Status.MARKED_AS_READY,
+            Project.Status.FAILED,
+        ]:
+            raise Exception("Project can only be processed if is either 'Marked as ready' or 'Failed'")
+
         logger.info("%s - start creating a project", self.project.pk)
 
+        self.project.update_processing_status(Project.ProcessingStatus.PREPARING, True)
+        # TODO(tnagorra): We need to cleanup groups, tasks and files
+        # for failed items
+
         try:
-            self.validate_geometries()
-            self.create_groups()
+            # TODO(tnagorra): Handle updates to processstatus
+            resp = self.validate()
+            self.create_groups(resp)
             self.post_create_groups()
+
+            self.project.update_processing_status(Project.ProcessingStatus.COMPLETED, True)
+            self.project.update_status(Project.Status.READY, True)
             return True
         except ValidateException as ex:
             logger.error(ex)
-            # TODO(tnagorra): handle this properly
+            self.project.update_status(Project.Status.FAILED, True)
             return False

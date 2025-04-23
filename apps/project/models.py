@@ -39,12 +39,61 @@ class ProjectTypeEnum(models.IntegerChoices):
 
 
 class ProjectStatusEnum(models.IntegerChoices):
-    INACTIVE = 1, "Inactive"
-    ACTIVE = 2, "Active"
-    PRIVATE_FINISHED = 3, "Private finished"
-    ARCHIVED = 4, "Archived"
-    FINISHED = 5, "Finished"
-    # TODO(thenav56): Paused?
+    DRAFT = 10, "Draft"
+    """
+    Background processes and validations will not be triggered for a "Draft" project.
+    """
+
+    MARKED_AS_READY = 20, "Marked as Ready"
+    """
+    Background processes and validations will be triggered
+    once a project is "Marked as Ready".
+    """
+
+    FAILED = 30, "Failed"
+    """
+    If there are validation errors or issues with background processes,
+    then creation of project has "Failed"
+    """
+
+    READY = 40, "Ready"
+    """
+    If there are no validation errors or issues with background processes,
+    then the project is "Ready"
+    These projects are not be yet visible to the contributors.
+    """
+
+    PUBLISHED = 50, "Published"
+    """
+    "Published" projects is be visible to the contributors.
+    """
+
+    PAUSED = 60, "Paused"
+    """
+    "Paused" projects are visible to the contributors.
+    "Paused" projects can be "un-paused".
+    """
+
+    ARCHIVED = 70, "Archived"
+    """
+    "Archived" projects are visible to the contributors.
+    "Archived" projects cannot be "un-archived".
+    """
+
+    DISCARDED = 80, "Discarded"
+    """
+    "Discarded" projects are visible to the contributors.
+    "Discarded" projects cannot be "un-discarded".
+    """
+
+
+class ProjectProcessingStatusEnum(models.IntegerChoices):
+    PREPARING = 10, "Preparing"
+    VALIDATING_GEOMETRY = 20, "Validating Geometry"
+    GENERATING_GROUPS_AND_TASKS = 30, "Generating groups and tasks"
+    ANALYZING_GROUPS_AND_TASK = 40, "Analyzing groups and tasks"
+    GENERATING_TASKS_GEOJSON = 50, "Generating GeoJSON from tasks"
+    COMPLETED = 60, "Processing Completed"
 
 
 class UploadHelper:
@@ -74,10 +123,11 @@ class Organization(UserResource):
 class Project(UserResource):
     Type = ProjectTypeEnum
     Status = ProjectStatusEnum
+    ProcessingStatus = ProjectProcessingStatusEnum
 
     old_id = models.CharField(max_length=30, db_index=True, null=True, blank=True)
 
-    project_type: ProjectTypeEnum = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+    project_type: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=ProjectTypeEnum,
     )
 
@@ -156,11 +206,17 @@ class Project(UserResource):
 
     # STATUS
 
+    # TODO(tnagorra): Remove is_draft
     is_draft = models.BooleanField(default=True, help_text=gettext_lazy("Draft project can be modified"))
     is_featured = models.BooleanField(default=False)
-    status: ProjectStatusEnum = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+    status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=ProjectStatusEnum,
-        default=ProjectStatusEnum.INACTIVE,
+        default=ProjectStatusEnum.DRAFT,
+    )
+    processing_status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=ProjectProcessingStatusEnum,
+        null=True,
+        blank=True,
     )
 
     # TODO(tnagorra): Add area-based validations
@@ -194,10 +250,19 @@ class Project(UserResource):
     def __str__(self):
         return self.name
 
-    def update_status(self, status: ProjectStatusEnum, commit=True):
+    @property
+    def project_type_enum(self):
+        return ProjectTypeEnum(self.project_type)
+
+    def update_status(self, status: ProjectStatusEnum, commit: bool = True):
         self.status = status
         if commit:
             self.save(update_fields=("status",))
+
+    def update_processing_status(self, status: ProjectProcessingStatusEnum, commit: bool = True):
+        self.processing_status = status
+        if commit:
+            self.save(update_fields=("processing_status",))
 
     @typing.override
     def clean(self):

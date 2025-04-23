@@ -39,10 +39,22 @@ class FindProjectPropertyType: ...
 @strawberry_django.type(Project)
 class ProjectType:
     id: strawberry.ID
-    name: strawberry.auto
-
+    project_type: strawberry.auto
     requesting_organization_id: strawberry.ID
     requesting_organization: OrganizationType
-    project_type: strawberry.auto
-
+    name: strawberry.auto
+    look_for: strawberry.auto
+    additional_info_url: strawberry.auto
+    description: strawberry.auto
+    # TODO(tnagorra) Add image
+    # TODO(tnagorra): Add tutorial and tutorial_id
+    verification_number: strawberry.auto
+    group_size: strawberry.auto
+    max_tasks_per_user: strawberry.auto
     project_type_specifics: CompareProjectPropertyType | FindProjectPropertyType
+    # TODO(tnagorra): Add aoi_geometry_file
+    is_featured: strawberry.auto
+    status: strawberry.auto
+    processing_status: strawberry.auto
+    progress: strawberry.auto
+    # TODO(tnagorra): Add processed_geometry_file
