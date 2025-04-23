@@ -55,5 +55,6 @@ class ProjectType:
     # TODO(tnagorra): Add aoi_geometry_file
     is_featured: strawberry.auto
     status: strawberry.auto
+    processing_status: strawberry.auto
     progress: strawberry.auto
     # TODO(tnagorra): Add processed_geometry_file

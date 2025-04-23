@@ -6,7 +6,7 @@ from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 
 from apps.project.factories import OrganizationFactory
-from apps.project.models import Project, ProjectStatusEnum, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
+from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
 from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.tasks import process_project_task
 from apps.user.factories import UserFactory
@@ -105,6 +105,7 @@ class TestProjectMutation(TestCase):
                     maxTasksPerUser
                     isFeatured
                     status
+                    processingStatus
                     progress
                   }
                 }
@@ -201,7 +202,8 @@ class TestProjectMutation(TestCase):
                 groupSize=latest_project.group_size,
                 maxTasksPerUser=latest_project.max_tasks_per_user,
                 isFeatured=latest_project.is_featured,
-                status=self.genum(ProjectStatusEnum.DRAFT),
+                status=self.genum(Project.Status.DRAFT),
+                processingStatus=self.genum(Project.ProcessingStatus.WAITING),
                 progress=0,
             ),
         ), content
@@ -248,6 +250,7 @@ class TestProjectTypeMutation(TestCase):
                       name
                     }
                     status
+                    processingStatus
                   }
                 }
               }
@@ -278,6 +281,7 @@ class TestProjectTypeMutation(TestCase):
                       name
                     }
                     status
+                    processingStatus
                   }
                 }
               }
@@ -505,12 +509,13 @@ class TestProjectTypeMutation(TestCase):
         content = self._update_project_mutation(
             str(latest_project.id),
             {
-                "status": self.genum(ProjectStatusEnum.MARKED_AS_READY),
+                "status": self.genum(Project.Status.MARKED_AS_READY),
             },
         )
         resp_data = content["data"]["updateProject"]
         assert resp_data["errors"] is None, content
-        assert resp_data["result"]["status"] == self.genum(ProjectStatusEnum.MARKED_AS_READY)
+        assert resp_data["result"]["status"] == self.genum(Project.Status.MARKED_AS_READY)
+        assert resp_data["result"]["processingStatus"] == self.genum(Project.ProcessingStatus.WAITING)
 
         mock_requests.assert_called_once()
         mock_requests.assert_has_calls([call(latest_project.id)])
@@ -619,10 +624,12 @@ class TestProjectTypeMutation(TestCase):
                 )[:5],
             ),
             "status": latest_project.status,
+            "processing_status": latest_project.processing_status,
         } == {
             "tasks_groups_count": len(expected_task_groups),
             "tasks_count": 72,
             "tasks_groups": expected_task_groups,
             "tasks": expected_last_5_tasks,
-            "status": ProjectStatusEnum.READY,
+            "status": Project.Status.READY,
+            "processing_status": Project.ProcessingStatus.COMPLETED,
         }
