@@ -287,6 +287,37 @@ class TestProjectTypeMutation(TestCase):
               }
             }
         """
+        UPDATE_PROCESSED_PROJECT = """
+            mutation UpdateProcessedProject($pk: ID!, $data: ProcessedProjectUpdateInput!) {
+              updateProcessedProject(pk: $pk, data: $data) {
+                ... on OperationInfo {
+                  __typename
+                  messages {
+                    code
+                    field
+                    kind
+                    message
+                  }
+                }
+                ... on ProjectTypeMutationResponseType {
+                  errors
+                  ok
+                  result {
+                    id
+                    name
+                    projectType
+                    requestingOrganizationId
+                    requestingOrganization {
+                      id
+                      name
+                    }
+                    status
+                    processingStatus
+                  }
+                }
+              }
+            }
+        """
 
     @typing.override
     @classmethod
@@ -360,16 +391,26 @@ class TestProjectTypeMutation(TestCase):
                 **kwargs,
             )
 
+    def _update_processed_project_mutation(self, pk: str, project_data: dict, **kwargs):
+        with self.captureOnCommitCallbacks(execute=True):
+            return update_project_query(
+                query_check_func=self.query_check,
+                query=self.Mutation.UPDATE_PROCESSED_PROJECT,
+                pk=pk,
+                project_data=project_data,
+                **kwargs,
+            )
+
     @patch("apps.project.serializers.process_project_task.delay")
     def test_project_compare(self, mock_requests):
+        # Defining user and base project data
         self.force_login(self.user)
         project_data = {
             **self.project_data,
             "projectType": self.genum(ProjectTypeEnum.COMPARE),
         }
 
-        # Pydantic error (with valid projectTypeSpecifics type but invalid data)
-
+        # Creating Project: Test for pydantic error (with valid projectTypeSpecifics type but invalid data)
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
@@ -379,7 +420,6 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
         }
-
         content = self._create_project_mutation(project_data)
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] == [
@@ -393,6 +433,7 @@ class TestProjectTypeMutation(TestCase):
             },
         ], content
 
+        # Creating Project: Test for pydantic error (with valid projectTypeSpecifics type but invalid data)
         content = self._create_project_mutation(project_data, empty_geo_file=True)
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] == [
@@ -406,18 +447,18 @@ class TestProjectTypeMutation(TestCase):
             },
         ], content
 
-        # GraphQL error (without projectTypeSpecifics)
+        # Creating Project: Test for GraphQL error (without projectTypeSpecifics)
         project_data.pop("projectTypeSpecifics")
         content = self._create_project_mutation(project_data, assert_errors=True)
 
-        # GraphQL error (with invalid projectTypeSpecifics)
+        # Creating Project: Test for GraphQL error (with empty projectTypeSpecifics)
         project_data = {
             **project_data,
             "projectTypeSpecifics": {},
         }
         content = self._create_project_mutation(project_data, assert_errors=True)
 
-        # GraphQL error (with invalid projectTypeSpecifics) - Try 1
+        # Creating Project: Test for GraphQL error (with invalid projectTypeSpecifics: Try 1)
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
@@ -426,7 +467,7 @@ class TestProjectTypeMutation(TestCase):
         }
         content = self._create_project_mutation(project_data, assert_errors=True)
 
-        # GraphQL error (with invalid projectTypeSpecifics) - Try 2
+        # Creating Project: Test for GraphQL error (with invalid projectTypeSpecifics: Try 2)
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
@@ -438,7 +479,7 @@ class TestProjectTypeMutation(TestCase):
         }
         content = self._create_project_mutation(project_data, assert_errors=True)
 
-        # GraphQL error (Partial data)
+        # Creating Project: Test for GraphQL error (with invalid projectTypeSpecifics: Partial Data)
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
@@ -450,7 +491,7 @@ class TestProjectTypeMutation(TestCase):
         }
         content = self._create_project_mutation(project_data, assert_errors=True)
 
-        # Pydantic validation error
+        # Creating Project: Test for Pydantic validation error
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
@@ -465,7 +506,7 @@ class TestProjectTypeMutation(TestCase):
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] is not None, content
 
-        # Pydantic validation error
+        # Creating Project: Test for Pydantic validation error
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
@@ -480,7 +521,7 @@ class TestProjectTypeMutation(TestCase):
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] is not None, content
 
-        # Success
+        # Creating Project: Test for valid data
         project_data = {
             **project_data,
             "projectTypeSpecifics": {
@@ -491,11 +532,11 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
         }
-
         content = self._create_project_mutation(project_data)
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] is None, content
-        # -- Compare with DB
+
+        # Creating Project: Test for comparing with database
         latest_project = Project.objects.get(pk=resp_data["result"]["id"])
         assert latest_project.created_by_id == self.user.pk
         assert latest_project.modified_by_id == self.user.pk
@@ -506,6 +547,7 @@ class TestProjectTypeMutation(TestCase):
         }
         compare_project.CompareProjectProperty.model_validate(latest_project.project_type_specifics)
 
+        # Updating Project: Test project processing
         content = self._update_project_mutation(
             str(latest_project.id),
             {
@@ -521,6 +563,7 @@ class TestProjectTypeMutation(TestCase):
         mock_requests.assert_has_calls([call(latest_project.id)])
 
         process_project_task(latest_project.id)
+
         expected_task_groups = [
             {
                 "number_of_tasks": 18,
@@ -559,7 +602,6 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
         ]
-
         expected_last_5_tasks = [
             {
                 "project_type_specifics": {
@@ -603,8 +645,6 @@ class TestProjectTypeMutation(TestCase):
             },
         ]
 
-        # TODO: Clear out tasks and groups when editing project
-
         latest_project.refresh_from_db()
         project_task_group_qs = ProjectTaskGroup.objects.filter(project=latest_project)
         project_task_qs = ProjectTask.objects.filter(task_group__project=latest_project)
@@ -633,3 +673,15 @@ class TestProjectTypeMutation(TestCase):
             "status": Project.Status.READY,
             "processing_status": Project.ProcessingStatus.COMPLETED,
         }
+
+        # Updating Processed Project: Test project publishing
+        content = self._update_processed_project_mutation(
+            str(latest_project.id),
+            {
+                "status": self.genum(Project.Status.PUBLISHED),
+            },
+        )
+        resp_data = content["data"]["updateProcessedProject"]
+        assert resp_data["errors"] is None, content
+        assert resp_data["result"]["status"] == self.genum(Project.Status.PUBLISHED)
+        assert resp_data["result"]["processingStatus"] == self.genum(Project.ProcessingStatus.COMPLETED)

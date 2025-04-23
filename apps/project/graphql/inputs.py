@@ -76,11 +76,11 @@ class ProjectUpdateInput:
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.partial(Project)
 class ProcessedProjectUpdateInput:
-    requesting_organization: strawberry.ID
     name: strawberry.auto
     look_for: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
-    image: Upload
     # TODO(tnagorra): Add tutorial
     status: strawberry.auto
+    requesting_organization: strawberry.ID | None = strawberry.UNSET
+    image: Upload | None = strawberry.UNSET
