@@ -88,13 +88,12 @@ class ProjectStatusEnum(models.IntegerChoices):
 
 
 class ProjectProcessingStatusEnum(models.IntegerChoices):
-    WAITING = 10, "Waiting"
-    PREPARING = 20, "Preparing"
-    VALIDATING_GEOMETRY = 30, "Validating Geometry"
-    GENERATING_GROUPS_AND_TASKS = 40, "Generating groups and tasks"
-    ANALYZING_GROUPS_AND_TASK = 50, "Analyzing groups and tasks"
-    GENERATING_TASKS_GEOJSON = 60, "Generating GeoJSON from tasks"
-    COMPLETED = 70, "Processing Completed"
+    PREPARING = 10, "Preparing"
+    VALIDATING_GEOMETRY = 20, "Validating Geometry"
+    GENERATING_GROUPS_AND_TASKS = 30, "Generating groups and tasks"
+    ANALYZING_GROUPS_AND_TASK = 40, "Analyzing groups and tasks"
+    GENERATING_TASKS_GEOJSON = 50, "Generating GeoJSON from tasks"
+    COMPLETED = 60, "Processing Completed"
 
 
 class UploadHelper:
@@ -216,7 +215,8 @@ class Project(UserResource):
     )
     processing_status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=ProjectProcessingStatusEnum,
-        default=ProjectProcessingStatusEnum.WAITING,
+        null=True,
+        blank=True,
     )
 
     # TODO(tnagorra): Add area-based validations
@@ -255,11 +255,14 @@ class Project(UserResource):
         return ProjectTypeEnum(self.project_type)
 
     def update_status(self, status: ProjectStatusEnum, commit: bool = True):
-        # TODO(tnagorra): Add a validation here
-        # FIXME(tnagorra): This is not used anywhere.
         self.status = status
         if commit:
             self.save(update_fields=("status",))
+
+    def update_processing_status(self, status: ProjectProcessingStatusEnum, commit: bool = True):
+        self.processing_status = status
+        if commit:
+            self.save(update_fields=("processing_status",))
 
     @typing.override
     def clean(self):

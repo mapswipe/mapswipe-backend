@@ -293,7 +293,6 @@ input ProjectOrder {
 }
 
 enum ProjectProcessingStatusEnum {
-  WAITING
   PREPARING
   VALIDATING_GEOMETRY
   GENERATING_GROUPS_AND_TASKS
@@ -430,7 +429,7 @@ type ProjectType {
   projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyType!
   isFeatured: Boolean!
   status: ProjectStatusEnum!
-  processingStatus: ProjectProcessingStatusEnum!
+  processingStatus: ProjectProcessingStatusEnum
   progress: Int!
 }
 
