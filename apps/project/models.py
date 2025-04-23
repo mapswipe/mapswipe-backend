@@ -87,6 +87,16 @@ class ProjectStatusEnum(models.IntegerChoices):
     """
 
 
+class ProjectProcessingStatusEnum(models.IntegerChoices):
+    WAITING = 10, "Waiting"
+    PREPARING = 20, "Preparing"
+    VALIDATING_GEOMETRY = 30, "Validating Geometry"
+    GENERATING_GROUPS_AND_TASKS = 40, "Generating groups and tasks"
+    ANALYZING_GROUPS_AND_TASK = 50, "Analyzing groups and tasks"
+    GENERATING_TASKS_GEOJSON = 60, "Generating GeoJSON from tasks"
+    COMPLETED = 70, "Processing Completed"
+
+
 class UploadHelper:
     @staticmethod
     def project_geometry(instance: "Project", filename: str):
@@ -114,6 +124,7 @@ class Organization(UserResource):
 class Project(UserResource):
     Type = ProjectTypeEnum
     Status = ProjectStatusEnum
+    ProcessingStatus = ProjectProcessingStatusEnum
 
     old_id = models.CharField(max_length=30, db_index=True, null=True, blank=True)
 
@@ -202,6 +213,10 @@ class Project(UserResource):
     status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=ProjectStatusEnum,
         default=ProjectStatusEnum.DRAFT,
+    )
+    processing_status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=ProjectProcessingStatusEnum,
+        default=ProjectProcessingStatusEnum.WAITING,
     )
 
     # TODO(tnagorra): Add area-based validations

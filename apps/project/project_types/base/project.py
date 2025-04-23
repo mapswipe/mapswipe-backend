@@ -76,6 +76,9 @@ class BaseProject(
 
     def post_create_groups(self):
         # Update number_of_tasks
+        self.project.processing_status = Project.ProcessingStatus.ANALYZING_GROUPS_AND_TASK
+        self.project.save(update_fields=["processing_status"])
+
         ProjectTaskGroup.objects.filter(
             project_id=self.project.pk,
         ).update(
@@ -88,6 +91,9 @@ class BaseProject(
         )
 
         # NOTE: Create a geojson from the tasks (useful for tutorial creation)
+        self.project.processing_status = Project.ProcessingStatus.GENERATING_TASKS_GEOJSON
+        self.project.save(update_fields=["processing_status"])
+
         tasks_qs = ProjectTask.objects.filter(task_group__project_id=self.project.pk)
         features = []
         for task in tasks_qs:
@@ -152,13 +158,20 @@ class BaseProject(
 
         logger.info("%s - start creating a project", self.project.pk)
 
+        self.project.processing_status = Project.ProcessingStatus.PREPARING
+        self.project.save(update_fields=["processing_status"])
+        # TODO(tnagorra): We need to cleanup groups, tasks and files
+        # for failed items
+
         try:
             # TODO(tnagorra): Handle updates to processstatus
             resp = self.validate()
             self.create_groups(resp)
             self.post_create_groups()
+
+            self.project.processing_status = Project.ProcessingStatus.COMPLETED
             self.project.status = Project.Status.READY
-            self.project.save(update_fields=["status"])
+            self.project.save(update_fields=["status", "processing_status"])
             return True
         except ValidateException as ex:
             logger.error(ex)

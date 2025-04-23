@@ -109,6 +109,9 @@ class TileMapServiceBaseProject(
     @typing.override
     def create_groups(self, resp: tile_grouping.AoiGeometry):
         """Create groups for project extent."""
+        self.project.processing_status = Project.ProcessingStatus.GENERATING_GROUPS_AND_TASKS
+        self.project.save(update_fields=["processing_status"])
+
         raw_groups = tile_grouping.extent_to_groups(
             resp,
             self.project_type_specifics.zoom_level,
@@ -138,6 +141,9 @@ class TileMapServiceBaseProject(
     @typing.override
     def validate(self):
         """Validate project before creating groups"""
+        self.project.processing_status = Project.ProcessingStatus.VALIDATING_GEOMETRY
+        self.project.save(update_fields=["processing_status"])
+
         extension = Path(self.project.aoi_geometry_file.file.name).suffix
         with tempfile.NamedTemporaryFile(suffix=extension, dir=settings.TEMP_DIR) as temp_file:
             temp_file.write(self.project.aoi_geometry_file.file.read())
