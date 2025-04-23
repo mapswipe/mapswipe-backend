@@ -211,8 +211,6 @@ type OrganizationType implements UserResourceTypeMixin {
 Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
 """
 input ProcessedProjectUpdateInput {
-  """Which group, institution or community is requesting this project?"""
-  requestingOrganization: ID!
   name: String
 
   """What should the users look for (e.g. buildings, cars, trees)"""
@@ -223,8 +221,11 @@ input ProcessedProjectUpdateInput {
   """
   additionalInfoUrl: String
   description: String
-  image: Upload!
   status: ProjectStatusEnum
+
+  """Which group, institution or community is requesting this project?"""
+  requestingOrganization: ID
+  image: Upload
 }
 
 """
