@@ -75,7 +75,7 @@ class ProjectUpdateInput:
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.partial(Project)
-class ReadyProjectUpdateInput:
+class ProcessedProjectUpdateInput:
     requesting_organization: strawberry.ID
     name: strawberry.auto
     look_for: strawberry.auto

@@ -23,7 +23,7 @@ VALID_PROJECT_STATUS_TRANSITIONS = set(
     ],
 )
 
-VALID_READY_PROJECT_STATUS_TRANSITIONS = set(
+VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS = set(
     [
         # NOTE: Transition from MARKED_AS_READY are updated by the system
         # (Project.Status.MARKED_AS_READY, Project.Status.FAILED),
@@ -140,7 +140,7 @@ class ProjectSerializer(UserResourceSerializer[Project]):
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
-class ReadyProjectSerializer(UserResourceSerializer[Project]):
+class ProcessedProjectSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
@@ -156,7 +156,7 @@ class ReadyProjectSerializer(UserResourceSerializer[Project]):
     def validate_status(self, new_status: Project.Status):
         if not self.instance:
             raise Exception("Project does not exist")
-        if (self.instance.status, new_status) not in VALID_READY_PROJECT_STATUS_TRANSITIONS:
+        if (self.instance.status, new_status) not in VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS:
             raise serializers.ValidationError(
                 gettext("Project status cannot be changed from %s to %s") % (self.instance.status, new_status),
             )

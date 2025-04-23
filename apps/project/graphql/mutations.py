@@ -3,12 +3,12 @@ import strawberry_django
 from strawberry_django.permissions import IsAuthenticated
 
 from apps.project.models import Project
-from apps.project.serializers import ProjectSerializer, ReadyProjectSerializer
+from apps.project.serializers import ProcessedProjectSerializer, ProjectSerializer
 from main.graphql.context import Info
 from utils.graphql.mutations import ModelMutation
 from utils.graphql.types import MutationResponseType
 
-from .inputs import ProjectCreateInput, ProjectUpdateInput, ReadyProjectUpdateInput
+from .inputs import ProcessedProjectUpdateInput, ProjectCreateInput, ProjectUpdateInput
 from .types import ProjectType
 
 
@@ -31,11 +31,11 @@ class Mutation:
         return await ModelMutation(ProjectSerializer).handle_update_mutation(data, info, project)
 
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
-    async def update_ready_project(
+    async def update_processed_project(
         self,
         info: Info,
-        data: ReadyProjectUpdateInput,
+        data: ProcessedProjectUpdateInput,
         pk: strawberry.ID,
     ) -> MutationResponseType[ProjectType]:
-        project = Project.objects.get(pk=pk)
-        return await ModelMutation(ReadyProjectSerializer).handle_update_mutation(data, info, project)
+        project = await Project.objects.aget(pk=pk)
+        return await ModelMutation(ProcessedProjectSerializer).handle_update_mutation(data, info, project)

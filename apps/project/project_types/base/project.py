@@ -148,11 +148,12 @@ class BaseProject(
             Project.Status.MARKED_AS_READY,
             Project.Status.FAILED,
         ]:
-            raise Exception("Status should either be 'Marked as ready' or 'Failed'")
+            raise Exception("Project can only be processed if is either 'Marked as ready' or 'Failed'")
 
         logger.info("%s - start creating a project", self.project.pk)
 
         try:
+            # TODO(tnagorra): Handle updates to processstatus
             resp = self.validate()
             self.create_groups(resp)
             self.post_create_groups()

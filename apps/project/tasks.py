@@ -23,5 +23,6 @@ def process_project_task(project_id: int):
         return True
     except Exception:
         logger.error("Project geometry load failed", exc_info=True)
-        # TODO(thenav56): project.update_status(ProjectStatusEnum.FAILED)
+        project.status = Project.Status.FAILED
+        project.save(update_fields=["status"])
         return False

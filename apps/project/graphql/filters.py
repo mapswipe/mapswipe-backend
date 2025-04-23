@@ -8,3 +8,7 @@ from apps.project.models import Project
 class ProjectFilter:
     id: strawberry.auto
     name: strawberry.auto
+    project_type: strawberry.auto
+    requesting_organization: strawberry.auto
+    is_featured: strawberry.auto
+    status: strawberry.auto
