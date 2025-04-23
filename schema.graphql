@@ -57,6 +57,19 @@ type AppEnumCollectionTutorialInformationPageBlockTypeEnum {
   label: String!
 }
 
+input BoolBaseFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: Boolean
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [Boolean!]
+}
+
 input CompareProjectPropertyInput {
   zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfigInput!
@@ -85,6 +98,10 @@ scalar CustomErrorType
 scalar DateTime
 
 union DeleteProjectPayload = ProjectType | OperationInfo
+
+input DjangoModelFilterInput {
+  id: ID!
+}
 
 enum DummyEnum {
   VALUE_1
@@ -124,9 +141,10 @@ enum MappingSessionClientTypeEnum {
 type Mutation {
   login(username: String!, password: String!): UserMeType!
   logout: Boolean!
-  updateProject(data: ProjectInputPartial!): UpdateProjectPayload! @isAuthenticated
   deleteProject: DeleteProjectPayload! @isAuthenticated
-  createProject(data: ProjectInput!): CreateProjectPayload! @isAuthenticated
+  createProject(data: ProjectCreateInput!): CreateProjectPayload! @isAuthenticated
+  updateProject(data: ProjectUpdateInput!, pk: ID!): UpdateProjectPayload! @isAuthenticated
+  updateProcessedProject(data: ProcessedProjectUpdateInput!, pk: ID!): UpdateProcessedProjectPayload! @isAuthenticated
 }
 
 type OffsetPaginationInfo {
@@ -190,76 +208,82 @@ type OrganizationType implements UserResourceTypeMixin {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
 """
-input ProjectFilter {
-  id: IDBaseFilterLookup
-  name: StrFilterLookup
-  AND: ProjectFilter
-  OR: ProjectFilter
-  NOT: ProjectFilter
-  DISTINCT: Boolean
+input ProcessedProjectUpdateInput {
+  """Which group, institution or community is requesting this project?"""
+  requestingOrganization: ID!
+  name: String
+
+  """What should the users look for (e.g. buildings, cars, trees)"""
+  lookFor: String
+
+  """
+  Provide an optional link to a resource with additional information on the project
+  """
+  additionalInfoUrl: String
+  description: String
+  image: Upload!
+  status: ProjectStatusEnum
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
 """
-input ProjectInput {
-  name: String!
+input ProjectCreateInput {
   projectType: ProjectTypeEnum!
 
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: ID!
+  name: String!
+
+  """What should the users look for (e.g. buildings, cars, trees)"""
+  lookFor: String!
+
+  """
+  Provide an optional link to a resource with additional information on the project
+  """
+  additionalInfoUrl: String
+  description: String
   image: Upload!
-
-  """
-  The area of interest for this project uploaded by the user. This should be OGR-supported vector geospatial file format
-  """
-  aoiGeometryFile: Upload!
-
-  """
-  How big should a mapping session be? Group size refers to the number of tasks per mapping session.
-  """
-  groupSize: Int!
 
   """
   How many people do you want to see every tile before you consider it finished?
   """
   verificationNumber: Int!
 
-  """What should the users look for (e.g. buildings, cars, trees)"""
-  lookFor: String!
+  """
+  How big should a mapping session be? Group size refers to the number of tasks per mapping session.
+  """
+  groupSize: Int!
+
+  """How many tasks each user is allowed to work on for this project"""
+  maxTasksPerUser: Int
   projectTypeSpecifics: ProjectTypeSpecificInput!
-}
-
-"""
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
-"""
-input ProjectInputPartial {
-  name: String
-  projectType: ProjectTypeEnum
-
-  """Which group, institution or community is requesting this project?"""
-  requestingOrganization: ID!
-  image: Upload!
 
   """
   The area of interest for this project uploaded by the user. This should be OGR-supported vector geospatial file format
   """
   aoiGeometryFile: Upload!
+  status: ProjectStatusEnum
+}
 
-  """
-  How big should a mapping session be? Group size refers to the number of tasks per mapping session.
-  """
-  groupSize: Int
+"""
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+"""
+input ProjectFilter {
+  id: IDBaseFilterLookup
+  name: StrFilterLookup
+  projectType: ProjectTypeEnumFilterLookup
 
-  """
-  How many people do you want to see every tile before you consider it finished?
-  """
-  verificationNumber: Int
-
-  """What should the users look for (e.g. buildings, cars, trees)"""
-  lookFor: String
+  """Which group, institution or community is requesting this project?"""
+  requestingOrganization: DjangoModelFilterInput
+  isFeatured: BoolBaseFilterLookup
+  status: ProjectStatusEnumFilterLookup
+  AND: ProjectFilter
+  OR: ProjectFilter
+  NOT: ProjectFilter
+  DISTINCT: Boolean
 }
 
 input ProjectOrder {
@@ -267,12 +291,73 @@ input ProjectOrder {
   name: Ordering
 }
 
+enum ProjectProcessingStatusEnum {
+  WAITING
+  PREPARING
+  VALIDATING_GEOMETRY
+  GENERATING_GROUPS_AND_TASKS
+  ANALYZING_GROUPS_AND_TASK
+  GENERATING_TASKS_GEOJSON
+  COMPLETED
+}
+
 enum ProjectStatusEnum {
-  INACTIVE
-  ACTIVE
-  PRIVATE_FINISHED
+  DRAFT
+  MARKED_AS_READY
+  FAILED
+  READY
+  PUBLISHED
+  PAUSED
   ARCHIVED
-  FINISHED
+  DISCARDED
+}
+
+input ProjectStatusEnumFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ProjectStatusEnum
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ProjectStatusEnum!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: ProjectStatusEnum
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: ProjectStatusEnum
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: ProjectStatusEnum
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: ProjectStatusEnum
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: ProjectStatusEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: ProjectStatusEnum
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: ProjectStatusEnum
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: ProjectStatusEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: ProjectStatusEnum
 }
 
 type ProjectTileServerCommonConfig {
@@ -307,25 +392,99 @@ type ProjectTileServerCustomConfig {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
 """
 type ProjectType {
   id: ID!
-  name: String!
+  projectType: ProjectTypeEnum!
 
   """Which group, institution or community is requesting this project?"""
   requestingOrganizationId: ID!
 
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: OrganizationType!
-  projectType: ProjectTypeEnum!
+  name: String!
+
+  """What should the users look for (e.g. buildings, cars, trees)"""
+  lookFor: String!
+
+  """
+  Provide an optional link to a resource with additional information on the project
+  """
+  additionalInfoUrl: String
+  description: String
+
+  """
+  How many people do you want to see every tile before you consider it finished?
+  """
+  verificationNumber: Int!
+
+  """
+  How big should a mapping session be? Group size refers to the number of tasks per mapping session.
+  """
+  groupSize: Int!
+
+  """How many tasks each user is allowed to work on for this project"""
+  maxTasksPerUser: Int
   projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyType!
+  isFeatured: Boolean!
+  status: ProjectStatusEnum!
+  processingStatus: ProjectProcessingStatusEnum!
+  progress: Int!
 }
 
 enum ProjectTypeEnum {
   FIND
   COMPARE
   COMPLETENESS
+}
+
+input ProjectTypeEnumFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ProjectTypeEnum
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ProjectTypeEnum!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: ProjectTypeEnum
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: ProjectTypeEnum
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: ProjectTypeEnum
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: ProjectTypeEnum
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: ProjectTypeEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: ProjectTypeEnum
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: ProjectTypeEnum
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: ProjectTypeEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: ProjectTypeEnum
 }
 
 type ProjectTypeMutationResponseType {
@@ -347,6 +506,46 @@ type ProjectTypeOffsetPaginated {
 input ProjectTypeSpecificInput @oneOf {
   compare: CompareProjectPropertyInput
   find: FindProjectPropertyInput
+}
+
+"""
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+"""
+input ProjectUpdateInput {
+  name: String
+
+  """What should the users look for (e.g. buildings, cars, trees)"""
+  lookFor: String
+
+  """
+  Provide an optional link to a resource with additional information on the project
+  """
+  additionalInfoUrl: String
+  description: String
+
+  """
+  How many people do you want to see every tile before you consider it finished?
+  """
+  verificationNumber: Int
+
+  """
+  How big should a mapping session be? Group size refers to the number of tasks per mapping session.
+  """
+  groupSize: Int
+
+  """How many tasks each user is allowed to work on for this project"""
+  maxTasksPerUser: Int
+  status: ProjectStatusEnum
+
+  """Which group, institution or community is requesting this project?"""
+  requestingOrganization: ID
+  image: Upload
+  projectTypeSpecifics: ProjectTypeSpecificInput
+
+  """
+  The area of interest for this project uploaded by the user. This should be OGR-supported vector geospatial file format
+  """
+  aoiGeometryFile: Upload
 }
 
 type Query {
@@ -429,7 +628,9 @@ enum TutorialInformationPageBlockTypeEnum {
   IMAGE
 }
 
-union UpdateProjectPayload = ProjectType | OperationInfo
+union UpdateProcessedProjectPayload = ProjectTypeMutationResponseType | OperationInfo
+
+union UpdateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
 
 scalar Upload
 
