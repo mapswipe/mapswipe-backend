@@ -73,12 +73,14 @@ input BoolBaseFilterLookup {
 input CompareProjectPropertyInput {
   zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfigInput!
+  aoiGeometry: String!
   tileServerBProperty: ProjectTileServerConfigInput!
 }
 
 type CompareProjectPropertyType {
   zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfig!
+  aoiGeometry: String!
   tileServerBProperty: ProjectTileServerConfig!
 }
 
@@ -88,6 +90,8 @@ enum ContributorUserGroupMembershipLogActionEnum {
   JOIN
   LEAVE
 }
+
+union CreateProjectAssetPayload = ProjectAssetTypeMutationResponseType | OperationInfo
 
 union CreateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
 
@@ -111,11 +115,13 @@ enum DummyEnum {
 input FindProjectPropertyInput {
   zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfigInput!
+  aoiGeometry: String!
 }
 
 type FindProjectPropertyType {
   zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfig!
+  aoiGeometry: String!
 }
 
 input IDBaseFilterLookup {
@@ -145,6 +151,7 @@ type Mutation {
   createProject(data: ProjectCreateInput!): CreateProjectPayload! @isAuthenticated
   updateProject(data: ProjectUpdateInput!, pk: ID!): UpdateProjectPayload! @isAuthenticated
   updateProcessedProject(data: ProcessedProjectUpdateInput!, pk: ID!): UpdateProcessedProjectPayload! @isAuthenticated
+  createProjectAsset(data: ProjectAssetCreateInput!): CreateProjectAssetPayload! @isAuthenticated
 }
 
 type OffsetPaginationInfo {
@@ -208,7 +215,7 @@ type OrganizationType implements UserResourceTypeMixin {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProcessedProjectUpdateInput {
   name: String
@@ -229,7 +236,48 @@ input ProcessedProjectUpdateInput {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project)
+"""
+input ProjectAssetCreateInput {
+  type: ProjectAssetTypeEnum!
+  mimetype: ProjectAssetMimeTypeEnum!
+
+  """The file associated with the asset"""
+  file: Upload!
+  project: ID!
+}
+
+enum ProjectAssetMimeTypeEnum {
+  GEOJSON
+  IMAGE_JPEG
+  IMAGE_PNG
+  IMAGE_GIF
+}
+
+"""
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project)
+"""
+type ProjectAssetType {
+  id: ID!
+  type: ProjectAssetTypeEnum!
+  mimetype: ProjectAssetMimeTypeEnum!
+  projectId: ID!
+}
+
+enum ProjectAssetTypeEnum {
+  INPUT
+  OUTPUT
+  STATS
+}
+
+type ProjectAssetTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: ProjectAssetType
+}
+
+"""
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectCreateInput {
   projectType: ProjectTypeEnum!
@@ -247,30 +295,10 @@ input ProjectCreateInput {
   additionalInfoUrl: String
   description: String
   image: Upload!
-
-  """
-  How many people do you want to see every tile before you consider it finished?
-  """
-  verificationNumber: Int!
-
-  """
-  How big should a mapping session be? Group size refers to the number of tasks per mapping session.
-  """
-  groupSize: Int!
-
-  """How many tasks each user is allowed to work on for this project"""
-  maxTasksPerUser: Int
-  projectTypeSpecifics: ProjectTypeSpecificInput!
-
-  """
-  The area of interest for this project uploaded by the user. This should be OGR-supported vector geospatial file format
-  """
-  aoiGeometryFile: Upload!
-  status: ProjectStatusEnum
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectFilter {
   id: IDBaseFilterLookup
@@ -392,7 +420,7 @@ type ProjectTileServerCustomConfig {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 type ProjectType {
   id: ID!
@@ -426,7 +454,7 @@ type ProjectType {
 
   """How many tasks each user is allowed to work on for this project"""
   maxTasksPerUser: Int
-  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyType!
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyType
   isFeatured: Boolean!
   status: ProjectStatusEnum!
   processingStatus: ProjectProcessingStatusEnum
@@ -509,7 +537,7 @@ input ProjectTypeSpecificInput @oneOf {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectUpdateInput {
   name: String
@@ -541,11 +569,6 @@ input ProjectUpdateInput {
   requestingOrganization: ID
   image: Upload
   projectTypeSpecifics: ProjectTypeSpecificInput
-
-  """
-  The area of interest for this project uploaded by the user. This should be OGR-supported vector geospatial file format
-  """
-  aoiGeometryFile: Upload
 }
 
 type Query {
