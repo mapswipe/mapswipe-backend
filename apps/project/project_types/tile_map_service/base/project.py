@@ -101,7 +101,7 @@ class TileMapServiceBaseProject(
                 "geometry": geojson,
                 "properties": {
                     "group_id": task.task_group_id,
-                    "task_id": task.id,
+                    "task_id": task.pk,
                     # FIXME(tnagorra): We might need the following values to create tutorial
                     # "tile_x": None,
                     # "tile_y": None,
@@ -217,7 +217,7 @@ class TileMapServiceBaseProject(
             id=self.project_type_specifics.aoi_geometry,
             type=ProjectAssetTypeEnum.INPUT,
             mimetype=ProjectAssetMimeTypeEnum.GEOJSON,
-            project_id=self.project.id,
+            project_id=self.project.pk,
         )
 
         extension = Path(aoi_asset.file.name).suffix

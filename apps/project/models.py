@@ -124,11 +124,12 @@ class ProjectProcessingStatusEnum(models.IntegerChoices):
 
 class UploadHelper:
     @staticmethod
-    def project_geometry(instance: "Project", filename: str):
-        return f"project/{instance.pk}/geometry/{filename}"
+    def project_asset(instance: "ProjectAsset", filename: str):
+        return f"project/{instance.project_id}/asset/{filename}"
 
     @staticmethod
     def project_image(instance: "Project", filename: str):
+        # FIXME(tnagorra): instance.pk is always None when creating the project
         return f"project/{instance.pk}/image/{filename}"
 
 
@@ -262,6 +263,11 @@ class Project(UserResource):
     required_results = models.IntegerField(default=0)
     result_count = models.IntegerField(default=0)  # NOTE: All project have 0 in production database
 
+    # Type hints
+    requesting_organization_id: int
+    tutorial_id: int | None
+    project_type_specific_output_id: int | None
+
     @typing.override
     def __str__(self):
         return self.name
@@ -312,7 +318,7 @@ class ProjectAsset(UserResource):
 
     file = models.FileField(
         # FIXME(tnaogrra): the upload_to might not be correct
-        upload_to=UploadHelper.project_geometry,
+        upload_to=UploadHelper.project_asset,
         help_text=gettext_lazy("The file associated with the asset"),
     )
 
@@ -321,6 +327,9 @@ class ProjectAsset(UserResource):
         on_delete=models.CASCADE,
         related_name="+",
     )
+
+    # Type hints
+    project_id: int
 
 
 class ProjectTaskGroup(models.Model):
@@ -376,7 +385,6 @@ class ProjectTask(models.Model):
 
     # Type hints
     task_group_id: int
-    id: int
 
     @typing.override
     def __str__(self):

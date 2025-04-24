@@ -21,8 +21,7 @@ class UserResource(models.Model):
     )
 
     # Typing
-    pk: int
-    id: int
+    # pk: int
     created_by_id: int
     modified_by_id: int
 

@@ -24,11 +24,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='project',
             name='aoi_geometry_file',
-            field=models.FileField(blank=True, help_text='The area of interest for this project uploaded by the user. This should be OGR-supported vector geospatial file format', null=True, upload_to=apps.project.models.UploadHelper.project_geometry),
+            field=models.FileField(blank=True, help_text='The area of interest for this project uploaded by the user. This should be OGR-supported vector geospatial file format', null=True, upload_to=apps.project.models.UploadHelper.project_asset),
         ),
         migrations.AddField(
             model_name='project',
             name='processed_geometry_file',
-            field=models.FileField(blank=True, help_text='Eg. For TileMapService, this includes the AOI broken down into tiles.', null=True, upload_to=apps.project.models.UploadHelper.project_geometry),
+            field=models.FileField(blank=True, help_text='Eg. For TileMapService, this includes the AOI broken down into tiles.', null=True, upload_to=apps.project.models.UploadHelper.project_asset),
         ),
     ]

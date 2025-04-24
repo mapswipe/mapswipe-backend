@@ -37,6 +37,9 @@ class ContributorUserGroup(UserResource):
         on_delete=models.PROTECT,
     )
 
+    # Type hints
+    archived_by_id: int
+
     @typing.override
     def __str__(self):
         return self.name

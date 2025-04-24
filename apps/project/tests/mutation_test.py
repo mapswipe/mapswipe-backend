@@ -355,7 +355,7 @@ class TestProjectMutation(TestCase):
         }
 
         # Updating Project: Without authentication
-        content = self._update_project_mutation(str(proj.id), project_data)
+        content = self._update_project_mutation(str(proj.pk), project_data)
         assert content["data"]["updateProject"]["messages"] == [
             {
                 "code": None,
@@ -367,11 +367,11 @@ class TestProjectMutation(TestCase):
 
         # Updating Project: With authentication
         self.force_login(self.user)
-        content = self._update_project_mutation(str(proj.id), project_data)
+        content = self._update_project_mutation(str(proj.pk), project_data)
         resp_data = content["data"]["updateProject"]
         assert resp_data["errors"] is None, content
 
-        latest_project = Project.objects.get(pk=proj.id)
+        latest_project = Project.objects.get(pk=proj.pk)
         assert resp_data == self.g_mutation_response(
             ok=True,
             result=dict(
@@ -401,7 +401,7 @@ class TestProjectMutation(TestCase):
         project_data = {
             "status": self.genum(Project.Status.MARKED_AS_READY),
         }
-        content = self._update_project_mutation(str(latest_project.id), project_data)
+        content = self._update_project_mutation(str(latest_project.pk), project_data)
         assert content["data"]["updateProject"]["errors"] == [
             {
                 "array_errors": None,
@@ -415,7 +415,7 @@ class TestProjectMutation(TestCase):
 
         # Creating Project Asset: Without authentication
         project_asset_data = {
-            "project": str(latest_project.id),
+            "project": str(latest_project.pk),
             "mimetype": self.genum(ProjectAssetMimeTypeEnum.GEOJSON),
             "type": self.genum(ProjectAssetTypeEnum.INPUT),
         }
@@ -428,7 +428,7 @@ class TestProjectMutation(TestCase):
         project_data = {
             "projectTypeSpecifics": {},
         }
-        content = self._update_project_mutation(str(latest_project.id), project_data, assert_errors=True)
+        content = self._update_project_mutation(str(latest_project.pk), project_data, assert_errors=True)
         assert content["errors"] == [
             {
                 "message": "OneOf Input Object 'ProjectTypeSpecificInput' must specify exactly one key.",
@@ -458,7 +458,7 @@ class TestProjectMutation(TestCase):
                 },
             },
         }
-        content = self._update_project_mutation(str(latest_project.id), project_data)
+        content = self._update_project_mutation(str(latest_project.pk), project_data)
         assert content["data"]["updateProject"]["errors"] == [
             {
                 "field": "projectTypeSpecifics",
@@ -487,7 +487,7 @@ class TestProjectMutation(TestCase):
             },
         }
 
-        content = self._update_project_mutation(str(latest_project.id), project_data)
+        content = self._update_project_mutation(str(latest_project.pk), project_data)
         resp_data = content["data"]["updateProject"]
         assert resp_data["errors"] is None, content
 
@@ -508,7 +508,7 @@ class TestProjectMutation(TestCase):
         project_data = {
             "status": self.genum(Project.Status.MARKED_AS_READY),
         }
-        content = self._update_project_mutation(str(latest_project.id), project_data)
+        content = self._update_project_mutation(str(latest_project.pk), project_data)
         assert content["data"]["updateProject"]["errors"] is None
 
 
@@ -722,9 +722,9 @@ class TestProjectTypeMutation(TestCase):
         assert resp_data["result"]["processingStatus"] is None
 
         mock_requests.assert_called_once()
-        mock_requests.assert_has_calls([call(int(project_id), self.user.id)])
+        mock_requests.assert_has_calls([call(int(project_id), self.user.pk)])
 
-        process_project_task(int(project_id), self.user.id)
+        process_project_task(int(project_id), self.user.pk)
 
         expected_task_groups = [
             {

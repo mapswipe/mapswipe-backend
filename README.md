@@ -65,9 +65,9 @@ docker compose exec web ./manage.py changepassword mapswipe-user-1
 ### Generate latest GraphQl schema
 
 ```bash
-docker compose run --rm web ./manage.py graphql_schema --out schema.graphql
+docker compose run --rm web ./manage.py export_schema main.graphql.schema --path schema.graphql
 # OR
-docker compose exec web ./manage.py graphql_schema --out schema.graphql
+docker compose exec web ./manage.py export_schema main.graphql.schema --path schema.graphql
 ```
 
 ### Run tests

@@ -51,7 +51,7 @@ class Migration(migrations.Migration):
                 ('modified_at', models.DateTimeField(auto_now=True)),
                 ('type', django_choices_field.fields.IntegerChoicesField(choices=[(100, 'Input'), (200, 'Output'), (300, 'Stats')], choices_enum=apps.project.models.ProjectAssetTypeEnum)),
                 ('mimetype', django_choices_field.fields.IntegerChoicesField(choices=[(100, 'application/geo+json'), (201, 'image/jpeg'), (202, 'image/png'), (203, 'image/gif')], choices_enum=apps.project.models.ProjectAssetMimeTypeEnum)),
-                ('file', models.FileField(help_text='The file associated with the asset', upload_to=apps.project.models.UploadHelper.project_geometry)),
+                ('file', models.FileField(help_text='The file associated with the asset', upload_to=apps.project.models.UploadHelper.project_asset)),
                 ('created_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='%(class)s_created', to=settings.AUTH_USER_MODEL)),
                 ('modified_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='%(class)s_modified', to=settings.AUTH_USER_MODEL)),
                 ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='project.project')),
