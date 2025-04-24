@@ -1,3 +1,4 @@
+import json
 import logging
 import tempfile
 import typing
@@ -5,6 +6,9 @@ from abc import ABC
 from pathlib import Path
 
 from django.conf import settings
+from django.contrib.gis.geos import GEOSGeometry
+from django.core.files.base import ContentFile
+from django.core.serializers.json import DjangoJSONEncoder
 from pydantic import field_validator
 
 from apps.project.models import Project, ProjectAsset, ProjectAssetTypeEnum, ProjectTask, ProjectTaskGroup
@@ -73,6 +77,51 @@ class TileMapServiceBaseProject(
     def __init__(self, project: Project):
         super().__init__(project)
         self.tile_server = get_tile_server(self.project_type_specifics.tile_server_property)
+
+    @typing.override
+    def post_create_groups(self):
+        # NOTE: Create a geojson from the tasks (useful for tutorial creation)
+        self.project.update_processing_status(Project.ProcessingStatus.GENERATING_TASKS_GEOJSON, True)
+
+        tasks_qs = ProjectTask.objects.filter(task_group__project_id=self.project.pk)
+
+        def get_feature(task: ProjectTask):
+            geom = GEOSGeometry(task.geometry)
+            geojson = json.loads(geom.geojson)
+            return {
+                "type": "Feature",
+                "geometry": geojson,
+                "properties": {
+                    "group_id": task.task_group_id,
+                    "task_id": task.id,
+                    # FIXME(tnagorra): We might need the following values to create tutorial
+                    # "tile_x": None,
+                    # "tile_y": None,
+                    # "tile_z": None,
+                },
+            }
+
+        # FIXME(tnagorra): move this to utils
+        def create_json_dump(item: dict[typing.Any, typing.Any]) -> bytes:
+            return json.dumps(
+                item,
+                cls=DjangoJSONEncoder,
+            ).encode("utf-8")
+
+        feature_collection = {
+            "type": "FeatureCollection",
+            "metadata": {
+                "project_id": self.project.pk,
+            },
+            "features": [get_feature(task) for task in tasks_qs],
+        }
+        file = ContentFile(create_json_dump(feature_collection))
+
+        # TODO(tnagorra): Create an asset using "file"
+        # TODO(tnagorra): Attach this to project specifics
+
+        # TODO(thenav56): Calculate centroid, bounding box, etc.
+        # TODO(thenav56): Calculate: total_area, time_spent_max_allowed
 
     @typing.override
     def _create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:
