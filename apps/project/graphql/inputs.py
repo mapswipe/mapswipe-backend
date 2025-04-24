@@ -2,7 +2,7 @@ import strawberry
 import strawberry_django
 from strawberry.file_uploads import Upload
 
-from apps.project.models import Project
+from apps.project.models import Project, ProjectAsset
 from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.project_types.tile_map_service.find import project as find_project
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
@@ -76,3 +76,12 @@ class ProcessedProjectUpdateInput:
     status: strawberry.auto
     requesting_organization: strawberry.ID | None = strawberry.UNSET
     image: Upload | None = strawberry.UNSET
+
+
+# NOTE: Make sure this matches with the serializers ../serializers.py
+@strawberry_django.input(ProjectAsset)
+class ProjectAssetCreateInput:
+    type: strawberry.auto
+    mimetype: strawberry.auto
+    file: Upload
+    project: strawberry.ID

@@ -11,7 +11,7 @@ from apps.project.project_types.tile_map_service.find import project as find_pro
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
-from .models import Project, ProjectTypeEnum
+from .models import Project, ProjectAsset, ProjectTypeEnum
 from .tasks import process_project_task
 
 VALID_PROJECT_STATUS_TRANSITIONS = set(
@@ -43,6 +43,7 @@ PROJECT_TYPE_PROPERTY_MAP = {
     ProjectTypeEnum.COMPARE: ("compare", compare_project.CompareProjectProperty),
     ProjectTypeEnum.FIND: ("find", find_project.FindProjectProperty),
 }
+
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class ProjectCreateSerializer(UserResourceSerializer[Project]):
@@ -149,8 +150,10 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
     def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:
         new_project = super().update(instance, validated_data)
 
+        user = self.context["request"].user
+
         if new_project.status == Project.Status.MARKED_AS_READY:
-            transaction.on_commit(lambda: process_project_task.delay(new_project.pk))
+            transaction.on_commit(lambda: process_project_task.delay(new_project.pk, user.pk))
 
         return new_project
 
@@ -177,3 +180,15 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
                 gettext("Project status cannot be changed from %s to %s") % (self.instance.status, new_status),
             )
         return new_status
+
+
+# NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
+class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        model = ProjectAsset
+        fields = (
+            "type",
+            "mimetype",
+            "file",
+            "project",
+        )

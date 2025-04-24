@@ -2,6 +2,7 @@ import typing
 
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
 from apps.project.project_types.tile_map_service.base import project as base_project
+from apps.user.models import User
 from main.bulk_managers import BulkCreateManager
 from utils.geo import tile_functions, tile_grouping
 from utils.geo.tile_server.models import TileServerConfig
@@ -32,8 +33,8 @@ class CompareProject(
     project_task_group_property_class = CompareProjectTaskGroupProperty
     project_task_property_class = CompareProjectTaskProperty
 
-    def __init__(self, project: Project):
-        super().__init__(project)
+    def __init__(self, project: Project, user: User):
+        super().__init__(project, user)
         assert project.project_type == ProjectTypeEnum.COMPARE, f"{type(self)} is defined for COMPARE"
         self.tile_server_b = get_tile_server(self.project_type_specifics.tile_server_b_property)
 

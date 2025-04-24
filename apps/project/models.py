@@ -28,14 +28,9 @@ class ProjectAssetMimeTypeEnum(models.IntegerChoices):
 
 
 class ProjectAssetTypeEnum(models.IntegerChoices):
-    GEOMETRY_AOI = 100, "AOI Geometry"
-    """ Area of interest. This should be OGR-supported vector geospatial file format """
-
-    GEOMETRY_TILES = 101, "Tiles Geometry"
-    """ Valid GeoJSON containing area of interest broken down into tiles """
-
-    IMAGE = 200, "Image"
-    """ Image """
+    INPUT = 100, "Input"
+    OUTPUT = 200, "Output"
+    STATS = 300, "Stats"
 
     @classmethod
     def get_display(cls, value: typing.Self | int) -> str:
@@ -241,6 +236,9 @@ class Project(UserResource):
     project_type_specific_output: "ProjectAsset" = models.ForeignKey(  # type: ignore[reportAssignmentType]
         "project.ProjectAsset",
         related_name="+",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     # STATUS
@@ -313,13 +311,14 @@ class ProjectAsset(UserResource):
     )
 
     file = models.FileField(
+        # FIXME(tnaogrra): the upload_to might not be correct
         upload_to=UploadHelper.project_geometry,
         help_text=gettext_lazy("The file associated with the asset"),
     )
 
     project = models.ForeignKey(
         Project,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name="+",
     )
 

@@ -6,7 +6,14 @@ from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 
 from apps.project.factories import OrganizationFactory, ProjectFactory
-from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
+from apps.project.models import (
+    Project,
+    ProjectAssetMimeTypeEnum,
+    ProjectAssetTypeEnum,
+    ProjectTask,
+    ProjectTaskGroup,
+    ProjectTypeEnum,
+)
 from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.tasks import process_project_task
 from apps.user.factories import UserFactory
@@ -16,6 +23,32 @@ from utils.geo.tile_server.config import TileServerNameEnum
 BASE_DIR = Path(__file__).resolve().parent
 
 
+def create_project_asset_query(
+    *,
+    query_check_func: typing.Callable,
+    query: str,
+    project_asset_data: dict,
+    **kwargs,
+) -> dict:
+    with (
+        Path(BASE_DIR / "data/ring-road.geojson").open() as geo_file,
+    ):
+        # geo_file.seek(0, 2)
+        return query_check_func(
+            query,
+            variables={
+                "data": project_asset_data,
+            },
+            files={
+                "geoFile": geo_file,
+            },
+            map={
+                "geoFile": ["variables.data.file"],
+            },
+            **kwargs,
+        )
+
+
 def create_project_query(
     *,
     query_check_func: typing.Callable,
@@ -23,12 +56,6 @@ def create_project_query(
     project_data: dict,
     **kwargs,
 ) -> dict:
-    # with (
-    #     NamedTemporaryFile(dir=settings.TEMP_DIR) as image_file,
-    #     Path(BASE_DIR / "data/ring-road.geojson").open() as geo_file,
-    # ):
-    #     geo_file.seek(0, 2)
-
     with (
         NamedTemporaryFile(dir=settings.TEMP_DIR) as image_file,
     ):
@@ -69,87 +96,152 @@ def update_project_query(
     )
 
 
-class TestProjectMutation(TestCase):
-    class Mutation:
-        CREATE_PROJECT = """
-            mutation CreateProject($data: ProjectCreateInput!) {
-              createProject(data: $data) {
-                ... on OperationInfo {
-                  __typename
-                  messages {
-                    code
-                    field
-                    kind
-                    message
-                  }
-                }
-                ... on ProjectTypeMutationResponseType {
-                  errors
-                  ok
-                  result {
-                    id
-                    projectType
-                    requestingOrganizationId
-                    requestingOrganization {
-                      id
-                      name
-                    }
-                    name
-                    lookFor
-                    additionalInfoUrl
-                    description
-                    verificationNumber
-                    groupSize
-                    maxTasksPerUser
-                    isFeatured
-                    status
-                    processingStatus
-                    progress
-                  }
-                }
+class Mutation:
+    CREATE_PROJECT_ASSET = """
+        mutation CreateProjectAsset($data: ProjectAssetCreateInput!) {
+          createProjectAsset(data: $data) {
+            ... on OperationInfo {
+              __typename
+              messages {
+                code
+                field
+                kind
+                message
               }
             }
-        """
-        UPDATE_PROJECT = """
-            mutation UpdateProject($pk: ID!, $data: ProjectUpdateInput!) {
-              updateProject(pk: $pk, data: $data) {
-                ... on OperationInfo {
-                  __typename
-                  messages {
-                    code
-                    field
-                    kind
-                    message
-                  }
-                }
-                ... on ProjectTypeMutationResponseType {
-                  errors
-                  ok
-                  result {
-                    id
-                    projectType
-                    requestingOrganizationId
-                    requestingOrganization {
-                      id
-                      name
-                    }
-                    name
-                    lookFor
-                    additionalInfoUrl
-                    description
-                    verificationNumber
-                    groupSize
-                    maxTasksPerUser
-                    isFeatured
-                    status
-                    processingStatus
-                    progress
-                  }
-                }
+            ... on ProjectAssetTypeMutationResponseType {
+              errors
+              ok
+              result {
+                id
+                type
+                mimetype
+                projectId
               }
             }
-        """
+          }
+        }
+    """
+    CREATE_PROJECT = """
+        mutation CreateProject($data: ProjectCreateInput!) {
+          createProject(data: $data) {
+            ... on OperationInfo {
+              __typename
+              messages {
+                code
+                field
+                kind
+                message
+              }
+            }
+            ... on ProjectTypeMutationResponseType {
+              errors
+              ok
+              result {
+                id
+                projectType
+                requestingOrganizationId
+                requestingOrganization {
+                  id
+                  name
+                }
+                name
+                lookFor
+                additionalInfoUrl
+                description
+                verificationNumber
+                groupSize
+                maxTasksPerUser
+                isFeatured
+                status
+                processingStatus
+                progress
+              }
+            }
+          }
+        }
+    """
+    UPDATE_PROJECT = """
+        mutation UpdateProject($pk: ID!, $data: ProjectUpdateInput!) {
+          updateProject(pk: $pk, data: $data) {
+            ... on OperationInfo {
+              __typename
+              messages {
+                code
+                field
+                kind
+                message
+              }
+            }
+            ... on ProjectTypeMutationResponseType {
+              errors
+              ok
+              result {
+                id
+                projectType
+                requestingOrganizationId
+                requestingOrganization {
+                  id
+                  name
+                }
+                name
+                lookFor
+                additionalInfoUrl
+                description
+                verificationNumber
+                groupSize
+                maxTasksPerUser
+                isFeatured
+                status
+                processingStatus
+                progress
+              }
+            }
+          }
+        }
+    """
+    UPDATE_PROCESSED_PROJECT = """
+        mutation UpdateProcessedProject($pk: ID!, $data: ProcessedProjectUpdateInput!) {
+          updateProcessedProject(pk: $pk, data: $data) {
+            ... on OperationInfo {
+              __typename
+              messages {
+                code
+                field
+                kind
+                message
+              }
+            }
+            ... on ProjectTypeMutationResponseType {
+              errors
+              ok
+              result {
+                id
+                projectType
+                requestingOrganizationId
+                requestingOrganization {
+                  id
+                  name
+                }
+                name
+                lookFor
+                additionalInfoUrl
+                description
+                verificationNumber
+                groupSize
+                maxTasksPerUser
+                isFeatured
+                status
+                processingStatus
+                progress
+              }
+            }
+          }
+        }
+    """
 
+
+class TestProjectMutation(TestCase):
     @typing.override
     @classmethod
     def setUpClass(cls):
@@ -162,17 +254,24 @@ class TestProjectMutation(TestCase):
 
         cls.organization = OrganizationFactory.create(**cls.user_resource_kwargs)
 
+    def _create_project_asset(self, project_asset_data: dict, **kwargs):
+        return create_project_asset_query(
+            query_check_func=self.query_check,
+            query=Mutation.CREATE_PROJECT_ASSET,
+            project_asset_data=project_asset_data,
+        )
+
     def _create_project_mutation(self, project_data: dict, **kwargs):
         return create_project_query(
             query_check_func=self.query_check,
-            query=self.Mutation.CREATE_PROJECT,
+            query=Mutation.CREATE_PROJECT,
             project_data=project_data,
         )
 
     def _update_project_mutation(self, pk: str, project_data: dict, **kwargs):
         return update_project_query(
             query_check_func=self.query_check,
-            query=self.Mutation.UPDATE_PROJECT,
+            query=Mutation.UPDATE_PROJECT,
             pk=pk,
             project_data=project_data,
             **kwargs,
@@ -314,6 +413,17 @@ class TestProjectMutation(TestCase):
             },
         ]
 
+        # Creating Project Asset: Without authentication
+        project_asset_data = {
+            "project": str(latest_project.id),
+            "mimetype": self.genum(ProjectAssetMimeTypeEnum.GEOJSON),
+            "type": self.genum(ProjectAssetTypeEnum.INPUT),
+        }
+        content = self._create_project_asset(project_asset_data, assert_errors=True)
+        resp_data = content["data"]["createProjectAsset"]
+        assert resp_data["errors"] is None, content
+        aoi_geometry_asset = resp_data["result"]
+
         # Updating Project: with empty object as project type specifics
         project_data = {
             "projectTypeSpecifics": {},
@@ -329,6 +439,7 @@ class TestProjectMutation(TestCase):
         project_data = {
             "projectTypeSpecifics": {
                 "compare": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": {
                         "name": self.genum(TileServerNameEnum.CUSTOM),
@@ -363,6 +474,7 @@ class TestProjectMutation(TestCase):
         project_data = {
             "projectTypeSpecifics": {
                 "find": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": {
                         "name": self.genum(TileServerNameEnum.CUSTOM),
@@ -382,6 +494,7 @@ class TestProjectMutation(TestCase):
         latest_project.refresh_from_db()
         assert latest_project.project_type_specifics == {
             "zoom_level": 15,
+            "aoi_geometry": aoi_geometry_asset["id"],
             "tile_server_property": {
                 "name": TileServerNameEnum.CUSTOM.value,
                 "custom": {
@@ -400,101 +513,6 @@ class TestProjectMutation(TestCase):
 
 
 class TestProjectTypeMutation(TestCase):
-    class Mutation:
-        CREATE_PROJECT = """
-            mutation CreateProject($data: ProjectCreateInput!) {
-              createProject(data: $data) {
-                ... on OperationInfo {
-                  __typename
-                  messages {
-                    code
-                    field
-                    kind
-                    message
-                  }
-                }
-                ... on ProjectTypeMutationResponseType {
-                  errors
-                  ok
-                  result {
-                    id
-                    name
-                    projectType
-                    requestingOrganizationId
-                    requestingOrganization {
-                      id
-                      name
-                    }
-                    status
-                    processingStatus
-                  }
-                }
-              }
-            }
-        """
-        UPDATE_PROJECT = """
-            mutation UpdateProject($pk: ID!, $data: ProjectUpdateInput!) {
-              updateProject(pk: $pk, data: $data) {
-                ... on OperationInfo {
-                  __typename
-                  messages {
-                    code
-                    field
-                    kind
-                    message
-                  }
-                }
-                ... on ProjectTypeMutationResponseType {
-                  errors
-                  ok
-                  result {
-                    id
-                    name
-                    projectType
-                    requestingOrganizationId
-                    requestingOrganization {
-                      id
-                      name
-                    }
-                    status
-                    processingStatus
-                  }
-                }
-              }
-            }
-        """
-        UPDATE_PROCESSED_PROJECT = """
-            mutation UpdateProcessedProject($pk: ID!, $data: ProcessedProjectUpdateInput!) {
-              updateProcessedProject(pk: $pk, data: $data) {
-                ... on OperationInfo {
-                  __typename
-                  messages {
-                    code
-                    field
-                    kind
-                    message
-                  }
-                }
-                ... on ProjectTypeMutationResponseType {
-                  errors
-                  ok
-                  result {
-                    id
-                    name
-                    projectType
-                    requestingOrganizationId
-                    requestingOrganization {
-                      id
-                      name
-                    }
-                    status
-                    processingStatus
-                  }
-                }
-              }
-            }
-        """
-
     @typing.override
     @classmethod
     def setUpClass(cls):
@@ -546,11 +564,18 @@ class TestProjectTypeMutation(TestCase):
         # NOTE: _internal is for snake_case attributes, currently its same
         cls.tile_server_property_internal = cls.tile_server_property
 
+    def _create_project_asset(self, project_asset_data: dict, **kwargs):
+        return create_project_asset_query(
+            query_check_func=self.query_check,
+            query=Mutation.CREATE_PROJECT_ASSET,
+            project_asset_data=project_asset_data,
+        )
+
     def _create_project_mutation(self, project_data: dict, **kwargs):
         with self.captureOnCommitCallbacks(execute=True):
             return create_project_query(
                 query_check_func=self.query_check,
-                query=self.Mutation.CREATE_PROJECT,
+                query=Mutation.CREATE_PROJECT,
                 project_data=project_data,
                 **kwargs,
             )
@@ -559,7 +584,7 @@ class TestProjectTypeMutation(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             return update_project_query(
                 query_check_func=self.query_check,
-                query=self.Mutation.UPDATE_PROJECT,
+                query=Mutation.UPDATE_PROJECT,
                 pk=pk,
                 project_data=project_data,
                 **kwargs,
@@ -569,7 +594,7 @@ class TestProjectTypeMutation(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             return update_project_query(
                 query_check_func=self.query_check,
-                query=self.Mutation.UPDATE_PROCESSED_PROJECT,
+                query=Mutation.UPDATE_PROCESSED_PROJECT,
                 pk=pk,
                 project_data=project_data,
                 **kwargs,
@@ -589,11 +614,23 @@ class TestProjectTypeMutation(TestCase):
 
         project_id = resp_data["result"]["id"]
 
+        # Creating Project Asset: Without authentication
+        project_asset_data = {
+            "project": project_id,
+            "mimetype": self.genum(ProjectAssetMimeTypeEnum.GEOJSON),
+            "type": self.genum(ProjectAssetTypeEnum.INPUT),
+        }
+        content = self._create_project_asset(project_asset_data, assert_errors=True)
+        resp_data = content["data"]["createProjectAsset"]
+        assert resp_data["errors"] is None, content
+        aoi_geometry_asset = resp_data["result"]
+
         # Updating Project
         # fails as project type specifics has empty object as tile server property
         project_data = {
             "projectTypeSpecifics": {
                 "find": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": {},
                     "tileServerBProperty": self.tile_server_property["valid_custom"],
@@ -607,6 +644,7 @@ class TestProjectTypeMutation(TestCase):
         project_data = {
             "projectTypeSpecifics": {
                 "compare": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["valid_custom"],
                 },
@@ -619,6 +657,7 @@ class TestProjectTypeMutation(TestCase):
         project_data = {
             "projectTypeSpecifics": {
                 "compare": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["invalid_custom"],
                     "tileServerBProperty": self.tile_server_property["valid_custom"],
@@ -634,6 +673,7 @@ class TestProjectTypeMutation(TestCase):
         project_data = {
             "projectTypeSpecifics": {
                 "compare": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["invalid_custom_02"],
                     "tileServerBProperty": self.tile_server_property["valid_custom"],
@@ -648,6 +688,7 @@ class TestProjectTypeMutation(TestCase):
         project_data = {
             "projectTypeSpecifics": {
                 "compare": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["valid_custom"],
                     "tileServerBProperty": self.tile_server_property["valid_custom_02"],
@@ -662,6 +703,7 @@ class TestProjectTypeMutation(TestCase):
         assert latest_project.created_by_id == self.user.pk
         assert latest_project.modified_by_id == self.user.pk
         assert latest_project.project_type_specifics == {
+            "aoi_geometry": aoi_geometry_asset["id"],
             "zoom_level": 15,
             "tile_server_property": self.tile_server_property_internal["valid_custom"],
             "tile_server_b_property": self.tile_server_property_internal["valid_custom_02"],
@@ -680,9 +722,9 @@ class TestProjectTypeMutation(TestCase):
         assert resp_data["result"]["processingStatus"] is None
 
         mock_requests.assert_called_once()
-        mock_requests.assert_has_calls([call(int(project_id))])
+        mock_requests.assert_has_calls([call(int(project_id), self.user.id)])
 
-        process_project_task(int(project_id))
+        process_project_task(int(project_id), self.user.id)
 
         expected_task_groups = [
             {

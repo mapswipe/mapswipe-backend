@@ -11,8 +11,16 @@ from django.core.files.base import ContentFile
 from django.core.serializers.json import DjangoJSONEncoder
 from pydantic import field_validator
 
-from apps.project.models import Project, ProjectAsset, ProjectAssetTypeEnum, ProjectTask, ProjectTaskGroup
+from apps.project.models import (
+    Project,
+    ProjectAsset,
+    ProjectAssetMimeTypeEnum,
+    ProjectAssetTypeEnum,
+    ProjectTask,
+    ProjectTaskGroup,
+)
 from apps.project.project_types.base import project as base_project
+from apps.user.models import User
 from main.bulk_managers import BulkCreateManager
 from utils.geo import tile_functions, tile_grouping
 from utils.geo.tile_server.models import TileServerConfig
@@ -24,7 +32,7 @@ logger = logging.getLogger(__name__)
 class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
     zoom_level: int
     tile_server_property: TileServerConfig
-    aoi_geometry: int | None
+    aoi_geometry: str  # NOTE: Should be numeric
 
     @field_validator("zoom_level")
     @classmethod
@@ -74,8 +82,8 @@ class TileMapServiceBaseProject(
 ):
     tile_server: AvailableTileServerTypeAlias
 
-    def __init__(self, project: Project):
-        super().__init__(project)
+    def __init__(self, project: Project, user: User):
+        super().__init__(project, user)
         self.tile_server = get_tile_server(self.project_type_specifics.tile_server_property)
 
     @typing.override
@@ -115,10 +123,23 @@ class TileMapServiceBaseProject(
             },
             "features": [get_feature(task) for task in tasks_qs],
         }
-        file = ContentFile(create_json_dump(feature_collection))
+        file = ContentFile(
+            create_json_dump(feature_collection),
+            "processed_geometry.geojson",
+        )
 
-        # TODO(tnagorra): Create an asset using "file"
-        # TODO(tnagorra): Attach this to project specifics
+        asset = ProjectAsset.objects.create(
+            project=self.project,
+            file=file,
+            type=ProjectAssetTypeEnum.OUTPUT,
+            mimetype=ProjectAssetMimeTypeEnum.GEOJSON,
+            # FIXME(tnagorra): Had to pass user just to set these 2 fields
+            # Need to check if we can skip this
+            created_by=self.user,
+            modified_by=self.user,
+        )
+        self.project.project_type_specific_output = asset
+        self.project.save(update_fields=("project_type_specific_output",))
 
         # TODO(thenav56): Calculate centroid, bounding box, etc.
         # TODO(thenav56): Calculate: total_area, time_spent_max_allowed
@@ -192,16 +213,16 @@ class TileMapServiceBaseProject(
         """Validate project before creating groups"""
         self.project.update_processing_status(Project.ProcessingStatus.VALIDATING_GEOMETRY, True)
 
-        # TODO(tnagorra): Let's read the asset_id from project specifics
         aoi_asset = ProjectAsset.objects.get(
+            id=self.project_type_specifics.aoi_geometry,
+            type=ProjectAssetTypeEnum.INPUT,
+            mimetype=ProjectAssetMimeTypeEnum.GEOJSON,
             project_id=self.project.id,
-            asset_type=ProjectAssetTypeEnum.GEOMETRY_AOI,
         )
-        file = aoi_asset.file
 
-        extension = Path(file.name).suffix
+        extension = Path(aoi_asset.file.name).suffix
         with tempfile.NamedTemporaryFile(suffix=extension, dir=settings.TEMP_DIR) as temp_file:
-            temp_file.write(file.read())
+            temp_file.write(aoi_asset.file.read())
             temp_file.flush()
 
             aoi_geometry = tile_grouping.get_geometry_from_file(temp_file.name)
