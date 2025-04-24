@@ -46,20 +46,6 @@ class ProjectCreateInput:
     additional_info_url: strawberry.auto
     description: strawberry.auto
     image: Upload
-    # TODO(tnagorra): Add tutorial
-    verification_number: strawberry.auto
-    group_size: strawberry.auto
-    max_tasks_per_user: strawberry.auto
-    project_type_specifics: ProjectTypeSpecificInput
-    status: strawberry.auto
-
-
-@strawberry_django.partial(Project)
-class ProjectInputPartial:
-    name: strawberry.auto
-    project_type: strawberry.auto
-    requesting_organization: strawberry.ID
-    image: Upload
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py

@@ -213,6 +213,7 @@ class Project(UserResource):
     # TODO(tnagorra): This should be an integer from 3 to 10000
     verification_number = models.PositiveSmallIntegerField(
         help_text=gettext_lazy("How many people do you want to see every tile before you consider it finished?"),
+        default=3,
     )
 
     # TODO(tnagorra): This should be an integer from 10 to 25
@@ -220,6 +221,7 @@ class Project(UserResource):
         help_text=gettext_lazy(
             "How big should a mapping session be? Group size refers to the number of tasks per mapping session.",
         ),
+        default=10,
     )
 
     # TODO(tnagorra): This should be an integer from 10 to 250
@@ -228,12 +230,13 @@ class Project(UserResource):
         help_text=gettext_lazy("How many tasks each user is allowed to work on for this project"),
         null=True,
         blank=True,
+        default=10,
     )
 
     # TODO(tnagorra): Currently this field collects any data not stored by another fields, pulled from firebase.
     # Also, used in SQL queries
     # FIXME(thenav56): Refactor this
-    project_type_specifics = models.JSONField(blank=True)
+    project_type_specifics = models.JSONField(blank=True, null=True)
 
     project_type_specific_output: "ProjectAsset" = models.ForeignKey(  # type: ignore[reportAssignmentType]
         "project.ProjectAsset",
