@@ -33,7 +33,7 @@ class RawGroup(typing.TypedDict):
 
 
 # FIXME(tnagorra): This seems to be unused
-class UnSupportedGeoExtenstionException(Exception):
+class UnSupportedGeoExtensionException(Exception):
     pass
 
 
@@ -157,7 +157,7 @@ def _get_vertical_slice(
     """
     The function slices the horizontal stripes vertically.
     Each input stripe has a height of three tiles
-    and will be splitted into vertical parts.
+    and will be split into vertical parts.
     The width of each part is defined by the width threshold set below.
 
     Parameters
@@ -189,7 +189,7 @@ def _get_vertical_slice(
 
     # process each polygon individually
     for p, horizontal_slice in enumerate(geom_collections):
-        # sometimes we get really really small polygones, skip these
+        # sometimes we get really really small polygons, skip these
         if horizontal_slice.area < 0.0000001:
             continue
 
@@ -209,7 +209,7 @@ def _get_vertical_slice(
         tile = tile_functions.pixel_coords_to_tile_address(pixel.x, pixel.y)
         TileX_right = tile.x
 
-        # we don't compute tile y top and tile y botton coordinates again,
+        # we don't compute tile y top and tile y bottom coordinates again,
         # but get the ones from the list
         # doing so we can avoid problems due to rounding errors
         # which result in wrong tile coordinates

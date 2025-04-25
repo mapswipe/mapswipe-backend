@@ -52,7 +52,7 @@ class MappingSessionResult(models.Model):
     project_task = models.ForeignKey(ProjectTask, on_delete=models.PROTECT)
     result = models.PositiveSmallIntegerField()
 
-    # TODO(thenav56): Add constrant to make sure we have non-duplicate row with task_id, .session.user_id
+    # TODO(thenav56): Add constraint to make sure we have non-duplicate row with task_id, .session.user_id
 
     # Type hints
     session_id: int
