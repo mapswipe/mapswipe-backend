@@ -232,7 +232,6 @@ class Project(UserResource):
 
     # TODO(tnagorra): Currently this field collects any data not stored by another fields, pulled from firebase.
     # Also, used in SQL queries
-    # FIXME(thenav56): Refactor this
     project_type_specifics = models.JSONField(blank=True, null=True)
 
     project_type_specific_output: "ProjectAsset | None" = models.ForeignKey(  # type: ignore[reportAssignmentType]

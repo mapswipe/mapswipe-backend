@@ -116,7 +116,6 @@ class BaseProject(
         # for failed items
 
         try:
-            # TODO(tnagorra): Handle updates to processstatus
             resp = self.validate()
             self.create_groups(resp)
             self.analyze_groups()

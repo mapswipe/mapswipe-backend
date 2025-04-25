@@ -181,7 +181,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
-# FIXME(tnagorra): Should we validate the mimetype?
+# FIXME(tnagorra): Should we validate the mimetype during upload?
 class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = ProjectAsset
