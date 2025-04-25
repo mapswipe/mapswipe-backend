@@ -51,7 +51,6 @@ class ProjectType:
     verification_number: strawberry.auto
     group_size: strawberry.auto
     max_tasks_per_user: strawberry.auto
-    # FIXME(tnagorra): Need to verify if we need to also add "None" here
     project_type_specifics: CompareProjectPropertyType | FindProjectPropertyType | None
     is_featured: strawberry.auto
     status: strawberry.auto
@@ -65,4 +64,3 @@ class ProjectAssetType:
     type: strawberry.auto
     mimetype: strawberry.auto
     project_id: strawberry.ID
-    # TODO(tnagorra): Do we also add project here?

@@ -6,7 +6,6 @@ from django.db import models
 from pydantic import BaseModel
 
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup
-from apps.user.models import User
 from utils.geo import tile_grouping
 
 logger = logging.getLogger(__name__)
@@ -44,10 +43,9 @@ class BaseProject(
     project_task_group_property_class: type[ProjectTaskGroupPropertyTypeVar]
     project_task_property_class: type[ProjectTaskPropertyTypeVar]
 
-    def __init__(self, project: Project, user: User):
+    def __init__(self, project: Project):
         self.project = project
         self.project_type_specifics = self.project_property_class(**project.project_type_specifics)
-        self.user = user
 
     @classmethod
     def _inheritance_checks(cls):

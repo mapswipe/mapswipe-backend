@@ -150,10 +150,8 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
     def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:
         new_project = super().update(instance, validated_data)
 
-        user = self.context["request"].user
-
         if new_project.status == Project.Status.MARKED_AS_READY:
-            transaction.on_commit(lambda: process_project_task.delay(new_project.pk, user.pk))
+            transaction.on_commit(lambda: process_project_task.delay(new_project.pk))
 
         return new_project
 

@@ -20,7 +20,6 @@ from apps.project.models import (
     ProjectTaskGroup,
 )
 from apps.project.project_types.base import project as base_project
-from apps.user.models import User
 from main.bulk_managers import BulkCreateManager
 from utils.geo import tile_functions, tile_grouping
 from utils.geo.tile_server.models import TileServerConfig
@@ -83,8 +82,8 @@ class TileMapServiceBaseProject(
 ):
     tile_server: AvailableTileServerTypeAlias
 
-    def __init__(self, project: Project, user: User):
-        super().__init__(project, user)
+    def __init__(self, project: Project):
+        super().__init__(project)
         self.tile_server = get_tile_server(self.project_type_specifics.tile_server_property)
 
     @typing.override
@@ -134,10 +133,9 @@ class TileMapServiceBaseProject(
             file=file,
             type=ProjectAssetTypeEnum.OUTPUT,
             mimetype=ProjectAssetMimetypeEnum.GEOJSON,
-            # FIXME(tnagorra): Had to pass user just to set these 2 fields
-            # Need to check if we can skip this
-            created_by=self.user,
-            modified_by=self.user,
+            # FIXME(tnagorra): Maybe create a internal user like mapswipe-bot
+            created_by=self.project.modified_by,
+            modified_by=self.project.modified_by,
         )
         self.project.project_type_specific_output = asset
         self.project.save(update_fields=("project_type_specific_output",))

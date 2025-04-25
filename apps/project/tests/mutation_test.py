@@ -722,9 +722,9 @@ class TestProjectTypeMutation(TestCase):
         assert resp_data["result"]["processingStatus"] is None
 
         mock_requests.assert_called_once()
-        mock_requests.assert_has_calls([call(int(project_id), self.user.pk)])
+        mock_requests.assert_has_calls([call(int(project_id))])
 
-        process_project_task(int(project_id), self.user.pk)
+        process_project_task(int(project_id))
 
         expected_task_groups = [
             {
