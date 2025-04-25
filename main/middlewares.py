@@ -20,7 +20,7 @@ def sentry_middleware(get_response: typing.Any):
 
         async def amiddleware(request):
             if settings.SENTRY_ENABLED:
-                await SentryTransactionMiddlewareHelper.atrack_transaction(graphql_urls, request)
+                await SentryTransactionMiddlewareHelper.async_track_transaction(graphql_urls, request)
             return await get_response(request)
 
         return amiddleware
