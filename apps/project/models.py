@@ -27,6 +27,7 @@ class ProjectAssetMimetypeEnum(models.IntegerChoices):
         return "Unknown"
 
 
+# FIXME(tnagorra): Finalize the enum labels
 class ProjectAssetTypeEnum(models.IntegerChoices):
     INPUT = 100, "Input"
     OUTPUT = 200, "Output"
@@ -234,7 +235,7 @@ class Project(UserResource):
     # FIXME(thenav56): Refactor this
     project_type_specifics = models.JSONField(blank=True, null=True)
 
-    project_type_specific_output: "ProjectAsset" = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    project_type_specific_output: "ProjectAsset | None" = models.ForeignKey(  # type: ignore[reportAssignmentType]
         "project.ProjectAsset",
         related_name="+",
         blank=True,
@@ -317,7 +318,6 @@ class ProjectAsset(UserResource):
     )
 
     file = models.FileField(
-        # FIXME(tnaogrra): the upload_to might not be correct
         upload_to=UploadHelper.project_asset,
         help_text=gettext_lazy("The file associated with the asset"),
     )

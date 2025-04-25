@@ -38,7 +38,7 @@ class ContributorUserGroup(UserResource):
     )
 
     # Type hints
-    archived_by_id: int
+    archived_by_id: int | None
 
     @typing.override
     def __str__(self):

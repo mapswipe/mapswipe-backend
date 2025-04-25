@@ -32,7 +32,8 @@ logger = logging.getLogger(__name__)
 class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
     zoom_level: int
     tile_server_property: TileServerConfig
-    aoi_geometry: str  # NOTE: Should be numeric
+    # FIXME(tnagorra): Should be numeric and reference-able
+    aoi_geometry: str
 
     @field_validator("zoom_level")
     @classmethod
