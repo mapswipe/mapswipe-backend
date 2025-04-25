@@ -130,7 +130,10 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         project_type_specifics = clean_up_none_keys(project_type_specifics)
 
         try:
-            pydantic_model.model_validate(project_type_specifics)
+            pydantic_model.model_validate(
+                project_type_specifics,
+                context={"project_id": self.instance.pk},
+            )
         except pydantic.ValidationError as pydantic_error:
             raise handle_pydantic_validation_error("project_type_specifics", pydantic_error) from None
 

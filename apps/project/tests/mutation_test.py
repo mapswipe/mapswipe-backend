@@ -708,7 +708,10 @@ class TestProjectTypeMutation(TestCase):
             "tile_server_property": self.tile_server_property_internal["valid_custom"],
             "tile_server_b_property": self.tile_server_property_internal["valid_custom_02"],
         }
-        compare_project.CompareProjectProperty.model_validate(latest_project.project_type_specifics)
+        compare_project.CompareProjectProperty.model_validate(
+            latest_project.project_type_specifics,
+            context={"project_id": latest_project.pk},
+        )
 
         # Updating Project:
         # Test project processing

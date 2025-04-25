@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
 from django.core.serializers.json import DjangoJSONEncoder
-from pydantic import field_validator
+from pydantic import Field, ValidationInfo, model_validator
 
 from apps.project.models import (
     Project,
@@ -28,20 +28,36 @@ from utils.geo.tile_server.tile_server import AvailableTileServerTypeAlias, get_
 logger = logging.getLogger(__name__)
 
 
-class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
-    zoom_level: int
-    tile_server_property: TileServerConfig
-    # FIXME(tnagorra): Should be numeric and reference-able
-    aoi_geometry: str
+# FIXME(tnagorra): move this to utils
+def create_json_dump(item: dict[typing.Any, typing.Any]) -> bytes:
+    return json.dumps(
+        item,
+        cls=DjangoJSONEncoder,
+    ).encode("utf-8")
 
-    @field_validator("zoom_level")
-    @classmethod
-    def zoom_level_range(cls, v: int):
-        if v < 14:
-            raise ValueError("Zoom level should at least be 14")
-        if v > 22:
-            raise ValueError("Zoom level should at most be 22")
-        return v
+
+class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
+    zoom_level: typing.Annotated[int, Field(strict=True, gt=13, lt=23)]
+    tile_server_property: TileServerConfig
+    # FIXME(tnagorra): Should be reference-able
+    aoi_geometry: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")]
+
+    @model_validator(mode="after")
+    def check_api_geometry_exists(self, info: ValidationInfo) -> typing.Self:
+        if not isinstance(info.context, dict):
+            # Skipping validation in case context is not defined
+            return self
+
+        project_id = info.context.get("project_id")
+        # FIXME(tnagorra): Handle error
+        if not ProjectAsset.objects.filter(
+            id=self.aoi_geometry,
+            type=ProjectAssetTypeEnum.INPUT,
+            mimetype=ProjectAssetMimetypeEnum.GEOJSON,
+            project_id=project_id,
+        ).exists():
+            raise ValueError(f"ProjectAsset with id {self.aoi_geometry} is invalid or does not exist.")
+        return self
 
 
 class TileMapServiceProjectTaskGroupProperty(base_project.BaseProjectTaskGroupProperty):
@@ -108,13 +124,6 @@ class TileMapServiceBaseProject(
                     # "tile_z": None,
                 },
             }
-
-        # FIXME(tnagorra): move this to utils
-        def create_json_dump(item: dict[typing.Any, typing.Any]) -> bytes:
-            return json.dumps(
-                item,
-                cls=DjangoJSONEncoder,
-            ).encode("utf-8")
 
         feature_collection = {
             "type": "FeatureCollection",

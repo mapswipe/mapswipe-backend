@@ -1,22 +1,18 @@
 import typing
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from .config import TileServerNameEnum
 
 
 class TileServerCustomConfig(BaseModel):
-    # NOTE: Validation is currently defined in BaseTileServer.check_imagery_url
-    # TODO(tnagorra): Max length should be 1000
-    url: str
-
-    # TODO(tnagorra): Max length should be 1000
-    credits: str | None = None
+    # NOTE: URL validation is currently defined in BaseTileServer.check_imagery_url
+    url: typing.Annotated[str, Field(strict=True, max_length=1000)]
+    credits: typing.Annotated[str | None, Field(strict=True, max_length=1000)] = None
 
 
 class TileServerCommonConfig(BaseModel):
-    # TODO(tnagorra): Max length should be 1000
-    credits: str | None = None
+    credits: typing.Annotated[str | None, Field(strict=True, max_length=1000)] = None
 
 
 class TileServerConfig(BaseModel):
