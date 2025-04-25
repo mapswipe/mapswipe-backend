@@ -247,11 +247,77 @@ input ProjectAssetCreateInput {
   project: ID!
 }
 
+"""
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project)
+"""
+input ProjectAssetFilter {
+  id: IDBaseFilterLookup
+  type: ProjectAssetTypeEnumFilterLookup
+  mimetype: ProjectAssetMimeTypeEnumFilterLookup
+  project: DjangoModelFilterInput
+  AND: ProjectAssetFilter
+  OR: ProjectAssetFilter
+  NOT: ProjectAssetFilter
+  DISTINCT: Boolean
+}
+
 enum ProjectAssetMimeTypeEnum {
   GEOJSON
   IMAGE_JPEG
   IMAGE_PNG
   IMAGE_GIF
+}
+
+input ProjectAssetMimeTypeEnumFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ProjectAssetMimeTypeEnum
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ProjectAssetMimeTypeEnum!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: ProjectAssetMimeTypeEnum
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: ProjectAssetMimeTypeEnum
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: ProjectAssetMimeTypeEnum
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: ProjectAssetMimeTypeEnum
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: ProjectAssetMimeTypeEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: ProjectAssetMimeTypeEnum
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: ProjectAssetMimeTypeEnum
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: ProjectAssetMimeTypeEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: ProjectAssetMimeTypeEnum
+}
+
+input ProjectAssetOrder {
+  id: Ordering
 }
 
 """
@@ -270,10 +336,68 @@ enum ProjectAssetTypeEnum {
   STATS
 }
 
+input ProjectAssetTypeEnumFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ProjectAssetTypeEnum
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ProjectAssetTypeEnum!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: ProjectAssetTypeEnum
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: ProjectAssetTypeEnum
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: ProjectAssetTypeEnum
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: ProjectAssetTypeEnum
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: ProjectAssetTypeEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: ProjectAssetTypeEnum
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: ProjectAssetTypeEnum
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: ProjectAssetTypeEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: ProjectAssetTypeEnum
+}
+
 type ProjectAssetTypeMutationResponseType {
   ok: Boolean!
   errors: CustomErrorType
   result: ProjectAssetType
+}
+
+type ProjectAssetTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [ProjectAssetType!]!
 }
 
 """
@@ -576,6 +700,8 @@ type Query {
   me: UserMeType
   project(id: ID!): ProjectType! @isAuthenticated
   projects(pagination: OffsetPaginationInput, filters: ProjectFilter, order: ProjectOrder): ProjectTypeOffsetPaginated! @isAuthenticated
+  projectAsset(id: ID!): ProjectAssetType! @isAuthenticated
+  projectAssets(pagination: OffsetPaginationInput, filters: ProjectAssetFilter, order: ProjectAssetOrder): ProjectAssetTypeOffsetPaginated! @isAuthenticated
   enums: AppEnumCollection!
 }
 

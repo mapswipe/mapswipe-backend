@@ -316,7 +316,7 @@ class ProjectAsset(UserResource):
         help_text=gettext_lazy("The file associated with the asset"),
     )
 
-    project = models.ForeignKey(
+    project: Project = models.ForeignKey(  # type: ignore[reportAssignmentType]
         Project,
         on_delete=models.CASCADE,
         related_name="+",
