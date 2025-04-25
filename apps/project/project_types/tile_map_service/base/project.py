@@ -14,7 +14,7 @@ from pydantic import field_validator
 from apps.project.models import (
     Project,
     ProjectAsset,
-    ProjectAssetMimeTypeEnum,
+    ProjectAssetMimetypeEnum,
     ProjectAssetTypeEnum,
     ProjectTask,
     ProjectTaskGroup,
@@ -132,7 +132,7 @@ class TileMapServiceBaseProject(
             project=self.project,
             file=file,
             type=ProjectAssetTypeEnum.OUTPUT,
-            mimetype=ProjectAssetMimeTypeEnum.GEOJSON,
+            mimetype=ProjectAssetMimetypeEnum.GEOJSON,
             # FIXME(tnagorra): Had to pass user just to set these 2 fields
             # Need to check if we can skip this
             created_by=self.user,
@@ -216,7 +216,7 @@ class TileMapServiceBaseProject(
         aoi_asset = ProjectAsset.objects.get(
             id=self.project_type_specifics.aoi_geometry,
             type=ProjectAssetTypeEnum.INPUT,
-            mimetype=ProjectAssetMimeTypeEnum.GEOJSON,
+            mimetype=ProjectAssetMimetypeEnum.GEOJSON,
             project_id=self.project.pk,
         )
 

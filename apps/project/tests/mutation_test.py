@@ -8,7 +8,7 @@ from django.core.files.temp import NamedTemporaryFile
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
     Project,
-    ProjectAssetMimeTypeEnum,
+    ProjectAssetMimetypeEnum,
     ProjectAssetTypeEnum,
     ProjectTask,
     ProjectTaskGroup,
@@ -416,7 +416,7 @@ class TestProjectMutation(TestCase):
         # Creating Project Asset: Without authentication
         project_asset_data = {
             "project": str(latest_project.pk),
-            "mimetype": self.genum(ProjectAssetMimeTypeEnum.GEOJSON),
+            "mimetype": self.genum(ProjectAssetMimetypeEnum.GEOJSON),
             "type": self.genum(ProjectAssetTypeEnum.INPUT),
         }
         content = self._create_project_asset(project_asset_data, assert_errors=True)
@@ -617,7 +617,7 @@ class TestProjectTypeMutation(TestCase):
         # Creating Project Asset: Without authentication
         project_asset_data = {
             "project": project_id,
-            "mimetype": self.genum(ProjectAssetMimeTypeEnum.GEOJSON),
+            "mimetype": self.genum(ProjectAssetMimetypeEnum.GEOJSON),
             "type": self.genum(ProjectAssetTypeEnum.INPUT),
         }
         content = self._create_project_asset(project_asset_data, assert_errors=True)

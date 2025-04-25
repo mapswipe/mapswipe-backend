@@ -13,7 +13,7 @@ if typing.TYPE_CHECKING:
     from apps.tutorial.models import Tutorial
 
 
-class ProjectAssetMimeTypeEnum(models.IntegerChoices):
+class ProjectAssetMimetypeEnum(models.IntegerChoices):
     GEOJSON = 100, "application/geo+json"
 
     IMAGE_JPEG = 201, "image/jpeg"
@@ -306,14 +306,14 @@ class Project(UserResource):
 
 class ProjectAsset(UserResource):
     Type = ProjectAssetTypeEnum
-    MimeType = ProjectAssetMimeTypeEnum
+    Mimetype = ProjectAssetMimetypeEnum
 
     type = IntegerChoicesField(
         choices_enum=ProjectAssetTypeEnum,
     )
 
     mimetype = IntegerChoicesField(
-        choices_enum=ProjectAssetMimeTypeEnum,
+        choices_enum=ProjectAssetMimetypeEnum,
     )
 
     file = models.FileField(

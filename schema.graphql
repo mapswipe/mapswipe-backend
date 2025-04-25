@@ -240,7 +240,7 @@ ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetyp
 """
 input ProjectAssetCreateInput {
   type: ProjectAssetTypeEnum!
-  mimetype: ProjectAssetMimeTypeEnum!
+  mimetype: ProjectAssetMimetypeEnum!
 
   """The file associated with the asset"""
   file: Upload!
@@ -253,7 +253,7 @@ ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetyp
 input ProjectAssetFilter {
   id: IDBaseFilterLookup
   type: ProjectAssetTypeEnumFilterLookup
-  mimetype: ProjectAssetMimeTypeEnumFilterLookup
+  mimetype: ProjectAssetMimetypeEnumFilterLookup
   project: DjangoModelFilterInput
   AND: ProjectAssetFilter
   OR: ProjectAssetFilter
@@ -261,16 +261,16 @@ input ProjectAssetFilter {
   DISTINCT: Boolean
 }
 
-enum ProjectAssetMimeTypeEnum {
+enum ProjectAssetMimetypeEnum {
   GEOJSON
   IMAGE_JPEG
   IMAGE_PNG
   IMAGE_GIF
 }
 
-input ProjectAssetMimeTypeEnumFilterLookup {
+input ProjectAssetMimetypeEnumFilterLookup {
   """Exact match. Filter will be skipped on `null` value"""
-  exact: ProjectAssetMimeTypeEnum
+  exact: ProjectAssetMimetypeEnum
 
   """Assignment test. Filter will be skipped on `null` value"""
   isNull: Boolean
@@ -278,42 +278,42 @@ input ProjectAssetMimeTypeEnumFilterLookup {
   """
   Exact match of items in a given list. Filter will be skipped on `null` value
   """
-  inList: [ProjectAssetMimeTypeEnum!]
+  inList: [ProjectAssetMimetypeEnum!]
 
   """Case-insensitive exact match. Filter will be skipped on `null` value"""
-  iExact: ProjectAssetMimeTypeEnum
+  iExact: ProjectAssetMimetypeEnum
 
   """
   Case-sensitive containment test. Filter will be skipped on `null` value
   """
-  contains: ProjectAssetMimeTypeEnum
+  contains: ProjectAssetMimetypeEnum
 
   """
   Case-insensitive containment test. Filter will be skipped on `null` value
   """
-  iContains: ProjectAssetMimeTypeEnum
+  iContains: ProjectAssetMimetypeEnum
 
   """Case-sensitive starts-with. Filter will be skipped on `null` value"""
-  startsWith: ProjectAssetMimeTypeEnum
+  startsWith: ProjectAssetMimetypeEnum
 
   """Case-insensitive starts-with. Filter will be skipped on `null` value"""
-  iStartsWith: ProjectAssetMimeTypeEnum
+  iStartsWith: ProjectAssetMimetypeEnum
 
   """Case-sensitive ends-with. Filter will be skipped on `null` value"""
-  endsWith: ProjectAssetMimeTypeEnum
+  endsWith: ProjectAssetMimetypeEnum
 
   """Case-insensitive ends-with. Filter will be skipped on `null` value"""
-  iEndsWith: ProjectAssetMimeTypeEnum
+  iEndsWith: ProjectAssetMimetypeEnum
 
   """
   Case-sensitive regular expression match. Filter will be skipped on `null` value
   """
-  regex: ProjectAssetMimeTypeEnum
+  regex: ProjectAssetMimetypeEnum
 
   """
   Case-insensitive regular expression match. Filter will be skipped on `null` value
   """
-  iRegex: ProjectAssetMimeTypeEnum
+  iRegex: ProjectAssetMimetypeEnum
 }
 
 input ProjectAssetOrder {
@@ -326,7 +326,7 @@ ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetyp
 type ProjectAssetType {
   id: ID!
   type: ProjectAssetTypeEnum!
-  mimetype: ProjectAssetMimeTypeEnum!
+  mimetype: ProjectAssetMimetypeEnum!
   projectId: ID!
 }
 
