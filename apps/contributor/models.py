@@ -34,7 +34,9 @@ class ContributorUserGroup(UserResource):
     archived_by = models.ForeignKey(
         User,
         related_name="+",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
 
     # Type hints
