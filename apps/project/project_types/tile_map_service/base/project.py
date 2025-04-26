@@ -1,3 +1,4 @@
+import json
 import logging
 import tempfile
 import typing
@@ -5,9 +6,19 @@ from abc import ABC
 from pathlib import Path
 
 from django.conf import settings
-from pydantic import field_validator
+from django.contrib.gis.geos import GEOSGeometry
+from django.core.files.base import ContentFile
+from django.core.serializers.json import DjangoJSONEncoder
+from pydantic import Field, ValidationInfo, model_validator
 
-from apps.project.models import Project, ProjectTask, ProjectTaskGroup
+from apps.project.models import (
+    Project,
+    ProjectAsset,
+    ProjectAssetMimetypeEnum,
+    ProjectAssetTypeEnum,
+    ProjectTask,
+    ProjectTaskGroup,
+)
 from apps.project.project_types.base import project as base_project
 from main.bulk_managers import BulkCreateManager
 from utils.geo import tile_functions, tile_grouping
@@ -17,18 +28,36 @@ from utils.geo.tile_server.tile_server import AvailableTileServerTypeAlias, get_
 logger = logging.getLogger(__name__)
 
 
-class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
-    zoom_level: int
-    tile_server_property: TileServerConfig
+# FIXME(tnagorra): move this to utils
+def create_json_dump(item: dict[typing.Any, typing.Any]) -> bytes:
+    return json.dumps(
+        item,
+        cls=DjangoJSONEncoder,
+    ).encode("utf-8")
 
-    @field_validator("zoom_level")
-    @classmethod
-    def zoom_level_range(cls, v: int):
-        if v < 14:
-            raise ValueError("Zoom level should at least be 14")
-        if v > 22:
-            raise ValueError("Zoom level should at most be 22")
-        return v
+
+class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
+    zoom_level: typing.Annotated[int, Field(strict=True, gt=13, lt=23)]
+    tile_server_property: TileServerConfig
+    # FIXME(tnagorra): Should be reference-able
+    aoi_geometry: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")]
+
+    @model_validator(mode="after")
+    def check_api_geometry_exists(self, info: ValidationInfo) -> typing.Self:
+        if not isinstance(info.context, dict):
+            # Skipping validation in case context is not defined
+            return self
+
+        project_id = info.context.get("project_id")
+        # FIXME(tnagorra): Handle error
+        if not ProjectAsset.objects.filter(
+            id=self.aoi_geometry,
+            type=ProjectAssetTypeEnum.INPUT,
+            mimetype=ProjectAssetMimetypeEnum.GEOJSON,
+            project_id=project_id,
+        ).exists():
+            raise ValueError(f"ProjectAsset with id {self.aoi_geometry} is invalid or does not exist.")
+        return self
 
 
 class TileMapServiceProjectTaskGroupProperty(base_project.BaseProjectTaskGroupProperty):
@@ -72,6 +101,56 @@ class TileMapServiceBaseProject(
     def __init__(self, project: Project):
         super().__init__(project)
         self.tile_server = get_tile_server(self.project_type_specifics.tile_server_property)
+
+    @typing.override
+    def post_create_groups(self):
+        # NOTE: Create a geojson from the tasks (useful for tutorial creation)
+        self.project.update_processing_status(Project.ProcessingStatus.GENERATING_TASKS_GEOJSON, True)
+
+        tasks_qs = ProjectTask.objects.filter(task_group__project_id=self.project.pk)
+
+        def get_feature(task: ProjectTask):
+            geom = GEOSGeometry(task.geometry)
+            geojson = json.loads(geom.geojson)
+            return {
+                "type": "Feature",
+                "geometry": geojson,
+                "properties": {
+                    "group_id": task.task_group_id,
+                    "task_id": task.pk,
+                    # FIXME(tnagorra): We might need the following values to create tutorial
+                    # "tile_x": None,
+                    # "tile_y": None,
+                    # "tile_z": None,
+                },
+            }
+
+        feature_collection = {
+            "type": "FeatureCollection",
+            "metadata": {
+                "project_id": self.project.pk,
+            },
+            "features": [get_feature(task) for task in tasks_qs],
+        }
+        file = ContentFile(
+            create_json_dump(feature_collection),
+            "processed_geometry.geojson",
+        )
+
+        asset = ProjectAsset.objects.create(
+            project=self.project,
+            file=file,
+            type=ProjectAssetTypeEnum.OUTPUT,
+            mimetype=ProjectAssetMimetypeEnum.GEOJSON,
+            # FIXME(tnagorra): Maybe create a internal user like mapswipe-bot
+            created_by=self.project.modified_by,
+            modified_by=self.project.modified_by,
+        )
+        self.project.project_type_specific_output = asset
+        self.project.save(update_fields=("project_type_specific_output",))
+
+        # TODO(thenav56): Calculate centroid, bounding box, etc.
+        # TODO(thenav56): Calculate: total_area, time_spent_max_allowed
 
     @typing.override
     def _create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:
@@ -142,9 +221,16 @@ class TileMapServiceBaseProject(
         """Validate project before creating groups"""
         self.project.update_processing_status(Project.ProcessingStatus.VALIDATING_GEOMETRY, True)
 
-        extension = Path(self.project.aoi_geometry_file.file.name).suffix
+        aoi_asset = ProjectAsset.objects.get(
+            id=self.project_type_specifics.aoi_geometry,
+            type=ProjectAssetTypeEnum.INPUT,
+            mimetype=ProjectAssetMimetypeEnum.GEOJSON,
+            project_id=self.project.pk,
+        )
+
+        extension = Path(aoi_asset.file.name).suffix
         with tempfile.NamedTemporaryFile(suffix=extension, dir=settings.TEMP_DIR) as temp_file:
-            temp_file.write(self.project.aoi_geometry_file.file.read())
+            temp_file.write(aoi_asset.file.read())
             temp_file.flush()
 
             aoi_geometry = tile_grouping.get_geometry_from_file(temp_file.name)
@@ -152,14 +238,12 @@ class TileMapServiceBaseProject(
 
             POLYGON_COUNT_LIMIT = 20
             if len(aoi_polygons) > POLYGON_COUNT_LIMIT:
-                # FIXME(tnagorra): Properly handle error
-                raise base_project.ValidateException(f"No more than {POLYGON_COUNT_LIMIT} polygons please")
+                raise base_project.ValidateException(f"AOI should not have more than {POLYGON_COUNT_LIMIT} polygons")
 
             # NOTE: The formula was copied from the validation in manager dashboard
             aoi_area = sum([polygon.area for polygon in aoi_polygons])
             allowed_area = 5 * (4 ** (23 - self.project_type_specifics.zoom_level))
             if aoi_area > allowed_area:
-                # FIXME(tnagorra): Properly handle error
-                raise base_project.ValidateException(f"No more than {allowed_area} area please")
+                raise base_project.ValidateException(f"AOI should not have more thatn {allowed_area} area")
 
             return aoi_geometry

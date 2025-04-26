@@ -35,6 +35,10 @@ class MappingSession(models.Model):
     start_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null
     end_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null
 
+    # Type hints
+    project_task_group_id: int
+    contributor_user_id: int
+
     @typing.override
     def __str__(self):
         return str(self.pk)
@@ -49,6 +53,10 @@ class MappingSessionResult(models.Model):
     result = models.PositiveSmallIntegerField()
 
     # TODO(thenav56): Add constrant to make sure we have non-duplicate row with task_id, .session.user_id
+
+    # Type hints
+    session_id: int
+    project_task_id: int
 
     @typing.override
     def __str__(self):

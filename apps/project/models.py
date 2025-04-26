@@ -13,6 +13,33 @@ if typing.TYPE_CHECKING:
     from apps.tutorial.models import Tutorial
 
 
+class ProjectAssetMimetypeEnum(models.IntegerChoices):
+    GEOJSON = 100, "application/geo+json"
+
+    IMAGE_JPEG = 201, "image/jpeg"
+    IMAGE_PNG = 202, "image/png"
+    IMAGE_GIF = 203, "image/gif"
+
+    @classmethod
+    def get_display(cls, value: typing.Self | int) -> str:
+        if value in cls:
+            return cls(value).label
+        return "Unknown"
+
+
+# FIXME(tnagorra): Finalize the enum labels
+class ProjectAssetTypeEnum(models.IntegerChoices):
+    INPUT = 100, "Input"
+    OUTPUT = 200, "Output"
+    STATS = 300, "Stats"
+
+    @classmethod
+    def get_display(cls, value: typing.Self | int) -> str:
+        if value in cls:
+            return cls(value).label
+        return "Unknown"
+
+
 class ProjectTypeEnum(models.IntegerChoices):
     FIND = 1, "Find"
     """ Find project type. Previously known as Classification / Build Area. """
@@ -98,11 +125,12 @@ class ProjectProcessingStatusEnum(models.IntegerChoices):
 
 class UploadHelper:
     @staticmethod
-    def project_geometry(instance: "Project", filename: str):
-        return f"project/{instance.pk}/geometry/{filename}"
+    def project_asset(instance: "ProjectAsset", filename: str):
+        return f"project/{instance.project_id}/asset/{filename}"
 
     @staticmethod
     def project_image(instance: "Project", filename: str):
+        # FIXME(tnagorra): instance.pk is always None when creating the project
         return f"project/{instance.pk}/image/{filename}"
 
 
@@ -182,6 +210,7 @@ class Project(UserResource):
     # TODO(tnagorra): This should be an integer from 3 to 10000
     verification_number = models.PositiveSmallIntegerField(
         help_text=gettext_lazy("How many people do you want to see every tile before you consider it finished?"),
+        default=3,
     )
 
     # TODO(tnagorra): This should be an integer from 10 to 25
@@ -189,6 +218,7 @@ class Project(UserResource):
         help_text=gettext_lazy(
             "How big should a mapping session be? Group size refers to the number of tasks per mapping session.",
         ),
+        default=10,
     )
 
     # TODO(tnagorra): This should be an integer from 10 to 250
@@ -197,12 +227,20 @@ class Project(UserResource):
         help_text=gettext_lazy("How many tasks each user is allowed to work on for this project"),
         null=True,
         blank=True,
+        default=10,
     )
 
     # TODO(tnagorra): Currently this field collects any data not stored by another fields, pulled from firebase.
     # Also, used in SQL queries
-    # FIXME(thenav56): Refactor this
-    project_type_specifics = models.JSONField(blank=True)
+    project_type_specifics = models.JSONField(blank=True, null=True)
+
+    project_type_specific_output: "ProjectAsset | None" = models.ForeignKey(  # type: ignore[reportAssignmentType]
+        "project.ProjectAsset",
+        related_name="+",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
 
     # STATUS
 
@@ -219,32 +257,16 @@ class Project(UserResource):
         blank=True,
     )
 
-    # TODO(tnagorra): Add area-based validations
-    aoi_geometry_file = models.FileField(
-        upload_to=UploadHelper.project_geometry,
-        null=True,
-        blank=True,
-        help_text=gettext_lazy(
-            "The area of interest for this project uploaded by the user. "
-            "This should be OGR-supported vector geospatial file format",
-        ),
-    )
-
-    # TODO(tnagorra): It's not always possible to have geometry during project creation.
-    processed_geometry_file = models.FileField(
-        upload_to=UploadHelper.project_geometry,
-        null=True,
-        blank=True,
-        help_text=gettext_lazy(
-            "Eg. For TileMapService, this includes the AOI broken down into tiles.",
-        ),
-    )
-
     # CALCULATED FIELDS
 
     progress = models.PositiveSmallIntegerField(default=0, validators=[validate_percentage])
     required_results = models.IntegerField(default=0)
     result_count = models.IntegerField(default=0)  # NOTE: All project have 0 in production database
+
+    # Type hints
+    requesting_organization_id: int
+    tutorial_id: int | None
+    project_type_specific_output_id: int | None
 
     @typing.override
     def __str__(self):
@@ -280,6 +302,33 @@ class Project(UserResource):
         # for group in self.groups.values():
         #     group.requiredCount = self.verificationNumber
         #     self.requiredResults += group.requiredCount * group.numberOfTasks
+
+
+class ProjectAsset(UserResource):
+    Type = ProjectAssetTypeEnum
+    Mimetype = ProjectAssetMimetypeEnum
+
+    type = IntegerChoicesField(
+        choices_enum=ProjectAssetTypeEnum,
+    )
+
+    mimetype = IntegerChoicesField(
+        choices_enum=ProjectAssetMimetypeEnum,
+    )
+
+    file = models.FileField(
+        upload_to=UploadHelper.project_asset,
+        help_text=gettext_lazy("The file associated with the asset"),
+    )
+
+    project: Project = models.ForeignKey(  # type: ignore[reportAssignmentType]
+        Project,
+        on_delete=models.CASCADE,
+        related_name="+",
+    )
+
+    # Type hints
+    project_id: int
 
 
 class ProjectTaskGroup(models.Model):
@@ -335,7 +384,6 @@ class ProjectTask(models.Model):
 
     # Type hints
     task_group_id: int
-    id: int
 
     @typing.override
     def __str__(self):

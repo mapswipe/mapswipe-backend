@@ -92,6 +92,7 @@ def tile_coords_and_zoom_to_quadKey(TileX: int, TileY: int, zoom: int) -> str:
     return quadKey
 
 
+# FIXME(tnagorra): This is not used.
 def quadKey_to_Bing_URL(quadKey: str, api_key: str):
     """Create a tile image URL linking to a Bing tile server."""
     # FIXME(tnagorra): We should not hardcode the urls

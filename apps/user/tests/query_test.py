@@ -40,7 +40,7 @@ class TestUserQuery(TestCase):
         self.force_login(user)
         content = self.query_check(self.Query.ME)
         assert content["data"]["me"] == dict(
-            id=self.gID(user.id),
+            id=self.gID(user.pk),
             email=user.email,
             firstName=user.first_name,
             lastName=user.last_name,

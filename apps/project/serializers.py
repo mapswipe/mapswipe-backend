@@ -11,7 +11,7 @@ from apps.project.project_types.tile_map_service.find import project as find_pro
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
-from .models import Project, ProjectTypeEnum
+from .models import Project, ProjectAsset, ProjectTypeEnum
 from .tasks import process_project_task
 
 VALID_PROJECT_STATUS_TRANSITIONS = set(
@@ -38,9 +38,30 @@ VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS = set(
     ],
 )
 
+PROJECT_TYPE_PROPERTY_MAP = {
+    # FIXME(tnagorra): Handle completeness
+    ProjectTypeEnum.COMPARE: ("compare", compare_project.CompareProjectProperty),
+    ProjectTypeEnum.FIND: ("find", find_project.FindProjectProperty),
+}
+
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
-class ProjectSerializer(UserResourceSerializer[Project]):
+class ProjectCreateSerializer(UserResourceSerializer[Project]):
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        model = Project
+        fields = (
+            "project_type",
+            "requesting_organization",
+            "name",
+            "look_for",
+            "additional_info_url",
+            "description",
+            "image",
+        )
+
+
+# NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
+class ProjectUpdateSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
@@ -55,29 +76,22 @@ class ProjectSerializer(UserResourceSerializer[Project]):
             "group_size",
             "max_tasks_per_user",
             "project_type_specifics",
-            "aoi_geometry_file",
             "status",
         )
 
     def validate_status(self, new_status: Project.Status):
-        if not self.instance:
-            if new_status != Project.Status.DRAFT:
-                raise serializers.ValidationError(gettext("During project creation, project status should be Draft"))
-        else:
-            if (self.instance.status, new_status) not in VALID_PROJECT_STATUS_TRANSITIONS:
-                raise serializers.ValidationError(
-                    gettext("Project status cannot be changed from %s to %s") % (self.instance.status, new_status),
-                )
+        assert self.instance is not None
+
+        if (self.instance.status, new_status) not in VALID_PROJECT_STATUS_TRANSITIONS:
+            raise serializers.ValidationError(
+                gettext("Project status cannot be changed from %s to %s") % (self.instance.status, new_status),
+            )
         return new_status
 
-    def _validate_editable(self):
-        if self.instance and self.instance.status != Project.Status.DRAFT and self.instance.status != Project.Status.FAILED:
-            raise serializers.ValidationError(gettext("Cannot update project with status %s") % self.instance.status)
-
     def _validate_project_type_specifics(self, attrs: dict[str, typing.Any]):
-        project_type = attrs.get("project_type") or (self.instance and self.instance.project_type_enum)
-        raw_project_type_specifics = attrs.get("project_type_specifics")
+        assert self.instance is not None
 
+        project_type = attrs.get("project_type") or self.instance.project_type_enum
         if project_type is None:
             raise serializers.ValidationError(
                 {
@@ -85,31 +99,30 @@ class ProjectSerializer(UserResourceSerializer[Project]):
                 },
             )
 
-        ENUM_FIELD_MAP = {
-            # FIXME(tnagorra): Handle completeness
-            ProjectTypeEnum.COMPARE: ("compare", compare_project.CompareProjectProperty),
-            ProjectTypeEnum.FIND: ("find", find_project.FindProjectProperty),
-        }
-
         project_type_label = ProjectTypeEnum.get_display(project_type)
-        if project_type not in ENUM_FIELD_MAP:
+        if project_type not in PROJECT_TYPE_PROPERTY_MAP:
             raise serializers.ValidationError(
                 {
                     "project_type_specifics": gettext("Given project type is not handled: %s") % project_type_label,
                 },
             )
+        field_name, pydantic_model = PROJECT_TYPE_PROPERTY_MAP[project_type]
 
-        field_name, pydantic_model = ENUM_FIELD_MAP[project_type]
+        raw_project_type_specifics = attrs.get("project_type_specifics")
+
+        if raw_project_type_specifics is None and attrs.get("status") != Project.Status.MARKED_AS_READY:
+            # NOTE: project_type_specifics is only required when project status is MARKED_AS_READY
+            return
 
         if raw_project_type_specifics is not None:
             project_type_specifics = raw_project_type_specifics.get(field_name)
         else:
-            project_type_specifics = self.instance and self.instance.project_type_specifics
+            project_type_specifics = self.instance.project_type_specifics
 
         if project_type_specifics is None:
             raise serializers.ValidationError(
                 {
-                    "project_type_specifics": gettext("Configuration not provided for: %s") % project_type_label,
+                    "project_type_specifics": gettext("Configuration not provided for %s") % project_type_label,
                 },
             )
 
@@ -117,7 +130,10 @@ class ProjectSerializer(UserResourceSerializer[Project]):
         project_type_specifics = clean_up_none_keys(project_type_specifics)
 
         try:
-            pydantic_model.model_validate(project_type_specifics)
+            pydantic_model.model_validate(
+                project_type_specifics,
+                context={"project_id": self.instance.pk},
+            )
         except pydantic.ValidationError as pydantic_error:
             raise handle_pydantic_validation_error("project_type_specifics", pydantic_error) from None
 
@@ -125,7 +141,11 @@ class ProjectSerializer(UserResourceSerializer[Project]):
 
     @typing.override
     def validate(self, attrs: dict[str, typing.Any]):
-        self._validate_editable()
+        assert self.instance is not None
+
+        if self.instance.status != Project.Status.DRAFT and self.instance.status != Project.Status.FAILED:
+            raise serializers.ValidationError(gettext("Cannot update project with status %s") % self.instance.status)
+
         self._validate_project_type_specifics(attrs)
         return super().validate(attrs)
 
@@ -161,3 +181,16 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
                 gettext("Project status cannot be changed from %s to %s") % (self.instance.status, new_status),
             )
         return new_status
+
+
+# NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
+# FIXME(tnagorra): Should we validate the mimetype during upload?
+class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        model = ProjectAsset
+        fields = (
+            "type",
+            "mimetype",
+            "file",
+            "project",
+        )

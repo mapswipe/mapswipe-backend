@@ -2,7 +2,7 @@ import strawberry
 import strawberry_django
 
 from apps.common.graphql.types import UserResourceTypeMixin
-from apps.project.models import Organization, Project
+from apps.project.models import Organization, Project, ProjectAsset
 from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.project_types.tile_map_service.find import project as find_project
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
@@ -51,10 +51,16 @@ class ProjectType:
     verification_number: strawberry.auto
     group_size: strawberry.auto
     max_tasks_per_user: strawberry.auto
-    project_type_specifics: CompareProjectPropertyType | FindProjectPropertyType
-    # TODO(tnagorra): Add aoi_geometry_file
+    project_type_specifics: CompareProjectPropertyType | FindProjectPropertyType | None
     is_featured: strawberry.auto
     status: strawberry.auto
     processing_status: strawberry.auto
     progress: strawberry.auto
-    # TODO(tnagorra): Add processed_geometry_file
+
+
+@strawberry_django.type(ProjectAsset)
+class ProjectAssetType:
+    id: strawberry.ID
+    type: strawberry.auto
+    mimetype: strawberry.auto
+    project_id: strawberry.ID

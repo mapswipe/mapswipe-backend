@@ -70,7 +70,7 @@ class TestProjectQuery(TestCase):
                 total_count=3,
                 results=[
                     dict(
-                        id=self.gID(project.id),
+                        id=self.gID(project.pk),
                         name=project.name,
                         projectType=self.genum(project.project_type),
                     )

@@ -1,11 +1,7 @@
-import json
 import logging
 import typing
 from abc import ABC, abstractmethod
 
-from django.contrib.gis.geos import GEOSGeometry
-from django.core.files.base import ContentFile
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from pydantic import BaseModel
 
@@ -74,7 +70,7 @@ class BaseProject(
         super().__init_subclass__(**kwargs)
         cls._inheritance_checks()
 
-    def post_create_groups(self):
+    def analyze_groups(self):
         # Update number_of_tasks
         self.project.update_processing_status(Project.ProcessingStatus.ANALYZING_GROUPS_AND_TASK, True)
 
@@ -89,49 +85,8 @@ class BaseProject(
             ),
         )
 
-        # NOTE: Create a geojson from the tasks (useful for tutorial creation)
-        self.project.update_processing_status(Project.ProcessingStatus.GENERATING_TASKS_GEOJSON, True)
-
-        tasks_qs = ProjectTask.objects.filter(task_group__project_id=self.project.pk)
-        features = []
-        for task in tasks_qs:
-            geom = GEOSGeometry(task.geometry)
-            geojson = json.loads(geom.geojson)
-            feature = {
-                "type": "Feature",
-                "geometry": geojson,
-                "properties": {
-                    "group_id": task.task_group_id,
-                    "task_id": task.id,
-                    # FIXME(tnagorra): We might need the following values to create tutorial
-                    # "tile_x": None,
-                    # "tile_y": None,
-                    # "tile_z": None,
-                },
-            }
-            features.append(feature)
-
-        feature_collection = {
-            "type": "FeatureCollection",
-            "metadata": {
-                "project_id": self.project.pk,
-            },
-            "features": features,
-        }
-
-        file = ContentFile(
-            json.dumps(
-                feature_collection,
-                cls=DjangoJSONEncoder,
-            ).encode("utf-8"),
-        )
-        self.project.processed_geometry_file.save(
-            "processed-geometry.geojson",
-            file,
-        )
-
-        # TODO(thenav56): Calculate centroid, bounding box, etc.
-        # TODO(thenav56): Calculate: total_area, time_spent_max_allowed
+    @abstractmethod
+    def post_create_groups(self): ...
 
     @abstractmethod
     def validate(self) -> ValidateResponse: ...
@@ -161,9 +116,9 @@ class BaseProject(
         # for failed items
 
         try:
-            # TODO(tnagorra): Handle updates to processstatus
             resp = self.validate()
             self.create_groups(resp)
+            self.analyze_groups()
             self.post_create_groups()
 
             self.project.update_processing_status(Project.ProcessingStatus.COMPLETED, True)

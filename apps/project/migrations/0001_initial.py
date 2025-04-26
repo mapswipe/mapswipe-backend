@@ -47,7 +47,7 @@ class Migration(migrations.Migration):
                 ('is_featured', models.BooleanField(default=False)),
                 ('look_for', models.CharField(help_text='eg: Buildings and Roads', max_length=255)),
                 ('description', models.TextField(blank=True, null=True)),
-                ('geometry_file', models.FileField(blank=True, null=True, upload_to=apps.project.models.UploadHelper.project_geometry)),
+                ('geometry_file', models.FileField(blank=True, null=True, upload_to=apps.project.models.UploadHelper.project_asset)),
                 ('progress', models.PositiveSmallIntegerField(default=0, validators=[utils.fields.validate_percentage])),
                 ('required_results', models.IntegerField(default=0)),
                 ('result_count', models.IntegerField(default=0)),

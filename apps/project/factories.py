@@ -21,22 +21,13 @@ class ProjectFactory(DjangoModelFactory):
         model = Project
 
     name = factory.Sequence(lambda n: f"Project {n}")
-    requesting_organization = factory.SubFactory(OrganizationFactory)
 
     project_type = Project.Type.FIND
     image = factory.django.ImageField(filename="preview.png")
     project_type_specifics = factory.LazyAttribute(lambda _: {})
 
     look_for = "Buildings and Roads"
-    description = "Buildings and Roads"
-
-    group_size = 15
-    progress = 0
-    required_results = 100
-    result_count = 0
-    status = Project.Status.READY
-    verification_number = 1
-    max_tasks_per_user = 30
+    description = "We want to identify buildings and roads"
 
 
 class TaskGroupFactory(DjangoModelFactory):

@@ -5,8 +5,15 @@ from unittest.mock import call, patch
 from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 
-from apps.project.factories import OrganizationFactory
-from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
+from apps.project.factories import OrganizationFactory, ProjectFactory
+from apps.project.models import (
+    Project,
+    ProjectAssetMimetypeEnum,
+    ProjectAssetTypeEnum,
+    ProjectTask,
+    ProjectTaskGroup,
+    ProjectTypeEnum,
+)
 from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.tasks import process_project_task
 from apps.user.factories import UserFactory
@@ -16,25 +23,45 @@ from utils.geo.tile_server.config import TileServerNameEnum
 BASE_DIR = Path(__file__).resolve().parent
 
 
+def create_project_asset_query(
+    *,
+    query_check_func: typing.Callable,
+    query: str,
+    project_asset_data: dict,
+    **kwargs,
+) -> dict:
+    with (
+        Path(BASE_DIR / "data/ring-road.geojson").open() as geo_file,
+    ):
+        # geo_file.seek(0, 2)
+        return query_check_func(
+            query,
+            variables={
+                "data": project_asset_data,
+            },
+            files={
+                "geoFile": geo_file,
+            },
+            map={
+                "geoFile": ["variables.data.file"],
+            },
+            **kwargs,
+        )
+
+
 def create_project_query(
     *,
     query_check_func: typing.Callable,
     query: str,
     project_data: dict,
-    empty_geo_file=False,
     **kwargs,
 ) -> dict:
     with (
         NamedTemporaryFile(dir=settings.TEMP_DIR) as image_file,
-        Path(BASE_DIR / "data/ring-road.geojson").open() as geo_file,
     ):
-        # Fake image
+        # Mock image
         image_file.write(b"base64image")
         image_file.seek(0)
-
-        if empty_geo_file:
-            # Empty file
-            geo_file.seek(0, 2)
 
         return query_check_func(
             query,
@@ -43,11 +70,9 @@ def create_project_query(
             },
             files={
                 "imageFile": image_file,
-                "geoFile": geo_file,
             },
             map={
                 "imageFile": ["variables.data.image"],
-                "geoFile": ["variables.data.aoiGeometryFile"],
             },
             **kwargs,
         )
@@ -71,48 +96,152 @@ def update_project_query(
     )
 
 
-class TestProjectMutation(TestCase):
-    class Mutation:
-        CREATE_PROJECT = """
-            mutation CreateProject($data: ProjectCreateInput!) {
-              createProject(data: $data) {
-                ... on OperationInfo {
-                  __typename
-                  messages {
-                    code
-                    field
-                    kind
-                    message
-                  }
-                }
-                ... on ProjectTypeMutationResponseType {
-                  errors
-                  ok
-                  result {
-                    id
-                    projectType
-                    requestingOrganizationId
-                    requestingOrganization {
-                      id
-                      name
-                    }
-                    name
-                    lookFor
-                    additionalInfoUrl
-                    description
-                    verificationNumber
-                    groupSize
-                    maxTasksPerUser
-                    isFeatured
-                    status
-                    processingStatus
-                    progress
-                  }
-                }
+class Mutation:
+    CREATE_PROJECT_ASSET = """
+        mutation CreateProjectAsset($data: ProjectAssetCreateInput!) {
+          createProjectAsset(data: $data) {
+            ... on OperationInfo {
+              __typename
+              messages {
+                code
+                field
+                kind
+                message
               }
             }
-        """
+            ... on ProjectAssetTypeMutationResponseType {
+              errors
+              ok
+              result {
+                id
+                type
+                mimetype
+                projectId
+              }
+            }
+          }
+        }
+    """
+    CREATE_PROJECT = """
+        mutation CreateProject($data: ProjectCreateInput!) {
+          createProject(data: $data) {
+            ... on OperationInfo {
+              __typename
+              messages {
+                code
+                field
+                kind
+                message
+              }
+            }
+            ... on ProjectTypeMutationResponseType {
+              errors
+              ok
+              result {
+                id
+                projectType
+                requestingOrganizationId
+                requestingOrganization {
+                  id
+                  name
+                }
+                name
+                lookFor
+                additionalInfoUrl
+                description
+                verificationNumber
+                groupSize
+                maxTasksPerUser
+                isFeatured
+                status
+                processingStatus
+                progress
+              }
+            }
+          }
+        }
+    """
+    UPDATE_PROJECT = """
+        mutation UpdateProject($pk: ID!, $data: ProjectUpdateInput!) {
+          updateProject(pk: $pk, data: $data) {
+            ... on OperationInfo {
+              __typename
+              messages {
+                code
+                field
+                kind
+                message
+              }
+            }
+            ... on ProjectTypeMutationResponseType {
+              errors
+              ok
+              result {
+                id
+                projectType
+                requestingOrganizationId
+                requestingOrganization {
+                  id
+                  name
+                }
+                name
+                lookFor
+                additionalInfoUrl
+                description
+                verificationNumber
+                groupSize
+                maxTasksPerUser
+                isFeatured
+                status
+                processingStatus
+                progress
+              }
+            }
+          }
+        }
+    """
+    UPDATE_PROCESSED_PROJECT = """
+        mutation UpdateProcessedProject($pk: ID!, $data: ProcessedProjectUpdateInput!) {
+          updateProcessedProject(pk: $pk, data: $data) {
+            ... on OperationInfo {
+              __typename
+              messages {
+                code
+                field
+                kind
+                message
+              }
+            }
+            ... on ProjectTypeMutationResponseType {
+              errors
+              ok
+              result {
+                id
+                projectType
+                requestingOrganizationId
+                requestingOrganization {
+                  id
+                  name
+                }
+                name
+                lookFor
+                additionalInfoUrl
+                description
+                verificationNumber
+                groupSize
+                maxTasksPerUser
+                isFeatured
+                status
+                processingStatus
+                progress
+              }
+            }
+          }
+        }
+    """
 
+
+class TestProjectMutation(TestCase):
     @typing.override
     @classmethod
     def setUpClass(cls):
@@ -125,40 +254,41 @@ class TestProjectMutation(TestCase):
 
         cls.organization = OrganizationFactory.create(**cls.user_resource_kwargs)
 
+    def _create_project_asset(self, project_asset_data: dict, **kwargs):
+        return create_project_asset_query(
+            query_check_func=self.query_check,
+            query=Mutation.CREATE_PROJECT_ASSET,
+            project_asset_data=project_asset_data,
+        )
+
+    def _create_project_mutation(self, project_data: dict, **kwargs):
+        return create_project_query(
+            query_check_func=self.query_check,
+            query=Mutation.CREATE_PROJECT,
+            project_data=project_data,
+        )
+
+    def _update_project_mutation(self, pk: str, project_data: dict, **kwargs):
+        return update_project_query(
+            query_check_func=self.query_check,
+            query=Mutation.UPDATE_PROJECT,
+            pk=pk,
+            project_data=project_data,
+            **kwargs,
+        )
+
     def test_project_create(self):
         project_data = {
-            "projectType": self.genum(ProjectTypeEnum.COMPARE),
+            "projectType": self.genum(ProjectTypeEnum.FIND),
             "requestingOrganization": self.organization.pk,
             "name": "New Project 101",
             "lookFor": "Buildings",
             "additionalInfoUrl": "https://hi-there/about.html",
             "description": "The new **project** from hi-there.",
-            "verificationNumber": 1,
-            "groupSize": 15,
-            "maxTasksPerUser": 10,
-            "projectTypeSpecifics": {
-                "find": {
-                    "zoomLevel": 15,
-                    "tileServerProperty": {
-                        "name": self.genum(TileServerNameEnum.CUSTOM),
-                        "custom": {
-                            "url": "https://hi-there/{x}/{y}/{z}",
-                            "credits": "My Map",
-                        },
-                    },
-                },
-            },
         }
 
-        def _query():
-            return create_project_query(
-                query_check_func=self.query_check,
-                query=self.Mutation.CREATE_PROJECT,
-                project_data=project_data,
-            )
-
-        # Without authentication -----
-        content = _query()
+        # Creating Project: Without authentication
+        content = self._create_project_mutation(project_data)
         assert content["data"]["createProject"]["messages"] == [
             {
                 "code": None,
@@ -168,22 +298,80 @@ class TestProjectMutation(TestCase):
             },
         ], content
 
-        # With authentication -----
+        # Creating Project: With Authentication
         self.force_login(self.user)
-        content = _query()
-        resp_data = content["data"]["createProject"]
-        assert resp_data["errors"] is not None, content
-
-        # Fix the error and try again
-        project_data["projectType"] = self.genum(ProjectTypeEnum.FIND)
-        content = _query()
+        content = self._create_project_mutation(project_data)
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] is None, content
 
-        # Fetch the new project from database
         latest_project = Project.objects.get(pk=resp_data["result"]["id"])
+        assert latest_project.created_by_id == self.user.pk
+        assert latest_project.modified_by_id == self.user.pk
+        assert resp_data == self.g_mutation_response(
+            ok=True,
+            result=dict(
+                id=self.gID(latest_project.pk),
+                projectType=self.genum(ProjectTypeEnum.FIND),
+                requestingOrganizationId=self.gID(latest_project.requesting_organization.pk),
+                requestingOrganization=dict(
+                    id=self.gID(latest_project.requesting_organization.pk),
+                    name=latest_project.requesting_organization.name,
+                ),
+                name=latest_project.name,
+                lookFor=latest_project.look_for,
+                additionalInfoUrl=latest_project.additional_info_url,
+                description=latest_project.description,
+                verificationNumber=3,
+                groupSize=10,
+                maxTasksPerUser=10,
+                isFeatured=latest_project.is_featured,
+                status=self.genum(Project.Status.DRAFT),
+                processingStatus=None,
+                progress=0,
+            ),
+        ), content
 
-        # Validate response values
+    def test_project_update(self):
+        proj = ProjectFactory.create(
+            **self.user_resource_kwargs,
+            project_type=ProjectTypeEnum.FIND,
+            requesting_organization=self.organization,
+            name="New Project 101",
+            look_for="Buildings",
+            additional_info_url="https://hi-there/about.html",
+            description="The new **project** from hi-there.",
+            project_type_specifics=None,
+        )
+
+        project_data = {
+            "requestingOrganization": self.organization.pk,
+            "name": "New Project 101 - Updated",
+            "lookFor": "Buildings and Houses",
+            "additionalInfoUrl": "https://hi-there/about.html?code=1",
+            "description": "The new updated **project** from hi-there.",
+            "verificationNumber": 2,
+            "groupSize": 16,
+            "maxTasksPerUser": 11,
+        }
+
+        # Updating Project: Without authentication
+        content = self._update_project_mutation(str(proj.pk), project_data)
+        assert content["data"]["updateProject"]["messages"] == [
+            {
+                "code": None,
+                "field": "updateProject",
+                "kind": "PERMISSION",
+                "message": "User is not authenticated.",
+            },
+        ], content
+
+        # Updating Project: With authentication
+        self.force_login(self.user)
+        content = self._update_project_mutation(str(proj.pk), project_data)
+        resp_data = content["data"]["updateProject"]
+        assert resp_data["errors"] is None, content
+
+        latest_project = Project.objects.get(pk=proj.pk)
         assert resp_data == self.g_mutation_response(
             ok=True,
             result=dict(
@@ -208,11 +396,105 @@ class TestProjectMutation(TestCase):
             ),
         ), content
 
-        # Validate database values
-        assert latest_project.created_by_id == self.user.pk
-        assert latest_project.modified_by_id == self.user.pk
+        # Updating Project: Status change
+        # fails as project specifics is required when changing status to "marked as ready"
+        project_data = {
+            "status": self.genum(Project.Status.MARKED_AS_READY),
+        }
+        content = self._update_project_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProject"]["errors"] == [
+            {
+                "array_errors": None,
+                "client_id": None,
+                "field": "projectTypeSpecifics",
+                "messages": "Configuration not provided for Find",
+                "object_errors": None,
+                "pydantic_errors": None,
+            },
+        ]
+
+        # Creating Project Asset: Without authentication
+        project_asset_data = {
+            "project": str(latest_project.pk),
+            "mimetype": self.genum(ProjectAssetMimetypeEnum.GEOJSON),
+            "type": self.genum(ProjectAssetTypeEnum.INPUT),
+        }
+        content = self._create_project_asset(project_asset_data, assert_errors=True)
+        resp_data = content["data"]["createProjectAsset"]
+        assert resp_data["errors"] is None, content
+        aoi_geometry_asset = resp_data["result"]
+
+        # Updating Project: with empty object as project type specifics
+        project_data = {
+            "projectTypeSpecifics": {},
+        }
+        content = self._update_project_mutation(str(latest_project.pk), project_data, assert_errors=True)
+        assert content["errors"] == [
+            {
+                "message": "OneOf Input Object 'ProjectTypeSpecificInput' must specify exactly one key.",
+            },
+        ]
+
+        # Updating Project: with valid but mismatching project type specifics
+        project_data = {
+            "projectTypeSpecifics": {
+                "compare": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
+                    "zoomLevel": 15,
+                    "tileServerProperty": {
+                        "name": self.genum(TileServerNameEnum.CUSTOM),
+                        "custom": {
+                            "url": "https://hi-there/{x}/{y}/{z}",
+                            "credits": "My Map",
+                        },
+                    },
+                    "tileServerBProperty": {
+                        "name": self.genum(TileServerNameEnum.CUSTOM),
+                        "custom": {
+                            "url": "https://hi-there-2/{x}/{y}/{z}",
+                            "credits": "My Map 2",
+                        },
+                    },
+                },
+            },
+        }
+        content = self._update_project_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProject"]["errors"] == [
+            {
+                "field": "projectTypeSpecifics",
+                "client_id": None,
+                "messages": "Configuration not provided for Find",
+                "object_errors": None,
+                "array_errors": None,
+                "pydantic_errors": None,
+            },
+        ]
+
+        # Updating Project: with valid project type specifics
+        project_data = {
+            "projectTypeSpecifics": {
+                "find": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
+                    "zoomLevel": 15,
+                    "tileServerProperty": {
+                        "name": self.genum(TileServerNameEnum.CUSTOM),
+                        "custom": {
+                            "url": "https://hi-there/{x}/{y}/{z}",
+                            "credits": "My Map",
+                        },
+                    },
+                },
+            },
+        }
+
+        content = self._update_project_mutation(str(latest_project.pk), project_data)
+        resp_data = content["data"]["updateProject"]
+        assert resp_data["errors"] is None, content
+
+        latest_project.refresh_from_db()
         assert latest_project.project_type_specifics == {
             "zoom_level": 15,
+            "aoi_geometry": aoi_geometry_asset["id"],
             "tile_server_property": {
                 "name": TileServerNameEnum.CUSTOM.value,
                 "custom": {
@@ -222,103 +504,15 @@ class TestProjectMutation(TestCase):
             },
         }
 
+        # Updating Project: Status change
+        project_data = {
+            "status": self.genum(Project.Status.MARKED_AS_READY),
+        }
+        content = self._update_project_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProject"]["errors"] is None
+
 
 class TestProjectTypeMutation(TestCase):
-    class Mutation:
-        CREATE_PROJECT = """
-            mutation CreateProject($data: ProjectCreateInput!) {
-              createProject(data: $data) {
-                ... on OperationInfo {
-                  __typename
-                  messages {
-                    code
-                    field
-                    kind
-                    message
-                  }
-                }
-                ... on ProjectTypeMutationResponseType {
-                  errors
-                  ok
-                  result {
-                    id
-                    name
-                    projectType
-                    requestingOrganizationId
-                    requestingOrganization {
-                      id
-                      name
-                    }
-                    status
-                    processingStatus
-                  }
-                }
-              }
-            }
-        """
-        UPDATE_PROJECT = """
-            mutation UpdateProject($pk: ID!, $data: ProjectUpdateInput!) {
-              updateProject(pk: $pk, data: $data) {
-                ... on OperationInfo {
-                  __typename
-                  messages {
-                    code
-                    field
-                    kind
-                    message
-                  }
-                }
-                ... on ProjectTypeMutationResponseType {
-                  errors
-                  ok
-                  result {
-                    id
-                    name
-                    projectType
-                    requestingOrganizationId
-                    requestingOrganization {
-                      id
-                      name
-                    }
-                    status
-                    processingStatus
-                  }
-                }
-              }
-            }
-        """
-        UPDATE_PROCESSED_PROJECT = """
-            mutation UpdateProcessedProject($pk: ID!, $data: ProcessedProjectUpdateInput!) {
-              updateProcessedProject(pk: $pk, data: $data) {
-                ... on OperationInfo {
-                  __typename
-                  messages {
-                    code
-                    field
-                    kind
-                    message
-                  }
-                }
-                ... on ProjectTypeMutationResponseType {
-                  errors
-                  ok
-                  result {
-                    id
-                    name
-                    projectType
-                    requestingOrganizationId
-                    requestingOrganization {
-                      id
-                      name
-                    }
-                    status
-                    processingStatus
-                  }
-                }
-              }
-            }
-        """
-
     @typing.override
     @classmethod
     def setUpClass(cls):
@@ -330,11 +524,10 @@ class TestProjectTypeMutation(TestCase):
         )
 
         cls.organization = OrganizationFactory.create(**cls.user_resource_kwargs)
+
         cls.project_data = {
             "name": "New Project 101",
             "requestingOrganization": cls.organization.pk,
-            "groupSize": 15,
-            "verificationNumber": 1,
             "lookFor": "Buildings",
         }
 
@@ -371,13 +564,19 @@ class TestProjectTypeMutation(TestCase):
         # NOTE: _internal is for snake_case attributes, currently its same
         cls.tile_server_property_internal = cls.tile_server_property
 
-    def _create_project_mutation(self, project_data: dict, empty_geo_file: bool = False, **kwargs):
+    def _create_project_asset(self, project_asset_data: dict, **kwargs):
+        return create_project_asset_query(
+            query_check_func=self.query_check,
+            query=Mutation.CREATE_PROJECT_ASSET,
+            project_asset_data=project_asset_data,
+        )
+
+    def _create_project_mutation(self, project_data: dict, **kwargs):
         with self.captureOnCommitCallbacks(execute=True):
             return create_project_query(
                 query_check_func=self.query_check,
-                query=self.Mutation.CREATE_PROJECT,
+                query=Mutation.CREATE_PROJECT,
                 project_data=project_data,
-                empty_geo_file=empty_geo_file,
                 **kwargs,
             )
 
@@ -385,7 +584,7 @@ class TestProjectTypeMutation(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             return update_project_query(
                 query_check_func=self.query_check,
-                query=self.Mutation.UPDATE_PROJECT,
+                query=Mutation.UPDATE_PROJECT,
                 pk=pk,
                 project_data=project_data,
                 **kwargs,
@@ -395,7 +594,7 @@ class TestProjectTypeMutation(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             return update_project_query(
                 query_check_func=self.query_check,
-                query=self.Mutation.UPDATE_PROCESSED_PROJECT,
+                query=Mutation.UPDATE_PROCESSED_PROJECT,
                 pk=pk,
                 project_data=project_data,
                 **kwargs,
@@ -409,160 +608,126 @@ class TestProjectTypeMutation(TestCase):
             **self.project_data,
             "projectType": self.genum(ProjectTypeEnum.COMPARE),
         }
-
-        # Creating Project: Test for pydantic error (with valid projectTypeSpecifics type but invalid data)
-        project_data = {
-            **project_data,
-            "projectTypeSpecifics": {
-                "find": {  # NOTE: Different project type
-                    "zoomLevel": 15,
-                    "tileServerProperty": self.tile_server_property["valid_custom"],
-                },
-            },
-        }
         content = self._create_project_mutation(project_data)
         resp_data = content["data"]["createProject"]
-        assert resp_data["errors"] == [
-            {
-                "field": "projectTypeSpecifics",
-                "client_id": None,
-                "messages": "Configuration not provided for: Compare",
-                "object_errors": None,
-                "array_errors": None,
-                "pydantic_errors": None,
-            },
-        ], content
+        assert resp_data["errors"] is None, content
 
-        # Creating Project: Test for pydantic error (with valid projectTypeSpecifics type but invalid data)
-        content = self._create_project_mutation(project_data, empty_geo_file=True)
-        resp_data = content["data"]["createProject"]
-        assert resp_data["errors"] == [
-            {
-                "field": "aoiGeometryFile",
-                "client_id": None,
-                "messages": "The submitted file is empty.",
-                "object_errors": None,
-                "array_errors": None,
-                "pydantic_errors": None,
-            },
-        ], content
+        project_id = resp_data["result"]["id"]
 
-        # Creating Project: Test for GraphQL error (without projectTypeSpecifics)
-        project_data.pop("projectTypeSpecifics")
-        content = self._create_project_mutation(project_data, assert_errors=True)
-
-        # Creating Project: Test for GraphQL error (with empty projectTypeSpecifics)
-        project_data = {
-            **project_data,
-            "projectTypeSpecifics": {},
+        # Creating Project Asset: Without authentication
+        project_asset_data = {
+            "project": project_id,
+            "mimetype": self.genum(ProjectAssetMimetypeEnum.GEOJSON),
+            "type": self.genum(ProjectAssetTypeEnum.INPUT),
         }
-        content = self._create_project_mutation(project_data, assert_errors=True)
+        content = self._create_project_asset(project_asset_data, assert_errors=True)
+        resp_data = content["data"]["createProjectAsset"]
+        assert resp_data["errors"] is None, content
+        aoi_geometry_asset = resp_data["result"]
 
-        # Creating Project: Test for GraphQL error (with invalid projectTypeSpecifics: Try 1)
+        # Updating Project
+        # fails as project type specifics has empty object as tile server property
         project_data = {
-            **project_data,
-            "projectTypeSpecifics": {
-                "find": {},
-            },
-        }
-        content = self._create_project_mutation(project_data, assert_errors=True)
-
-        # Creating Project: Test for GraphQL error (with invalid projectTypeSpecifics: Try 2)
-        project_data = {
-            **project_data,
             "projectTypeSpecifics": {
                 "find": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": {},
+                    "tileServerBProperty": self.tile_server_property["valid_custom"],
                 },
             },
         }
-        content = self._create_project_mutation(project_data, assert_errors=True)
+        content = self._update_project_mutation(project_id, project_data, assert_errors=True)
 
-        # Creating Project: Test for GraphQL error (with invalid projectTypeSpecifics: Partial Data)
+        # Updating Project
+        # fails as project type specifics has partial data
         project_data = {
-            **project_data,
             "projectTypeSpecifics": {
                 "compare": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["valid_custom"],
                 },
             },
         }
-        content = self._create_project_mutation(project_data, assert_errors=True)
+        content = self._update_project_mutation(project_id, project_data, assert_errors=True)
 
-        # Creating Project: Test for Pydantic validation error
+        # Updating Project
+        # fails as project type specifics has one invalid tile server property
         project_data = {
-            **project_data,
             "projectTypeSpecifics": {
                 "compare": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["invalid_custom"],
                     "tileServerBProperty": self.tile_server_property["valid_custom"],
                 },
             },
         }
-        content = self._create_project_mutation(project_data)
-        resp_data = content["data"]["createProject"]
+        content = self._update_project_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProject"]
         assert resp_data["errors"] is not None, content
 
-        # Creating Project: Test for Pydantic validation error
+        # Updating Project
+        # fails as project type specifics has one invalid tile server property
         project_data = {
-            **project_data,
             "projectTypeSpecifics": {
                 "compare": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["invalid_custom_02"],
                     "tileServerBProperty": self.tile_server_property["valid_custom"],
                 },
             },
         }
-        content = self._create_project_mutation(project_data)
-        resp_data = content["data"]["createProject"]
+        content = self._update_project_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProject"]
         assert resp_data["errors"] is not None, content
 
-        # Creating Project: Test for valid data
+        # Updating Project
         project_data = {
-            **project_data,
             "projectTypeSpecifics": {
                 "compare": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": self.tile_server_property["valid_custom"],
                     "tileServerBProperty": self.tile_server_property["valid_custom_02"],
                 },
             },
         }
-        content = self._create_project_mutation(project_data)
-        resp_data = content["data"]["createProject"]
+        content = self._update_project_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProject"]
         assert resp_data["errors"] is None, content
 
-        # Creating Project: Test for comparing with database
-        latest_project = Project.objects.get(pk=resp_data["result"]["id"])
+        latest_project = Project.objects.get(pk=project_id)
         assert latest_project.created_by_id == self.user.pk
         assert latest_project.modified_by_id == self.user.pk
         assert latest_project.project_type_specifics == {
+            "aoi_geometry": aoi_geometry_asset["id"],
             "zoom_level": 15,
             "tile_server_property": self.tile_server_property_internal["valid_custom"],
             "tile_server_b_property": self.tile_server_property_internal["valid_custom_02"],
         }
-        compare_project.CompareProjectProperty.model_validate(latest_project.project_type_specifics)
-
-        # Updating Project: Test project processing
-        content = self._update_project_mutation(
-            str(latest_project.id),
-            {
-                "status": self.genum(Project.Status.MARKED_AS_READY),
-            },
+        compare_project.CompareProjectProperty.model_validate(
+            latest_project.project_type_specifics,
+            context={"project_id": latest_project.pk},
         )
+
+        # Updating Project:
+        # Test project processing
+        project_data = {
+            "status": self.genum(Project.Status.MARKED_AS_READY),
+        }
+        content = self._update_project_mutation(project_id, project_data)
         resp_data = content["data"]["updateProject"]
         assert resp_data["errors"] is None, content
         assert resp_data["result"]["status"] == self.genum(Project.Status.MARKED_AS_READY)
         assert resp_data["result"]["processingStatus"] is None
 
         mock_requests.assert_called_once()
-        mock_requests.assert_has_calls([call(latest_project.id)])
+        mock_requests.assert_has_calls([call(int(project_id))])
 
-        process_project_task(latest_project.id)
+        process_project_task(int(project_id))
 
         expected_task_groups = [
             {
@@ -674,13 +839,12 @@ class TestProjectTypeMutation(TestCase):
             "processing_status": Project.ProcessingStatus.COMPLETED,
         }
 
-        # Updating Processed Project: Test project publishing
-        content = self._update_processed_project_mutation(
-            str(latest_project.id),
-            {
-                "status": self.genum(Project.Status.PUBLISHED),
-            },
-        )
+        # Updating Processed Project:
+        # Test project publishing
+        project_data = {
+            "status": self.genum(Project.Status.PUBLISHED),
+        }
+        content = self._update_processed_project_mutation(project_id, project_data)
         resp_data = content["data"]["updateProcessedProject"]
         assert resp_data["errors"] is None, content
         assert resp_data["result"]["status"] == self.genum(Project.Status.PUBLISHED)

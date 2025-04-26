@@ -1,7 +1,7 @@
 import strawberry
 import strawberry_django
 
-from apps.project.models import Project
+from apps.project.models import Project, ProjectAsset
 
 
 @strawberry_django.filters.filter(Project, lookups=True)
@@ -12,3 +12,11 @@ class ProjectFilter:
     requesting_organization: strawberry.auto
     is_featured: strawberry.auto
     status: strawberry.auto
+
+
+@strawberry_django.filters.filter(ProjectAsset, lookups=True)
+class ProjectAssetFilter:
+    id: strawberry.auto
+    type: strawberry.auto
+    mimetype: strawberry.auto
+    project: strawberry.auto

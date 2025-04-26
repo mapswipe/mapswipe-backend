@@ -17,8 +17,6 @@ class User(AbstractUser):
 
     objects: CustomUserManager = CustomUserManager()  # type: ignore[reportAssignmentType]
 
-    pk: int
-
     @typing.override
     def save(self, *args, **kwargs):
         # Make sure email are same and lowercase

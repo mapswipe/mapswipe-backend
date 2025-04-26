@@ -3,13 +3,18 @@ import strawberry_django
 from strawberry_django.permissions import IsAuthenticated
 
 from apps.project.models import Project
-from apps.project.serializers import ProcessedProjectSerializer, ProjectSerializer
+from apps.project.serializers import (
+    ProcessedProjectSerializer,
+    ProjectAssetSerializer,
+    ProjectCreateSerializer,
+    ProjectUpdateSerializer,
+)
 from main.graphql.context import Info
 from utils.graphql.mutations import ModelMutation
 from utils.graphql.types import MutationResponseType
 
-from .inputs import ProcessedProjectUpdateInput, ProjectCreateInput, ProjectUpdateInput
-from .types import ProjectType
+from .inputs import ProcessedProjectUpdateInput, ProjectAssetCreateInput, ProjectCreateInput, ProjectUpdateInput
+from .types import ProjectAssetType, ProjectType
 
 
 @strawberry.type
@@ -18,7 +23,7 @@ class Mutation:
 
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
     async def create_project(self, info: Info, data: ProjectCreateInput) -> MutationResponseType[ProjectType]:
-        return await ModelMutation(ProjectSerializer).handle_create_mutation(data, info, None)
+        return await ModelMutation(ProjectCreateSerializer).handle_create_mutation(data, info, None)
 
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
     async def update_project(
@@ -28,7 +33,7 @@ class Mutation:
         pk: strawberry.ID,
     ) -> MutationResponseType[ProjectType]:
         project = await Project.objects.aget(pk=pk)
-        return await ModelMutation(ProjectSerializer).handle_update_mutation(data, info, project)
+        return await ModelMutation(ProjectUpdateSerializer).handle_update_mutation(data, info, project)
 
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
     async def update_processed_project(
@@ -39,3 +44,11 @@ class Mutation:
     ) -> MutationResponseType[ProjectType]:
         project = await Project.objects.aget(pk=pk)
         return await ModelMutation(ProcessedProjectSerializer).handle_update_mutation(data, info, project)
+
+    @strawberry_django.mutation(extensions=[IsAuthenticated()])
+    async def create_project_asset(
+        self,
+        info: Info,
+        data: ProjectAssetCreateInput,
+    ) -> MutationResponseType[ProjectAssetType]:
+        return await ModelMutation(ProjectAssetSerializer).handle_create_mutation(data, info, None)

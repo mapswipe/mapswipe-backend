@@ -73,12 +73,14 @@ input BoolBaseFilterLookup {
 input CompareProjectPropertyInput {
   zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfigInput!
+  aoiGeometry: String!
   tileServerBProperty: ProjectTileServerConfigInput!
 }
 
 type CompareProjectPropertyType {
   zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfig!
+  aoiGeometry: String!
   tileServerBProperty: ProjectTileServerConfig!
 }
 
@@ -88,6 +90,8 @@ enum ContributorUserGroupMembershipLogActionEnum {
   JOIN
   LEAVE
 }
+
+union CreateProjectAssetPayload = ProjectAssetTypeMutationResponseType | OperationInfo
 
 union CreateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
 
@@ -111,11 +115,13 @@ enum DummyEnum {
 input FindProjectPropertyInput {
   zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfigInput!
+  aoiGeometry: String!
 }
 
 type FindProjectPropertyType {
   zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfig!
+  aoiGeometry: String!
 }
 
 input IDBaseFilterLookup {
@@ -145,6 +151,7 @@ type Mutation {
   createProject(data: ProjectCreateInput!): CreateProjectPayload! @isAuthenticated
   updateProject(data: ProjectUpdateInput!, pk: ID!): UpdateProjectPayload! @isAuthenticated
   updateProcessedProject(data: ProcessedProjectUpdateInput!, pk: ID!): UpdateProcessedProjectPayload! @isAuthenticated
+  createProjectAsset(data: ProjectAssetCreateInput!): CreateProjectAssetPayload! @isAuthenticated
 }
 
 type OffsetPaginationInfo {
@@ -208,7 +215,7 @@ type OrganizationType implements UserResourceTypeMixin {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProcessedProjectUpdateInput {
   name: String
@@ -229,7 +236,172 @@ input ProcessedProjectUpdateInput {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project)
+"""
+input ProjectAssetCreateInput {
+  type: ProjectAssetTypeEnum!
+  mimetype: ProjectAssetMimetypeEnum!
+
+  """The file associated with the asset"""
+  file: Upload!
+  project: ID!
+}
+
+"""
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project)
+"""
+input ProjectAssetFilter {
+  id: IDBaseFilterLookup
+  type: ProjectAssetTypeEnumFilterLookup
+  mimetype: ProjectAssetMimetypeEnumFilterLookup
+  project: DjangoModelFilterInput
+  AND: ProjectAssetFilter
+  OR: ProjectAssetFilter
+  NOT: ProjectAssetFilter
+  DISTINCT: Boolean
+}
+
+enum ProjectAssetMimetypeEnum {
+  GEOJSON
+  IMAGE_JPEG
+  IMAGE_PNG
+  IMAGE_GIF
+}
+
+input ProjectAssetMimetypeEnumFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ProjectAssetMimetypeEnum
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ProjectAssetMimetypeEnum!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: ProjectAssetMimetypeEnum
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: ProjectAssetMimetypeEnum
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: ProjectAssetMimetypeEnum
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: ProjectAssetMimetypeEnum
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: ProjectAssetMimetypeEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: ProjectAssetMimetypeEnum
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: ProjectAssetMimetypeEnum
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: ProjectAssetMimetypeEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: ProjectAssetMimetypeEnum
+}
+
+input ProjectAssetOrder {
+  id: Ordering
+}
+
+"""
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project)
+"""
+type ProjectAssetType {
+  id: ID!
+  type: ProjectAssetTypeEnum!
+  mimetype: ProjectAssetMimetypeEnum!
+  projectId: ID!
+}
+
+enum ProjectAssetTypeEnum {
+  INPUT
+  OUTPUT
+  STATS
+}
+
+input ProjectAssetTypeEnumFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ProjectAssetTypeEnum
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ProjectAssetTypeEnum!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: ProjectAssetTypeEnum
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: ProjectAssetTypeEnum
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: ProjectAssetTypeEnum
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: ProjectAssetTypeEnum
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: ProjectAssetTypeEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: ProjectAssetTypeEnum
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: ProjectAssetTypeEnum
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: ProjectAssetTypeEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: ProjectAssetTypeEnum
+}
+
+type ProjectAssetTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: ProjectAssetType
+}
+
+type ProjectAssetTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [ProjectAssetType!]!
+}
+
+"""
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectCreateInput {
   projectType: ProjectTypeEnum!
@@ -247,30 +419,10 @@ input ProjectCreateInput {
   additionalInfoUrl: String
   description: String
   image: Upload!
-
-  """
-  How many people do you want to see every tile before you consider it finished?
-  """
-  verificationNumber: Int!
-
-  """
-  How big should a mapping session be? Group size refers to the number of tasks per mapping session.
-  """
-  groupSize: Int!
-
-  """How many tasks each user is allowed to work on for this project"""
-  maxTasksPerUser: Int
-  projectTypeSpecifics: ProjectTypeSpecificInput!
-
-  """
-  The area of interest for this project uploaded by the user. This should be OGR-supported vector geospatial file format
-  """
-  aoiGeometryFile: Upload!
-  status: ProjectStatusEnum
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectFilter {
   id: IDBaseFilterLookup
@@ -392,7 +544,7 @@ type ProjectTileServerCustomConfig {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 type ProjectType {
   id: ID!
@@ -426,7 +578,7 @@ type ProjectType {
 
   """How many tasks each user is allowed to work on for this project"""
   maxTasksPerUser: Int
-  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyType!
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyType
   isFeatured: Boolean!
   status: ProjectStatusEnum!
   processingStatus: ProjectProcessingStatusEnum
@@ -509,7 +661,7 @@ input ProjectTypeSpecificInput @oneOf {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, is_draft, is_featured, status, processing_status, aoi_geometry_file, processed_geometry_file, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectUpdateInput {
   name: String
@@ -541,11 +693,6 @@ input ProjectUpdateInput {
   requestingOrganization: ID
   image: Upload
   projectTypeSpecifics: ProjectTypeSpecificInput
-
-  """
-  The area of interest for this project uploaded by the user. This should be OGR-supported vector geospatial file format
-  """
-  aoiGeometryFile: Upload
 }
 
 type Query {
@@ -553,6 +700,8 @@ type Query {
   me: UserMeType
   project(id: ID!): ProjectType! @isAuthenticated
   projects(pagination: OffsetPaginationInput, filters: ProjectFilter, order: ProjectOrder): ProjectTypeOffsetPaginated! @isAuthenticated
+  projectAsset(id: ID!): ProjectAssetType! @isAuthenticated
+  projectAssets(pagination: OffsetPaginationInput, filters: ProjectAssetFilter, order: ProjectAssetOrder): ProjectAssetTypeOffsetPaginated! @isAuthenticated
   enums: AppEnumCollection!
 }
 
