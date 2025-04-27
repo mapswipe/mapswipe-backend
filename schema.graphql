@@ -236,7 +236,7 @@ input ProcessedProjectUpdateInput {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project)
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, is_deleted)
 """
 input ProjectAssetCreateInput {
   type: ProjectAssetTypeEnum!
@@ -248,7 +248,7 @@ input ProjectAssetCreateInput {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project)
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, is_deleted)
 """
 input ProjectAssetFilter {
   id: IDBaseFilterLookup
@@ -321,7 +321,7 @@ input ProjectAssetOrder {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project)
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, is_deleted)
 """
 type ProjectAssetType {
   id: ID!

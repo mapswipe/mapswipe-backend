@@ -308,9 +308,18 @@ class Project(UserResource):
         #     self.requiredResults += group.requiredCount * group.numberOfTasks
 
 
+class SoftDeletionManager(models.Manager):
+    @typing.override
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
+
 class ProjectAsset(UserResource):
     Type = ProjectAssetTypeEnum
     Mimetype = ProjectAssetMimetypeEnum
+
+    objects = SoftDeletionManager()
+    # all_objects = models.Manager()
 
     type = IntegerChoicesField(
         choices_enum=ProjectAssetTypeEnum,
@@ -329,6 +338,11 @@ class ProjectAsset(UserResource):
         Project,
         on_delete=models.CASCADE,
         related_name="+",
+    )
+
+    is_deleted = models.BooleanField(
+        default=False,
+        help_text=gettext_lazy("If this flag is enabled, this project asset will be deleted in the future"),
     )
 
     # Type hints
