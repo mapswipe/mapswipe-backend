@@ -126,11 +126,11 @@ class ProjectProcessingStatusEnum(models.IntegerChoices):
 class UploadHelper:
     @staticmethod
     def project_asset(instance: "ProjectAsset", filename: str):
-        return f"project/{instance.project_id}/asset/{filename}"
+        return f"project/{instance.project_id}/asset/{instance.type}/{instance.mimetype}/{filename}"
 
     @staticmethod
+    # FIXME: This is not be used anymore
     def project_image(instance: "Project", filename: str):
-        # FIXME(tnagorra): instance.pk is always None when creating the project
         return f"project/{instance.pk}/image/{filename}"
 
 
@@ -192,10 +192,13 @@ class Project(UserResource):
     )  # NOTE: project_details before
 
     # NOTE: JPG and PNG should be supported.
-    # TODO(tnagorra): We might need to further validation for image.
-    image = models.FileField(
-        upload_to=UploadHelper.project_image,
-    )  # NOTE: project_image before
+    image: "ProjectAsset | None" = models.ForeignKey(  # type: ignore[reportAssignmentType]
+        "project.ProjectAsset",
+        related_name="+",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
 
     # NOTE: The tutorial should align with what we are looking for.
     tutorial: "Tutorial" = models.ForeignKey(  # type: ignore[reportAssignmentType]
@@ -266,6 +269,7 @@ class Project(UserResource):
     # Type hints
     requesting_organization_id: int
     tutorial_id: int | None
+    image_id: int | None
     project_type_specific_output_id: int | None
 
     @typing.override

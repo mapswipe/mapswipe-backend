@@ -88,6 +88,24 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             )
         return new_status
 
+    def validate_image(self, new_image: ProjectAsset):
+        assert self.instance is not None
+
+        asset_exists = ProjectAsset.objects.filter(
+            id=new_image.pk,
+            type=ProjectAsset.Type.INPUT,
+            mimetype__in=[
+                ProjectAsset.Mimetype.IMAGE_GIF,
+                ProjectAsset.Mimetype.IMAGE_JPEG,
+                ProjectAsset.Mimetype.IMAGE_PNG,
+            ],
+            project_id=self.instance.pk,
+        ).exists()
+        if not asset_exists:
+            raise serializers.ValidationError(gettext("ProjectAsset is invalid or does not exist."))
+
+        return new_image
+
     def _validate_project_type_specifics(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
 
@@ -182,6 +200,24 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             )
         return new_status
 
+    def validate_image(self, new_image: ProjectAsset):
+        assert self.instance is not None
+
+        asset_exists = ProjectAsset.objects.filter(
+            id=new_image.pk,
+            type=ProjectAsset.Type.INPUT,
+            mimetype__in=[
+                ProjectAsset.Mimetype.IMAGE_GIF,
+                ProjectAsset.Mimetype.IMAGE_JPEG,
+                ProjectAsset.Mimetype.IMAGE_PNG,
+            ],
+            project_id=self.instance.pk,
+        ).exists()
+        if not asset_exists:
+            raise serializers.ValidationError(gettext("ProjectAsset is invalid or does not exist."))
+
+        return new_image
+
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 # FIXME(tnagorra): Should we validate the mimetype during upload?
@@ -194,3 +230,11 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
             "file",
             "project",
         )
+
+    def validate_type(self, new_type: Project.Status):
+        # NOTE: Users should only be able to create Input type assets
+        if new_type != ProjectAsset.Type.INPUT:
+            raise serializers.ValidationError(
+                gettext("ProjectAsset type should be Input"),
+            )
+        return new_type

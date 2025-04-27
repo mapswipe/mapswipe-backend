@@ -43,19 +43,21 @@ class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
     aoi_geometry: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")]
 
     @model_validator(mode="after")
-    def check_api_geometry_exists(self, info: ValidationInfo) -> typing.Self:
+    def check_aoi_geometry_exists(self, info: ValidationInfo) -> typing.Self:
         if not isinstance(info.context, dict):
             # Skipping validation in case context is not defined
             return self
 
         project_id = info.context.get("project_id")
-        # FIXME(tnagorra): Handle error
-        if not ProjectAsset.objects.filter(
+        asset_exists = ProjectAsset.objects.filter(
             id=self.aoi_geometry,
             type=ProjectAssetTypeEnum.INPUT,
             mimetype=ProjectAssetMimetypeEnum.GEOJSON,
             project_id=project_id,
-        ).exists():
+        ).exists()
+
+        # FIXME(tnagorra): Handle error
+        if not asset_exists:
             raise ValueError(f"ProjectAsset with id {self.aoi_geometry} is invalid or does not exist.")
         return self
 

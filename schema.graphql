@@ -232,7 +232,7 @@ input ProcessedProjectUpdateInput {
 
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: ID
-  image: Upload
+  image: ID
 }
 
 """
@@ -418,7 +418,6 @@ input ProjectCreateInput {
   """
   additionalInfoUrl: String
   description: String
-  image: Upload!
 }
 
 """
@@ -691,7 +690,7 @@ input ProjectUpdateInput {
 
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: ID
-  image: Upload
+  image: ID
   projectTypeSpecifics: ProjectTypeSpecificInput
 }
 

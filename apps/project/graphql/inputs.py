@@ -45,7 +45,6 @@ class ProjectCreateInput:
     look_for: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
-    image: Upload
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
@@ -61,7 +60,7 @@ class ProjectUpdateInput:
     max_tasks_per_user: strawberry.auto
     status: strawberry.auto
     requesting_organization: strawberry.ID | None = strawberry.UNSET
-    image: Upload | None = strawberry.UNSET
+    image: strawberry.ID | None = strawberry.UNSET
     project_type_specifics: ProjectTypeSpecificInput | None = strawberry.UNSET
 
 
@@ -75,7 +74,7 @@ class ProcessedProjectUpdateInput:
     # TODO(tnagorra): Add tutorial
     status: strawberry.auto
     requesting_organization: strawberry.ID | None = strawberry.UNSET
-    image: Upload | None = strawberry.UNSET
+    image: strawberry.ID | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
