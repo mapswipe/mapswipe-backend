@@ -84,7 +84,21 @@ type CompareProjectPropertyType {
   tileServerBProperty: ProjectTileServerConfig!
 }
 
-union CompareProjectPropertyTypeFindProjectPropertyType = CompareProjectPropertyType | FindProjectPropertyType
+union CompareProjectPropertyTypeFindProjectPropertyTypeCompletenessProjectPropertyType = CompareProjectPropertyType | FindProjectPropertyType | CompletenessProjectPropertyType
+
+input CompletenessProjectPropertyInput {
+  zoomLevel: Int!
+  tileServerProperty: ProjectTileServerConfigInput!
+  aoiGeometry: String!
+  tileServerBProperty: ProjectTileServerConfigInput!
+}
+
+type CompletenessProjectPropertyType {
+  zoomLevel: Int!
+  tileServerProperty: ProjectTileServerConfig!
+  aoiGeometry: String!
+  tileServerBProperty: ProjectTileServerConfig!
+}
 
 enum ContributorUserGroupMembershipLogActionEnum {
   JOIN
@@ -577,7 +591,7 @@ type ProjectType {
 
   """How many tasks each user is allowed to work on for this project"""
   maxTasksPerUser: Int
-  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyType
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeCompletenessProjectPropertyType
   isFeatured: Boolean!
   status: ProjectStatusEnum!
   processingStatus: ProjectProcessingStatusEnum
@@ -657,6 +671,7 @@ type ProjectTypeOffsetPaginated {
 input ProjectTypeSpecificInput @oneOf {
   compare: CompareProjectPropertyInput
   find: FindProjectPropertyInput
+  completeness: CompletenessProjectPropertyInput
 }
 
 """

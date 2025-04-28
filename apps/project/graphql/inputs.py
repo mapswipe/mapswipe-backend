@@ -4,6 +4,7 @@ from strawberry.file_uploads import Upload
 
 from apps.project.models import Project, ProjectAsset
 from apps.project.project_types.tile_map_service.compare import project as compare_project
+from apps.project.project_types.tile_map_service.completeness import project as completeness_project
 from apps.project.project_types.tile_map_service.find import project as find_project
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
 
@@ -30,10 +31,15 @@ class CompareProjectPropertyInput: ...
 class FindProjectPropertyInput: ...
 
 
+@strawberry.experimental.pydantic.input(model=completeness_project.CompletenessProjectProperty, all_fields=True)
+class CompletenessProjectPropertyInput: ...
+
+
 @strawberry.input(one_of=True)
 class ProjectTypeSpecificInput:
     compare: CompareProjectPropertyInput | None = strawberry.UNSET
     find: FindProjectPropertyInput | None = strawberry.UNSET
+    completeness: CompletenessProjectPropertyInput | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py

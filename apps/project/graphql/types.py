@@ -4,6 +4,7 @@ import strawberry_django
 from apps.common.graphql.types import UserResourceTypeMixin
 from apps.project.models import Organization, Project, ProjectAsset
 from apps.project.project_types.tile_map_service.compare import project as compare_project
+from apps.project.project_types.tile_map_service.completeness import project as completeness_project
 from apps.project.project_types.tile_map_service.find import project as find_project
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
 
@@ -36,6 +37,10 @@ class CompareProjectPropertyType: ...
 class FindProjectPropertyType: ...
 
 
+@strawberry.experimental.pydantic.type(model=completeness_project.CompletenessProjectProperty, all_fields=True)
+class CompletenessProjectPropertyType: ...
+
+
 @strawberry_django.type(Project)
 class ProjectType:
     id: strawberry.ID
@@ -51,7 +56,7 @@ class ProjectType:
     verification_number: strawberry.auto
     group_size: strawberry.auto
     max_tasks_per_user: strawberry.auto
-    project_type_specifics: CompareProjectPropertyType | FindProjectPropertyType | None
+    project_type_specifics: CompareProjectPropertyType | FindProjectPropertyType | CompletenessProjectPropertyType | None
     is_featured: strawberry.auto
     status: strawberry.auto
     processing_status: strawberry.auto
