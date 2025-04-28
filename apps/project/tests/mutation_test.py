@@ -31,7 +31,7 @@ def create_project_image_asset_query(
     **kwargs,
 ) -> dict:
     with (
-        NamedTemporaryFile(dir=settings.TEMP_DIR) as image_file,
+        NamedTemporaryFile(dir=settings.TEMP_DIR, suffix=".jpeg") as image_file,
     ):
         # Mock image
         image_file.write(b"base64image")
