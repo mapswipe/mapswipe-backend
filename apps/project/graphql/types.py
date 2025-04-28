@@ -1,3 +1,5 @@
+import typing
+
 import strawberry
 import strawberry_django
 
@@ -7,6 +9,31 @@ from apps.project.project_types.tile_map_service.compare import project as compa
 from apps.project.project_types.tile_map_service.completeness import project as completeness_project
 from apps.project.project_types.tile_map_service.find import project as find_project
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
+
+
+def prepare_tile_server_property(prop: dict | None):
+    # FIXME(tnagorra): Do we need to do a deep clone?
+    if prop is None:
+        return None
+
+    custom = prop.pop("custom", None)
+    bing = prop.pop("bing", None)
+    mapbox = prop.pop("mapbox", None)
+    maxar_standard = prop.pop("maxar_standard", None)
+    maxar_premium = prop.pop("maxar_premium", None)
+    esri = prop.pop("esri", None)
+    esri_beta = prop.pop("esri_beta", None)
+
+    return ProjectTileServerConfig(
+        **prop,
+        custom=ProjectTileServerCustomConfig(**custom) if custom is not None else None,
+        bing=ProjectTileServerCommonConfig(**bing) if bing is not None else None,
+        mapbox=ProjectTileServerCommonConfig(**mapbox) if mapbox is not None else None,
+        maxar_standard=ProjectTileServerCommonConfig(**maxar_standard) if maxar_standard is not None else None,
+        maxar_premium=ProjectTileServerCommonConfig(**maxar_premium) if maxar_premium is not None else None,
+        esri=ProjectTileServerCommonConfig(**esri) if esri is not None else None,
+        esri_beta=ProjectTileServerCommonConfig(**esri_beta) if esri_beta is not None else None,
+    )
 
 
 @strawberry_django.type(Organization)
@@ -56,11 +83,42 @@ class ProjectType:
     verification_number: strawberry.auto
     group_size: strawberry.auto
     max_tasks_per_user: strawberry.auto
-    project_type_specifics: CompareProjectPropertyType | FindProjectPropertyType | CompletenessProjectPropertyType | None
     is_featured: strawberry.auto
     status: strawberry.auto
     processing_status: strawberry.auto
     progress: strawberry.auto
+
+    @strawberry_django.field(only=["project_type_specifics", "project_type"])
+    async def project_type_specifics(
+        self,
+        project: strawberry.Parent[Project],
+    ) -> CompareProjectPropertyType | FindProjectPropertyType | CompletenessProjectPropertyType | None:
+        data = project.project_type_specifics
+        if data is None:
+            return None
+        if project.project_type_enum == Project.Type.FIND:
+            tile_server_property = data.pop("tile_server_property")
+            return FindProjectPropertyType(
+                **data,
+                tile_server_property=prepare_tile_server_property(tile_server_property),
+            )
+        if project.project_type_enum == Project.Type.COMPARE:
+            tile_server_property = data.pop("tile_server_property")
+            tile_server_b_property = data.pop("tile_server_b_property")
+            return CompareProjectPropertyType(
+                **data,
+                tile_server_property=prepare_tile_server_property(tile_server_property),
+                tile_server_b_property=prepare_tile_server_property(tile_server_b_property),
+            )
+        if project.project_type_enum == Project.Type.COMPLETENESS:
+            tile_server_property = data.pop("tile_server_property")
+            tile_server_b_property = data.pop("tile_server_b_property")
+            return CompletenessProjectPropertyType(
+                **data,
+                tile_server_property=prepare_tile_server_property(tile_server_property),
+                tile_server_b_property=prepare_tile_server_property(tile_server_b_property),
+            )
+        typing.assert_never(project.project_type_enum)
 
 
 @strawberry_django.type(ProjectAsset)

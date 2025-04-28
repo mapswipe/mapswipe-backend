@@ -23,7 +23,7 @@ class ProjectFactory(DjangoModelFactory):
     name = factory.Sequence(lambda n: f"Project {n}")
 
     project_type = Project.Type.FIND
-    project_type_specifics = factory.LazyAttribute(lambda _: {})
+    project_type_specifics = None
 
     look_for = "Buildings and Roads"
     description = "We want to identify buildings and roads"

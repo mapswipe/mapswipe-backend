@@ -591,11 +591,11 @@ type ProjectType {
 
   """How many tasks each user is allowed to work on for this project"""
   maxTasksPerUser: Int
-  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeCompletenessProjectPropertyType
   isFeatured: Boolean!
   status: ProjectStatusEnum!
   processingStatus: ProjectProcessingStatusEnum
   progress: Int!
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeCompletenessProjectPropertyType
 }
 
 enum ProjectTypeEnum {
