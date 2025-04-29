@@ -11,7 +11,7 @@ from apps.project.models import Project
 
 class UploadHelper:
     @staticmethod
-    def information_page_block_image(instance: "TutorialInformationPageBlock", filename):
+    def information_page_block_image(instance: "TutorialInformationPageBlock", filename: str):
         return f"tutorial/{instance.page.tutorial_id}/block-image/{filename}"
 
 

@@ -167,12 +167,14 @@ class Project(UserResource):
         help_text=gettext_lazy("Which group, institution or community is requesting this project?"),
     )
 
-    # TODO(tnagorra): Add uniqueness on project topic? Discuss with PM
+    # TODO(tnagorra): Do we also store project topic, region and number?
+    # TODO(tnagorra): Do we add uniqueness on project topic?
 
     # Generate in manager dashboard based on topic, region, project number, requesting org
     name = models.CharField(max_length=255)
 
     # TODO(tnagorra): Max length is 25 in manager dashboard.
+    # TODO(frozenhelium): We should discuss if we need this field.
     look_for = models.CharField(
         max_length=255,
         help_text=gettext_lazy("What should the users look for (e.g. buildings, cars, trees)"),

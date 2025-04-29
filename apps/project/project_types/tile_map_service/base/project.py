@@ -114,16 +114,20 @@ class TileMapServiceBaseProject(
         def get_feature(task: ProjectTask):
             geom = GEOSGeometry(task.geometry)
             geojson = json.loads(geom.geojson)
+
+            task_specifics = self.project_task_property_class(
+                **task.project_type_specifics,
+            )
+
             return {
                 "type": "Feature",
                 "geometry": geojson,
                 "properties": {
                     "group_id": task.task_group_id,
                     "task_id": task.pk,
-                    # FIXME(tnagorra): We might need the following values to create tutorial
-                    # "tile_x": None,
-                    # "tile_y": None,
-                    # "tile_z": None,
+                    "tile_x": task_specifics.tile_x,
+                    "tile_y": task_specifics.tile_y,
+                    "tile_z": self.project_type_specifics.zoom_level,
                 },
             }
 
