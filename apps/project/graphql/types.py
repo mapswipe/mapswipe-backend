@@ -89,3 +89,4 @@ class ProjectAssetType:
     type: strawberry.auto
     mimetype: strawberry.auto
     project_id: strawberry.ID
+    marked_as_deleted: strawberry.auto

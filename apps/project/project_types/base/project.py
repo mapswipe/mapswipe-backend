@@ -116,10 +116,10 @@ class BaseProject(
         # TODO(tnagorra): We need to add a CRON to delete these project assets
         # FIXME(tnagorra): Do we also cleanup the user INPUT?
         # We need to be careful not to delete assets that are currently used
-        ProjectAsset.objects.filter(
+        ProjectAsset.usable_objects().filter(
             project=self.project.pk,
             type__in=[ProjectAsset.Type.OUTPUT, ProjectAsset.Type.STATS],
-        ).update(is_deleted=True)
+        ).update(marked_as_deleted=True)
 
         try:
             resp = self.validate()

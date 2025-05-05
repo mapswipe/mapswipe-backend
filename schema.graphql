@@ -250,7 +250,7 @@ input ProcessedProjectUpdateInput {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, is_deleted)
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
 """
 input ProjectAssetCreateInput {
   type: ProjectAssetTypeEnum!
@@ -262,7 +262,7 @@ input ProjectAssetCreateInput {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, is_deleted)
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
 """
 input ProjectAssetFilter {
   id: IDBaseFilterLookup
@@ -335,13 +335,18 @@ input ProjectAssetOrder {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, is_deleted)
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
 """
 type ProjectAssetType {
   id: ID!
   type: ProjectAssetTypeEnum!
   mimetype: ProjectAssetMimetypeEnum!
   projectId: ID!
+
+  """
+  If this flag is enabled, this project asset will be deleted in the future
+  """
+  markedAsDeleted: Boolean!
 }
 
 enum ProjectAssetTypeEnum {
