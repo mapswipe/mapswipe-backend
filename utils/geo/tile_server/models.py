@@ -1,6 +1,6 @@
 import typing
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from .config import TileServerNameEnum
 
@@ -25,6 +25,12 @@ class TileServerConfig(BaseModel):
     maxar_premium: TileServerCommonConfig | None = None
     esri: TileServerCommonConfig | None = None
     esri_beta: TileServerCommonConfig | None = None
+
+    @field_validator("name", mode="before")
+    def ensure_name_enum(cls, value: str | TileServerNameEnum | None):
+        if isinstance(value, str):
+            return TileServerNameEnum(value)
+        return value
 
     @model_validator(mode="after")
     def check_valid_data(self) -> typing.Self:

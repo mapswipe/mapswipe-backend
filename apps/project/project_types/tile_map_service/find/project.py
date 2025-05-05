@@ -1,3 +1,5 @@
+import typing
+
 from apps.project.models import Project, ProjectTypeEnum
 from apps.project.project_types.tile_map_service.base import project as tile_map_service_project
 
@@ -24,4 +26,5 @@ class FindProject(
 
     def __init__(self, project: Project):
         super().__init__(project)
-        assert project.project_type == ProjectTypeEnum.FIND, f"{type(self)} is defined for FIND"
+        if typing.TYPE_CHECKING:
+            assert project.project_type == ProjectTypeEnum.FIND, f"{type(self)} is defined for FIND"

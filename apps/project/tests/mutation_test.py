@@ -23,7 +23,36 @@ from utils.geo.tile_server.config import TileServerNameEnum
 BASE_DIR = Path(__file__).resolve().parent
 
 
-def create_project_asset_query(
+def create_project_image_asset_query(
+    *,
+    query_check_func: typing.Callable,
+    query: str,
+    project_asset_data: dict,
+    **kwargs,
+) -> dict:
+    with (
+        NamedTemporaryFile(dir=settings.TEMP_DIR, suffix=".jpeg") as image_file,
+    ):
+        # Mock image
+        image_file.write(b"base64image")
+        image_file.seek(0)
+
+        return query_check_func(
+            query,
+            variables={
+                "data": project_asset_data,
+            },
+            files={
+                "imageFile": image_file,
+            },
+            map={
+                "imageFile": ["variables.data.file"],
+            },
+            **kwargs,
+        )
+
+
+def create_project_aoi_asset_query(
     *,
     query_check_func: typing.Callable,
     query: str,
@@ -33,7 +62,6 @@ def create_project_asset_query(
     with (
         Path(BASE_DIR / "data/ring-road.geojson").open() as geo_file,
     ):
-        # geo_file.seek(0, 2)
         return query_check_func(
             query,
             variables={
@@ -56,26 +84,13 @@ def create_project_query(
     project_data: dict,
     **kwargs,
 ) -> dict:
-    with (
-        NamedTemporaryFile(dir=settings.TEMP_DIR) as image_file,
-    ):
-        # Mock image
-        image_file.write(b"base64image")
-        image_file.seek(0)
-
-        return query_check_func(
-            query,
-            variables={
-                "data": project_data,
-            },
-            files={
-                "imageFile": image_file,
-            },
-            map={
-                "imageFile": ["variables.data.image"],
-            },
-            **kwargs,
-        )
+    return query_check_func(
+        query,
+        variables={
+            "data": project_data,
+        },
+        **kwargs,
+    )
 
 
 def update_project_query(
@@ -254,8 +269,15 @@ class TestProjectMutation(TestCase):
 
         cls.organization = OrganizationFactory.create(**cls.user_resource_kwargs)
 
-    def _create_project_asset(self, project_asset_data: dict, **kwargs):
-        return create_project_asset_query(
+    def _create_project_aoi_asset(self, project_asset_data: dict, **kwargs):
+        return create_project_aoi_asset_query(
+            query_check_func=self.query_check,
+            query=Mutation.CREATE_PROJECT_ASSET,
+            project_asset_data=project_asset_data,
+        )
+
+    def _create_project_image_asset(self, project_asset_data: dict, **kwargs):
+        return create_project_image_asset_query(
             query_check_func=self.query_check,
             query=Mutation.CREATE_PROJECT_ASSET,
             project_asset_data=project_asset_data,
@@ -413,16 +435,27 @@ class TestProjectMutation(TestCase):
             },
         ]
 
-        # Creating Project Asset: Without authentication
+        # Creating AOI Project Asset
         project_asset_data = {
             "project": str(latest_project.pk),
             "mimetype": self.genum(ProjectAssetMimetypeEnum.GEOJSON),
             "type": self.genum(ProjectAssetTypeEnum.INPUT),
         }
-        content = self._create_project_asset(project_asset_data, assert_errors=True)
+        content = self._create_project_aoi_asset(project_asset_data, assert_errors=True)
         resp_data = content["data"]["createProjectAsset"]
         assert resp_data["errors"] is None, content
         aoi_geometry_asset = resp_data["result"]
+
+        # Creating Project Image Asset
+        project_asset_data = {
+            "project": str(latest_project.pk),
+            "mimetype": self.genum(ProjectAssetMimetypeEnum.IMAGE_JPEG),
+            "type": self.genum(ProjectAssetTypeEnum.INPUT),
+        }
+        content = self._create_project_image_asset(project_asset_data, assert_errors=True)
+        resp_data = content["data"]["createProjectAsset"]
+        assert resp_data["errors"] is None, content
+        image_asset = resp_data["result"]
 
         # Updating Project: with empty object as project type specifics
         project_data = {
@@ -437,6 +470,7 @@ class TestProjectMutation(TestCase):
 
         # Updating Project: with valid but mismatching project type specifics
         project_data = {
+            "image": image_asset["id"],
             "projectTypeSpecifics": {
                 "compare": {
                     "aoiGeometry": aoi_geometry_asset["id"],
@@ -472,6 +506,7 @@ class TestProjectMutation(TestCase):
 
         # Updating Project: with valid project type specifics
         project_data = {
+            "image": image_asset["id"],
             "projectTypeSpecifics": {
                 "find": {
                     "aoiGeometry": aoi_geometry_asset["id"],
@@ -492,6 +527,7 @@ class TestProjectMutation(TestCase):
         assert resp_data["errors"] is None, content
 
         latest_project.refresh_from_db()
+        assert latest_project.image_id == int(image_asset["id"])
         assert latest_project.project_type_specifics == {
             "zoom_level": 15,
             "aoi_geometry": aoi_geometry_asset["id"],
@@ -564,8 +600,15 @@ class TestProjectTypeMutation(TestCase):
         # NOTE: _internal is for snake_case attributes, currently its same
         cls.tile_server_property_internal = cls.tile_server_property
 
-    def _create_project_asset(self, project_asset_data: dict, **kwargs):
-        return create_project_asset_query(
+    def _create_project_aoi_asset(self, project_asset_data: dict, **kwargs):
+        return create_project_aoi_asset_query(
+            query_check_func=self.query_check,
+            query=Mutation.CREATE_PROJECT_ASSET,
+            project_asset_data=project_asset_data,
+        )
+
+    def _create_project_image_asset(self, project_asset_data: dict, **kwargs):
+        return create_project_image_asset_query(
             query_check_func=self.query_check,
             query=Mutation.CREATE_PROJECT_ASSET,
             project_asset_data=project_asset_data,
@@ -614,20 +657,32 @@ class TestProjectTypeMutation(TestCase):
 
         project_id = resp_data["result"]["id"]
 
-        # Creating Project Asset: Without authentication
+        # Creating AOI Project Asset
         project_asset_data = {
             "project": project_id,
             "mimetype": self.genum(ProjectAssetMimetypeEnum.GEOJSON),
             "type": self.genum(ProjectAssetTypeEnum.INPUT),
         }
-        content = self._create_project_asset(project_asset_data, assert_errors=True)
+        content = self._create_project_aoi_asset(project_asset_data, assert_errors=True)
         resp_data = content["data"]["createProjectAsset"]
         assert resp_data["errors"] is None, content
         aoi_geometry_asset = resp_data["result"]
 
+        # Creating Project Image Asset
+        project_asset_data = {
+            "project": project_id,
+            "mimetype": self.genum(ProjectAssetMimetypeEnum.IMAGE_JPEG),
+            "type": self.genum(ProjectAssetTypeEnum.INPUT),
+        }
+        content = self._create_project_image_asset(project_asset_data, assert_errors=True)
+        resp_data = content["data"]["createProjectAsset"]
+        assert resp_data["errors"] is None, content
+        image_asset = resp_data["result"]
+
         # Updating Project
         # fails as project type specifics has empty object as tile server property
         project_data = {
+            "image": image_asset["id"],
             "projectTypeSpecifics": {
                 "find": {
                     "aoiGeometry": aoi_geometry_asset["id"],
@@ -642,6 +697,7 @@ class TestProjectTypeMutation(TestCase):
         # Updating Project
         # fails as project type specifics has partial data
         project_data = {
+            "image": image_asset["id"],
             "projectTypeSpecifics": {
                 "compare": {
                     "aoiGeometry": aoi_geometry_asset["id"],
@@ -655,6 +711,7 @@ class TestProjectTypeMutation(TestCase):
         # Updating Project
         # fails as project type specifics has one invalid tile server property
         project_data = {
+            "image": image_asset["id"],
             "projectTypeSpecifics": {
                 "compare": {
                     "aoiGeometry": aoi_geometry_asset["id"],
@@ -671,6 +728,7 @@ class TestProjectTypeMutation(TestCase):
         # Updating Project
         # fails as project type specifics has one invalid tile server property
         project_data = {
+            "image": image_asset["id"],
             "projectTypeSpecifics": {
                 "compare": {
                     "aoiGeometry": aoi_geometry_asset["id"],
@@ -686,6 +744,7 @@ class TestProjectTypeMutation(TestCase):
 
         # Updating Project
         project_data = {
+            "image": image_asset["id"],
             "projectTypeSpecifics": {
                 "compare": {
                     "aoiGeometry": aoi_geometry_asset["id"],
@@ -702,6 +761,7 @@ class TestProjectTypeMutation(TestCase):
         latest_project = Project.objects.get(pk=project_id)
         assert latest_project.created_by_id == self.user.pk
         assert latest_project.modified_by_id == self.user.pk
+        assert latest_project.image_id == int(image_asset["id"])
         assert latest_project.project_type_specifics == {
             "aoi_geometry": aoi_geometry_asset["id"],
             "zoom_level": 15,

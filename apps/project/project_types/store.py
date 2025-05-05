@@ -3,9 +3,10 @@ import typing
 from apps.project.models import ProjectTypeEnum
 
 from .tile_map_service.compare.project import CompareProject
+from .tile_map_service.completeness.project import CompletenessProject
 from .tile_map_service.find.project import FindProject
 
-type ProjectTypeHandlers = type[CompareProject | FindProject]
+type ProjectTypeHandlers = type[CompareProject | FindProject | CompletenessProject]
 
 
 @typing.overload
@@ -23,7 +24,7 @@ def get_project_type_handler(
 @typing.overload
 def get_project_type_handler(
     project_type: typing.Literal[ProjectTypeEnum.COMPLETENESS],
-) -> type[CompareProject]: ...
+) -> type[CompletenessProject]: ...
 
 
 def get_project_type_handler(project_type: ProjectTypeEnum) -> ProjectTypeHandlers:
@@ -33,4 +34,4 @@ def get_project_type_handler(project_type: ProjectTypeEnum) -> ProjectTypeHandle
         case ProjectTypeEnum.COMPARE:
             return CompareProject
         case ProjectTypeEnum.COMPLETENESS:
-            return FindProject
+            return CompletenessProject

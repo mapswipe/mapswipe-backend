@@ -1,5 +1,6 @@
 import typing
 
+import ulid
 from django.contrib.gis.db import models as gid_models
 from django.db import models
 from django.db.models.functions import Lower
@@ -126,11 +127,11 @@ class ProjectProcessingStatusEnum(models.IntegerChoices):
 class UploadHelper:
     @staticmethod
     def project_asset(instance: "ProjectAsset", filename: str):
-        return f"project/{instance.project_id}/asset/{filename}"
+        return f"project/{instance.project_id}/asset/{instance.type}/{str(ulid.ULID())}/{filename}"
 
     @staticmethod
+    # FIXME: This is not be used anymore
     def project_image(instance: "Project", filename: str):
-        # FIXME(tnagorra): instance.pk is always None when creating the project
         return f"project/{instance.pk}/image/{filename}"
 
 
@@ -166,12 +167,14 @@ class Project(UserResource):
         help_text=gettext_lazy("Which group, institution or community is requesting this project?"),
     )
 
-    # TODO(tnagorra): Add uniqueness on project topic? Discuss with PM
+    # TODO(tnagorra): Do we also store project topic, region and number?
+    # TODO(tnagorra): Do we add uniqueness on project topic?
 
     # Generate in manager dashboard based on topic, region, project number, requesting org
     name = models.CharField(max_length=255)
 
     # TODO(tnagorra): Max length is 25 in manager dashboard.
+    # TODO(frozenhelium): We should discuss if we need this field.
     look_for = models.CharField(
         max_length=255,
         help_text=gettext_lazy("What should the users look for (e.g. buildings, cars, trees)"),
@@ -192,10 +195,13 @@ class Project(UserResource):
     )  # NOTE: project_details before
 
     # NOTE: JPG and PNG should be supported.
-    # TODO(tnagorra): We might need to further validation for image.
-    image = models.FileField(
-        upload_to=UploadHelper.project_image,
-    )  # NOTE: project_image before
+    image: "ProjectAsset | None" = models.ForeignKey(  # type: ignore[reportAssignmentType]
+        "project.ProjectAsset",
+        related_name="+",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
 
     # NOTE: The tutorial should align with what we are looking for.
     tutorial: "Tutorial" = models.ForeignKey(  # type: ignore[reportAssignmentType]
@@ -266,6 +272,7 @@ class Project(UserResource):
     # Type hints
     requesting_organization_id: int
     tutorial_id: int | None
+    image_id: int | None
     project_type_specific_output_id: int | None
 
     @typing.override
@@ -304,9 +311,18 @@ class Project(UserResource):
         #     self.requiredResults += group.requiredCount * group.numberOfTasks
 
 
+class SoftDeletionManager(models.Manager):
+    @typing.override
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
+
 class ProjectAsset(UserResource):
     Type = ProjectAssetTypeEnum
     Mimetype = ProjectAssetMimetypeEnum
+
+    objects = SoftDeletionManager()
+    # all_objects = models.Manager()
 
     type = IntegerChoicesField(
         choices_enum=ProjectAssetTypeEnum,
@@ -325,6 +341,11 @@ class ProjectAsset(UserResource):
         Project,
         on_delete=models.CASCADE,
         related_name="+",
+    )
+
+    is_deleted = models.BooleanField(
+        default=False,
+        help_text=gettext_lazy("If this flag is enabled, this project asset will be deleted in the future"),
     )
 
     # Type hints
@@ -374,6 +395,7 @@ class ProjectTask(models.Model):
         related_name="+",
     )
 
+    # NOTE(tnagorra): The geometry is only necessary for footprint project type
     # FIXME(thenav56): Existing gid_models.MultiPolygonField(srid=4326, blank=True, null=True)
     geometry = gid_models.GeometryField(null=True, blank=True, default=None, dim=3)
 

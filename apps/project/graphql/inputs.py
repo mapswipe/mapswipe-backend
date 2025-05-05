@@ -4,6 +4,7 @@ from strawberry.file_uploads import Upload
 
 from apps.project.models import Project, ProjectAsset
 from apps.project.project_types.tile_map_service.compare import project as compare_project
+from apps.project.project_types.tile_map_service.completeness import project as completeness_project
 from apps.project.project_types.tile_map_service.find import project as find_project
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
 
@@ -30,10 +31,15 @@ class CompareProjectPropertyInput: ...
 class FindProjectPropertyInput: ...
 
 
+@strawberry.experimental.pydantic.input(model=completeness_project.CompletenessProjectProperty, all_fields=True)
+class CompletenessProjectPropertyInput: ...
+
+
 @strawberry.input(one_of=True)
 class ProjectTypeSpecificInput:
     compare: CompareProjectPropertyInput | None = strawberry.UNSET
     find: FindProjectPropertyInput | None = strawberry.UNSET
+    completeness: CompletenessProjectPropertyInput | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
@@ -45,7 +51,6 @@ class ProjectCreateInput:
     look_for: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
-    image: Upload
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
@@ -61,7 +66,7 @@ class ProjectUpdateInput:
     max_tasks_per_user: strawberry.auto
     status: strawberry.auto
     requesting_organization: strawberry.ID | None = strawberry.UNSET
-    image: Upload | None = strawberry.UNSET
+    image: strawberry.ID | None = strawberry.UNSET
     project_type_specifics: ProjectTypeSpecificInput | None = strawberry.UNSET
 
 
@@ -75,7 +80,7 @@ class ProcessedProjectUpdateInput:
     # TODO(tnagorra): Add tutorial
     status: strawberry.auto
     requesting_organization: strawberry.ID | None = strawberry.UNSET
-    image: Upload | None = strawberry.UNSET
+    image: strawberry.ID | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py

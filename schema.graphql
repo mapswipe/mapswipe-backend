@@ -84,7 +84,21 @@ type CompareProjectPropertyType {
   tileServerBProperty: ProjectTileServerConfig!
 }
 
-union CompareProjectPropertyTypeFindProjectPropertyType = CompareProjectPropertyType | FindProjectPropertyType
+union CompareProjectPropertyTypeFindProjectPropertyTypeCompletenessProjectPropertyType = CompareProjectPropertyType | FindProjectPropertyType | CompletenessProjectPropertyType
+
+input CompletenessProjectPropertyInput {
+  zoomLevel: Int!
+  tileServerProperty: ProjectTileServerConfigInput!
+  aoiGeometry: String!
+  tileServerBProperty: ProjectTileServerConfigInput!
+}
+
+type CompletenessProjectPropertyType {
+  zoomLevel: Int!
+  tileServerProperty: ProjectTileServerConfig!
+  aoiGeometry: String!
+  tileServerBProperty: ProjectTileServerConfig!
+}
 
 enum ContributorUserGroupMembershipLogActionEnum {
   JOIN
@@ -232,11 +246,11 @@ input ProcessedProjectUpdateInput {
 
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: ID
-  image: Upload
+  image: ID
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project)
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, is_deleted)
 """
 input ProjectAssetCreateInput {
   type: ProjectAssetTypeEnum!
@@ -248,7 +262,7 @@ input ProjectAssetCreateInput {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project)
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, is_deleted)
 """
 input ProjectAssetFilter {
   id: IDBaseFilterLookup
@@ -321,7 +335,7 @@ input ProjectAssetOrder {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project)
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, is_deleted)
 """
 type ProjectAssetType {
   id: ID!
@@ -418,7 +432,6 @@ input ProjectCreateInput {
   """
   additionalInfoUrl: String
   description: String
-  image: Upload!
 }
 
 """
@@ -578,11 +591,11 @@ type ProjectType {
 
   """How many tasks each user is allowed to work on for this project"""
   maxTasksPerUser: Int
-  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyType
   isFeatured: Boolean!
   status: ProjectStatusEnum!
   processingStatus: ProjectProcessingStatusEnum
   progress: Int!
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeCompletenessProjectPropertyType
 }
 
 enum ProjectTypeEnum {
@@ -658,6 +671,7 @@ type ProjectTypeOffsetPaginated {
 input ProjectTypeSpecificInput @oneOf {
   compare: CompareProjectPropertyInput
   find: FindProjectPropertyInput
+  completeness: CompletenessProjectPropertyInput
 }
 
 """
@@ -691,7 +705,7 @@ input ProjectUpdateInput {
 
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: ID
-  image: Upload
+  image: ID
   projectTypeSpecifics: ProjectTypeSpecificInput
 }
 

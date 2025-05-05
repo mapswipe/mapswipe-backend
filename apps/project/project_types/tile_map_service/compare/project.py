@@ -34,7 +34,8 @@ class CompareProject(
 
     def __init__(self, project: Project):
         super().__init__(project)
-        assert project.project_type == ProjectTypeEnum.COMPARE, f"{type(self)} is defined for COMPARE"
+        if typing.TYPE_CHECKING:
+            assert project.project_type == ProjectTypeEnum.COMPARE, f"{type(self)} is defined for COMPARE"
         self.tile_server_b = get_tile_server(self.project_type_specifics.tile_server_b_property)
 
     @typing.override

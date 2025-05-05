@@ -7,6 +7,7 @@ from rest_framework import serializers
 
 from apps.common.serializers import UserResourceSerializer
 from apps.project.project_types.tile_map_service.compare import project as compare_project
+from apps.project.project_types.tile_map_service.completeness import project as completeness_project
 from apps.project.project_types.tile_map_service.find import project as find_project
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
@@ -38,11 +39,18 @@ VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS = set(
     ],
 )
 
-PROJECT_TYPE_PROPERTY_MAP = {
-    # FIXME(tnagorra): Handle completeness
-    ProjectTypeEnum.COMPARE: ("compare", compare_project.CompareProjectProperty),
-    ProjectTypeEnum.FIND: ("find", find_project.FindProjectProperty),
-}
+
+# FIXME(tnagorra): Move this to utils
+def get_project_property(project_type: ProjectTypeEnum | None):
+    if project_type is None:
+        return None
+    if project_type == ProjectTypeEnum.COMPARE:
+        return ("compare", compare_project.CompareProjectProperty)
+    if project_type == ProjectTypeEnum.FIND:
+        return ("find", find_project.FindProjectProperty)
+    if project_type == ProjectTypeEnum.COMPLETENESS:
+        return ("completeness", completeness_project.CompletenessProjectProperty)
+    typing.assert_never(project_type)
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
@@ -88,6 +96,24 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             )
         return new_status
 
+    def validate_image(self, new_image: ProjectAsset):
+        assert self.instance is not None
+
+        asset_exists = ProjectAsset.objects.filter(
+            id=new_image.pk,
+            type=ProjectAsset.Type.INPUT,
+            mimetype__in=[
+                ProjectAsset.Mimetype.IMAGE_GIF,
+                ProjectAsset.Mimetype.IMAGE_JPEG,
+                ProjectAsset.Mimetype.IMAGE_PNG,
+            ],
+            project_id=self.instance.pk,
+        ).exists()
+        if not asset_exists:
+            raise serializers.ValidationError(gettext("ProjectAsset is invalid or does not exist."))
+
+        return new_image
+
     def _validate_project_type_specifics(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
 
@@ -100,14 +126,16 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             )
 
         project_type_label = ProjectTypeEnum.get_display(project_type)
-        if project_type not in PROJECT_TYPE_PROPERTY_MAP:
+
+        project_property = get_project_property(project_type)
+        if project_property is None:
             raise serializers.ValidationError(
                 {
                     "project_type_specifics": gettext("Given project type is not handled: %s") % project_type_label,
                 },
             )
-        field_name, pydantic_model = PROJECT_TYPE_PROPERTY_MAP[project_type]
 
+        field_name, pydantic_model = project_property
         raw_project_type_specifics = attrs.get("project_type_specifics")
 
         if raw_project_type_specifics is None and attrs.get("status") != Project.Status.MARKED_AS_READY:
@@ -182,6 +210,24 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             )
         return new_status
 
+    def validate_image(self, new_image: ProjectAsset):
+        assert self.instance is not None
+
+        asset_exists = ProjectAsset.objects.filter(
+            id=new_image.pk,
+            type=ProjectAsset.Type.INPUT,
+            mimetype__in=[
+                ProjectAsset.Mimetype.IMAGE_GIF,
+                ProjectAsset.Mimetype.IMAGE_JPEG,
+                ProjectAsset.Mimetype.IMAGE_PNG,
+            ],
+            project_id=self.instance.pk,
+        ).exists()
+        if not asset_exists:
+            raise serializers.ValidationError(gettext("ProjectAsset is invalid or does not exist."))
+
+        return new_image
+
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 # FIXME(tnagorra): Should we validate the mimetype during upload?
@@ -194,3 +240,11 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
             "file",
             "project",
         )
+
+    def validate_type(self, new_type: Project.Status):
+        # NOTE: Users should only be able to create Input type assets
+        if new_type != ProjectAsset.Type.INPUT:
+            raise serializers.ValidationError(
+                gettext("ProjectAsset type should be Input"),
+            )
+        return new_type

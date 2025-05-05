@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from django.db import models
 from pydantic import BaseModel
 
-from apps.project.models import Project, ProjectTask, ProjectTaskGroup
+from apps.project.models import Project, ProjectAsset, ProjectTask, ProjectTaskGroup
 from utils.geo import tile_grouping
 
 logger = logging.getLogger(__name__)
@@ -112,8 +112,14 @@ class BaseProject(
         logger.info("%s - start creating a project", self.project.pk)
 
         self.project.update_processing_status(Project.ProcessingStatus.PREPARING, True)
-        # TODO(tnagorra): We need to cleanup groups, tasks and files
-        # for failed items
+        ProjectTaskGroup.objects.filter(project=self.project.pk).delete()
+        # TODO(tnagorra): We need to add a CRON to delete these project assets
+        # FIXME(tnagorra): Do we also cleanup the user INPUT?
+        # We need to be careful not to delete assets that are currently used
+        ProjectAsset.objects.filter(
+            project=self.project.pk,
+            type__in=[ProjectAsset.Type.OUTPUT, ProjectAsset.Type.STATS],
+        ).update(is_deleted=True)
 
         try:
             resp = self.validate()

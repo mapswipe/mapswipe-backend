@@ -1,26 +1,12 @@
-import re
 import typing
 
 import strawberry
 from pydantic import ValidationError as PydanticValidationError
 from rest_framework import serializers
 
+from utils.common import to_camel_case, to_snake_case
+
 from .types import CustomErrorType
-
-
-# Adapted from this response in Stackoverflow
-# http://stackoverflow.com/a/19053800/1072990
-def to_camel_case(snake_str: str):
-    components = snake_str.split("_")
-    # We capitalize the first letter of each component except the first one
-    # with the 'capitalize' method and join them together.
-    return components[0] + "".join(x.capitalize() if x else "_" for x in components[1:])
-
-
-def to_snake_case(name: str):
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
-
 
 ARRAY_NON_MEMBER_ERRORS = "nonMemberErrors"
 

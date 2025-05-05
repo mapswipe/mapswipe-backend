@@ -43,19 +43,21 @@ class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
     aoi_geometry: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")]
 
     @model_validator(mode="after")
-    def check_api_geometry_exists(self, info: ValidationInfo) -> typing.Self:
+    def check_aoi_geometry_exists(self, info: ValidationInfo) -> typing.Self:
         if not isinstance(info.context, dict):
             # Skipping validation in case context is not defined
             return self
 
         project_id = info.context.get("project_id")
-        # FIXME(tnagorra): Handle error
-        if not ProjectAsset.objects.filter(
+        asset_exists = ProjectAsset.objects.filter(
             id=self.aoi_geometry,
             type=ProjectAssetTypeEnum.INPUT,
             mimetype=ProjectAssetMimetypeEnum.GEOJSON,
             project_id=project_id,
-        ).exists():
+        ).exists()
+
+        # FIXME(tnagorra): Handle error
+        if not asset_exists:
             raise ValueError(f"ProjectAsset with id {self.aoi_geometry} is invalid or does not exist.")
         return self
 
@@ -112,16 +114,20 @@ class TileMapServiceBaseProject(
         def get_feature(task: ProjectTask):
             geom = GEOSGeometry(task.geometry)
             geojson = json.loads(geom.geojson)
+
+            task_specifics = self.project_task_property_class(
+                **task.project_type_specifics,
+            )
+
             return {
                 "type": "Feature",
                 "geometry": geojson,
                 "properties": {
                     "group_id": task.task_group_id,
                     "task_id": task.pk,
-                    # FIXME(tnagorra): We might need the following values to create tutorial
-                    # "tile_x": None,
-                    # "tile_y": None,
-                    # "tile_z": None,
+                    "tile_x": task_specifics.tile_x,
+                    "tile_y": task_specifics.tile_y,
+                    "tile_z": self.project_type_specifics.zoom_level,
                 },
             }
 

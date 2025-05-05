@@ -1,13 +1,40 @@
 import typing
 
 from apps.project.factories import OrganizationFactory, ProjectFactory
+from apps.project.models import ProjectTypeEnum
 from apps.user.factories import UserFactory
 from main.tests import TestCase
+from utils.common import format_object_keys, to_camel_case
 
 
 class TestProjectQuery(TestCase):
     class Query:
         PROJECTS = """
+            fragment TileServerPropertyFields on ProjectTileServerConfig {
+              name
+              bing {
+                credits
+              }
+              custom {
+                credits
+                url
+              }
+              esri {
+                credits
+              }
+              esriBeta {
+                credits
+              }
+              mapbox {
+                credits
+              }
+              maxarPremium {
+                credits
+              }
+              maxarStandard {
+                credits
+              }
+            }
             query Projects($pagination: OffsetPaginationInput) {
               projects(order: {id: ASC}, pagination: $pagination) {
                 totalCount
@@ -19,6 +46,35 @@ class TestProjectQuery(TestCase):
                   id
                   name
                   projectType
+                  projectTypeSpecifics {
+                    ... on FindProjectPropertyType {
+                      zoomLevel
+                      aoiGeometry
+                      tileServerProperty {
+                        ...TileServerPropertyFields
+                      }
+                    }
+                    ... on CompareProjectPropertyType {
+                      zoomLevel
+                      aoiGeometry
+                      tileServerProperty {
+                        ...TileServerPropertyFields
+                      }
+                      tileServerBProperty {
+                        ...TileServerPropertyFields
+                      }
+                    }
+                    ... on CompletenessProjectPropertyType {
+                      zoomLevel
+                      aoiGeometry
+                      tileServerProperty {
+                        ...TileServerPropertyFields
+                      }
+                      tileServerBProperty {
+                        ...TileServerPropertyFields
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -36,11 +92,96 @@ class TestProjectQuery(TestCase):
 
         cls.organization = OrganizationFactory.create(**cls.user_resource_kwargs)
         # Some init projects
-        cls.projects = ProjectFactory.create_batch(
-            3,
-            **cls.user_resource_kwargs,
-            requesting_organization=cls.organization,
-        )
+        cls.projects = [
+            ProjectFactory.create(
+                **cls.user_resource_kwargs,
+                requesting_organization=cls.organization,
+                project_type=ProjectTypeEnum.FIND,
+                project_type_specifics={
+                    "zoom_level": 14,
+                    "aoi_geometry": "1",
+                    "tile_server_property": {
+                        "name": "BING",
+                        "custom": None,
+                        "bing": {
+                            "credits": "My Map",
+                        },
+                        "mapbox": None,
+                        "maxar_standard": None,
+                        "maxar_premium": None,
+                        "esri": None,
+                        "esri_beta": None,
+                    },
+                },
+            ),
+            ProjectFactory.create(
+                **cls.user_resource_kwargs,
+                requesting_organization=cls.organization,
+                project_type=ProjectTypeEnum.COMPARE,
+                project_type_specifics={
+                    "zoom_level": 14,
+                    "aoi_geometry": "1",
+                    "tile_server_property": {
+                        "name": "BING",
+                        "custom": None,
+                        "bing": {
+                            "credits": "My Map",
+                        },
+                        "mapbox": None,
+                        "maxar_standard": None,
+                        "maxar_premium": None,
+                        "esri": None,
+                        "esri_beta": None,
+                    },
+                    "tile_server_b_property": {
+                        "name": "ESRI",
+                        "custom": None,
+                        "bing": None,
+                        "mapbox": None,
+                        "maxar_standard": None,
+                        "maxar_premium": None,
+                        "esri": {
+                            "credits": "My Map",
+                        },
+                        "esri_beta": None,
+                    },
+                },
+            ),
+            ProjectFactory.create(
+                **cls.user_resource_kwargs,
+                requesting_organization=cls.organization,
+                project_type=ProjectTypeEnum.COMPLETENESS,
+                project_type_specifics={
+                    "zoom_level": 14,
+                    "aoi_geometry": "1",
+                    "tile_server_property": {
+                        "name": "BING",
+                        "custom": None,
+                        "bing": {
+                            "credits": "My Map",
+                        },
+                        "mapbox": None,
+                        "maxar_standard": None,
+                        "maxar_premium": None,
+                        "esri": None,
+                        "esri_beta": None,
+                    },
+                    "tile_server_b_property": {
+                        "name": "CUSTOM",
+                        "custom": {
+                            "url": "https://hi-there/{x}/{y}/{z}",
+                            "credits": "My Map",
+                        },
+                        "bing": None,
+                        "mapbox": None,
+                        "maxar_standard": None,
+                        "maxar_premium": None,
+                        "esri": None,
+                        "esri_beta": None,
+                    },
+                },
+            ),
+        ]
 
     def test_projects(self):
         def _query():
@@ -73,6 +214,7 @@ class TestProjectQuery(TestCase):
                         id=self.gID(project.pk),
                         name=project.name,
                         projectType=self.genum(project.project_type),
+                        projectTypeSpecifics=format_object_keys(project.project_type_specifics, to_camel_case),
                     )
                     for project in self.projects
                 ],
