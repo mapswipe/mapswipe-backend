@@ -98,7 +98,7 @@ class TestProjectQuery(TestCase):
                 requesting_organization=cls.organization,
                 project_type=ProjectTypeEnum.FIND,
                 project_type_specifics={
-                    "zoom_level": 12,
+                    "zoom_level": 14,
                     "aoi_geometry": "1",
                     "tile_server_property": {
                         "name": "BING",
@@ -119,7 +119,7 @@ class TestProjectQuery(TestCase):
                 requesting_organization=cls.organization,
                 project_type=ProjectTypeEnum.COMPARE,
                 project_type_specifics={
-                    "zoom_level": 12,
+                    "zoom_level": 14,
                     "aoi_geometry": "1",
                     "tile_server_property": {
                         "name": "BING",
@@ -152,7 +152,7 @@ class TestProjectQuery(TestCase):
                 requesting_organization=cls.organization,
                 project_type=ProjectTypeEnum.COMPLETENESS,
                 project_type_specifics={
-                    "zoom_level": 12,
+                    "zoom_level": 14,
                     "aoi_geometry": "1",
                     "tile_server_property": {
                         "name": "BING",

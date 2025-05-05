@@ -395,6 +395,7 @@ class ProjectTask(models.Model):
         related_name="+",
     )
 
+    # NOTE(tnagorra): The geometry is only necessary for footprint project type
     # FIXME(thenav56): Existing gid_models.MultiPolygonField(srid=4326, blank=True, null=True)
     geometry = gid_models.GeometryField(null=True, blank=True, default=None, dim=3)
 
