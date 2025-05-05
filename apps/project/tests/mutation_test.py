@@ -9,7 +9,6 @@ from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
     Project,
     ProjectAssetMimetypeEnum,
-    ProjectAssetTypeEnum,
     ProjectTask,
     ProjectTaskGroup,
     ProjectTypeEnum,
@@ -439,7 +438,6 @@ class TestProjectMutation(TestCase):
         project_asset_data = {
             "project": str(latest_project.pk),
             "mimetype": self.genum(ProjectAssetMimetypeEnum.GEOJSON),
-            "type": self.genum(ProjectAssetTypeEnum.INPUT),
         }
         content = self._create_project_aoi_asset(project_asset_data, assert_errors=True)
         resp_data = content["data"]["createProjectAsset"]
@@ -450,7 +448,6 @@ class TestProjectMutation(TestCase):
         project_asset_data = {
             "project": str(latest_project.pk),
             "mimetype": self.genum(ProjectAssetMimetypeEnum.IMAGE_JPEG),
-            "type": self.genum(ProjectAssetTypeEnum.INPUT),
         }
         content = self._create_project_image_asset(project_asset_data, assert_errors=True)
         resp_data = content["data"]["createProjectAsset"]
@@ -661,7 +658,6 @@ class TestProjectTypeMutation(TestCase):
         project_asset_data = {
             "project": project_id,
             "mimetype": self.genum(ProjectAssetMimetypeEnum.GEOJSON),
-            "type": self.genum(ProjectAssetTypeEnum.INPUT),
         }
         content = self._create_project_aoi_asset(project_asset_data, assert_errors=True)
         resp_data = content["data"]["createProjectAsset"]
@@ -672,7 +668,6 @@ class TestProjectTypeMutation(TestCase):
         project_asset_data = {
             "project": project_id,
             "mimetype": self.genum(ProjectAssetMimetypeEnum.IMAGE_JPEG),
-            "type": self.genum(ProjectAssetTypeEnum.INPUT),
         }
         content = self._create_project_image_asset(project_asset_data, assert_errors=True)
         resp_data = content["data"]["createProjectAsset"]

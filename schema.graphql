@@ -253,7 +253,6 @@ input ProcessedProjectUpdateInput {
 ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
 """
 input ProjectAssetCreateInput {
-  type: ProjectAssetTypeEnum!
   mimetype: ProjectAssetMimetypeEnum!
 
   """The file associated with the asset"""
