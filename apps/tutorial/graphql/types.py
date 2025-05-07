@@ -16,7 +16,8 @@ class TutorialTaskType:
     id: strawberry.ID
     scenario_id: strawberry.ID
     reference: strawberry.auto
-    # TODO(tnagorra): Add project_type_specifics
+    # FIXME(tnagorra): Make this typesafe
+    project_type_specifics: strawberry.auto
 
 
 @strawberry_django.type(TutorialScenarioPage)
@@ -33,7 +34,6 @@ class TutorialScenarioPageType:
     success_description: strawberry.auto
     success_icon: strawberry.auto
     success_title: strawberry.auto
-    # TODO(tnagorra): Define how to resolve tasks
     tasks: list[TutorialTaskType]
 
 
@@ -53,7 +53,6 @@ class TutorialInformationPageType:
     tutorial_id: strawberry.ID
     title: strawberry.auto
     page_number: strawberry.auto
-    # TODO(tnagorra): Define how to resolve blocks
     blocks: list[TutorialInformationPageBlockType]
 
 
@@ -63,7 +62,5 @@ class TutorialType(UserResourceTypeMixin):
     project_id: strawberry.ID
     is_draft: strawberry.auto
 
-    # TODO(tnagorra): Define how to resolve scenarios
     scenarios: list[TutorialScenarioPageType]
-    # TODO(tnagorra): Define how to resolve information_pages
     information_pages: list[TutorialInformationPageType]

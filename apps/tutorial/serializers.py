@@ -1,26 +1,41 @@
-from apps.common.serializers import UserResourceSerializer
+import typing
+
+from apps.common.serializers import DrfContextType, UserResourceSerializer
 
 from .models import Tutorial, TutorialInformationPage, TutorialInformationPageBlock, TutorialScenarioPage, TutorialTask
 
 
-class TutorialTaskCreateSerializer(UserResourceSerializer[TutorialTask]):
+class TutorialTaskSerializerContextType(DrfContextType):
+    scenario: TutorialScenarioPage
+
+
+class TutorialTaskSerializer(UserResourceSerializer[TutorialTask, TutorialTaskSerializerContextType]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = TutorialTask
         fields = (
-            "scenario",
             "reference",
-            # TODO(tnagorra): Implement project_type_specifics
-            # "project_type_specifics",
+            # TODO(tnagorra): Implement stricter project_type_specifics
+            "project_type_specifics",
         )
 
+    @typing.override
+    def create(self, validated_data: dict[typing.Any, typing.Any]):
+        validated_data["scenario"] = self.context["scenario"]
+        return super().create(validated_data)
 
-class TutorialScenarioPageCreateSerializer(UserResourceSerializer[TutorialScenarioPage]):
-    tasks = TutorialTaskCreateSerializer(many=True)
+
+class TutorialScenarioPageContextType(DrfContextType):
+    tutorial: Tutorial
+
+
+class TutorialScenarioPageSerializer(
+    UserResourceSerializer[TutorialScenarioPage, TutorialScenarioPageContextType],
+):
+    tasks = TutorialTaskSerializer(many=True)
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = TutorialScenarioPage
         fields = (
-            "tutorial",
             "scenario_id",
             "instructions_description",
             "instructions_icon",
@@ -31,64 +46,130 @@ class TutorialScenarioPageCreateSerializer(UserResourceSerializer[TutorialScenar
             "success_description",
             "success_icon",
             "success_title",
+            "tasks",
         )
 
+    @typing.override
+    def create(self, validated_data: dict[typing.Any, typing.Any]):
+        tasks_data = validated_data.pop("tasks")
 
-class TutorialInformationPageBlockCreateSerializer(UserResourceSerializer[TutorialInformationPageBlock]):
+        validated_data["tutorial"] = self.context["tutorial"]
+        scenario = super().create(validated_data)
+
+        for task_data in tasks_data:
+            task_serializer = TutorialTaskSerializer(
+                data=task_data,
+                context={
+                    **self.context,
+                    "scenario": scenario,
+                },
+            )
+            task_serializer.is_valid(raise_exception=True)
+            task_serializer.save()
+
+        return scenario
+
+
+class TutorialInformationPageBlockContextType(DrfContextType):
+    page: TutorialScenarioPage
+
+
+class TutorialInformationPageBlockSerializer(
+    UserResourceSerializer[TutorialInformationPageBlock, TutorialInformationPageBlockContextType],
+):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = TutorialInformationPageBlock
         fields = (
-            "page",
             "block_number",
             "block_type",
             "text",
             "image",
         )
 
+    @typing.override
+    def create(self, validated_data: dict[typing.Any, typing.Any]):
+        validated_data["page"] = self.context["page"]
+        return super().create(validated_data)
 
-class TutorialInformationPageCreateSerializer(UserResourceSerializer[TutorialInformationPage]):
-    blocks = TutorialInformationPageBlockCreateSerializer(many=True)
+
+class TutorialInformationPageContextType(DrfContextType):
+    tutorial: Tutorial
+
+
+class TutorialInformationPageSerializer(
+    UserResourceSerializer[TutorialInformationPage, TutorialInformationPageContextType],
+):
+    blocks = TutorialInformationPageBlockSerializer(many=True)
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = TutorialInformationPage
         fields = (
-            "tutorial",
             "title",
             "page_number",
+            "blocks",
         )
 
+    @typing.override
+    def create(self, validated_data: dict[typing.Any, typing.Any]):
+        blocks_data = validated_data.pop("blocks")
 
-class TutorialCreateSerializer(UserResourceSerializer[Tutorial]):
-    scenarios = TutorialScenarioPageCreateSerializer(many=True)
-    information_pages = TutorialInformationPageCreateSerializer(many=True)
+        validated_data["tutorial"] = self.context["tutorial"]
+        page = super().create(validated_data)
+
+        for block_data in blocks_data:
+            block_serializer = TutorialInformationPageBlockSerializer(
+                data=block_data,
+                context={
+                    **self.context,
+                    "page": page,
+                },
+            )
+            block_serializer.is_valid(raise_exception=True)
+            block_serializer.save()
+
+        return page
+
+
+class TutorialSerializer(UserResourceSerializer[Tutorial]):
+    scenarios = TutorialScenarioPageSerializer(many=True)
+    information_pages = TutorialInformationPageSerializer(many=True)
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Tutorial
         fields = (
             "project",
             "is_draft",
+            "information_pages",
+            "scenarios",
         )
 
-    # @typing.override
-    # def create(self, validated_data: dict[typing.Any, typing.Any]):
-    #     scenarios_data = validated_data.pop("scenarios")
-    #     information_pages_data = validated_data.pop("information_pages")
-    #     tutorial = Tutorial.objects.create(**validated_data)
+    @typing.override
+    def create(self, validated_data: dict[typing.Any, typing.Any]):
+        scenarios_data = validated_data.pop("scenarios")
+        information_pages_data = validated_data.pop("information_pages")
+        tutorial = super().create(validated_data)
 
-    #     for scenario_data in scenarios_data:
-    #         tasks_data = scenario_data.pop("tasks")
-    #         scenario = TutorialScenarioPage.objects.create(**scenario_data)
-    #         for task_data in tasks_data:
-    #             task = TutorialTask.objects.create(**task_data)
-    #             scenario.tasks.add(task)
-    #         tutorial.scenarios.add(scenario)
+        for scenario_data in scenarios_data:
+            scenario_serializer = TutorialScenarioPageSerializer(
+                data=scenario_data,
+                context={
+                    **self.context,
+                    "tutorial": tutorial,
+                },
+            )
+            scenario_serializer.is_valid(raise_exception=True)
+            scenario_serializer.save()
 
-    #     for information_page_data in information_pages_data:
-    #         blocks_data = information_page_data.pop("blocks")
-    #         information_page = TutorialInformationPage.objects.create(**information_page_data)
-    #         for block_data in blocks_data:
-    #             block = TutorialInformationPageBlock.objects.create(**block_data)
-    #             information_page.blocks.add(block)
-    #         tutorial.information_pages.add(information_page)
+        for information_page_data in information_pages_data:
+            # blocks_data = information_page_data.pop("blocks")
+            information_page_serializer = TutorialInformationPageSerializer(
+                data=information_page_data,
+                context={
+                    **self.context,
+                    "tutorial": tutorial,
+                },
+            )
+            information_page_serializer.is_valid(raise_exception=True)
+            information_page_serializer.save()
 
-    #     return tutorial
+        return tutorial

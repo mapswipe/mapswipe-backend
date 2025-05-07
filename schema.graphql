@@ -398,6 +398,11 @@ input IDBaseFilterLookup {
   inList: [ID!]
 }
 
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
+"""
+scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
+
 type MapContributionStatsType {
   geojson: GenericJSON!
   totalContribution: Int!
@@ -1329,6 +1334,7 @@ TutorialTask(id, created_at, modified_at, created_by, modified_by, scenario, ref
 """
 input TutorialTaskCreateInput {
   reference: Int!
+  projectTypeSpecifics: JSON!
 }
 
 input TutorialTaskInput {
@@ -1344,6 +1350,7 @@ type TutorialTaskType {
   id: ID!
   scenarioId: ID!
   reference: Int!
+  projectTypeSpecifics: JSON!
 }
 
 """
@@ -1352,6 +1359,7 @@ TutorialTask(id, created_at, modified_at, created_by, modified_by, scenario, ref
 input TutorialTaskUpdateInput {
   id: ID!
   reference: Int
+  projectTypeSpecifics: JSON
 }
 
 """

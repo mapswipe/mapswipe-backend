@@ -1,17 +1,30 @@
 import typing
 
+from django.http.request import HttpRequest
 from rest_framework import serializers
 
 from apps.common.models import UserResource
 
-ModelType = typing.TypeVar("ModelType", bound=UserResource)
+
+class DrfContextType(typing.TypedDict):
+    request: HttpRequest
 
 
-class UserResourceSerializer(serializers.ModelSerializer[ModelType]):
+# FIXME(tnagorra): Add support for DrfContextType in __init__
+# Reference: https://github.com/locustio/locust/blob/master/locust/clients.py#L144
+class UserResourceSerializer[ModelType: UserResource, ContextType: DrfContextType = DrfContextType](
+    serializers.ModelSerializer[ModelType],
+):
     modified_at = serializers.DateTimeField(read_only=True)
     modified_by = serializers.PrimaryKeyRelatedField(read_only=True)
 
     instance: ModelType | None  # type: ignore[override]
+
+    @property
+    def context(self) -> ContextType:  # type: ignore[override]
+        context = super().context
+        assert context is not None, f"Always pass context when using {type(self)}"
+        return typing.cast("ContextType", context)
 
     @typing.override
     def create(self, validated_data: dict[str, typing.Any]) -> ModelType:

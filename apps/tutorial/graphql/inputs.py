@@ -26,7 +26,8 @@ class TutorialTaskCreateInput:
     # NOTE: scenario_id will be referenced from parent
 
     reference: strawberry.auto
-    # TODO(tnagorra): Add project_type_specifics
+    # FIXME(tnagorra): Make this typesafe
+    project_type_specifics: strawberry.auto
 
 
 @strawberry_django.partial(TutorialTask)
@@ -35,7 +36,8 @@ class TutorialTaskUpdateInput:
 
     id: strawberry.ID
     reference: strawberry.auto
-    # TODO(tnagorra): Add project_type_specifics
+    # FIXME(tnagorra): Make this typesafe
+    project_type_specifics: strawberry.auto
 
 
 @strawberry.input

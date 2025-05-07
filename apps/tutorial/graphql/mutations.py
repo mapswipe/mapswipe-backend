@@ -3,7 +3,7 @@ import strawberry_django
 from strawberry_django.permissions import IsAuthenticated
 
 from apps.tutorial.models import Tutorial
-from apps.tutorial.serializers import TutorialCreateSerializer
+from apps.tutorial.serializers import TutorialSerializer
 from main.graphql.context import Info
 from utils.graphql.mutations import ModelMutation
 from utils.graphql.types import MutationResponseType
@@ -18,7 +18,7 @@ class Mutation:
 
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
     async def create_tutorial(self, info: Info, data: TutorialCreateInput) -> MutationResponseType[TutorialType]:
-        return await ModelMutation(TutorialCreateSerializer).handle_create_mutation(data, info, None)
+        return await ModelMutation(TutorialSerializer).handle_create_mutation(data, info, None)
 
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
     async def update_tutorial(
@@ -31,7 +31,7 @@ class Mutation:
         # TODO(tnagorra):
         # 1. Add a function to update nested update mutations
         # 2. Remove deletes
-        return await ModelMutation(TutorialCreateSerializer).handle_update_mutation(
+        return await ModelMutation(TutorialSerializer).handle_update_mutation(
             data,
             info,
             tutorial,
