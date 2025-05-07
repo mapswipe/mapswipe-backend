@@ -53,7 +53,7 @@ class ProjectAssetType(UserResourceTypeMixin):
 
 
 @strawberry_django.type(Project)
-class ProjectType:
+class ProjectType(UserResourceTypeMixin):
     id: strawberry.ID
     project_type: strawberry.auto
     requesting_organization_id: strawberry.ID

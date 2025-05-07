@@ -15,6 +15,7 @@ def parse_input_data(data: typing.Any) -> dict[typing.Any, typing.Any] | list[ty
     # TODO(thenav56): Write test
     if type(data) in [tuple, list]:
         return [parse_input_data(datum) for datum in data]
+
     native_dict = {}
     for key, value in data.__dict__.items():
         if value == strawberry.UNSET:
@@ -27,8 +28,7 @@ def parse_input_data(data: typing.Any) -> dict[typing.Any, typing.Any] | list[ty
                 else:
                     _list_value.append(_value)
             native_dict[key] = _list_value
-            continue
-        if is_dataclass(value):
+        elif is_dataclass(value):
             native_dict[key] = parse_input_data(value)
         else:
             native_dict[key] = value

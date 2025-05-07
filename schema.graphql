@@ -854,7 +854,11 @@ type ProjectTileServerCustomConfig {
 """
 Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
-type ProjectType {
+type ProjectType implements UserResourceTypeMixin {
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
   id: ID!
   projectType: ProjectTypeEnum!
 
