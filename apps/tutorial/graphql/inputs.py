@@ -17,7 +17,9 @@ class DeleteInput:
 
 
 @strawberry.interface
-class CudInput:
+class CudInput[X, Y]:
+    create: X | None = strawberry.UNSET
+    update: Y | None = strawberry.UNSET
     delete: DeleteInput | None = strawberry.UNSET
 
 
@@ -41,9 +43,8 @@ class TutorialTaskUpdateInput:
 
 
 @strawberry.input
-class TutorialTaskInput(CudInput):
-    create: TutorialTaskCreateInput | None = strawberry.UNSET
-    update: TutorialTaskUpdateInput | None = strawberry.UNSET
+class TutorialTaskInput(CudInput[TutorialTaskCreateInput, TutorialTaskUpdateInput]):
+    ...
 
 
 @strawberry_django.input(TutorialScenarioPage)
@@ -82,9 +83,8 @@ class TutorialScenarioPageUpdateInput:
 
 
 @strawberry_django.input(TutorialTask)
-class TutorialScenarioPageInput(CudInput):
-    create: TutorialScenarioPageCreateInput | None = strawberry.UNSET
-    update: TutorialScenarioPageUpdateInput | None = strawberry.UNSET
+class TutorialScenarioPageInput(CudInput[TutorialScenarioPageCreateInput, TutorialScenarioPageUpdateInput ]):
+    ...
 
 
 @strawberry_django.input(TutorialInformationPageBlock)
@@ -109,9 +109,8 @@ class TutorialInformationPageBlockUpdateInput:
 
 
 @strawberry.input
-class TutorialInformationPageBlockInput(CudInput):
-    create: TutorialInformationPageBlockCreateInput | None = strawberry.UNSET
-    update: TutorialInformationPageBlockUpdateInput | None = strawberry.UNSET
+class TutorialInformationPageBlockInput(CudInput[TutorialInformationPageBlockCreateInput, TutorialInformationPageBlockUpdateInput]):
+    ...
 
 
 @strawberry_django.input(TutorialInformationPage)
@@ -134,9 +133,8 @@ class TutorialInformationPageUpdateInput:
 
 
 @strawberry.input
-class TutorialInformationPageInput(CudInput):
-    create: TutorialInformationPageCreateInput | None = strawberry.UNSET
-    update: TutorialInformationPageUpdateInput | None = strawberry.UNSET
+class TutorialInformationPageInput(CudInput[TutorialInformationPageCreateInput, TutorialInformationPageUpdateInput]):
+    ...
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
