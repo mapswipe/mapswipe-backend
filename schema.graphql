@@ -338,6 +338,8 @@ union CreateProjectAssetPayload = ProjectAssetTypeMutationResponseType | Operati
 
 union CreateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
 
+union CreateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
+
 """A generic type to return error messages"""
 scalar CustomErrorType
 
@@ -352,7 +354,13 @@ input DateRangeInput {
 """Date with time (isoformat)"""
 scalar DateTime
 
+input DeleteInput {
+  id: ID!
+}
+
 union DeleteProjectPayload = ProjectType | OperationInfo
+
+union DeleteTutorialPayload = TutorialType | OperationInfo
 
 input DjangoModelFilterInput {
   id: ID!
@@ -410,6 +418,9 @@ type Mutation {
   updateProject(data: ProjectUpdateInput!, pk: ID!): UpdateProjectPayload! @isAuthenticated
   updateProcessedProject(data: ProcessedProjectUpdateInput!, pk: ID!): UpdateProcessedProjectPayload! @isAuthenticated
   createProjectAsset(data: ProjectAssetCreateInput!): CreateProjectAssetPayload! @isAuthenticated
+  deleteTutorial: DeleteTutorialPayload! @isAuthenticated
+  createTutorial(data: TutorialCreateInput!): CreateTutorialPayload! @isAuthenticated
+  updateTutorial(data: TutorialUpdateInput!, pk: ID!): UpdateTutorialPayload! @isAuthenticated
 }
 
 type OffsetPaginationInfo {
@@ -1015,6 +1026,8 @@ type Query {
   projectAssets(pagination: OffsetPaginationInput, filters: ProjectAssetFilter, order: ProjectAssetOrder): ProjectAssetTypeOffsetPaginated! @isAuthenticated
   organization(id: ID!): OrganizationType! @isAuthenticated
   organizations(pagination: OffsetPaginationInput, filters: OrganizationFilter, order: OrganizationOrder): OrganizationTypeOffsetPaginated! @isAuthenticated
+  tutorial(id: ID!): TutorialType! @isAuthenticated
+  tutorials(pagination: OffsetPaginationInput, filters: TutorialFilter, order: TutorialOrder): TutorialTypeOffsetPaginated! @isAuthenticated
   contributorUsers(pagination: OffsetPaginationInput, filters: ContributorUserFilter, order: ContributorUserOrder): ContributorUserTypeOffsetPaginated!
   contributorUser(id: ID!): ContributorUserType!
   contributorUserGroups(pagination: OffsetPaginationInput, filters: ContributorUserGroupFilter, order: ContributorUserGroupOrder): ContributorUserGroupTypeOffsetPaginated!
@@ -1098,14 +1111,300 @@ enum TileServerNameEnum {
   ESRI_BETA
 }
 
+"""
+Tutorial(id, created_at, modified_at, created_by, modified_by, project, is_draft)
+"""
+input TutorialCreateInput {
+  """Project this tutorial is referring to."""
+  project: ID!
+
+  """Draft tutorial can be modified"""
+  isDraft: Boolean
+  scenarios: [TutorialScenarioPageCreateInput!]!
+  informationPages: [TutorialInformationPageCreateInput!]!
+}
+
+"""
+Tutorial(id, created_at, modified_at, created_by, modified_by, project, is_draft)
+"""
+input TutorialFilter {
+  id: IDBaseFilterLookup
+
+  """Draft tutorial can be modified"""
+  isDraft: BoolBaseFilterLookup
+  AND: TutorialFilter
+  OR: TutorialFilter
+  NOT: TutorialFilter
+  DISTINCT: Boolean
+}
+
+"""
+TutorialInformationPageBlock(id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
+"""
+input TutorialInformationPageBlockCreateInput {
+  blockNumber: Int!
+  blockType: TutorialInformationPageBlockTypeEnum!
+  text: String
+  image: Upload
+}
+
+input TutorialInformationPageBlockInput {
+  delete: DeleteInput
+  create: TutorialInformationPageBlockCreateInput
+  update: TutorialInformationPageBlockUpdateInput
+}
+
+"""
+TutorialInformationPageBlock(id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
+"""
+type TutorialInformationPageBlockType {
+  id: ID!
+  pageId: ID!
+  blockNumber: Int!
+  blockType: TutorialInformationPageBlockTypeEnum!
+  text: String
+}
+
 enum TutorialInformationPageBlockTypeEnum {
   TEXT
   IMAGE
 }
 
+"""
+TutorialInformationPageBlock(id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
+"""
+input TutorialInformationPageBlockUpdateInput {
+  id: ID!
+  blockNumber: Int
+  blockType: TutorialInformationPageBlockTypeEnum
+  text: String
+  image: Upload
+}
+
+"""
+TutorialInformationPage(id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
+"""
+input TutorialInformationPageCreateInput {
+  title: String!
+  pageNumber: Int!
+  blocks: [TutorialInformationPageBlockCreateInput!]!
+}
+
+input TutorialInformationPageInput {
+  delete: DeleteInput
+  create: TutorialInformationPageCreateInput
+  update: TutorialInformationPageUpdateInput
+}
+
+"""
+TutorialInformationPage(id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
+"""
+type TutorialInformationPageType {
+  id: ID!
+  tutorialId: ID!
+  title: String!
+  pageNumber: Int!
+  blocks: [TutorialInformationPageBlockType!]!
+}
+
+"""
+TutorialInformationPage(id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
+"""
+input TutorialInformationPageUpdateInput {
+  id: ID!
+  title: String
+  pageNumber: Int
+  blocks: [TutorialInformationPageBlockInput!]
+}
+
+input TutorialOrder {
+  id: Ordering
+}
+
+enum TutorialScenarioIconEnum {
+  ADD_OUTLINE
+  ALERT_OUTLINE
+  BAN_OUTLINE
+  CHECK
+  CLOSE_OUTLINE
+  CHECKMARK_OUTLINE
+  EGG_OUTLINE
+  ELLIPSE_OUTLINE
+  FLAG_OUTLINE
+  HAND_LEFT_OUTLINE
+  HAND_RIGHT_OUTLINE
+  HAPPY_OUTLINE
+  HEART_OUTLINE
+  HELP_OUTLINE
+  INFORMATION_OUTLINE
+  PRISM_OUTLINE
+  REFRESH_OUTLINE
+  REMOVE_OUTLINE
+  SAD_OUTLINE
+  SEARCH_OUTLINE
+  SHAPES_OUTLINE
+  SQUARE_OUTLINE
+  STAR_OUTLINE
+  THUMBS_DOWN_OUTLINE
+  THUMBS_UP_OUTLINE
+  TRIANGLE_OUTLINE
+  WARNING_OUTLINE
+  GENERAL_TAP
+  TAP
+  TAP_1
+  TAP_2
+  TAP_3
+  SWIPE_LEFT
+}
+
+"""
+TutorialScenarioPage(id, created_at, modified_at, created_by, modified_by, tutorial, scenario_id, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
+"""
+input TutorialScenarioPageCreateInput {
+  scenarioId: Int!
+  instructionsDescription: String!
+  instructionsIcon: TutorialScenarioIconEnum!
+  instructionsTitle: String!
+  hintDescription: String
+  hintIcon: TutorialScenarioIconEnum
+  hintTitle: String
+  successDescription: String
+  successIcon: TutorialScenarioIconEnum
+  successTitle: String
+  tasks: [TutorialTaskCreateInput!]!
+}
+
+"""
+TutorialTask(id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
+"""
+input TutorialScenarioPageInput {
+  delete: DeleteInput
+  create: TutorialScenarioPageCreateInput
+  update: TutorialScenarioPageUpdateInput
+}
+
+"""
+TutorialScenarioPage(id, created_at, modified_at, created_by, modified_by, tutorial, scenario_id, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
+"""
+type TutorialScenarioPageType {
+  id: ID!
+  tutorialId: ID!
+  scenarioId: Int!
+  instructionsDescription: String!
+  instructionsIcon: TutorialScenarioIconEnum!
+  instructionsTitle: String!
+  hintDescription: String
+  hintIcon: TutorialScenarioIconEnum
+  hintTitle: String
+  successDescription: String
+  successIcon: TutorialScenarioIconEnum
+  successTitle: String
+  tasks: [TutorialTaskType!]!
+}
+
+"""
+TutorialScenarioPage(id, created_at, modified_at, created_by, modified_by, tutorial, scenario_id, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
+"""
+input TutorialScenarioPageUpdateInput {
+  id: ID!
+  scenarioId: Int
+  instructionsDescription: String
+  instructionsIcon: TutorialScenarioIconEnum
+  instructionsTitle: String
+  hintDescription: String
+  hintIcon: TutorialScenarioIconEnum
+  hintTitle: String
+  successDescription: String
+  successIcon: TutorialScenarioIconEnum
+  successTitle: String
+  tasks: [TutorialTaskInput!]
+}
+
+"""
+TutorialTask(id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
+"""
+input TutorialTaskCreateInput {
+  reference: Int!
+}
+
+input TutorialTaskInput {
+  delete: DeleteInput
+  create: TutorialTaskCreateInput
+  update: TutorialTaskUpdateInput
+}
+
+"""
+TutorialTask(id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
+"""
+type TutorialTaskType {
+  id: ID!
+  scenarioId: ID!
+  reference: Int!
+}
+
+"""
+TutorialTask(id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
+"""
+input TutorialTaskUpdateInput {
+  id: ID!
+  reference: Int
+}
+
+"""
+Tutorial(id, created_at, modified_at, created_by, modified_by, project, is_draft)
+"""
+type TutorialType implements UserResourceTypeMixin {
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
+  id: ID!
+
+  """Project this tutorial is referring to."""
+  projectId: ID!
+
+  """Draft tutorial can be modified"""
+  isDraft: Boolean!
+  scenarios: [TutorialScenarioPageType!]!
+  informationPages: [TutorialInformationPageType!]!
+}
+
+type TutorialTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: TutorialType
+}
+
+type TutorialTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [TutorialType!]!
+}
+
+"""
+Tutorial(id, created_at, modified_at, created_by, modified_by, project, is_draft)
+"""
+input TutorialUpdateInput {
+  id: ID!
+
+  """Project this tutorial is referring to."""
+  project: ID!
+
+  """Draft tutorial can be modified"""
+  isDraft: Boolean
+  scenarios: [TutorialScenarioPageInput!]
+  informationPages: [TutorialInformationPageInput!]
+}
+
 union UpdateProcessedProjectPayload = ProjectTypeMutationResponseType | OperationInfo
 
 union UpdateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
+
+union UpdateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
 
 scalar Upload
 

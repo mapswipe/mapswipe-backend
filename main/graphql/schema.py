@@ -9,6 +9,8 @@ from apps.community_dashboard.graphql import queries as community_dashboard_quer
 from apps.contributor.graphql import queries as contributor_queries
 from apps.project.graphql import mutations as project_mutations
 from apps.project.graphql import queries as project_queries
+from apps.tutorial.graphql import mutations as tutorial_mutations
+from apps.tutorial.graphql import queries as tutorial_queries
 from apps.user.graphql import mutations as user_mutations
 from apps.user.graphql import queries as user_queries
 
@@ -32,6 +34,7 @@ class CustomAsyncGraphQLView(AsyncGraphQLView):
 class Query(
     user_queries.Query,
     project_queries.Query,
+    tutorial_queries.Query,
     contributor_queries.Query,
     community_dashboard_queries.Query,
 ):
@@ -44,6 +47,7 @@ class Query(
 class Mutation(
     user_mutations.Mutation,
     project_mutations.Mutation,
+    tutorial_mutations.Mutation,
 ): ...
 
 
