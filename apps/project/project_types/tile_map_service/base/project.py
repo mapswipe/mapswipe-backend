@@ -39,7 +39,6 @@ def create_json_dump(item: dict[typing.Any, typing.Any]) -> bytes:
 class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
     zoom_level: typing.Annotated[int, Field(strict=True, gt=13, lt=23)]
     tile_server_property: TileServerConfig
-    # FIXME(tnagorra): Should be reference-able
     aoi_geometry: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")]
 
     @model_validator(mode="after")
