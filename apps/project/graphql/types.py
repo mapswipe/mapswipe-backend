@@ -43,6 +43,15 @@ class FindProjectPropertyType: ...
 class CompletenessProjectPropertyType: ...
 
 
+@strawberry_django.type(ProjectAsset)
+class ProjectAssetType(UserResourceTypeMixin):
+    id: strawberry.ID
+    type: strawberry.auto
+    mimetype: strawberry.auto
+    project_id: strawberry.ID
+    marked_as_deleted: strawberry.auto
+
+
 @strawberry_django.type(Project)
 class ProjectType:
     id: strawberry.ID
@@ -53,7 +62,7 @@ class ProjectType:
     look_for: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
-    # TODO(tnagorra) Add image
+    image: ProjectAssetType | None
     # TODO(tnagorra): Add tutorial and tutorial_id
     verification_number: strawberry.auto
     group_size: strawberry.auto
@@ -81,12 +90,3 @@ class ProjectType:
                 completeness_project.CompletenessProjectProperty.model_validate(data),
             )
         typing.assert_never(project.project_type_enum)
-
-
-@strawberry_django.type(ProjectAsset)
-class ProjectAssetType:
-    id: strawberry.ID
-    type: strawberry.auto
-    mimetype: strawberry.auto
-    project_id: strawberry.ID
-    marked_as_deleted: strawberry.auto
