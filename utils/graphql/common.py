@@ -1,10 +1,20 @@
 import typing
-from dataclasses import is_dataclass
+from dataclasses import Field, is_dataclass
 
 import strawberry
 
 
-def parse_input_data(data: typing.Any) -> dict[typing.Any, typing.Any] | list[typing.Any]:
+class DataclassInstance(typing.Protocol):
+    __dataclass_fields__: typing.ClassVar[dict[str, Field[typing.Any]]]
+
+
+InputDataType = DataclassInstance | tuple[typing.Any] | list[typing.Any] | typing.Any
+
+
+def parse_input_data(
+    data: InputDataType,
+    dataclass_transformer: typing.Callable[[DataclassInstance], tuple[bool, InputDataType]] | None = None,
+):
     """
     Return dict from Strawberry Input Object
     NOTE: strawberry.asdict doesn't handle nested and strawberry.UNSET
@@ -13,23 +23,25 @@ def parse_input_data(data: typing.Any) -> dict[typing.Any, typing.Any] | list[ty
 
     """
     # TODO(thenav56): Write test
-    if type(data) in [tuple, list]:
-        return [parse_input_data(datum) for datum in data]
+    if type(data) is tuple:
+        # NOTE: We need to filter out the response as we can return None when deleting items
+        return [item for item in (parse_input_data(datum, dataclass_transformer) for datum in data) if item is not None]
+
+    if type(data) is list:
+        # NOTE: We need to filter out the response as we can return None when deleting items
+        return [item for item in (parse_input_data(datum, dataclass_transformer) for datum in data) if item is not None]
+
+    if not is_dataclass(data) or isinstance(data, type):
+        return data
+
+    if dataclass_transformer:
+        handled, update = dataclass_transformer(data)
+        if handled:
+            return parse_input_data(update, dataclass_transformer)
 
     native_dict = {}
     for key, value in data.__dict__.items():
         if value == strawberry.UNSET:
             continue
-        if isinstance(value, list):
-            _list_value = []
-            for _value in value:
-                if is_dataclass(_value):
-                    _list_value.append(parse_input_data(_value))
-                else:
-                    _list_value.append(_value)
-            native_dict[key] = _list_value
-        elif is_dataclass(value):
-            native_dict[key] = parse_input_data(value)
-        else:
-            native_dict[key] = value
+        native_dict[key] = parse_input_data(value, dataclass_transformer)
     return native_dict

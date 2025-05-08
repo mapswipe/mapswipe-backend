@@ -9,18 +9,7 @@ from apps.tutorial.models import (
     TutorialScenarioPage,
     TutorialTask,
 )
-
-
-@strawberry.input
-class DeleteInput:
-    id: strawberry.ID
-
-
-@strawberry.interface
-class CudInput[X, Y]:
-    create: X | None = strawberry.UNSET
-    update: Y | None = strawberry.UNSET
-    delete: DeleteInput | None = strawberry.UNSET
+from utils.graphql.types import CudInput
 
 
 @strawberry_django.input(TutorialTask)
@@ -43,8 +32,7 @@ class TutorialTaskUpdateInput:
 
 
 @strawberry.input
-class TutorialTaskInput(CudInput[TutorialTaskCreateInput, TutorialTaskUpdateInput]):
-    ...
+class TutorialTaskInput(CudInput[TutorialTaskCreateInput, TutorialTaskUpdateInput]): ...
 
 
 @strawberry_django.input(TutorialScenarioPage)
@@ -83,8 +71,7 @@ class TutorialScenarioPageUpdateInput:
 
 
 @strawberry_django.input(TutorialTask)
-class TutorialScenarioPageInput(CudInput[TutorialScenarioPageCreateInput, TutorialScenarioPageUpdateInput ]):
-    ...
+class TutorialScenarioPageInput(CudInput[TutorialScenarioPageCreateInput, TutorialScenarioPageUpdateInput]): ...
 
 
 @strawberry_django.input(TutorialInformationPageBlock)
@@ -109,8 +96,9 @@ class TutorialInformationPageBlockUpdateInput:
 
 
 @strawberry.input
-class TutorialInformationPageBlockInput(CudInput[TutorialInformationPageBlockCreateInput, TutorialInformationPageBlockUpdateInput]):
-    ...
+class TutorialInformationPageBlockInput(
+    CudInput[TutorialInformationPageBlockCreateInput, TutorialInformationPageBlockUpdateInput],
+): ...
 
 
 @strawberry_django.input(TutorialInformationPage)
@@ -133,8 +121,7 @@ class TutorialInformationPageUpdateInput:
 
 
 @strawberry.input
-class TutorialInformationPageInput(CudInput[TutorialInformationPageCreateInput, TutorialInformationPageUpdateInput]):
-    ...
+class TutorialInformationPageInput(CudInput[TutorialInformationPageCreateInput, TutorialInformationPageUpdateInput]): ...
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py

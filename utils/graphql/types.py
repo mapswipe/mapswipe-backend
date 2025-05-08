@@ -21,6 +21,18 @@ class MutationResponseType[ResultTypeVar]:
     result: ResultTypeVar | None = None
 
 
+@strawberry.input
+class DeleteInput:
+    id: strawberry.ID
+
+
+@strawberry.interface
+class CudInput[X, Y]:
+    create: X | None = strawberry.UNSET
+    update: Y | None = strawberry.UNSET
+    delete: DeleteInput | None = strawberry.UNSET
+
+
 AreaSqKm = strawberry.scalar(
     NewType("AreaSqKm", float),
     serialize=lambda v: v,

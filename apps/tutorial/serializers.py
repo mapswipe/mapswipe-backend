@@ -1,5 +1,8 @@
 import typing
 
+from django.shortcuts import get_object_or_404
+from rest_framework import serializers
+
 from apps.common.serializers import DrfContextType, UserResourceSerializer
 
 from .models import Tutorial, TutorialInformationPage, TutorialInformationPageBlock, TutorialScenarioPage, TutorialTask
@@ -10,9 +13,12 @@ class TutorialTaskSerializerContextType(DrfContextType):
 
 
 class TutorialTaskSerializer(UserResourceSerializer[TutorialTask, TutorialTaskSerializerContextType]):
+    id = serializers.IntegerField(required=False, allow_null=True)
+
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = TutorialTask
         fields = (
+            "id",
             "reference",
             # TODO(tnagorra): Implement stricter project_type_specifics
             "project_type_specifics",
@@ -23,6 +29,11 @@ class TutorialTaskSerializer(UserResourceSerializer[TutorialTask, TutorialTaskSe
         validated_data["scenario"] = self.context["scenario"]
         return super().create(validated_data)
 
+    @typing.override
+    def update(self, instance: TutorialTask, validated_data: dict[typing.Any, typing.Any]):
+        validated_data["scenario"] = self.context["scenario"]
+        return super().update(instance, validated_data)
+
 
 class TutorialScenarioPageContextType(DrfContextType):
     tutorial: Tutorial
@@ -31,11 +42,13 @@ class TutorialScenarioPageContextType(DrfContextType):
 class TutorialScenarioPageSerializer(
     UserResourceSerializer[TutorialScenarioPage, TutorialScenarioPageContextType],
 ):
+    id = serializers.IntegerField(required=False, allow_null=True)
     tasks = TutorialTaskSerializer(many=True)
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = TutorialScenarioPage
         fields = (
+            "id",
             "scenario_id",
             "instructions_description",
             "instructions_icon",
@@ -69,6 +82,36 @@ class TutorialScenarioPageSerializer(
 
         return scenario
 
+    @typing.override
+    def update(self, instance: TutorialScenarioPage, validated_data: dict[typing.Any, typing.Any]):
+        tasks_data = validated_data.pop("tasks")
+
+        validated_data["tutorial"] = self.context["tutorial"]
+        scenario = super().update(instance, validated_data)
+
+        task_qs = TutorialTask.objects.filter(
+            scenario=scenario.pk,
+        )
+
+        for task_data in tasks_data:
+            task_id = task_data.pop("id", None)
+            task_instance = None
+            if task_id is not None:
+                task_instance = get_object_or_404(task_qs, id=task_id)
+
+            task_serializer = TutorialTaskSerializer(
+                data=task_data,
+                instance=task_instance,
+                context={
+                    **self.context,
+                    "scenario": scenario,
+                },
+            )
+            task_serializer.is_valid(raise_exception=True)
+            task_serializer.save()
+
+        return scenario
+
 
 class TutorialInformationPageBlockContextType(DrfContextType):
     page: TutorialScenarioPage
@@ -77,9 +120,12 @@ class TutorialInformationPageBlockContextType(DrfContextType):
 class TutorialInformationPageBlockSerializer(
     UserResourceSerializer[TutorialInformationPageBlock, TutorialInformationPageBlockContextType],
 ):
+    id = serializers.IntegerField(required=False, allow_null=True)
+
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = TutorialInformationPageBlock
         fields = (
+            "id",
             "block_number",
             "block_type",
             "text",
@@ -91,6 +137,11 @@ class TutorialInformationPageBlockSerializer(
         validated_data["page"] = self.context["page"]
         return super().create(validated_data)
 
+    @typing.override
+    def update(self, instance: TutorialInformationPageBlock, validated_data: dict[typing.Any, typing.Any]):
+        validated_data["page"] = self.context["page"]
+        return super().update(instance, validated_data)
+
 
 class TutorialInformationPageContextType(DrfContextType):
     tutorial: Tutorial
@@ -99,11 +150,13 @@ class TutorialInformationPageContextType(DrfContextType):
 class TutorialInformationPageSerializer(
     UserResourceSerializer[TutorialInformationPage, TutorialInformationPageContextType],
 ):
+    id = serializers.IntegerField(required=False, allow_null=True)
     blocks = TutorialInformationPageBlockSerializer(many=True)
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = TutorialInformationPage
         fields = (
+            "id",
             "title",
             "page_number",
             "blocks",
@@ -119,6 +172,36 @@ class TutorialInformationPageSerializer(
         for block_data in blocks_data:
             block_serializer = TutorialInformationPageBlockSerializer(
                 data=block_data,
+                context={
+                    **self.context,
+                    "page": page,
+                },
+            )
+            block_serializer.is_valid(raise_exception=True)
+            block_serializer.save()
+
+        return page
+
+    @typing.override
+    def update(self, instance: TutorialInformationPage, validated_data: dict[typing.Any, typing.Any]):
+        blocks_data = validated_data.pop("blocks")
+
+        validated_data["tutorial"] = self.context["tutorial"]
+        page = super().update(instance, validated_data)
+
+        block_qs = TutorialInformationPageBlock.objects.filter(
+            page=page.pk,
+        )
+
+        for block_data in blocks_data:
+            block_id = block_data.pop("id", None)
+            block_instance = None
+            if block_id is not None:
+                block_instance = get_object_or_404(block_qs, id=block_id)
+
+            block_serializer = TutorialInformationPageBlockSerializer(
+                data=block_data,
+                instance=block_instance,
                 context={
                     **self.context,
                     "page": page,
@@ -161,9 +244,56 @@ class TutorialSerializer(UserResourceSerializer[Tutorial]):
             scenario_serializer.save()
 
         for information_page_data in information_pages_data:
-            # blocks_data = information_page_data.pop("blocks")
             information_page_serializer = TutorialInformationPageSerializer(
                 data=information_page_data,
+                context={
+                    **self.context,
+                    "tutorial": tutorial,
+                },
+            )
+            information_page_serializer.is_valid(raise_exception=True)
+            information_page_serializer.save()
+
+        return tutorial
+
+    @typing.override
+    def update(self, instance: Tutorial, validated_data: dict[typing.Any, typing.Any]):
+        scenarios_data = validated_data.pop("scenarios")
+        information_pages_data = validated_data.pop("information_pages")
+        tutorial = super().update(instance, validated_data)
+
+        scenario_qs = TutorialScenarioPage.objects.filter(
+            tutorial=tutorial.pk,
+        )
+        information_page_qs = TutorialInformationPage.objects.filter(
+            tutorial=tutorial.pk,
+        )
+
+        for scenario_data in scenarios_data:
+            # FIXME(tnagorra): Check if we need to pop this information
+            scenario_id = scenario_data.pop("id", None)
+            scenario_instance = None
+            if scenario_id is not None:
+                scenario_instance = get_object_or_404(scenario_qs, id=scenario_id)
+            scenario_serializer = TutorialScenarioPageSerializer(
+                data=scenario_data,
+                instance=scenario_instance,
+                context={
+                    **self.context,
+                    "tutorial": tutorial,
+                },
+            )
+            scenario_serializer.is_valid(raise_exception=True)
+            scenario_serializer.save()
+
+        for information_page_data in information_pages_data:
+            information_page_id = information_page_data.pop("id", None)
+            information_page_instance = None
+            if information_page_id is not None:
+                information_page_instance = get_object_or_404(information_page_qs, id=information_page_id)
+            information_page_serializer = TutorialInformationPageSerializer(
+                data=information_page_data,
+                instance=information_page_instance,
                 context={
                     **self.context,
                     "tutorial": tutorial,

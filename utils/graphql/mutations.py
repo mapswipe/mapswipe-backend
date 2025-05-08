@@ -7,7 +7,7 @@ from rest_framework import serializers
 
 from main.graphql.context import Info
 
-from .common import parse_input_data
+from .common import DataclassInstance, InputDataType, parse_input_data
 from .drf import MutationCustomErrorType, mutation_is_not_valid
 from .types import CustomErrorType, MutationResponseType
 
@@ -78,10 +78,16 @@ class ModelMutation:
         info: Info,
         instance: models.Model,
         extra_context: dict | None = None,
+        dataclass_transformer: typing.Callable[[DataclassInstance], tuple[bool, InputDataType]] | None = None,
     ) -> MutationResponseType:
+        parsed_dict = parse_input_data(
+            data,
+            dataclass_transformer,
+        )
+
         errors, saved_instance = await self.handle_mutation(
             self.serializer_class,
-            parse_input_data(data),
+            parsed_dict,
             info,
             extra_context,
             instance=instance,

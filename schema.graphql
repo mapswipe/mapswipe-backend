@@ -362,6 +362,15 @@ union DeleteProjectPayload = ProjectType | OperationInfo
 
 union DeleteTutorialPayload = TutorialType | OperationInfo
 
+type DjangoImageType {
+  name: String!
+  path: String!
+  size: Int!
+  url: String!
+  width: Int!
+  height: Int!
+}
+
 input DjangoModelFilterInput {
   id: ID!
 }
@@ -1158,9 +1167,9 @@ input TutorialInformationPageBlockCreateInput {
 }
 
 input TutorialInformationPageBlockInput {
-  delete: DeleteInput
   create: TutorialInformationPageBlockCreateInput
   update: TutorialInformationPageBlockUpdateInput
+  delete: DeleteInput
 }
 
 """
@@ -1172,6 +1181,7 @@ type TutorialInformationPageBlockType {
   blockNumber: Int!
   blockType: TutorialInformationPageBlockTypeEnum!
   text: String
+  image: DjangoImageType
 }
 
 enum TutorialInformationPageBlockTypeEnum {
@@ -1200,9 +1210,9 @@ input TutorialInformationPageCreateInput {
 }
 
 input TutorialInformationPageInput {
-  delete: DeleteInput
   create: TutorialInformationPageCreateInput
   update: TutorialInformationPageUpdateInput
+  delete: DeleteInput
 }
 
 """
@@ -1287,9 +1297,9 @@ input TutorialScenarioPageCreateInput {
 TutorialTask(id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
 """
 input TutorialScenarioPageInput {
-  delete: DeleteInput
   create: TutorialScenarioPageCreateInput
   update: TutorialScenarioPageUpdateInput
+  delete: DeleteInput
 }
 
 """
@@ -1338,9 +1348,9 @@ input TutorialTaskCreateInput {
 }
 
 input TutorialTaskInput {
-  delete: DeleteInput
   create: TutorialTaskCreateInput
   update: TutorialTaskUpdateInput
+  delete: DeleteInput
 }
 
 """

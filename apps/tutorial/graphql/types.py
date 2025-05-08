@@ -44,7 +44,7 @@ class TutorialInformationPageBlockType:
     block_number: strawberry.auto
     block_type: strawberry.auto
     text: strawberry.auto
-    # TODO(tnagorra) Add image
+    image: strawberry.auto
 
 
 @strawberry_django.type(TutorialInformationPage)
