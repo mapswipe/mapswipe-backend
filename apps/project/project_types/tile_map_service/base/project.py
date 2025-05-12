@@ -78,21 +78,11 @@ class TileMapServiceProjectTaskProperty(base_project.BaseProjectTaskProperty):
     tile_y: int
 
 
-TileMapServiceProjectPropertyTypeVar = typing.TypeVar(
-    "TileMapServiceProjectPropertyTypeVar",
-    bound=TileMapServiceProjectProperty,
-)
-TileMapServiceProjectTaskGroupPropertyTypeVar = typing.TypeVar(
-    "TileMapServiceProjectTaskGroupPropertyTypeVar",
-    bound=TileMapServiceProjectTaskGroupProperty,
-)
-TileMapServiceProjectTaskPropertyTypeVar = typing.TypeVar(
-    "TileMapServiceProjectTaskPropertyTypeVar",
-    bound=TileMapServiceProjectTaskProperty,
-)
-
-
-class TileMapServiceBaseProject(
+class TileMapServiceBaseProject[
+    TileMapServiceProjectPropertyTypeVar: TileMapServiceProjectProperty,
+    TileMapServiceProjectTaskGroupPropertyTypeVar: TileMapServiceProjectTaskGroupProperty,
+    TileMapServiceProjectTaskPropertyTypeVar: TileMapServiceProjectTaskProperty,
+](
     base_project.BaseProject[
         TileMapServiceProjectPropertyTypeVar,
         TileMapServiceProjectTaskGroupPropertyTypeVar,
