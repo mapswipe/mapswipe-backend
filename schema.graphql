@@ -219,6 +219,23 @@ enum Ordering {
 """
 Organization(id, created_at, modified_at, created_by, modified_by, name, unique_name)
 """
+input OrganizationFilter {
+  id: IDBaseFilterLookup
+  name: StrFilterLookup
+  AND: OrganizationFilter
+  OR: OrganizationFilter
+  NOT: OrganizationFilter
+  DISTINCT: Boolean
+}
+
+input OrganizationOrder {
+  id: Ordering
+  name: Ordering
+}
+
+"""
+Organization(id, created_at, modified_at, created_by, modified_by, name, unique_name)
+"""
 type OrganizationType implements UserResourceTypeMixin {
   createdAt: DateTime!
   modifiedAt: DateTime!
@@ -226,6 +243,16 @@ type OrganizationType implements UserResourceTypeMixin {
   modifiedBy: UserType!
   id: ID!
   name: String!
+}
+
+type OrganizationTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [OrganizationType!]!
 }
 
 """
@@ -250,10 +277,9 @@ input ProcessedProjectUpdateInput {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, is_deleted)
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
 """
 input ProjectAssetCreateInput {
-  type: ProjectAssetTypeEnum!
   mimetype: ProjectAssetMimetypeEnum!
 
   """The file associated with the asset"""
@@ -262,7 +288,7 @@ input ProjectAssetCreateInput {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, is_deleted)
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
 """
 input ProjectAssetFilter {
   id: IDBaseFilterLookup
@@ -335,13 +361,22 @@ input ProjectAssetOrder {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, is_deleted)
+ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
 """
-type ProjectAssetType {
+type ProjectAssetType implements UserResourceTypeMixin {
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
   id: ID!
   type: ProjectAssetTypeEnum!
   mimetype: ProjectAssetMimetypeEnum!
   projectId: ID!
+
+  """
+  If this flag is enabled, this project asset will be deleted in the future
+  """
+  markedAsDeleted: Boolean!
 }
 
 enum ProjectAssetTypeEnum {
@@ -578,6 +613,7 @@ type ProjectType {
   """
   additionalInfoUrl: String
   description: String
+  image: ProjectAssetType
 
   """
   How many people do you want to see every tile before you consider it finished?
@@ -716,6 +752,8 @@ type Query {
   projects(pagination: OffsetPaginationInput, filters: ProjectFilter, order: ProjectOrder): ProjectTypeOffsetPaginated! @isAuthenticated
   projectAsset(id: ID!): ProjectAssetType! @isAuthenticated
   projectAssets(pagination: OffsetPaginationInput, filters: ProjectAssetFilter, order: ProjectAssetOrder): ProjectAssetTypeOffsetPaginated! @isAuthenticated
+  organization(id: ID!): OrganizationType! @isAuthenticated
+  organizations(pagination: OffsetPaginationInput, filters: OrganizationFilter, order: OrganizationOrder): OrganizationTypeOffsetPaginated! @isAuthenticated
   enums: AppEnumCollection!
 }
 

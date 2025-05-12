@@ -99,16 +99,20 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
     def validate_image(self, new_image: ProjectAsset):
         assert self.instance is not None
 
-        asset_exists = ProjectAsset.objects.filter(
-            id=new_image.pk,
-            type=ProjectAsset.Type.INPUT,
-            mimetype__in=[
-                ProjectAsset.Mimetype.IMAGE_GIF,
-                ProjectAsset.Mimetype.IMAGE_JPEG,
-                ProjectAsset.Mimetype.IMAGE_PNG,
-            ],
-            project_id=self.instance.pk,
-        ).exists()
+        asset_exists = (
+            ProjectAsset.usable_objects()
+            .filter(
+                id=new_image.pk,
+                type=ProjectAsset.Type.INPUT,
+                mimetype__in=[
+                    ProjectAsset.Mimetype.IMAGE_GIF,
+                    ProjectAsset.Mimetype.IMAGE_JPEG,
+                    ProjectAsset.Mimetype.IMAGE_PNG,
+                ],
+                project_id=self.instance.pk,
+            )
+            .exists()
+        )
         if not asset_exists:
             raise serializers.ValidationError(gettext("ProjectAsset is invalid or does not exist."))
 
@@ -213,16 +217,20 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
     def validate_image(self, new_image: ProjectAsset):
         assert self.instance is not None
 
-        asset_exists = ProjectAsset.objects.filter(
-            id=new_image.pk,
-            type=ProjectAsset.Type.INPUT,
-            mimetype__in=[
-                ProjectAsset.Mimetype.IMAGE_GIF,
-                ProjectAsset.Mimetype.IMAGE_JPEG,
-                ProjectAsset.Mimetype.IMAGE_PNG,
-            ],
-            project_id=self.instance.pk,
-        ).exists()
+        asset_exists = (
+            ProjectAsset.usable_objects()
+            .filter(
+                id=new_image.pk,
+                type=ProjectAsset.Type.INPUT,
+                mimetype__in=[
+                    ProjectAsset.Mimetype.IMAGE_GIF,
+                    ProjectAsset.Mimetype.IMAGE_JPEG,
+                    ProjectAsset.Mimetype.IMAGE_PNG,
+                ],
+                project_id=self.instance.pk,
+            )
+            .exists()
+        )
         if not asset_exists:
             raise serializers.ValidationError(gettext("ProjectAsset is invalid or does not exist."))
 
@@ -235,16 +243,13 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = ProjectAsset
         fields = (
-            "type",
             "mimetype",
             "file",
             "project",
         )
 
-    def validate_type(self, new_type: Project.Status):
-        # NOTE: Users should only be able to create Input type assets
-        if new_type != ProjectAsset.Type.INPUT:
-            raise serializers.ValidationError(
-                gettext("ProjectAsset type should be Input"),
-            )
-        return new_type
+    @typing.override
+    def create(self, validated_data: dict[str, typing.Any]) -> ProjectAsset:
+        # NOTE: User should only bye able to create INPUT type project assets
+        validated_data["type"] = ProjectAsset.Type.INPUT
+        return super().create(validated_data)

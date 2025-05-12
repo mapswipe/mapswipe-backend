@@ -39,7 +39,6 @@ def create_json_dump(item: dict[typing.Any, typing.Any]) -> bytes:
 class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
     zoom_level: typing.Annotated[int, Field(strict=True, gt=13, lt=23)]
     tile_server_property: TileServerConfig
-    # FIXME(tnagorra): Should be reference-able
     aoi_geometry: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")]
 
     @model_validator(mode="after")
@@ -49,12 +48,16 @@ class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
             return self
 
         project_id = info.context.get("project_id")
-        asset_exists = ProjectAsset.objects.filter(
-            id=self.aoi_geometry,
-            type=ProjectAssetTypeEnum.INPUT,
-            mimetype=ProjectAssetMimetypeEnum.GEOJSON,
-            project_id=project_id,
-        ).exists()
+        asset_exists = (
+            ProjectAsset.usable_objects()
+            .filter(
+                id=self.aoi_geometry,
+                type=ProjectAssetTypeEnum.INPUT,
+                mimetype=ProjectAssetMimetypeEnum.GEOJSON,
+                project_id=project_id,
+            )
+            .exists()
+        )
 
         # FIXME(tnagorra): Handle error
         if not asset_exists:
@@ -227,7 +230,7 @@ class TileMapServiceBaseProject(
         """Validate project before creating groups"""
         self.project.update_processing_status(Project.ProcessingStatus.VALIDATING_GEOMETRY, True)
 
-        aoi_asset = ProjectAsset.objects.get(
+        aoi_asset = ProjectAsset.usable_objects().get(
             id=self.project_type_specifics.aoi_geometry,
             type=ProjectAssetTypeEnum.INPUT,
             mimetype=ProjectAssetMimetypeEnum.GEOJSON,

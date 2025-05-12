@@ -86,7 +86,6 @@ class ProcessedProjectUpdateInput:
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.input(ProjectAsset)
 class ProjectAssetCreateInput:
-    type: strawberry.auto
     mimetype: strawberry.auto
     file: Upload
     project: strawberry.ID
