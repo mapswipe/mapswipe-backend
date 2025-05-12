@@ -1,3 +1,4 @@
+# pyright: reportUninitializedInstanceVariable=false
 import typing
 
 from django.core.exceptions import ValidationError
@@ -73,9 +74,13 @@ class TutorialInformationPageBlock(models.Model):
     def __str__(self):
         return f"page_id={self.page_id}, block_number={self.block_number}, block_type={self.block_type}"
 
+    @property
+    def block_type_enum(self):
+        return TutorialInformationPageBlockTypeEnum(self.block_type)
+
     @typing.override
     def clean(self):
-        if self.block_type == TutorialInformationPageBlockTypeEnum.TEXT and (self.text is None or self.text == ""):
+        if self.block_type_enum == TutorialInformationPageBlockTypeEnum.TEXT and (self.text is None or self.text == ""):
             raise ValidationError(gettext("Text should be provided for text block"))
-        if self.block_type == TutorialInformationPageBlockTypeEnum.IMAGE and self.image.name is None:
+        if self.block_type_enum == TutorialInformationPageBlockTypeEnum.IMAGE and self.image.name is None:
             raise ValidationError(gettext("Image should be provided for image block"))
