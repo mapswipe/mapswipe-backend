@@ -2,13 +2,38 @@ import logging
 import typing
 from abc import ABC, abstractmethod
 
+from django.contrib.gis.db.models.functions import Area
 from django.db import models
 from pydantic import BaseModel
 
-from apps.project.models import Project, ProjectAsset, ProjectTask, ProjectTaskGroup
+from apps.project.models import Project, ProjectAsset, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
 from utils.geo import tile_grouping
 
 logger = logging.getLogger(__name__)
+
+
+def get_max_time_spend_percentile(project_type: ProjectTypeEnum) -> float:
+    """
+    Factor calculated by @Hagellach37
+    For defining the threshold for outliers using `95_percent`
+
+    |project_type|median|95_percent|avg|
+    |------------|------|----------|---|
+    |1|00:00:00.208768|00:00:01.398161|00:00:28.951521|
+    |2|00:00:01.330297|00:00:06.076814|00:00:03.481192|
+    |3|00:00:02.092967|00:00:11.271081|00:00:06.045881|
+    """
+    match project_type:
+        case ProjectTypeEnum.FIND:
+            return 1.4
+        case ProjectTypeEnum.COMPLETENESS:
+            return 1.4
+        case ProjectTypeEnum.COMPARE:
+            return 11.2
+        # case ProjectTypeEnum.FOOTPRINT:
+        #     return 6.1
+        # case ProjectTypeEnum.STREET:
+        #     return 65
 
 
 class BaseProjectProperty(BaseModel, ABC): ...
@@ -74,14 +99,27 @@ class BaseProject(
         # Update number_of_tasks
         self.project.update_processing_status(Project.ProcessingStatus.ANALYZING_GROUPS_AND_TASK, True)
 
-        ProjectTaskGroup.objects.filter(
-            project_id=self.project.pk,
-        ).update(
+        project_task_groups_qs = ProjectTaskGroup.objects.filter(project_id=self.project.pk)
+
+        project_task_groups_qs.update(
             number_of_tasks=models.Subquery(
                 ProjectTask.objects.filter(task_group_id=models.OuterRef("id"))
                 .values("task_group_id")
                 .annotate(total_tasks=models.Count("*"))
                 .values("total_tasks")[:1],
+            ),
+            total_area=models.Subquery(
+                ProjectTask.objects.filter(task_group_id=models.OuterRef("id"))
+                .values("task_group_id")
+                .annotate(total_task_group_area=models.Sum(Area("geometry")))
+                .values("total_task_group_area")[:1],
+            ),
+        )
+
+        # NOTE: After number_of_tasks is calculated
+        project_task_groups_qs.update(
+            time_spent_max_allowed=(
+                models.F("number_of_tasks") * get_max_time_spend_percentile(self.project.project_type_enum)
             ),
         )
 

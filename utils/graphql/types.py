@@ -1,8 +1,9 @@
+import json
 import typing
+from typing import NewType
 
 import strawberry
-
-ResultTypeVar = typing.TypeVar("ResultTypeVar")
+from strawberry.scalars import JSON
 
 # generalize all the CustomErrorType
 CustomErrorType = strawberry.scalar(
@@ -14,7 +15,20 @@ CustomErrorType = strawberry.scalar(
 
 
 @strawberry.type
-class MutationResponseType(typing.Generic[ResultTypeVar]):
+class MutationResponseType[ResultTypeVar]:
     ok: bool = True
     errors: CustomErrorType | None = None
     result: ResultTypeVar | None = None
+
+
+AreaSqKm = strawberry.scalar(
+    NewType("AreaSqKm", float),
+    serialize=lambda v: v,
+    parse_value=lambda v: v,
+)
+
+GenericJSON = strawberry.scalar(
+    NewType("GenericJSON", JSON),
+    serialize=lambda v: json.loads(v) if isinstance(v, str) else v,
+    parse_value=lambda v: v,
+)

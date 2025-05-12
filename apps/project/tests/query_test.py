@@ -213,7 +213,7 @@ class TestProjectQuery(TestCase):
                     dict(
                         id=self.gID(project.pk),
                         name=project.name,
-                        projectType=self.genum(project.project_type),
+                        projectType=self.genum(project.project_type_enum),
                         projectTypeSpecifics=format_object_keys(project.project_type_specifics, to_camel_case),
                     )
                     for project in self.projects

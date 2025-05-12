@@ -1,7 +1,8 @@
+# pyright: reportUninitializedInstanceVariable=false
 import typing
 
 import ulid
-from django.contrib.gis.db import models as gid_models
+from django.contrib.gis.db import models as gis_models
 from django.db import models
 from django.db.models.functions import Lower
 from django.utils.translation import gettext_lazy
@@ -247,6 +248,8 @@ class Project(UserResource):
         null=True,
         on_delete=models.SET_NULL,
     )
+    # TODO(thenav56): Use srid=4326?
+    centroid = gis_models.PointField(blank=True, null=True)
 
     # STATUS
 
@@ -369,7 +372,7 @@ class ProjectTaskGroup(models.Model):
     # FIXME(thenav56): Refactor this
     project_type_specifics = models.JSONField()
 
-    # NOTE: Maintained by Aggregator (Community Dashboard)
+    # NOTE: Used by Community Dashboard
     total_area = models.FloatField(null=True, default=None)
     time_spent_max_allowed = models.FloatField(null=True, default=None)
 
@@ -393,7 +396,7 @@ class ProjectTask(models.Model):
 
     # NOTE(tnagorra): The geometry is only necessary for footprint project type
     # FIXME(thenav56): Existing gid_models.MultiPolygonField(srid=4326, blank=True, null=True)
-    geometry = gid_models.GeometryField(null=True, blank=True, default=None, dim=3)
+    geometry = gis_models.GeometryField(null=True, blank=True, default=None, dim=3)
 
     # TODO(thenav56): Currently this field collects any data not stored by another fields, pulled from firebase.
     # Also, used in SQL queries
