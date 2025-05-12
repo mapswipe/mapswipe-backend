@@ -9,7 +9,30 @@ from apps.tutorial.models import (
     TutorialScenarioPage,
     TutorialTask,
 )
+from apps.tutorial.project_types.tile_map_service.compare import tutorial as compare_tutorial
+from apps.tutorial.project_types.tile_map_service.completeness import tutorial as completeness_tutorial
+from apps.tutorial.project_types.tile_map_service.find import tutorial as find_tutorial
 from utils.graphql.types import CudInput
+
+
+# Project Properties
+@strawberry.experimental.pydantic.input(model=compare_tutorial.CompareTutorialTaskProperty, all_fields=True)
+class CompareTutorialTaskPropertyInput: ...
+
+
+@strawberry.experimental.pydantic.input(model=find_tutorial.FindTutorialTaskProperty, all_fields=True)
+class FindTutorialTaskPropertyInput: ...
+
+
+@strawberry.experimental.pydantic.input(model=completeness_tutorial.CompletenessTutorialTaskProperty, all_fields=True)
+class CompletenessTutorialTaskPropertyInput: ...
+
+
+@strawberry.input(one_of=True)
+class TutorialTaskProjectTypeSpecificInput:
+    compare: CompareTutorialTaskPropertyInput | None = strawberry.UNSET
+    find: FindTutorialTaskPropertyInput | None = strawberry.UNSET
+    completeness: CompletenessTutorialTaskPropertyInput | None = strawberry.UNSET
 
 
 @strawberry_django.input(TutorialTask)
@@ -18,7 +41,7 @@ class TutorialTaskCreateInput:
 
     reference: strawberry.auto
     # FIXME(tnagorra): Make this typesafe
-    project_type_specifics: strawberry.auto
+    project_type_specifics: TutorialTaskProjectTypeSpecificInput
 
 
 @strawberry_django.partial(TutorialTask)
@@ -28,7 +51,7 @@ class TutorialTaskUpdateInput:
     id: strawberry.ID
     reference: strawberry.auto
     # FIXME(tnagorra): Make this typesafe
-    project_type_specifics: strawberry.auto
+    project_type_specifics: TutorialTaskProjectTypeSpecificInput
 
 
 @strawberry.input

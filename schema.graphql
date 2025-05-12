@@ -103,6 +103,20 @@ type CompareProjectPropertyType {
 
 union CompareProjectPropertyTypeFindProjectPropertyTypeCompletenessProjectPropertyType = CompareProjectPropertyType | FindProjectPropertyType | CompletenessProjectPropertyType
 
+input CompareTutorialTaskPropertyInput {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
+}
+
+type CompareTutorialTaskPropertyType {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
+}
+
+union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType = CompareTutorialTaskPropertyType | FindTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType
+
 input CompletenessProjectPropertyInput {
   zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfigInput!
@@ -115,6 +129,18 @@ type CompletenessProjectPropertyType {
   tileServerProperty: ProjectTileServerConfig!
   aoiGeometry: String!
   tileServerBProperty: ProjectTileServerConfig!
+}
+
+input CompletenessTutorialTaskPropertyInput {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
+}
+
+type CompletenessTutorialTaskPropertyType {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
 }
 
 type ContributorSwipeStatType {
@@ -392,6 +418,18 @@ type FindProjectPropertyType {
   aoiGeometry: String!
 }
 
+input FindTutorialTaskPropertyInput {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
+}
+
+type FindTutorialTaskPropertyType {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
+}
+
 scalar GenericJSON
 
 input IDBaseFilterLookup {
@@ -406,11 +444,6 @@ input IDBaseFilterLookup {
   """
   inList: [ID!]
 }
-
-"""
-The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
-"""
-scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
 
 type MapContributionStatsType {
   geojson: GenericJSON!
@@ -530,7 +563,7 @@ type OrganizationTypeOffsetPaginated {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProcessedProjectUpdateInput {
   name: String
@@ -724,7 +757,7 @@ type ProjectAssetTypeOffsetPaginated {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectCreateInput {
   projectType: ProjectTypeEnum!
@@ -744,7 +777,7 @@ input ProjectCreateInput {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectFilter {
   id: IDBaseFilterLookup
@@ -866,7 +899,7 @@ type ProjectTileServerCustomConfig {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
 type ProjectType implements UserResourceTypeMixin {
   createdAt: DateTime!
@@ -1001,7 +1034,7 @@ type ProjectTypeSwipeStatsType {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectUpdateInput {
   name: String
@@ -1344,13 +1377,19 @@ TutorialTask(id, created_at, modified_at, created_by, modified_by, scenario, ref
 """
 input TutorialTaskCreateInput {
   reference: Int!
-  projectTypeSpecifics: JSON!
+  projectTypeSpecifics: TutorialTaskProjectTypeSpecificInput!
 }
 
 input TutorialTaskInput {
   create: TutorialTaskCreateInput
   update: TutorialTaskUpdateInput
   delete: DeleteInput
+}
+
+input TutorialTaskProjectTypeSpecificInput @oneOf {
+  compare: CompareTutorialTaskPropertyInput
+  find: FindTutorialTaskPropertyInput
+  completeness: CompletenessTutorialTaskPropertyInput
 }
 
 """
@@ -1360,7 +1399,7 @@ type TutorialTaskType {
   id: ID!
   scenarioId: ID!
   reference: Int!
-  projectTypeSpecifics: JSON!
+  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType
 }
 
 """
@@ -1369,7 +1408,7 @@ TutorialTask(id, created_at, modified_at, created_by, modified_by, scenario, ref
 input TutorialTaskUpdateInput {
   id: ID!
   reference: Int
-  projectTypeSpecifics: JSON
+  projectTypeSpecifics: TutorialTaskProjectTypeSpecificInput!
 }
 
 """

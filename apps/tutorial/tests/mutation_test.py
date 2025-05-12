@@ -1,4 +1,3 @@
-import pprint
 import typing
 from pathlib import Path
 
@@ -11,6 +10,7 @@ from apps.tutorial.models import (
 )
 from apps.user.factories import UserFactory
 from main.tests import TestCase
+from utils.common import format_object_keys, to_camel_case
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -61,7 +61,23 @@ class Mutation:
                   tasks {
                     id
                     reference
-                    projectTypeSpecifics
+                    projectTypeSpecifics {
+                      ... on CompareTutorialTaskPropertyType {
+                        tileX
+                        tileY
+                        tileZ
+                      }
+                      ... on FindTutorialTaskPropertyType {
+                        tileX
+                        tileY
+                        tileZ
+                      }
+                      ... on CompletenessTutorialTaskPropertyType {
+                        tileX
+                        tileY
+                        tileZ
+                      }
+                    }
                   }
                 }
               }
@@ -114,7 +130,23 @@ class Mutation:
                   tasks {
                     id
                     reference
-                    projectTypeSpecifics
+                    projectTypeSpecifics {
+                      ... on CompareTutorialTaskPropertyType {
+                        tileX
+                        tileY
+                        tileZ
+                      }
+                      ... on FindTutorialTaskPropertyType {
+                        tileX
+                        tileY
+                        tileZ
+                      }
+                      ... on CompletenessTutorialTaskPropertyType {
+                        tileX
+                        tileY
+                        tileZ
+                      }
+                    }
                   }
                 }
               }
@@ -182,12 +214,12 @@ class TestTutorialMutation(TestCase):
                     "successIcon": "CHECK",
                     "successTitle": "Well done!",
                     "tasks": [
-                        {"projectTypeSpecifics": {"tile_z": 18, "tile_x": 193196, "tile_y": 110087}, "reference": 0},
-                        {"projectTypeSpecifics": {"tile_z": 18, "tile_x": 193196, "tile_y": 110088}, "reference": 1},
-                        {"projectTypeSpecifics": {"tile_z": 18, "tile_x": 193196, "tile_y": 110089}, "reference": 0},
-                        {"projectTypeSpecifics": {"tile_z": 18, "tile_x": 193197, "tile_y": 110087}, "reference": 0},
-                        {"projectTypeSpecifics": {"tile_z": 18, "tile_x": 193197, "tile_y": 110088}, "reference": 1},
-                        {"projectTypeSpecifics": {"tile_z": 18, "tile_x": 193197, "tile_y": 110089}, "reference": 0},
+                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110087}}, "reference": 0},
+                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110088}}, "reference": 1},
+                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110089}}, "reference": 0},
+                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110087}}, "reference": 0},
+                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110088}}, "reference": 1},
+                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110089}}, "reference": 0},
                     ],
                 },
                 {
@@ -202,12 +234,12 @@ class TestTutorialMutation(TestCase):
                     "successIcon": "CHECK",
                     "successTitle": "Well done!",
                     "tasks": [
-                        {"projectTypeSpecifics": {"tile_z": 18, "tile_x": 193204, "tile_y": 110087}, "reference": 1},
-                        {"projectTypeSpecifics": {"tile_z": 18, "tile_x": 193204, "tile_y": 110088}, "reference": 1},
-                        {"projectTypeSpecifics": {"tile_z": 18, "tile_x": 193204, "tile_y": 110089}, "reference": 1},
-                        {"projectTypeSpecifics": {"tile_z": 18, "tile_x": 193205, "tile_y": 110087}, "reference": 1},
-                        {"projectTypeSpecifics": {"tile_z": 18, "tile_x": 193205, "tile_y": 110088}, "reference": 1},
-                        {"projectTypeSpecifics": {"tile_z": 18, "tile_x": 193205, "tile_y": 110089}, "reference": 1},
+                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110087}}, "reference": 1},
+                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110088}}, "reference": 1},
+                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110089}}, "reference": 1},
+                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110087}}, "reference": 1},
+                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110088}}, "reference": 1},
+                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110089}}, "reference": 1},
                     ],
                 },
             ],
@@ -260,7 +292,6 @@ class TestTutorialMutation(TestCase):
         self.force_login(self.user)
         content = self._create_tutorial_mutation(tutorial_data)
         resp_data = content["data"]["createTutorial"]
-        pprint.pp(resp_data["errors"])
         assert resp_data["errors"] is None, content
 
         latest_tutorial = Tutorial.objects.get(pk=resp_data["result"]["id"])
@@ -290,7 +321,8 @@ class TestTutorialMutation(TestCase):
                             {
                                 "id": self.gID(y.pk),
                                 "reference": y.reference,
-                                "projectTypeSpecifics": y.project_type_specifics,
+                                # "projectTypeSpecifics": y.project_type_specifics,
+                                "projectTypeSpecifics": format_object_keys(y.project_type_specifics, to_camel_case),
                             }
                             for y in x.tasks.all()
                         ],
@@ -318,6 +350,9 @@ class TestTutorialMutation(TestCase):
             ),
         ), content
 
+        def get_update_for_task(tut: dict):
+            return {"update": {**tut, "projectTypeSpecifics": {"find": tut.get("projectTypeSpecifics")}}}
+
         # Updating Tutorial: Without authentication
         tutorial_from_res = resp_data["result"]
         project = tutorial_from_res.pop("projectId")
@@ -329,12 +364,12 @@ class TestTutorialMutation(TestCase):
                     "update": {
                         **tutorial_from_res["scenarios"][0],
                         "tasks": [
-                            {"update": {**tutorial_from_res["scenarios"][0]["tasks"][0]}},
-                            {"update": {**tutorial_from_res["scenarios"][0]["tasks"][1]}},
-                            {"update": {**tutorial_from_res["scenarios"][0]["tasks"][2]}},
-                            {"update": {**tutorial_from_res["scenarios"][0]["tasks"][3]}},
-                            {"update": {**tutorial_from_res["scenarios"][0]["tasks"][4]}},
-                            {"update": {**tutorial_from_res["scenarios"][0]["tasks"][5]}},
+                            get_update_for_task(tutorial_from_res["scenarios"][0]["tasks"][0]),
+                            get_update_for_task(tutorial_from_res["scenarios"][0]["tasks"][1]),
+                            get_update_for_task(tutorial_from_res["scenarios"][0]["tasks"][2]),
+                            get_update_for_task(tutorial_from_res["scenarios"][0]["tasks"][3]),
+                            get_update_for_task(tutorial_from_res["scenarios"][0]["tasks"][4]),
+                            get_update_for_task(tutorial_from_res["scenarios"][0]["tasks"][5]),
                         ],
                     },
                 },
@@ -342,12 +377,12 @@ class TestTutorialMutation(TestCase):
                     "update": {
                         **tutorial_from_res["scenarios"][1],
                         "tasks": [
-                            {"update": {**tutorial_from_res["scenarios"][1]["tasks"][0]}},
-                            {"update": {**tutorial_from_res["scenarios"][1]["tasks"][1]}},
-                            {"update": {**tutorial_from_res["scenarios"][1]["tasks"][2]}},
-                            {"update": {**tutorial_from_res["scenarios"][1]["tasks"][3]}},
-                            {"update": {**tutorial_from_res["scenarios"][1]["tasks"][4]}},
-                            {"update": {**tutorial_from_res["scenarios"][1]["tasks"][5]}},
+                            get_update_for_task(tutorial_from_res["scenarios"][1]["tasks"][0]),
+                            get_update_for_task(tutorial_from_res["scenarios"][1]["tasks"][1]),
+                            get_update_for_task(tutorial_from_res["scenarios"][1]["tasks"][2]),
+                            get_update_for_task(tutorial_from_res["scenarios"][1]["tasks"][3]),
+                            get_update_for_task(tutorial_from_res["scenarios"][1]["tasks"][4]),
+                            get_update_for_task(tutorial_from_res["scenarios"][1]["tasks"][5]),
                         ],
                     },
                 },
@@ -408,7 +443,6 @@ class TestTutorialMutation(TestCase):
         self.force_login(self.user)
         content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
         resp_data = content["data"]["updateTutorial"]
-        pprint.pp(resp_data["errors"])
         assert resp_data["errors"] is None, content
 
         latest_tutorial.refresh_from_db()
@@ -436,7 +470,7 @@ class TestTutorialMutation(TestCase):
                             {
                                 "id": self.gID(y.pk),
                                 "reference": y.reference,
-                                "projectTypeSpecifics": y.project_type_specifics,
+                                "projectTypeSpecifics": format_object_keys(y.project_type_specifics, to_camel_case),
                             }
                             for y in x.tasks.all()
                         ],

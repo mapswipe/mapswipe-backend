@@ -1,11 +1,32 @@
 import typing
 
+import pydantic
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext
 from rest_framework import serializers
 
 from apps.common.serializers import DrfContextType, UserResourceSerializer
+from apps.project.models import ProjectTypeEnum
+from apps.tutorial.project_types.tile_map_service.compare import tutorial as compare_tutorial
+from apps.tutorial.project_types.tile_map_service.completeness import tutorial as completeness_tutorial
+from apps.tutorial.project_types.tile_map_service.find import tutorial as find_tutorial
+from utils.common import clean_up_none_keys
+from utils.graphql.drf import handle_pydantic_validation_error
 
 from .models import Tutorial, TutorialInformationPage, TutorialInformationPageBlock, TutorialScenarioPage, TutorialTask
+
+
+# FIXME(tnagorra): Move this to utils
+def get_tutorial_task_property(project_type: ProjectTypeEnum | None):
+    if project_type is None:
+        return None
+    if project_type == ProjectTypeEnum.COMPARE:
+        return ("compare", compare_tutorial.CompareTutorialTaskProperty)
+    if project_type == ProjectTypeEnum.FIND:
+        return ("find", find_tutorial.FindTutorialTaskProperty)
+    if project_type == ProjectTypeEnum.COMPLETENESS:
+        return ("completeness", completeness_tutorial.CompletenessTutorialTaskProperty)
+    typing.assert_never(project_type)
 
 
 class TutorialTaskSerializerContextType(DrfContextType):
@@ -20,9 +41,66 @@ class TutorialTaskSerializer(UserResourceSerializer[TutorialTask, TutorialTaskSe
         fields = (
             "id",
             "reference",
-            # TODO(tnagorra): Implement stricter project_type_specifics
             "project_type_specifics",
         )
+
+    def _validate_project_type_specifics(self, attrs: dict[str, typing.Any]):
+        if (tutorial := self.context.get("tutorial")) is None:
+            return
+
+        # FIXME: Make this type-safe
+        project_type = tutorial.project.project_type
+
+        # TODO(tnagorra): Get this project_type from the associated project
+        if project_type is None:
+            raise serializers.ValidationError(
+                {
+                    "project_type": gettext("Project type is required."),
+                },
+            )
+
+        project_type_label = ProjectTypeEnum.get_display(project_type)
+
+        project_property = get_tutorial_task_property(project_type)
+        if project_property is None:
+            raise serializers.ValidationError(
+                {
+                    "project_type_specifics": gettext("Given project type is not handled: %s") % project_type_label,
+                },
+            )
+
+        field_name, pydantic_model = project_property
+        raw_project_type_specifics = attrs.get("project_type_specifics")
+
+        project_type_specifics = None
+        if raw_project_type_specifics is not None:
+            project_type_specifics = raw_project_type_specifics.get(field_name)
+        elif self.instance is not None:
+            project_type_specifics = self.instance.project_type_specifics
+
+        if project_type_specifics is None:
+            raise serializers.ValidationError(
+                {
+                    "project_type_specifics": gettext("Configuration not provided for %s") % project_type_label,
+                },
+            )
+
+        # XXX: Clean up nullable keys
+        project_type_specifics = clean_up_none_keys(project_type_specifics)
+
+        try:
+            pydantic_model.model_validate(
+                project_type_specifics,
+            )
+        except pydantic.ValidationError as pydantic_error:
+            raise handle_pydantic_validation_error("project_type_specifics", pydantic_error) from None
+
+        attrs["project_type_specifics"] = project_type_specifics
+
+    @typing.override
+    def validate(self, attrs: dict[str, typing.Any]):
+        self._validate_project_type_specifics(attrs)
+        return super().validate(attrs)
 
     @typing.override
     def create(self, validated_data: dict[typing.Any, typing.Any]):
@@ -64,7 +142,8 @@ class TutorialScenarioPageSerializer(
 
     @typing.override
     def create(self, validated_data: dict[typing.Any, typing.Any]):
-        tasks_data = validated_data.pop("tasks")
+        tasks_data = self.initial_data["tasks"]
+        validated_data.pop("tasks")
 
         validated_data["tutorial"] = self.context["tutorial"]
         scenario = super().create(validated_data)
@@ -84,7 +163,8 @@ class TutorialScenarioPageSerializer(
 
     @typing.override
     def update(self, instance: TutorialScenarioPage, validated_data: dict[typing.Any, typing.Any]):
-        tasks_data = validated_data.pop("tasks")
+        tasks_data = self.initial_data.get("tasks") or []
+        validated_data.pop("tasks", None)
 
         validated_data["tutorial"] = self.context["tutorial"]
         scenario = super().update(instance, validated_data)
@@ -164,7 +244,8 @@ class TutorialInformationPageSerializer(
 
     @typing.override
     def create(self, validated_data: dict[typing.Any, typing.Any]):
-        blocks_data = validated_data.pop("blocks")
+        blocks_data = self.initial_data["blocks"]
+        validated_data.pop("blocks")
 
         validated_data["tutorial"] = self.context["tutorial"]
         page = super().create(validated_data)
@@ -184,7 +265,8 @@ class TutorialInformationPageSerializer(
 
     @typing.override
     def update(self, instance: TutorialInformationPage, validated_data: dict[typing.Any, typing.Any]):
-        blocks_data = validated_data.pop("blocks")
+        blocks_data = self.initial_data["blocks"] or []
+        validated_data.pop("blocks", None)
 
         validated_data["tutorial"] = self.context["tutorial"]
         page = super().update(instance, validated_data)
@@ -228,8 +310,10 @@ class TutorialSerializer(UserResourceSerializer[Tutorial]):
 
     @typing.override
     def create(self, validated_data: dict[typing.Any, typing.Any]):
-        scenarios_data = validated_data.pop("scenarios")
-        information_pages_data = validated_data.pop("information_pages")
+        scenarios_data = self.initial_data["scenarios"]
+        information_pages_data = self.initial_data["information_pages"]
+        validated_data.pop("scenarios")
+        validated_data.pop("information_pages")
         tutorial = super().create(validated_data)
 
         for scenario_data in scenarios_data:
@@ -258,8 +342,10 @@ class TutorialSerializer(UserResourceSerializer[Tutorial]):
 
     @typing.override
     def update(self, instance: Tutorial, validated_data: dict[typing.Any, typing.Any]):
-        scenarios_data = validated_data.pop("scenarios")
-        information_pages_data = validated_data.pop("information_pages")
+        scenarios_data = self.initial_data["scenarios"] or []
+        information_pages_data = self.initial_data["information_pages"] or []
+        validated_data.pop("scenarios", None)
+        validated_data.pop("information_pages", None)
         tutorial = super().update(instance, validated_data)
 
         scenario_qs = TutorialScenarioPage.objects.filter(
@@ -270,7 +356,6 @@ class TutorialSerializer(UserResourceSerializer[Tutorial]):
         )
 
         for scenario_data in scenarios_data:
-            # FIXME(tnagorra): Check if we need to pop this information
             scenario_id = scenario_data.pop("id", None)
             scenario_instance = None
             if scenario_id is not None:
