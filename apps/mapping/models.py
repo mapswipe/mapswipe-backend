@@ -1,9 +1,11 @@
+# pyright: reportUninitializedInstanceVariable=false
+# TODO(thenav56): Check and add missing unique_together
 import typing
 
 from django.db import models
 from django_choices_field import IntegerChoicesField
 
-from apps.contributor.models import ContributorUser
+from apps.contributor.models import ContributorUser, ContributorUserGroup
 from apps.project.models import ProjectTask, ProjectTaskGroup
 
 
@@ -36,8 +38,31 @@ class MappingSession(models.Model):
     end_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null
 
     # Type hints
+    id: int
     project_task_group_id: int
     contributor_user_id: int
+
+    class Meta:
+        unique_together = (("project_task_group", "contributor_user"),)
+
+    @typing.override
+    def __str__(self):
+        return str(self.pk)
+
+
+class MappingSessionUserGroup(models.Model):
+    # FIXME(tnagorra): We might need to skip the indexing
+    old_id = models.CharField(max_length=30, db_index=True, null=True)
+
+    mapping_session = models.ForeignKey(MappingSession, on_delete=models.PROTECT)
+    user_group = models.ForeignKey(
+        ContributorUserGroup,
+        on_delete=models.PROTECT,
+        related_name="+",
+    )
+
+    class Meta:
+        unique_together = (("mapping_session", "user_group"),)
 
     @typing.override
     def __str__(self):
@@ -52,7 +77,7 @@ class MappingSessionResult(models.Model):
     project_task = models.ForeignKey(ProjectTask, on_delete=models.PROTECT)
     result = models.PositiveSmallIntegerField()
 
-    # TODO(thenav56): Add constrant to make sure we have non-duplicate row with task_id, .session.user_id
+    # TODO(thenav56): Add constraint to make sure we have non-duplicate row with task_id, .session.user_id
 
     # Type hints
     session_id: int

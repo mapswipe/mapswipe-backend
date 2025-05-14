@@ -152,6 +152,7 @@ INSTALLED_APPS = [
     "apps.tutorial",
     "apps.contributor",
     "apps.mapping",
+    "apps.community_dashboard",
 ]
 
 MIDDLEWARE = [

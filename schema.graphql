@@ -57,6 +57,8 @@ type AppEnumCollectionTutorialInformationPageBlockTypeEnum {
   label: String!
 }
 
+scalar AreaSqKm
+
 input BoolBaseFilterLookup {
   """Exact match. Filter will be skipped on `null` value"""
   exact: Boolean
@@ -68,6 +70,21 @@ input BoolBaseFilterLookup {
   Exact match of items in a given list. Filter will be skipped on `null` value
   """
   inList: [Boolean!]
+}
+
+type CommunityFilteredStats {
+  swipeTimeByDate: [ContributorTimeStatType!]!
+  areaSwipedByProjectType: [ProjectTypeAreaStatsType!]!
+  swipeByProjectType: [ProjectTypeSwipeStatsType!]!
+  swipeByOrganizationName: [OrganizationSwipeStatsType!]!
+  swipeByProjectGeo: [MapContributionStatsType!]!
+}
+
+type CommunityStatsType {
+  id: ID!
+  totalSwipes: Int!
+  totalContributors: Int!
+  totalUserGroups: Int!
 }
 
 input CompareProjectPropertyInput {
@@ -100,9 +117,221 @@ type CompletenessProjectPropertyType {
   tileServerBProperty: ProjectTileServerConfig!
 }
 
+type ContributorSwipeStatType {
+  taskDate: Date!
+  totalSwipes: Int!
+}
+
+type ContributorTimeStatType {
+  date: Date!
+
+  """total swipe time (seconds)"""
+  totalSwipeTime: Int!
+}
+
+"""ContributorUser(id, user_id, username, created_at, modified_at)"""
+input ContributorUserFilter {
+  id: IDBaseFilterLookup
+  username: StrFilterLookup
+  AND: ContributorUserFilter
+  OR: ContributorUserFilter
+  NOT: ContributorUserFilter
+  DISTINCT: Boolean
+}
+
+type ContributorUserFilteredStats implements ContributorUserUserGroupBaseFilterStatsQuery {
+  swipeByDate: [ContributorSwipeStatType!]!
+  swipeTimeByDate: [ContributorTimeStatType!]!
+  areaSwipedByProjectType: [ProjectTypeAreaStatsType!]!
+  swipeByProjectType: [ProjectTypeSwipeStatsType!]!
+  swipeByOrganizationName: [OrganizationSwipeStatsType!]!
+  swipeByProjectGeo: [MapContributionStatsType!]!
+  id: ID!
+}
+
+"""
+ContributorUserGroup(id, created_at, modified_at, created_by, modified_by, old_id, name, description, is_archived, archived_at, archived_by)
+"""
+input ContributorUserGroupFilter {
+  id: IDBaseFilterLookup
+  name: StrFilterLookup
+  AND: ContributorUserGroupFilter
+  OR: ContributorUserGroupFilter
+  NOT: ContributorUserGroupFilter
+  DISTINCT: Boolean
+  userId: ID
+  userUserId: ID
+}
+
+type ContributorUserGroupFilteredStats implements ContributorUserUserGroupBaseFilterStatsQuery {
+  swipeByDate: [ContributorSwipeStatType!]!
+  swipeTimeByDate: [ContributorTimeStatType!]!
+  areaSwipedByProjectType: [ProjectTypeAreaStatsType!]!
+  swipeByProjectType: [ProjectTypeSwipeStatsType!]!
+  swipeByOrganizationName: [OrganizationSwipeStatsType!]!
+  swipeByProjectGeo: [MapContributionStatsType!]!
+}
+
+type ContributorUserGroupLatestStatsType {
+  totalSwipes: Int!
+
+  """total swipe time (seconds)"""
+  totalSwipeTime: Int!
+  totalMappingProjects: Int!
+  totalContributors: Int!
+}
+
+"""ContributorUserGroupMembership(id, user_group, user, is_active)"""
+input ContributorUserGroupMembershipFilter {
+  id: IDBaseFilterLookup
+  userGroupId: IDBaseFilterLookup
+  AND: ContributorUserGroupMembershipFilter
+  OR: ContributorUserGroupMembershipFilter
+  NOT: ContributorUserGroupMembershipFilter
+  DISTINCT: Boolean
+}
+
 enum ContributorUserGroupMembershipLogActionEnum {
   JOIN
   LEAVE
+}
+
+input ContributorUserGroupMembershipOrder {
+  id: Ordering
+}
+
+"""ContributorUserGroupMembership(id, user_group, user, is_active)"""
+type ContributorUserGroupMembershipType {
+  id: ID!
+  userId: ID!
+  isActive: Boolean!
+  user: ContributorUserType!
+  totalMappingProjects: Int!
+  totalSwipes: Int!
+  totalSwipeTime: Int!
+}
+
+type ContributorUserGroupMembershipTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [ContributorUserGroupMembershipType!]!
+}
+
+input ContributorUserGroupOrder {
+  id: Ordering
+  name: Ordering
+}
+
+type ContributorUserGroupStats {
+  id: ID!
+  stats: ContributorUserGroupStatsType!
+
+  """Stats from last 30 days"""
+  statsLatest: ContributorUserGroupLatestStatsType!
+  filteredStats(dateRange: DateRangeInput = null): ContributorUserGroupFilteredStats!
+}
+
+type ContributorUserGroupStatsType {
+  totalSwipes: Int!
+
+  """total swipe time (seconds)"""
+  totalSwipeTime: Int!
+  totalMappingProjects: Int!
+  totalContributors: Int!
+  totalAreaSwiped: AreaSqKm!
+  totalOrganization: Int!
+}
+
+"""
+ContributorUserGroup(id, created_at, modified_at, created_by, modified_by, old_id, name, description, is_archived, archived_at, archived_by)
+"""
+type ContributorUserGroupType {
+  id: ID!
+  name: String!
+  description: String!
+  createdAt: DateTime!
+  archivedAt: DateTime
+  isArchived: Boolean!
+  membersCount: Int!
+  userMemberships(pagination: OffsetPaginationInput): ContributorUserGroupMembershipTypeOffsetPaginated!
+}
+
+type ContributorUserGroupTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [ContributorUserGroupType!]!
+}
+
+type ContributorUserLatestStatsType {
+  totalSwipes: Int!
+
+  """total swipe time (seconds)"""
+  totalSwipeTime: Int!
+  totalUserGroups: Int!
+}
+
+input ContributorUserOrder {
+  id: Ordering
+  username: Ordering
+}
+
+type ContributorUserStatType {
+  totalSwipes: Int!
+
+  """total swipe time (seconds)"""
+  totalSwipeTime: Int!
+  totalMappingProjects: Int!
+  totalAreaSwiped: AreaSqKm!
+  totalOrganization: Int!
+}
+
+type ContributorUserStats {
+  id: ID!
+  stats: ContributorUserStatType!
+
+  """Stats from last 30 days"""
+  statsLatest: ContributorUserLatestStatsType!
+  filteredStats(dateRange: DateRangeInput = null): ContributorUserFilteredStats!
+}
+
+"""ContributorUser(id, user_id, username, created_at, modified_at)"""
+type ContributorUserType {
+  id: ID!
+
+  """Firebase User ID"""
+  userId: ID!
+  username: String!
+  createdAt: DateTime
+  totalMappingProjects: Int!
+  totalSwipes: Int!
+  totalSwipeTime: Int!
+}
+
+type ContributorUserTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [ContributorUserType!]!
+}
+
+interface ContributorUserUserGroupBaseFilterStatsQuery {
+  swipeByDate: [ContributorSwipeStatType!]!
+  swipeTimeByDate: [ContributorTimeStatType!]!
+  areaSwipedByProjectType: [ProjectTypeAreaStatsType!]!
+  swipeByProjectType: [ProjectTypeSwipeStatsType!]!
+  swipeByOrganizationName: [OrganizationSwipeStatsType!]!
+  swipeByProjectGeo: [MapContributionStatsType!]!
 }
 
 union CreateProjectAssetPayload = ProjectAssetTypeMutationResponseType | OperationInfo
@@ -111,6 +340,14 @@ union CreateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
 
 """A generic type to return error messages"""
 scalar CustomErrorType
+
+"""Date (isoformat)"""
+scalar Date
+
+input DateRangeInput {
+  fromDate: Date!
+  toDate: Date!
+}
 
 """Date with time (isoformat)"""
 scalar DateTime
@@ -138,6 +375,8 @@ type FindProjectPropertyType {
   aoiGeometry: String!
 }
 
+scalar GenericJSON
+
 input IDBaseFilterLookup {
   """Exact match. Filter will be skipped on `null` value"""
   exact: ID
@@ -149,6 +388,11 @@ input IDBaseFilterLookup {
   Exact match of items in a given list. Filter will be skipped on `null` value
   """
   inList: [ID!]
+}
+
+type MapContributionStatsType {
+  geojson: GenericJSON!
+  totalContribution: Int!
 }
 
 enum MappingSessionClientTypeEnum {
@@ -233,6 +477,11 @@ input OrganizationOrder {
   name: Ordering
 }
 
+type OrganizationSwipeStatsType {
+  organizationName: String!
+  totalSwipes: Int!
+}
+
 """
 Organization(id, created_at, modified_at, created_by, modified_by, name, unique_name)
 """
@@ -256,7 +505,7 @@ type OrganizationTypeOffsetPaginated {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProcessedProjectUpdateInput {
   name: String
@@ -450,7 +699,7 @@ type ProjectAssetTypeOffsetPaginated {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectCreateInput {
   projectType: ProjectTypeEnum!
@@ -470,7 +719,7 @@ input ProjectCreateInput {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectFilter {
   id: IDBaseFilterLookup
@@ -592,7 +841,7 @@ type ProjectTileServerCustomConfig {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 type ProjectType {
   id: ID!
@@ -632,6 +881,12 @@ type ProjectType {
   processingStatus: ProjectProcessingStatusEnum
   progress: Int!
   projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeCompletenessProjectPropertyType
+}
+
+type ProjectTypeAreaStatsType {
+  projectType: ProjectTypeEnum!
+  totalArea: AreaSqKm!
+  projectTypeDisplay: String!
 }
 
 enum ProjectTypeEnum {
@@ -710,8 +965,14 @@ input ProjectTypeSpecificInput @oneOf {
   completeness: CompletenessProjectPropertyInput
 }
 
+type ProjectTypeSwipeStatsType {
+  projectType: ProjectTypeEnum!
+  totalSwipes: Int!
+  projectTypeDisplay: String!
+}
+
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectUpdateInput {
   name: String
@@ -754,6 +1015,19 @@ type Query {
   projectAssets(pagination: OffsetPaginationInput, filters: ProjectAssetFilter, order: ProjectAssetOrder): ProjectAssetTypeOffsetPaginated! @isAuthenticated
   organization(id: ID!): OrganizationType! @isAuthenticated
   organizations(pagination: OffsetPaginationInput, filters: OrganizationFilter, order: OrganizationOrder): OrganizationTypeOffsetPaginated! @isAuthenticated
+  contributorUsers(pagination: OffsetPaginationInput, filters: ContributorUserFilter, order: ContributorUserOrder): ContributorUserTypeOffsetPaginated!
+  contributorUser(id: ID!): ContributorUserType!
+  contributorUserGroups(pagination: OffsetPaginationInput, filters: ContributorUserGroupFilter, order: ContributorUserGroupOrder): ContributorUserGroupTypeOffsetPaginated!
+  contributorUserGroup(id: ID!): ContributorUserGroupType!
+  contributorUserGroupMembers(pagination: OffsetPaginationInput, filters: ContributorUserGroupMembershipFilter, order: ContributorUserGroupMembershipOrder): ContributorUserGroupMembershipTypeOffsetPaginated!
+  contributorUserByUserId(userId: ID!): ContributorUserType!
+  communityStats: CommunityStatsType!
+
+  "\nStats from last 30 days\n"
+  communityStatsLatest: CommunityStatsType!
+  communityFilteredStats(dateRange: DateRangeInput = null): CommunityFilteredStats!
+  communityUserStats(userUserId: ID!): ContributorUserStats!
+  communityUserGroupStats(userGroupId: ID!): ContributorUserGroupStats!
   enums: AppEnumCollection!
 }
 

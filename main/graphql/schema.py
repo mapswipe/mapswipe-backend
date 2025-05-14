@@ -5,6 +5,8 @@ from strawberry.file_uploads import Upload
 from strawberry_django.optimizer import DjangoOptimizerExtension
 
 import utils.graphql.monkey_patches  # noqa: F401  type: ignore
+from apps.community_dashboard.graphql import queries as community_dashboard_queries
+from apps.contributor.graphql import queries as contributor_queries
 from apps.project.graphql import mutations as project_mutations
 from apps.project.graphql import queries as project_queries
 from apps.user.graphql import mutations as user_mutations
@@ -30,6 +32,8 @@ class CustomAsyncGraphQLView(AsyncGraphQLView):
 class Query(
     user_queries.Query,
     project_queries.Query,
+    contributor_queries.Query,
+    community_dashboard_queries.Query,
 ):
     enums: AppEnumCollection = strawberry.field(  # type: ignore[reportGeneralTypeIssues]
         resolver=lambda: AppEnumCollectionData(),

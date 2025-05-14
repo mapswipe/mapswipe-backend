@@ -1,3 +1,4 @@
+# pyright: reportUninitializedInstanceVariable=false
 import typing
 
 from django.db import models
@@ -13,6 +14,7 @@ class ContributorUser(models.Model):
     user_id = models.CharField(
         max_length=30,
         db_index=True,
+        unique=True,
         help_text="Firebase User ID",
     )
     username = models.CharField(max_length=255)

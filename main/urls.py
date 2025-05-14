@@ -21,6 +21,7 @@ urlpatterns = [
         "graphql/",
         CustomAsyncGraphQLView.as_view(
             **base_graphql_kwargs,
+            graphql_ide=None,
         ),
         name="graphql",
     ),

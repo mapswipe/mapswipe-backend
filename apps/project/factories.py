@@ -1,4 +1,10 @@
+# pyright: reportRedeclaration=false
+# pyright: reportIncompatibleVariableOverride=false
+# pyright: reportMissingTypeArgument=false
+import typing
+
 import factory
+from django.contrib.gis.geos import Point
 from factory.django import DjangoModelFactory
 
 from .models import (
@@ -10,14 +16,14 @@ from .models import (
 
 
 class OrganizationFactory(DjangoModelFactory):
-    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+    class Meta:
         model = Organization
 
     name = factory.Sequence(lambda n: f"Organization {n}")
 
 
 class ProjectFactory(DjangoModelFactory):
-    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+    class Meta:
         model = Project
 
     name = factory.Sequence(lambda n: f"Project {n}")
@@ -28,9 +34,11 @@ class ProjectFactory(DjangoModelFactory):
     look_for = "Buildings and Roads"
     description = "We want to identify buildings and roads"
 
+    centroid = Point(1, 2)
 
-class TaskGroupFactory(DjangoModelFactory):
-    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+
+class ProjectTaskGroupFactory(DjangoModelFactory):
+    class Meta:
         model = ProjectTaskGroup
 
     project_type_specifics = factory.LazyAttribute(lambda _: {})
@@ -44,8 +52,17 @@ class TaskGroupFactory(DjangoModelFactory):
     time_spent_max_allowed = 1
 
 
-class TaskFactory(DjangoModelFactory):
-    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+class ProjectTaskFactory(DjangoModelFactory):
+    class Meta:
         model = ProjectTask
 
     project_type_specifics = factory.LazyAttribute(lambda _: {})
+
+
+# NOTE: Make sure to add type hints for each factory class defined above
+# NOTE: This needs to be at the end of this file
+if typing.TYPE_CHECKING:
+    OrganizationFactory: type[DjangoModelFactory[Organization]]
+    ProjectFactory: type[DjangoModelFactory[Project]]
+    ProjectTaskGroupFactory: type[DjangoModelFactory[ProjectTaskGroup]]
+    ProjectTaskFactory: type[DjangoModelFactory[ProjectTask]]

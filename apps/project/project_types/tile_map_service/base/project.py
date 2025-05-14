@@ -253,6 +253,6 @@ class TileMapServiceBaseProject(
             aoi_area = sum([polygon.area for polygon in aoi_polygons])
             allowed_area = 5 * (4 ** (23 - self.project_type_specifics.zoom_level))
             if aoi_area > allowed_area:
-                raise base_project.ValidateException(f"AOI should not have more thatn {allowed_area} area")
+                raise base_project.ValidateException(f"AOI should not have more than {allowed_area} area")
 
             return aoi_geometry
