@@ -85,8 +85,8 @@ jobs:
 
           # XXX: Check if there is a slash in the BRANCH_NAME eg: project/add-docker
           if [[ "$BRANCH_NAME" == *"/"* ]]; then
-              # XXX: Change the docker image package to -alpha
-              IMAGE_NAME="$IMAGE_NAME-alpha"
+              # XXX: Change the docker image package to -dev
+              IMAGE_NAME="$IMAGE_NAME-dev"
               TAG="$(echo "$BRANCH_NAME" | sed 's|/|-|g').$(echo $GIT_HASH)"
           else
               TAG="$BRANCH_NAME.$(echo $GIT_HASH)"
