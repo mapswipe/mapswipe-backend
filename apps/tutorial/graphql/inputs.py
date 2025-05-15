@@ -37,6 +37,7 @@ class TutorialTaskProjectTypeSpecificInput:
 
 @strawberry_django.input(TutorialTask)
 class TutorialTaskCreateInput:
+    client_id: strawberry.auto
     # NOTE: scenario_id will be referenced from parent
 
     reference: strawberry.auto
@@ -46,6 +47,7 @@ class TutorialTaskCreateInput:
 
 @strawberry_django.partial(TutorialTask)
 class TutorialTaskUpdateInput:
+    client_id: strawberry.auto
     # NOTE: scenario_id will be referenced from parent
 
     id: strawberry.ID
@@ -60,6 +62,7 @@ class TutorialTaskInput(CudInput[TutorialTaskCreateInput, TutorialTaskUpdateInpu
 
 @strawberry_django.input(TutorialScenarioPage)
 class TutorialScenarioPageCreateInput:
+    client_id: strawberry.auto
     # NOTE: tutorial_id will be referenced from parent
 
     scenario_id: strawberry.auto
@@ -77,6 +80,7 @@ class TutorialScenarioPageCreateInput:
 
 @strawberry_django.partial(TutorialScenarioPage)
 class TutorialScenarioPageUpdateInput:
+    client_id: strawberry.auto
     # NOTE: tutorial_id will be referenced from parent
 
     id: strawberry.ID
@@ -99,6 +103,7 @@ class TutorialScenarioPageInput(CudInput[TutorialScenarioPageCreateInput, Tutori
 
 @strawberry_django.input(TutorialInformationPageBlock)
 class TutorialInformationPageBlockCreateInput:
+    client_id: strawberry.auto
     # NOTE: page_id will be referenced from parent
 
     block_number: strawberry.auto
@@ -109,6 +114,7 @@ class TutorialInformationPageBlockCreateInput:
 
 @strawberry_django.partial(TutorialInformationPageBlock)
 class TutorialInformationPageBlockUpdateInput:
+    client_id: strawberry.auto
     # NOTE: page_id will be referenced from parent
 
     id: strawberry.ID
@@ -126,6 +132,7 @@ class TutorialInformationPageBlockInput(
 
 @strawberry_django.input(TutorialInformationPage)
 class TutorialInformationPageCreateInput:
+    client_id: strawberry.auto
     # NOTE: tutorial_id will be referenced from parent
 
     title: strawberry.auto
@@ -135,6 +142,7 @@ class TutorialInformationPageCreateInput:
 
 @strawberry_django.partial(TutorialInformationPage)
 class TutorialInformationPageUpdateInput:
+    client_id: strawberry.auto
     # NOTE: tutorial_id will be referenced from parent
 
     id: strawberry.ID

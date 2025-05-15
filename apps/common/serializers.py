@@ -1,7 +1,9 @@
 import typing
 
 from django.http.request import HttpRequest
+from django.utils.translation import gettext
 from rest_framework import serializers
+from ulid import ULID
 
 from apps.common.models import UserResource
 
@@ -17,8 +19,18 @@ class UserResourceSerializer[ModelType: UserResource, ContextType: DrfContextTyp
 ):
     modified_at = serializers.DateTimeField(read_only=True)
     modified_by = serializers.PrimaryKeyRelatedField(read_only=True)
+    client_id = serializers.CharField()
 
     instance: ModelType | None  # type: ignore[override]
+
+    def validate_client_id(self, new_client_id: str):
+        try:
+            ULID.from_str(new_client_id)
+        except (ValueError, TypeError) as err:
+            raise serializers.ValidationError(
+                gettext("Not a valid ULID value '%s'") % (new_client_id),
+            ) from err
+        return new_client_id
 
     @property
     def context(self) -> ContextType:  # type: ignore[override]

@@ -32,7 +32,7 @@ class CompletenessTutorialTaskPropertyType: ...
 
 
 @strawberry_django.type(TutorialTask)
-class TutorialTaskType:
+class TutorialTaskType(UserResourceTypeMixin):
     id: strawberry.ID
     scenario_id: strawberry.ID
     reference: strawberry.auto
@@ -68,7 +68,7 @@ class TutorialTaskType:
 
 
 @strawberry_django.type(TutorialScenarioPage)
-class TutorialScenarioPageType:
+class TutorialScenarioPageType(UserResourceTypeMixin):
     id: strawberry.ID
     tutorial_id: strawberry.ID
     scenario_id: strawberry.auto
@@ -85,7 +85,7 @@ class TutorialScenarioPageType:
 
 
 @strawberry_django.type(TutorialInformationPageBlock)
-class TutorialInformationPageBlockType:
+class TutorialInformationPageBlockType(UserResourceTypeMixin):
     id: strawberry.ID
     page_id: strawberry.ID
     block_number: strawberry.auto
@@ -95,7 +95,7 @@ class TutorialInformationPageBlockType:
 
 
 @strawberry_django.type(TutorialInformationPage)
-class TutorialInformationPageType:
+class TutorialInformationPageType(UserResourceTypeMixin):
     id: strawberry.ID
     tutorial_id: strawberry.ID
     title: strawberry.auto
