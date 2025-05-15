@@ -58,6 +58,7 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
+            "client_id",
             "project_type",
             "requesting_organization",
             "name",
@@ -73,6 +74,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
+            "client_id",
             "project_type",
             "requesting_organization",
             "name",
@@ -85,6 +87,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             "max_tasks_per_user",
             "project_type_specifics",
             "status",
+            "tutorial",
         )
 
     def validate_status(self, new_status: Project.Status):
@@ -196,6 +199,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
+            "client_id",
             "requesting_organization",
             "name",
             "look_for",
@@ -203,6 +207,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             "description",
             "image",
             "status",
+            "tutorial",
         )
 
     def validate_status(self, new_status: Project.Status):
@@ -236,6 +241,23 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
         return new_image
 
+    def _validate_tutorial(self, attrs: dict[str, typing.Any]):
+        assert self.instance is not None
+        tutorial = attrs.get("tutorial") or self.instance.tutorial
+        # FIXME: Add validation that tutorial and project types must match
+
+        if tutorial is None and attrs.get("status") == Project.Status.PUBLISHED:
+            raise serializers.ValidationError(
+                {"tutorial": gettext("Tutorial is required before publishing a project.")},
+            )
+
+    @typing.override
+    def validate(self, attrs: dict[str, typing.Any]):
+        assert self.instance is not None
+
+        self._validate_tutorial(attrs)
+        return super().validate(attrs)
+
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 # FIXME(tnagorra): Should we validate the mimetype during upload?
@@ -243,6 +265,7 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = ProjectAsset
         fields = (
+            "client_id",
             "mimetype",
             "file",
             "project",

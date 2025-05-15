@@ -2,6 +2,11 @@ import strawberry
 import strawberry_django
 from strawberry.file_uploads import Upload
 
+from apps.common.graphql.inputs import (
+    UserResourceCreateInputMixin,
+    UserResourceTopLevelUpdateInputMixin,
+    UserResourceUpdateInputMixin,
+)
 from apps.tutorial.models import (
     Tutorial,
     TutorialInformationPage,
@@ -36,8 +41,7 @@ class TutorialTaskProjectTypeSpecificInput:
 
 
 @strawberry_django.input(TutorialTask)
-class TutorialTaskCreateInput:
-    client_id: strawberry.auto
+class TutorialTaskCreateInput(UserResourceCreateInputMixin):
     # NOTE: scenario_id will be referenced from parent
 
     reference: strawberry.auto
@@ -46,11 +50,9 @@ class TutorialTaskCreateInput:
 
 
 @strawberry_django.partial(TutorialTask)
-class TutorialTaskUpdateInput:
-    client_id: strawberry.auto
+class TutorialTaskUpdateInput(UserResourceUpdateInputMixin):
     # NOTE: scenario_id will be referenced from parent
 
-    id: strawberry.ID
     reference: strawberry.auto
     # FIXME(tnagorra): Make this typesafe
     project_type_specifics: TutorialTaskProjectTypeSpecificInput
@@ -61,8 +63,7 @@ class TutorialTaskInput(CudInput[TutorialTaskCreateInput, TutorialTaskUpdateInpu
 
 
 @strawberry_django.input(TutorialScenarioPage)
-class TutorialScenarioPageCreateInput:
-    client_id: strawberry.auto
+class TutorialScenarioPageCreateInput(UserResourceCreateInputMixin):
     # NOTE: tutorial_id will be referenced from parent
 
     scenario_id: strawberry.auto
@@ -79,11 +80,9 @@ class TutorialScenarioPageCreateInput:
 
 
 @strawberry_django.partial(TutorialScenarioPage)
-class TutorialScenarioPageUpdateInput:
-    client_id: strawberry.auto
+class TutorialScenarioPageUpdateInput(UserResourceUpdateInputMixin):
     # NOTE: tutorial_id will be referenced from parent
 
-    id: strawberry.ID
     scenario_id: strawberry.auto
     instructions_description: strawberry.auto
     instructions_icon: strawberry.auto
@@ -102,8 +101,7 @@ class TutorialScenarioPageInput(CudInput[TutorialScenarioPageCreateInput, Tutori
 
 
 @strawberry_django.input(TutorialInformationPageBlock)
-class TutorialInformationPageBlockCreateInput:
-    client_id: strawberry.auto
+class TutorialInformationPageBlockCreateInput(UserResourceCreateInputMixin):
     # NOTE: page_id will be referenced from parent
 
     block_number: strawberry.auto
@@ -113,11 +111,9 @@ class TutorialInformationPageBlockCreateInput:
 
 
 @strawberry_django.partial(TutorialInformationPageBlock)
-class TutorialInformationPageBlockUpdateInput:
-    client_id: strawberry.auto
+class TutorialInformationPageBlockUpdateInput(UserResourceUpdateInputMixin):
     # NOTE: page_id will be referenced from parent
 
-    id: strawberry.ID
     block_number: strawberry.auto
     block_type: strawberry.auto
     text: strawberry.auto
@@ -131,8 +127,7 @@ class TutorialInformationPageBlockInput(
 
 
 @strawberry_django.input(TutorialInformationPage)
-class TutorialInformationPageCreateInput:
-    client_id: strawberry.auto
+class TutorialInformationPageCreateInput(UserResourceCreateInputMixin):
     # NOTE: tutorial_id will be referenced from parent
 
     title: strawberry.auto
@@ -141,11 +136,9 @@ class TutorialInformationPageCreateInput:
 
 
 @strawberry_django.partial(TutorialInformationPage)
-class TutorialInformationPageUpdateInput:
-    client_id: strawberry.auto
+class TutorialInformationPageUpdateInput(UserResourceUpdateInputMixin):
     # NOTE: tutorial_id will be referenced from parent
 
-    id: strawberry.ID
     title: strawberry.auto
     page_number: strawberry.auto
     blocks: list[TutorialInformationPageBlockInput] | None = strawberry.UNSET
@@ -157,7 +150,7 @@ class TutorialInformationPageInput(CudInput[TutorialInformationPageCreateInput, 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.input(Tutorial)
-class TutorialCreateInput:
+class TutorialCreateInput(UserResourceCreateInputMixin):
     project: strawberry.ID
     is_draft: strawberry.auto
 
@@ -167,8 +160,7 @@ class TutorialCreateInput:
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.partial(Tutorial)
-class TutorialUpdateInput:
-    id: strawberry.ID
+class TutorialUpdateInput(UserResourceTopLevelUpdateInputMixin):
     project: strawberry.ID
     is_draft: strawberry.auto
 
