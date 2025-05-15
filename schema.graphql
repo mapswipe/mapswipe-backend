@@ -176,7 +176,7 @@ type ContributorUserFilteredStats implements ContributorUserUserGroupBaseFilterS
 }
 
 """
-ContributorUserGroup(id, created_at, modified_at, created_by, modified_by, old_id, name, description, is_archived, archived_at, archived_by)
+ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, old_id, name, description, is_archived, archived_at, archived_by)
 """
 input ContributorUserGroupFilter {
   id: IDBaseFilterLookup
@@ -273,13 +273,17 @@ type ContributorUserGroupStatsType {
 }
 
 """
-ContributorUserGroup(id, created_at, modified_at, created_by, modified_by, old_id, name, description, is_archived, archived_at, archived_by)
+ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, old_id, name, description, is_archived, archived_at, archived_by)
 """
-type ContributorUserGroupType {
+type ContributorUserGroupType implements UserResourceTypeMixin {
+  clientId: String!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
   id: ID!
   name: String!
   description: String!
-  createdAt: DateTime!
   archivedAt: DateTime
   isArchived: Boolean!
   membersCount: Int!
@@ -519,7 +523,7 @@ enum Ordering {
 }
 
 """
-Organization(id, created_at, modified_at, created_by, modified_by, name, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, name, unique_name)
 """
 input OrganizationFilter {
   id: IDBaseFilterLookup
@@ -541,9 +545,10 @@ type OrganizationSwipeStatsType {
 }
 
 """
-Organization(id, created_at, modified_at, created_by, modified_by, name, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, name, unique_name)
 """
 type OrganizationType implements UserResourceTypeMixin {
+  clientId: String!
   createdAt: DateTime!
   modifiedAt: DateTime!
   createdBy: UserType!
@@ -563,9 +568,10 @@ type OrganizationTypeOffsetPaginated {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProcessedProjectUpdateInput {
+  clientId: String!
   name: String
 
   """What should the users look for (e.g. buildings, cars, trees)"""
@@ -578,15 +584,19 @@ input ProcessedProjectUpdateInput {
   description: String
   status: ProjectStatusEnum
 
+  """Tutorial used for this project."""
+  tutorial: ID
+
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: ID
   image: ID
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
 """
 input ProjectAssetCreateInput {
+  clientId: String!
   mimetype: ProjectAssetMimetypeEnum!
 
   """The file associated with the asset"""
@@ -595,7 +605,7 @@ input ProjectAssetCreateInput {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
 """
 input ProjectAssetFilter {
   id: IDBaseFilterLookup
@@ -668,9 +678,10 @@ input ProjectAssetOrder {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
 """
 type ProjectAssetType implements UserResourceTypeMixin {
+  clientId: String!
   createdAt: DateTime!
   modifiedAt: DateTime!
   createdBy: UserType!
@@ -757,9 +768,10 @@ type ProjectAssetTypeOffsetPaginated {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectCreateInput {
+  clientId: String!
   projectType: ProjectTypeEnum!
 
   """Which group, institution or community is requesting this project?"""
@@ -777,7 +789,7 @@ input ProjectCreateInput {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectFilter {
   id: IDBaseFilterLookup
@@ -899,9 +911,10 @@ type ProjectTileServerCustomConfig {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
 type ProjectType implements UserResourceTypeMixin {
+  clientId: String!
   createdAt: DateTime!
   modifiedAt: DateTime!
   createdBy: UserType!
@@ -925,6 +938,12 @@ type ProjectType implements UserResourceTypeMixin {
   additionalInfoUrl: String
   description: String
   image: ProjectAssetType
+
+  """Tutorial used for this project."""
+  tutorial: TutorialType
+
+  """Tutorial used for this project."""
+  tutorialId: ID
 
   """
   How many people do you want to see every tile before you consider it finished?
@@ -1034,9 +1053,10 @@ type ProjectTypeSwipeStatsType {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectUpdateInput {
+  clientId: String!
   name: String
 
   """What should the users look for (e.g. buildings, cars, trees)"""
@@ -1061,6 +1081,9 @@ input ProjectUpdateInput {
   """How many tasks each user is allowed to work on for this project"""
   maxTasksPerUser: Int
   status: ProjectStatusEnum
+
+  """Tutorial used for this project."""
+  tutorial: ID
 
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: ID
@@ -1163,9 +1186,11 @@ enum TileServerNameEnum {
 }
 
 """
-Tutorial(id, created_at, modified_at, created_by, modified_by, project, is_draft)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, is_draft)
 """
 input TutorialCreateInput {
+  clientId: String!
+
   """Project this tutorial is referring to."""
   project: ID!
 
@@ -1176,7 +1201,7 @@ input TutorialCreateInput {
 }
 
 """
-Tutorial(id, created_at, modified_at, created_by, modified_by, project, is_draft)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, is_draft)
 """
 input TutorialFilter {
   id: IDBaseFilterLookup
@@ -1190,9 +1215,10 @@ input TutorialFilter {
 }
 
 """
-TutorialInformationPageBlock(id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
+TutorialInformationPageBlock(id, client_id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
 """
 input TutorialInformationPageBlockCreateInput {
+  clientId: String!
   blockNumber: Int!
   blockType: TutorialInformationPageBlockTypeEnum!
   text: String
@@ -1206,9 +1232,14 @@ input TutorialInformationPageBlockInput {
 }
 
 """
-TutorialInformationPageBlock(id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
+TutorialInformationPageBlock(id, client_id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
 """
-type TutorialInformationPageBlockType {
+type TutorialInformationPageBlockType implements UserResourceTypeMixin {
+  clientId: String!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
   id: ID!
   pageId: ID!
   blockNumber: Int!
@@ -1223,10 +1254,11 @@ enum TutorialInformationPageBlockTypeEnum {
 }
 
 """
-TutorialInformationPageBlock(id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
+TutorialInformationPageBlock(id, client_id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
 """
 input TutorialInformationPageBlockUpdateInput {
   id: ID!
+  clientId: String!
   blockNumber: Int
   blockType: TutorialInformationPageBlockTypeEnum
   text: String
@@ -1234,9 +1266,10 @@ input TutorialInformationPageBlockUpdateInput {
 }
 
 """
-TutorialInformationPage(id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
+TutorialInformationPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
 """
 input TutorialInformationPageCreateInput {
+  clientId: String!
   title: String!
   pageNumber: Int!
   blocks: [TutorialInformationPageBlockCreateInput!]!
@@ -1249,9 +1282,14 @@ input TutorialInformationPageInput {
 }
 
 """
-TutorialInformationPage(id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
+TutorialInformationPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
 """
-type TutorialInformationPageType {
+type TutorialInformationPageType implements UserResourceTypeMixin {
+  clientId: String!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
   id: ID!
   tutorialId: ID!
   title: String!
@@ -1260,10 +1298,11 @@ type TutorialInformationPageType {
 }
 
 """
-TutorialInformationPage(id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
+TutorialInformationPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
 """
 input TutorialInformationPageUpdateInput {
   id: ID!
+  clientId: String!
   title: String
   pageNumber: Int
   blocks: [TutorialInformationPageBlockInput!]
@@ -1310,9 +1349,10 @@ enum TutorialScenarioIconEnum {
 }
 
 """
-TutorialScenarioPage(id, created_at, modified_at, created_by, modified_by, tutorial, scenario_id, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
+TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_id, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
 """
 input TutorialScenarioPageCreateInput {
+  clientId: String!
   scenarioId: Int!
   instructionsDescription: String!
   instructionsIcon: TutorialScenarioIconEnum!
@@ -1327,7 +1367,7 @@ input TutorialScenarioPageCreateInput {
 }
 
 """
-TutorialTask(id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
+TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
 """
 input TutorialScenarioPageInput {
   create: TutorialScenarioPageCreateInput
@@ -1336,9 +1376,14 @@ input TutorialScenarioPageInput {
 }
 
 """
-TutorialScenarioPage(id, created_at, modified_at, created_by, modified_by, tutorial, scenario_id, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
+TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_id, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
 """
-type TutorialScenarioPageType {
+type TutorialScenarioPageType implements UserResourceTypeMixin {
+  clientId: String!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
   id: ID!
   tutorialId: ID!
   scenarioId: Int!
@@ -1355,10 +1400,11 @@ type TutorialScenarioPageType {
 }
 
 """
-TutorialScenarioPage(id, created_at, modified_at, created_by, modified_by, tutorial, scenario_id, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
+TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_id, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
 """
 input TutorialScenarioPageUpdateInput {
   id: ID!
+  clientId: String!
   scenarioId: Int
   instructionsDescription: String
   instructionsIcon: TutorialScenarioIconEnum
@@ -1373,9 +1419,10 @@ input TutorialScenarioPageUpdateInput {
 }
 
 """
-TutorialTask(id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
+TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
 """
 input TutorialTaskCreateInput {
+  clientId: String!
   reference: Int!
   projectTypeSpecifics: TutorialTaskProjectTypeSpecificInput!
 }
@@ -1393,9 +1440,14 @@ input TutorialTaskProjectTypeSpecificInput @oneOf {
 }
 
 """
-TutorialTask(id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
+TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
 """
-type TutorialTaskType {
+type TutorialTaskType implements UserResourceTypeMixin {
+  clientId: String!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
   id: ID!
   scenarioId: ID!
   reference: Int!
@@ -1403,18 +1455,20 @@ type TutorialTaskType {
 }
 
 """
-TutorialTask(id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
+TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
 """
 input TutorialTaskUpdateInput {
   id: ID!
+  clientId: String!
   reference: Int
   projectTypeSpecifics: TutorialTaskProjectTypeSpecificInput!
 }
 
 """
-Tutorial(id, created_at, modified_at, created_by, modified_by, project, is_draft)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, is_draft)
 """
 type TutorialType implements UserResourceTypeMixin {
+  clientId: String!
   createdAt: DateTime!
   modifiedAt: DateTime!
   createdBy: UserType!
@@ -1447,10 +1501,10 @@ type TutorialTypeOffsetPaginated {
 }
 
 """
-Tutorial(id, created_at, modified_at, created_by, modified_by, project, is_draft)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, is_draft)
 """
 input TutorialUpdateInput {
-  id: ID!
+  clientId: String!
 
   """Project this tutorial is referring to."""
   project: ID!
@@ -1498,6 +1552,7 @@ input UserOrder {
 }
 
 interface UserResourceTypeMixin {
+  clientId: String!
   createdAt: DateTime!
   modifiedAt: DateTime!
   createdBy: UserType!
