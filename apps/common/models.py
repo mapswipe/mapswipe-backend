@@ -12,6 +12,10 @@ from main.db import Model
 
 
 def validate_ulid(val: str):
+    if val == "":
+        raise ValidationError(
+            gettext("Empty string is not a valid ULID value"),
+        )
     try:
         ULID.from_str(val)
     except (ValueError, TypeError) as e:
@@ -20,17 +24,14 @@ def validate_ulid(val: str):
         ) from e
 
 
-def get_ulid_str():
-    return str(ULID())
-
-
 # -- Abstracts
 class UserResource(Model):
     client_id = models.CharField(
+        null=False,
+        blank=False,
         unique=True,
         max_length=26,
         editable=False,
-        default=get_ulid_str,
         validators=[validate_ulid],
     )
     created_at = models.DateTimeField(auto_now_add=True)

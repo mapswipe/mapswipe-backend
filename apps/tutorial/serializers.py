@@ -40,6 +40,7 @@ class TutorialTaskSerializer(UserResourceSerializer[TutorialTask, TutorialTaskSe
         model = TutorialTask
         fields = (
             "id",
+            "client_id",
             "reference",
             "project_type_specifics",
         )
@@ -127,6 +128,7 @@ class TutorialScenarioPageSerializer(
         model = TutorialScenarioPage
         fields = (
             "id",
+            "client_id",
             "scenario_id",
             "instructions_description",
             "instructions_icon",
@@ -206,6 +208,7 @@ class TutorialInformationPageBlockSerializer(
         model = TutorialInformationPageBlock
         fields = (
             "id",
+            "client_id",
             "block_number",
             "block_type",
             "text",
@@ -237,6 +240,7 @@ class TutorialInformationPageSerializer(
         model = TutorialInformationPage
         fields = (
             "id",
+            "client_id",
             "title",
             "page_number",
             "blocks",
@@ -302,6 +306,7 @@ class TutorialSerializer(UserResourceSerializer[Tutorial]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Tutorial
         fields = (
+            "client_id",
             "project",
             "is_draft",
             "information_pages",

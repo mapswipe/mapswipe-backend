@@ -10,6 +10,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
 from django.core.serializers.json import DjangoJSONEncoder
 from pydantic import Field, ValidationInfo, model_validator
+from ulid import ULID
 
 from apps.project.models import (
     Project,
@@ -137,6 +138,7 @@ class TileMapServiceBaseProject[
         )
 
         asset = ProjectAsset.objects.create(
+            client_id=str(ULID()),
             project=self.project,
             file=file,
             type=ProjectAssetTypeEnum.OUTPUT,

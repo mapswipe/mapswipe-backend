@@ -1,6 +1,8 @@
 import typing
 from pathlib import Path
 
+from ulid import ULID
+
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
     ProjectTypeEnum,
@@ -33,14 +35,17 @@ class Mutation:
               ok
               result {
                 id
+                clientId
                 isDraft
                 projectId
                 informationPages {
                   id
+                  clientId
                   pageNumber
                   title
                   blocks {
                     id
+                    clientId
                     blockType
                     blockNumber
                     text
@@ -51,6 +56,7 @@ class Mutation:
                   hintIcon
                   hintTitle
                   id
+                  clientId
                   instructionsDescription
                   instructionsIcon
                   instructionsTitle
@@ -60,6 +66,7 @@ class Mutation:
                   successTitle
                   tasks {
                     id
+                    clientId
                     reference
                     projectTypeSpecifics {
                       ... on CompareTutorialTaskPropertyType {
@@ -102,14 +109,17 @@ class Mutation:
               ok
               result {
                 id
+                clientId
                 isDraft
                 projectId
                 informationPages {
                   id
+                  clientId
                   pageNumber
                   title
                   blocks {
                     id
+                    clientId
                     blockType
                     blockNumber
                     text
@@ -120,6 +130,7 @@ class Mutation:
                   hintIcon
                   hintTitle
                   id
+                  clientId
                   instructionsDescription
                   instructionsIcon
                   instructionsTitle
@@ -129,6 +140,7 @@ class Mutation:
                   successTitle
                   tasks {
                     id
+                    clientId
                     reference
                     projectTypeSpecifics {
                       ... on CompareTutorialTaskPropertyType {
@@ -199,10 +211,12 @@ class TestTutorialMutation(TestCase):
 
     def test_tutorial_create(self):
         tutorial_data = {
+            "clientId": str(ULID()),
             "project": self.project.pk,
             "isDraft": False,
             "scenarios": [
                 {
+                    "clientId": str(ULID()),
                     "scenarioId": 1,
                     "instructionsDescription": "Anything that is not naturally occurring",
                     "instructionsIcon": "STAR_OUTLINE",
@@ -214,15 +228,40 @@ class TestTutorialMutation(TestCase):
                     "successIcon": "CHECK",
                     "successTitle": "Well done!",
                     "tasks": [
-                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110087}}, "reference": 0},
-                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110088}}, "reference": 1},
-                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110089}}, "reference": 0},
-                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110087}}, "reference": 0},
-                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110088}}, "reference": 1},
-                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110089}}, "reference": 0},
+                        {
+                            "clientId": str(ULID()),
+                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110087}},
+                            "reference": 0,
+                        },
+                        {
+                            "clientId": str(ULID()),
+                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110088}},
+                            "reference": 1,
+                        },
+                        {
+                            "clientId": str(ULID()),
+                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110089}},
+                            "reference": 0,
+                        },
+                        {
+                            "clientId": str(ULID()),
+                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110087}},
+                            "reference": 0,
+                        },
+                        {
+                            "clientId": str(ULID()),
+                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110088}},
+                            "reference": 1,
+                        },
+                        {
+                            "clientId": str(ULID()),
+                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110089}},
+                            "reference": 0,
+                        },
                     ],
                 },
                 {
+                    "clientId": str(ULID()),
                     "scenarioId": 2,
                     "instructionsDescription": "Anything that is not naturally occurring",
                     "instructionsIcon": "STAR_OUTLINE",
@@ -234,27 +273,54 @@ class TestTutorialMutation(TestCase):
                     "successIcon": "CHECK",
                     "successTitle": "Well done!",
                     "tasks": [
-                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110087}}, "reference": 1},
-                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110088}}, "reference": 1},
-                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110089}}, "reference": 1},
-                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110087}}, "reference": 1},
-                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110088}}, "reference": 1},
-                        {"projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110089}}, "reference": 1},
+                        {
+                            "clientId": str(ULID()),
+                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110087}},
+                            "reference": 1,
+                        },
+                        {
+                            "clientId": str(ULID()),
+                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110088}},
+                            "reference": 1,
+                        },
+                        {
+                            "clientId": str(ULID()),
+                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110089}},
+                            "reference": 1,
+                        },
+                        {
+                            "clientId": str(ULID()),
+                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110087}},
+                            "reference": 1,
+                        },
+                        {
+                            "clientId": str(ULID()),
+                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110088}},
+                            "reference": 1,
+                        },
+                        {
+                            "clientId": str(ULID()),
+                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110089}},
+                            "reference": 1,
+                        },
                     ],
                 },
             ],
             "informationPages": [
                 {
+                    "clientId": str(ULID()),
                     "title": "Man-made structures",
                     "pageNumber": 1,
                     "blocks": [
                         {
+                            "clientId": str(ULID()),
                             "blockNumber": 1,
                             "blockType": "TEXT",
                             "text": "Man-made structures are physical constructions created by humans, typically "
                             "using tools, materials, and engineering principles.",
                         },
                         {
+                            "clientId": str(ULID()),
                             "blockNumber": 2,
                             "blockType": "TEXT",
                             "text": "These structures are built to serve specific purposes, such as housing, "
@@ -263,10 +329,12 @@ class TestTutorialMutation(TestCase):
                     ],
                 },
                 {
+                    "clientId": str(ULID()),
                     "title": "Natural structures",
                     "pageNumber": 2,
                     "blocks": [
                         {
+                            "clientId": str(ULID()),
                             "blockNumber": 1,
                             "blockType": "TEXT",
                             "text": "Natural structures are physical formations that are created by nature "
@@ -301,12 +369,14 @@ class TestTutorialMutation(TestCase):
         assert resp_data == self.g_mutation_response(
             ok=True,
             result=dict(
+                clientId=latest_tutorial.client_id,
                 id=self.gID(latest_tutorial.pk),
                 isDraft=latest_tutorial.is_draft,
                 projectId=self.gID(latest_tutorial.project_id),
                 scenarios=[
                     {
                         "id": self.gID(x.pk),
+                        "clientId": x.client_id,
                         "scenarioId": x.scenario_id,
                         "hintDescription": x.hint_description,
                         "hintIcon": self.genum(x.hint_icon),  # type: ignore[reportArgumentType]
@@ -320,6 +390,7 @@ class TestTutorialMutation(TestCase):
                         "tasks": [
                             {
                                 "id": self.gID(y.pk),
+                                "clientId": y.client_id,
                                 "reference": y.reference,
                                 # "projectTypeSpecifics": y.project_type_specifics,
                                 "projectTypeSpecifics": format_object_keys(y.project_type_specifics, to_camel_case),
@@ -331,12 +402,14 @@ class TestTutorialMutation(TestCase):
                 ],
                 informationPages=[
                     {
+                        "clientId": x.client_id,
                         "id": self.gID(x.pk),
                         "pageNumber": x.page_number,
                         "title": x.title,
                         "blocks": [
                             {
                                 "id": self.gID(y.pk),
+                                "clientId": y.client_id,
                                 "blockNumber": y.block_number,
                                 "blockType": self.genum(y.block_type),  # type: ignore[reportArgumentType]
                                 "text": y.text,
@@ -356,6 +429,7 @@ class TestTutorialMutation(TestCase):
         # Updating Tutorial: Without authentication
         tutorial_from_res = resp_data["result"]
         project = tutorial_from_res.pop("projectId")
+        tutorial_from_res.pop("id")
         tutorial_data = {
             **tutorial_from_res,
             "project": project,
@@ -404,6 +478,7 @@ class TestTutorialMutation(TestCase):
                             },
                             {
                                 "create": {
+                                    "clientId": str(ULID()),
                                     # NOTE: blockNumber 2 is previously deleted so should not error on unique constraint
                                     "blockNumber": 2,
                                     "blockType": "TEXT",
@@ -450,12 +525,14 @@ class TestTutorialMutation(TestCase):
         assert resp_data == self.g_mutation_response(
             ok=True,
             result=dict(
+                clientId=latest_tutorial.client_id,
                 id=self.gID(latest_tutorial.pk),
                 isDraft=latest_tutorial.is_draft,
                 projectId=self.gID(latest_tutorial.project_id),
                 scenarios=[
                     {
                         "id": self.gID(x.pk),
+                        "clientId": x.client_id,
                         "scenarioId": x.scenario_id,
                         "hintDescription": x.hint_description,
                         "hintIcon": self.genum(x.hint_icon),  # type: ignore[reportArgumentType]
@@ -469,6 +546,7 @@ class TestTutorialMutation(TestCase):
                         "tasks": [
                             {
                                 "id": self.gID(y.pk),
+                                "clientId": y.client_id,
                                 "reference": y.reference,
                                 "projectTypeSpecifics": format_object_keys(y.project_type_specifics, to_camel_case),
                             }
@@ -480,11 +558,13 @@ class TestTutorialMutation(TestCase):
                 informationPages=[
                     {
                         "id": self.gID(x.pk),
+                        "clientId": x.client_id,
                         "pageNumber": x.page_number,
                         "title": x.title,
                         "blocks": [
                             {
                                 "id": self.gID(y.pk),
+                                "clientId": y.client_id,
                                 "blockNumber": y.block_number,
                                 "blockType": self.genum(y.block_type),  # type: ignore[reportArgumentType]
                                 "text": y.text,

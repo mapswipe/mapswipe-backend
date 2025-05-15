@@ -6,6 +6,7 @@ import typing
 import factory
 from django.contrib.gis.geos import Point
 from factory.django import DjangoModelFactory
+from ulid import ULID
 
 from .models import (
     Organization,
@@ -19,6 +20,7 @@ class OrganizationFactory(DjangoModelFactory):
     class Meta:
         model = Organization
 
+    client_id = factory.LazyFunction(lambda: str(ULID()))
     name = factory.Sequence(lambda n: f"Organization {n}")
 
 
@@ -26,6 +28,7 @@ class ProjectFactory(DjangoModelFactory):
     class Meta:
         model = Project
 
+    client_id = factory.LazyFunction(lambda: str(ULID()))
     name = factory.Sequence(lambda n: f"Project {n}")
 
     project_type = Project.Type.FIND

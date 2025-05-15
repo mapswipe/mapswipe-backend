@@ -5,6 +5,7 @@ import typing
 
 import factory
 from factory.django import DjangoModelFactory
+from ulid import ULID
 
 from .models import (
     ContributorUser,
@@ -26,6 +27,7 @@ class ContributorUserGroupFactory(DjangoModelFactory):
     class Meta:
         model = ContributorUserGroup
 
+    client_id = factory.LazyFunction(lambda: str(ULID()))
     name = factory.Sequence(lambda n: f"Contributor User Group {n}")
     description = "Some description"
 

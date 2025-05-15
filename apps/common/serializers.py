@@ -26,11 +26,11 @@ class UserResourceSerializer[ModelType: UserResource, ContextType: DrfContextTyp
     def validate_client_id(self, new_client_id: str):
         try:
             ULID.from_str(new_client_id)
+            return new_client_id
         except (ValueError, TypeError) as err:
             raise serializers.ValidationError(
                 gettext("Not a valid ULID value '%s'") % (new_client_id),
             ) from err
-        return new_client_id
 
     @property
     def context(self) -> ContextType:  # type: ignore[override]

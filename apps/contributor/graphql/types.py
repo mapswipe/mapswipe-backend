@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models.functions import Coalesce
 from strawberry_django.pagination import OffsetPaginated
 
+from apps.common.graphql.types import UserResourceTypeMixin
 from apps.community_dashboard.models import AggregatedUserGroupStatData, AggregatedUserStatData
 from apps.contributor.models import ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
@@ -64,11 +65,10 @@ class ContributorUserType:
 
 
 @strawberry_django.type(ContributorUserGroup)
-class ContributorUserGroupType:
+class ContributorUserGroupType(UserResourceTypeMixin):
     id: strawberry.ID
     name: strawberry.auto
     description: strawberry.auto
-    created_at: strawberry.auto
     archived_at: strawberry.auto
     is_archived: strawberry.auto
 
