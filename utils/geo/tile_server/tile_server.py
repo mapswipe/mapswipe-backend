@@ -91,10 +91,10 @@ class BingTileServer(CommonTileServer):
 
     @typing.override
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
-        quadKey = tile_coords_and_zoom_to_quadKey(tile_x, tile_y, tile_z)
+        quad_key = tile_coords_and_zoom_to_quadKey(tile_x, tile_y, tile_z)
         return self.url.format(
             key=self.api_key,
-            quadKey=quadKey,
+            quad_key=quad_key,
         )
 
 
