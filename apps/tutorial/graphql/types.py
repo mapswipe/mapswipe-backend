@@ -71,7 +71,7 @@ class TutorialTaskType(UserResourceTypeMixin):
 class TutorialScenarioPageType(UserResourceTypeMixin):
     id: strawberry.ID
     tutorial_id: strawberry.ID
-    scenario_id: strawberry.auto
+    scenario_page_number: strawberry.auto
     instructions_description: strawberry.auto
     instructions_icon: strawberry.auto
     instructions_title: strawberry.auto

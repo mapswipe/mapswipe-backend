@@ -24,7 +24,7 @@ class TutorialScenarioPageFactory(DjangoModelFactory):
         model = TutorialScenarioPage
 
     client_id = factory.LazyFunction(lambda: str(ULID()))
-    scenario_id = factory.Sequence(lambda n: n)
+    scenario_page_number = factory.Sequence(lambda n: n)
 
 
 class TutorialTaskFactory(DjangoModelFactory):

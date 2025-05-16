@@ -129,7 +129,7 @@ class TutorialScenarioPageSerializer(
         fields = (
             "id",
             "client_id",
-            "scenario_id",
+            "scenario_page_number",
             "instructions_description",
             "instructions_icon",
             "instructions_title",

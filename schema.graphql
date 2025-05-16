@@ -18,6 +18,7 @@ type AppEnumCollection {
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
   ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
   TutorialInformationPageBlockTypeEnum: [AppEnumCollectionTutorialInformationPageBlockTypeEnum!]!
+  TutorialScenarioIconEnum: [AppEnumCollectionTutorialScenarioIconEnum!]!
   MappingSessionClientTypeEnum: [AppEnumCollectionMappingSessionClientTypeEnum!]!
   ContributorUserGroupMembershipLogActionEnum: [AppEnumCollectionContributorUserGroupMembershipLogActionEnum!]!
 }
@@ -54,6 +55,11 @@ type AppEnumCollectionTileServerNameEnum {
 
 type AppEnumCollectionTutorialInformationPageBlockTypeEnum {
   key: TutorialInformationPageBlockTypeEnum!
+  label: String!
+}
+
+type AppEnumCollectionTutorialScenarioIconEnum {
+  key: TutorialScenarioIconEnum!
   label: String!
 }
 
@@ -392,6 +398,13 @@ union DeleteProjectPayload = ProjectType | OperationInfo
 
 union DeleteTutorialPayload = TutorialType | OperationInfo
 
+type DjangoFileType {
+  name: String!
+  path: String!
+  size: Int!
+  url: String!
+}
+
 type DjangoImageType {
   name: String!
   path: String!
@@ -688,6 +701,9 @@ type ProjectAssetType implements UserResourceTypeMixin {
   modifiedBy: UserType!
   id: ID!
   type: ProjectAssetTypeEnum!
+
+  """The file associated with the asset"""
+  file: DjangoFileType!
   mimetype: ProjectAssetMimetypeEnum!
   projectId: ID!
 
@@ -1349,11 +1365,11 @@ enum TutorialScenarioIconEnum {
 }
 
 """
-TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_id, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
+TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_page_number, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
 """
 input TutorialScenarioPageCreateInput {
   clientId: String!
-  scenarioId: Int!
+  scenarioPageNumber: Int!
   instructionsDescription: String!
   instructionsIcon: TutorialScenarioIconEnum!
   instructionsTitle: String!
@@ -1376,7 +1392,7 @@ input TutorialScenarioPageInput {
 }
 
 """
-TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_id, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
+TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_page_number, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
 """
 type TutorialScenarioPageType implements UserResourceTypeMixin {
   clientId: String!
@@ -1386,7 +1402,7 @@ type TutorialScenarioPageType implements UserResourceTypeMixin {
   modifiedBy: UserType!
   id: ID!
   tutorialId: ID!
-  scenarioId: Int!
+  scenarioPageNumber: Int!
   instructionsDescription: String!
   instructionsIcon: TutorialScenarioIconEnum!
   instructionsTitle: String!
@@ -1400,12 +1416,12 @@ type TutorialScenarioPageType implements UserResourceTypeMixin {
 }
 
 """
-TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_id, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
+TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_page_number, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
 """
 input TutorialScenarioPageUpdateInput {
   id: ID!
   clientId: String!
-  scenarioId: Int
+  scenarioPageNumber: Int
   instructionsDescription: String
   instructionsIcon: TutorialScenarioIconEnum
   instructionsTitle: String

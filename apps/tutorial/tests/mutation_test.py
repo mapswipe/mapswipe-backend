@@ -62,7 +62,7 @@ class Mutation:
                   instructionsTitle
                   successDescription
                   successIcon
-                  scenarioId
+                  scenarioPageNumber
                   successTitle
                   tasks {
                     id
@@ -136,7 +136,7 @@ class Mutation:
                   instructionsTitle
                   successDescription
                   successIcon
-                  scenarioId
+                  scenarioPageNumber
                   successTitle
                   tasks {
                     id
@@ -217,7 +217,7 @@ class TestTutorialMutation(TestCase):
             "scenarios": [
                 {
                     "clientId": str(ULID()),
-                    "scenarioId": 1,
+                    "scenarioPageNumber": 1,
                     "instructionsDescription": "Anything that is not naturally occurring",
                     "instructionsIcon": "STAR_OUTLINE",
                     "instructionsTitle": "Identify man-made structures",
@@ -262,7 +262,7 @@ class TestTutorialMutation(TestCase):
                 },
                 {
                     "clientId": str(ULID()),
-                    "scenarioId": 2,
+                    "scenarioPageNumber": 2,
                     "instructionsDescription": "Anything that is not naturally occurring",
                     "instructionsIcon": "STAR_OUTLINE",
                     "instructionsTitle": "Identify natural structures",
@@ -377,7 +377,7 @@ class TestTutorialMutation(TestCase):
                     {
                         "id": self.gID(x.pk),
                         "clientId": x.client_id,
-                        "scenarioId": x.scenario_id,
+                        "scenarioPageNumber": x.scenario_page_number,
                         "hintDescription": x.hint_description,
                         "hintIcon": self.genum(x.hint_icon),  # type: ignore[reportArgumentType]
                         "hintTitle": x.hint_title,
@@ -533,7 +533,7 @@ class TestTutorialMutation(TestCase):
                     {
                         "id": self.gID(x.pk),
                         "clientId": x.client_id,
-                        "scenarioId": x.scenario_id,
+                        "scenarioPageNumber": x.scenario_page_number,
                         "hintDescription": x.hint_description,
                         "hintIcon": self.genum(x.hint_icon),  # type: ignore[reportArgumentType]
                         "hintTitle": x.hint_title,
