@@ -1,5 +1,5 @@
 FROM python:3.13-slim-bookworm AS base
-COPY --from=ghcr.io/astral-sh/uv:0.6.2 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.7.4 /uv /uvx /bin/
 
 LABEL maintainer="Mapswipe Dev"
 LABEL org.opencontainers.image.source="https://github.com/mapswipe/mapswipe-backend/"
