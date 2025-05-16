@@ -1,6 +1,7 @@
 app:
   environment: PROD
   # Global Image
+  appTypeEnvName: "APP_TYPE"
   image:
     name: SET-BY-CICD-IMAGE
     tag: SET-BY-CICD-TAG
