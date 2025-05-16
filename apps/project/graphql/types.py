@@ -48,6 +48,7 @@ class CompletenessProjectPropertyType: ...
 class ProjectAssetType(UserResourceTypeMixin):
     id: strawberry.ID
     type: strawberry.auto
+    file: strawberry.auto
     mimetype: strawberry.auto
     project_id: strawberry.ID
     marked_as_deleted: strawberry.auto
