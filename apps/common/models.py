@@ -26,12 +26,12 @@ def validate_ulid(val: str):
 
 # -- Abstracts
 class UserResource(Model):
+    # FIXME(tnagorra): Should users be able to edit this?
     client_id = models.CharField(
         null=False,
         blank=False,
         unique=True,
         max_length=26,
-        editable=False,
         validators=[validate_ulid],
     )
     created_at = models.DateTimeField(auto_now_add=True)
