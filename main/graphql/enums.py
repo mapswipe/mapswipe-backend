@@ -22,6 +22,7 @@ ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     project_enums.ProjectTypeEnum,
     project_enums.ProjectStatusEnum,
     tutorial_enums.TutorialInformationPageBlockTypeEnum,
+    tutorial_enums.TutorialScenarioIconEnum,
     mapping_enums.MappingSessionClientTypeEnum,
     contributor_enums.ContributorUserGroupMembershipLogActionEnum,
 ]
