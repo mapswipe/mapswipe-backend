@@ -66,7 +66,7 @@ class TutorialTaskInput(CudInput[TutorialTaskCreateInput, TutorialTaskUpdateInpu
 class TutorialScenarioPageCreateInput(UserResourceCreateInputMixin):
     # NOTE: tutorial_id will be referenced from parent
 
-    scenario_id: strawberry.auto
+    scenario_page_number: strawberry.auto
     instructions_description: strawberry.auto
     instructions_icon: strawberry.auto
     instructions_title: strawberry.auto
@@ -83,7 +83,7 @@ class TutorialScenarioPageCreateInput(UserResourceCreateInputMixin):
 class TutorialScenarioPageUpdateInput(UserResourceUpdateInputMixin):
     # NOTE: tutorial_id will be referenced from parent
 
-    scenario_id: strawberry.auto
+    scenario_page_number: strawberry.auto
     instructions_description: strawberry.auto
     instructions_icon: strawberry.auto
     instructions_title: strawberry.auto

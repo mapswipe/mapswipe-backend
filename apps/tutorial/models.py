@@ -80,8 +80,7 @@ class TutorialScenarioPage(UserResource):
         related_name="scenarios",
     )
 
-    # FIXME(tnagorra): Rename this to scenario_page_number
-    scenario_id = models.PositiveSmallIntegerField()
+    scenario_page_number = models.PositiveSmallIntegerField()
 
     instructions_description = models.CharField(max_length=255)
     instructions_icon = IntegerChoicesField(choices_enum=TutorialScenarioIconEnum)
@@ -101,12 +100,12 @@ class TutorialScenarioPage(UserResource):
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         constraints = [
-            models.UniqueConstraint(fields=["tutorial", "scenario_id"], name="unique_scenario_on_tutorials"),
+            models.UniqueConstraint(fields=["tutorial", "scenario_page_number"], name="unique_scenario_on_tutorials"),
         ]
 
     @typing.override
     def __str__(self):
-        return self.scenario_id
+        return self.scenario_page_number
 
 
 class TutorialTask(UserResource):
