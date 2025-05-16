@@ -90,8 +90,11 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             "tutorial",
         )
 
-    def validate_status(self, new_status: Project.Status):
+    def validate_status(self, new_status: Project.Status | None):
         assert self.instance is not None
+
+        if new_status is None:
+            return None
 
         if (self.instance.status, new_status) not in VALID_PROJECT_STATUS_TRANSITIONS:
             raise serializers.ValidationError(
@@ -99,8 +102,11 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             )
         return new_status
 
-    def validate_image(self, new_image: ProjectAsset):
+    def validate_image(self, new_image: ProjectAsset | None):
         assert self.instance is not None
+
+        if new_image is None:
+            return None
 
         asset_exists = (
             ProjectAsset.usable_objects()
@@ -210,17 +216,24 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             "tutorial",
         )
 
-    def validate_status(self, new_status: Project.Status):
+    def validate_status(self, new_status: Project.Status | None):
         if not self.instance:
             raise Exception("Project does not exist")
+
+        if new_status is None:
+            return None
+
         if (self.instance.status, new_status) not in VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS:
             raise serializers.ValidationError(
                 gettext("Project status cannot be changed from %s to %s") % (self.instance.status, new_status),
             )
         return new_status
 
-    def validate_image(self, new_image: ProjectAsset):
+    def validate_image(self, new_image: ProjectAsset | None):
         assert self.instance is not None
+
+        if new_image is None:
+            return None
 
         asset_exists = (
             ProjectAsset.usable_objects()
