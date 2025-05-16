@@ -23,7 +23,10 @@ class UserResourceSerializer[ModelType: UserResource, ContextType: DrfContextTyp
 
     instance: ModelType | None  # type: ignore[override]
 
-    def validate_client_id(self, new_client_id: str):
+    def validate_client_id(self, new_client_id: str | None):
+        if new_client_id is None:
+            return None
+
         try:
             ULID.from_str(new_client_id)
             return new_client_id
