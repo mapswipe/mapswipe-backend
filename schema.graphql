@@ -414,10 +414,6 @@ type DjangoImageType {
   height: Int!
 }
 
-input DjangoModelFilterInput {
-  id: ID!
-}
-
 enum DummyEnum {
   VALUE_1
   VALUE_2
@@ -624,7 +620,7 @@ input ProjectAssetFilter {
   id: IDBaseFilterLookup
   type: ProjectAssetTypeEnumFilterLookup
   mimetype: ProjectAssetMimetypeEnumFilterLookup
-  project: DjangoModelFilterInput
+  projectId: IDBaseFilterLookup
   AND: ProjectAssetFilter
   OR: ProjectAssetFilter
   NOT: ProjectAssetFilter
@@ -813,7 +809,7 @@ input ProjectFilter {
   projectType: ProjectTypeEnumFilterLookup
 
   """Which group, institution or community is requesting this project?"""
-  requestingOrganization: DjangoModelFilterInput
+  requestingOrganizationId: IDBaseFilterLookup
   isFeatured: BoolBaseFilterLookup
   status: ProjectStatusEnumFilterLookup
   AND: ProjectFilter
