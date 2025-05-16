@@ -1,4 +1,5 @@
 app:
+  environment: PROD
   image:
     name: ghcr.io/mapswipe/mapswipe-backend
     tag: latest

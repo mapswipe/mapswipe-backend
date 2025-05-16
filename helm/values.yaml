@@ -1,7 +1,11 @@
 app:
+  environment: PROD
+  # Global Image
+  appTypeEnvName: "APP_TYPE"
   image:
     name: SET-BY-CICD-IMAGE
     tag: SET-BY-CICD-TAG
+    imagePullPolicy: IfNotPresent
 
   ingress:
     enabled: true
@@ -9,6 +13,7 @@ app:
 
   redis:
     enabled: true
+    fullnameOverride: "mapswipe-redis"
 
   postgresql:
     enabled: true
@@ -39,16 +44,55 @@ app:
 
   api:
     containerPort: 80
-    command: ["gunicorn", "config.wsgi:application", "--timeout=40", "--bind", "0.0.0.0:80"]
+    command: ["gunicorn", "main.wsgi:application", "--timeout=40", "--bind", "0.0.0.0:80"]
     resources:
       requests:
         cpu: "0.2"
 
   worker:
     enabled: true
+    beat:
+      command: ["celery", "-A", "main", "beat", "-l", "INFO"]
+      resources:
+        requests:
+          cpu: "0.1"
+          memory: 0.5Gi
+        limits:
+          cpu: "1"
+          memory: 1Gi
+    flower:
+      enabled: false
+    queueDefaultResources:
+      requests:
+        cpu: "0.1"
+        memory: 1Gi
+      limits:
+        cpu: "4"
+        memory: 2Gi
+    queueCommandPrefix:
+      - "celery"
+      - "-A"
+      - "main"
+      - "worker"
+      - "-l"
+      - "INFO"
+    queues:
+      # NOTE: Make sure keys are lowercase
+      default:
+        enabled: true
+        replicaCount: 1
+        celeryArgs:
+          - "-Q"
+          - "celery"
+          - "--concurrency"
+          - "4"
+          - "--max-tasks-per-child"
+          - "10"
 
   # NOTE: Check main/settings.py for all available options
   env:
+    APP_RELEASE: "{{ $.Values.image.tag }}"
+    APP_ENVIRONMENT: "{{ $.Values.environment }}"
     # AWS
     AWS_S3_ENABLED: "true"
     AWS_S3_ENDPOINT_URL: "https://{{ $.Values.minio.apiIngress.hostname }}/"
@@ -70,4 +114,7 @@ app:
     # Minio (S3)
     AWS_S3_ACCESS_KEY_ID: "{{ required \".Values.minio.auth.rootUser\" $.Values.minio.auth.rootUser }}"
     AWS_S3_SECRET_ACCESS_KEY: "{{ required \".Values.minio.auth.rootPassword\" $.Values.minio.auth.rootPassword }}"
-    AWS_S3_REGION: "us-east-1"
+    AWS_S3_REGION_NAME: "us-east-1"
+    # Redis
+    CELERY_REDIS_URL: "redis://{{ printf \"%s-master\" (include \"common.names.fullname\" $.Subcharts.redis) }}:6379/0"
+    CACHE_REDIS_URL: "redis://{{ printf \"%s-master\" (include \"common.names.fullname\" $.Subcharts.redis) }}:6379/1"
