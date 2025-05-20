@@ -43,7 +43,7 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     "apps.common.clear_expired_django_sessions": {
         "task": "apps.common.clear_expired_django_sessions",
-        "schedule": crontab(minute="1", hour="1", day_of_week="monday"),
+        "schedule": crontab(minute="1", hour="1", day_of_week="1"),
         "options": {"queue": "default"},
     },
 }
