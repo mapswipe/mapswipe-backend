@@ -403,7 +403,7 @@ if SENTRY_ENABLED:
         traces_sample_rate=env("SENTRY_TRACES_SAMPLE_RATE"),
         profiles_sample_rate=env("SENTRY_PROFILE_SAMPLE_RATE"),
         # Custom configs
-        tags={"site": APP_DOMAIN},
+        tags={"site": APP_DOMAIN.geturl()},
         monitor_celery_beat_tasks=env("SENTRY_MONITOR_CELERY_BEAT_TASKS"),
     )
     SENTRY_CONFIG.init_sentry()
