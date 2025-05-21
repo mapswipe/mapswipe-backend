@@ -512,3 +512,6 @@ if ENABLE_DEBUG_TOOLBAR and not IS_TESTING:
         "127.0.0.1",
         ".".join(socket.gethostbyname(socket.gethostname()).rsplit(".")[:-1]) + ".1",
     ]
+
+# Manual checks
+import main.checks  # noqa: F401 E402
