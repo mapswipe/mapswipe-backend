@@ -46,6 +46,11 @@ repos:
       - id: ruff-format
         types_or: [python, pyi, jupyter, toml]
 
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.2
+    hooks:
+      - id: gitleaks
+
   - repo: https://github.com/RobertCraigie/pyright-python
     rev: v1.1.398
     hooks:
