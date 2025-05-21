@@ -43,7 +43,7 @@ x-server: &base_server_setup
     MAP_IMAGE_ESRI_BETA_API_KEY: ${MAP_IMAGE_ESRI_BETA_API_KEY:-dummy-esri-beta}
     # MAP_IMAGE_DIGITAL_GLOBE_API_KEY: ${MAP_IMAGE_DIGITAL_GLOBE_API_KEY:-dummy-digital-globe}
   env_file:
-    - path: .env
+    - path: ${BACKEND_ENV_FILE:-.env}
       required: false
   extra_hosts:
     - "host.docker.internal:host-gateway"
