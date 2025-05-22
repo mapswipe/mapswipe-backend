@@ -1,5 +1,4 @@
 import dataclasses
-from enum import Enum
 
 import strawberry
 
@@ -8,7 +7,6 @@ from apps.mapping import models as mapping_enums
 from apps.project import models as project_enums
 from apps.tutorial import models as tutorial_enums
 from utils.geo.tile_server.config import TileServerNameEnum
-
 
 ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     TileServerNameEnum,
