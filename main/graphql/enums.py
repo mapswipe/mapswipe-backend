@@ -1,5 +1,4 @@
 import dataclasses
-from enum import Enum
 
 import strawberry
 
@@ -9,18 +8,14 @@ from apps.project import models as project_enums
 from apps.tutorial import models as tutorial_enums
 from utils.geo.tile_server.config import TileServerNameEnum
 
-
-@strawberry.enum
-class DummyEnum(Enum):
-    VALUE_1 = "Value 1"
-    VALUE_2 = "Value 2"
-
-
 ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
-    DummyEnum,
     TileServerNameEnum,
     project_enums.ProjectTypeEnum,
     project_enums.ProjectStatusEnum,
+    project_enums.ProjectProcessingStatusEnum,
+    project_enums.ProjectAssetMimetypeEnum,
+    project_enums.ProjectAssetTypeEnum,
+    tutorial_enums.TutorialStatusEnum,
     tutorial_enums.TutorialInformationPageBlockTypeEnum,
     tutorial_enums.TutorialScenarioIconEnum,
     mapping_enums.MappingSessionClientTypeEnum,

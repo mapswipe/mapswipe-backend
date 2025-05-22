@@ -18,6 +18,30 @@ class UploadHelper:
         return f"tutorial/{instance.page.tutorial_id}/block-image/{str(ulid.ULID())}/{filename}"
 
 
+class TutorialStatusEnum(models.IntegerChoices):
+    DRAFT = 10, "Draft"
+    """
+    Draft tutorials are not ready to be attached to projects.
+    """
+
+    PUBLISHED = 20, "Published"
+    """
+    "Published" tutorials can be attached to projects.
+    """
+
+    ARCHIVED = 30, "Archived"
+    """
+    "Archived" tutorials cannot be attached to new projects.
+    "Archived" tutorials cannot be "un-archived".
+    """
+
+    DISCARDED = 40, "Discarded"
+    """
+    "Discarded" tutorials cannot be attached to new projects.
+    "Discarded" tutorials cannot be "un-discarded".
+    """
+
+
 class Tutorial(UserResource):
     project = models.ForeignKey(
         Project,
@@ -26,10 +50,11 @@ class Tutorial(UserResource):
         help_text=gettext_lazy("Project this tutorial is referring to."),
     )
 
-    # FIXME(tnagorra): should we add title?
-    # FIXME(tnagorra): should we add project_type?
-
-    is_draft = models.BooleanField(default=True, help_text=gettext_lazy("Draft tutorial can be modified"))
+    name = models.CharField(max_length=255)
+    status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=TutorialStatusEnum,
+        default=TutorialStatusEnum.DRAFT,
+    )
 
     # Type hints
     project_id: int

@@ -13,10 +13,13 @@ directive @isAuthenticated repeatable on FIELD_DEFINITION
 directive @oneOf on INPUT_OBJECT
 
 type AppEnumCollection {
-  DummyEnum: [AppEnumCollectionDummyEnum!]!
   TileServerNameEnum: [AppEnumCollectionTileServerNameEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
   ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
+  ProjectProcessingStatusEnum: [AppEnumCollectionProjectProcessingStatusEnum!]!
+  ProjectAssetMimetypeEnum: [AppEnumCollectionProjectAssetMimetypeEnum!]!
+  ProjectAssetTypeEnum: [AppEnumCollectionProjectAssetTypeEnum!]!
+  TutorialStatusEnum: [AppEnumCollectionTutorialStatusEnum!]!
   TutorialInformationPageBlockTypeEnum: [AppEnumCollectionTutorialInformationPageBlockTypeEnum!]!
   TutorialScenarioIconEnum: [AppEnumCollectionTutorialScenarioIconEnum!]!
   MappingSessionClientTypeEnum: [AppEnumCollectionMappingSessionClientTypeEnum!]!
@@ -28,13 +31,23 @@ type AppEnumCollectionContributorUserGroupMembershipLogActionEnum {
   label: String!
 }
 
-type AppEnumCollectionDummyEnum {
-  key: DummyEnum!
+type AppEnumCollectionMappingSessionClientTypeEnum {
+  key: MappingSessionClientTypeEnum!
   label: String!
 }
 
-type AppEnumCollectionMappingSessionClientTypeEnum {
-  key: MappingSessionClientTypeEnum!
+type AppEnumCollectionProjectAssetMimetypeEnum {
+  key: ProjectAssetMimetypeEnum!
+  label: String!
+}
+
+type AppEnumCollectionProjectAssetTypeEnum {
+  key: ProjectAssetTypeEnum!
+  label: String!
+}
+
+type AppEnumCollectionProjectProcessingStatusEnum {
+  key: ProjectProcessingStatusEnum!
   label: String!
 }
 
@@ -60,6 +73,11 @@ type AppEnumCollectionTutorialInformationPageBlockTypeEnum {
 
 type AppEnumCollectionTutorialScenarioIconEnum {
   key: TutorialScenarioIconEnum!
+  label: String!
+}
+
+type AppEnumCollectionTutorialStatusEnum {
+  key: TutorialStatusEnum!
   label: String!
 }
 
@@ -405,11 +423,6 @@ type DjangoImageType {
   url: String!
   width: Int!
   height: Int!
-}
-
-enum DummyEnum {
-  VALUE_1
-  VALUE_2
 }
 
 input FindProjectPropertyInput {
@@ -1197,28 +1210,23 @@ enum TileServerNameEnum {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, is_draft)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, name, status)
 """
 input TutorialCreateInput {
   clientId: String!
 
   """Project this tutorial is referring to."""
   project: ID!
-
-  """Draft tutorial can be modified"""
-  isDraft: Boolean
   scenarios: [TutorialScenarioPageCreateInput!]!
   informationPages: [TutorialInformationPageCreateInput!]!
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, is_draft)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, name, status)
 """
 input TutorialFilter {
   id: IDBaseFilterLookup
-
-  """Draft tutorial can be modified"""
-  isDraft: BoolBaseFilterLookup
+  status: TutorialStatusEnumFilterLookup
   AND: TutorialFilter
   OR: TutorialFilter
   NOT: TutorialFilter
@@ -1429,6 +1437,61 @@ input TutorialScenarioPageUpdateInput {
   tasks: [TutorialTaskInput!]
 }
 
+enum TutorialStatusEnum {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  DISCARDED
+}
+
+input TutorialStatusEnumFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: TutorialStatusEnum
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [TutorialStatusEnum!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: TutorialStatusEnum
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: TutorialStatusEnum
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: TutorialStatusEnum
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: TutorialStatusEnum
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: TutorialStatusEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: TutorialStatusEnum
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: TutorialStatusEnum
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: TutorialStatusEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: TutorialStatusEnum
+}
+
 """
 TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
 """
@@ -1476,7 +1539,7 @@ input TutorialTaskUpdateInput {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, is_draft)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, name, status)
 """
 type TutorialType implements UserResourceTypeMixin {
   clientId: String!
@@ -1488,9 +1551,7 @@ type TutorialType implements UserResourceTypeMixin {
 
   """Project this tutorial is referring to."""
   projectId: ID!
-
-  """Draft tutorial can be modified"""
-  isDraft: Boolean!
+  status: TutorialStatusEnum!
   scenarios: [TutorialScenarioPageType!]!
   informationPages: [TutorialInformationPageType!]!
 }
@@ -1512,16 +1573,14 @@ type TutorialTypeOffsetPaginated {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, is_draft)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, name, status)
 """
 input TutorialUpdateInput {
   clientId: String!
 
   """Project this tutorial is referring to."""
   project: ID!
-
-  """Draft tutorial can be modified"""
-  isDraft: Boolean
+  status: TutorialStatusEnum
   scenarios: [TutorialScenarioPageInput!]
   informationPages: [TutorialInformationPageInput!]
 }
