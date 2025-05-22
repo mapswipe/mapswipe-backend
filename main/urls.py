@@ -2,8 +2,9 @@ from debug_toolbar.toolbar import debug_toolbar_urls
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
-from django.views.decorators.csrf import csrf_exempt
+from django.urls import path
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from health_check.views import MainView as HealthCheckView
 
 from main.graphql.schema import CustomAsyncGraphQLView
 from main.graphql.schema import schema as graphql_schema
@@ -16,7 +17,6 @@ base_graphql_kwargs = dict(
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("health-check/", include("health_check.urls")),
     path(
         "graphql/",
         CustomAsyncGraphQLView.as_view(
@@ -25,6 +25,10 @@ urlpatterns = [
         ),
         name="graphql",
     ),
+    # Health-check - NOTE: To include ensure_csrf_cookie decorator
+    # https://github.com/revsys/django-health-check/blob/master/health_check/urls.py
+    path("health-check/", ensure_csrf_cookie(HealthCheckView.as_view()), name="health_check_home"),
+    path("health-check/<str:subset>/", ensure_csrf_cookie(HealthCheckView.as_view()), name="health_check_subset"),
 ]
 
 if settings.DEBUG:
