@@ -363,7 +363,7 @@ CSRF_COOKIE_DOMAIN = env("CSRF_COOKIE_DOMAIN")
 CORS_ALLOWED_ORIGINS = MAPSWIPE_TRUSTED_ORIGINS
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_URLS_REGEX = r"(^/media/.*$)|(^/graphql/$)"
+CORS_URLS_REGEX = r"(^/media/.*$)|(^/graphql/$)|(^/health-check/$)"
 CORS_ALLOW_METHODS = (
     "DELETE",
     "GET",
