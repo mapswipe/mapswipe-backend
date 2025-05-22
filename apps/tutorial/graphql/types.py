@@ -107,7 +107,7 @@ class TutorialInformationPageType(UserResourceTypeMixin):
 class TutorialType(UserResourceTypeMixin):
     id: strawberry.ID
     project_id: strawberry.ID
-    is_draft: strawberry.auto
+    status: strawberry.auto
 
     scenarios: list[TutorialScenarioPageType]
     information_pages: list[TutorialInformationPageType]

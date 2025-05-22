@@ -9,6 +9,7 @@ from apps.project.models import (
 )
 from apps.tutorial.models import (
     Tutorial,
+    TutorialStatusEnum,
 )
 from apps.user.factories import UserFactory
 from main.tests import TestCase
@@ -36,7 +37,7 @@ class Mutation:
               result {
                 id
                 clientId
-                isDraft
+                status
                 projectId
                 informationPages {
                   id
@@ -110,7 +111,7 @@ class Mutation:
               result {
                 id
                 clientId
-                isDraft
+                status
                 projectId
                 informationPages {
                   id
@@ -213,7 +214,6 @@ class TestTutorialMutation(TestCase):
         tutorial_data = {
             "clientId": str(ULID()),
             "project": self.project.pk,
-            "isDraft": False,
             "scenarios": [
                 {
                     "clientId": str(ULID()),
@@ -371,7 +371,7 @@ class TestTutorialMutation(TestCase):
             result=dict(
                 clientId=latest_tutorial.client_id,
                 id=self.gID(latest_tutorial.pk),
-                isDraft=latest_tutorial.is_draft,
+                status=self.genum(TutorialStatusEnum.DRAFT),
                 projectId=self.gID(latest_tutorial.project_id),
                 scenarios=[
                     {
@@ -527,7 +527,7 @@ class TestTutorialMutation(TestCase):
             result=dict(
                 clientId=latest_tutorial.client_id,
                 id=self.gID(latest_tutorial.pk),
-                isDraft=latest_tutorial.is_draft,
+                status=self.genum(TutorialStatusEnum.DRAFT),
                 projectId=self.gID(latest_tutorial.project_id),
                 scenarios=[
                     {

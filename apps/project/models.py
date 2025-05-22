@@ -105,13 +105,13 @@ class ProjectStatusEnum(models.IntegerChoices):
 
     ARCHIVED = 70, "Archived"
     """
-    "Archived" projects are visible to the contributors.
+    "Archived" projects are not visible to the contributors.
     "Archived" projects cannot be "un-archived".
     """
 
     DISCARDED = 80, "Discarded"
     """
-    "Discarded" projects are visible to the contributors.
+    "Discarded" projects are not visible to the contributors.
     "Discarded" projects cannot be "un-discarded".
     """
 

@@ -49,10 +49,7 @@ class TutorialTaskSerializer(UserResourceSerializer[TutorialTask, TutorialTaskSe
         if (tutorial := self.context.get("tutorial")) is None:
             return
 
-        # FIXME: Make this type-safe
         project_type = tutorial.project.project_type
-
-        # TODO(tnagorra): Get this project_type from the associated project
         if project_type is None:
             raise serializers.ValidationError(
                 {
@@ -308,7 +305,7 @@ class TutorialSerializer(UserResourceSerializer[Tutorial]):
         fields = (
             "client_id",
             "project",
-            "is_draft",
+            "status",
             "information_pages",
             "scenarios",
         )

@@ -45,7 +45,6 @@ class TutorialTaskCreateInput(UserResourceCreateInputMixin):
     # NOTE: scenario_id will be referenced from parent
 
     reference: strawberry.auto
-    # FIXME(tnagorra): Make this typesafe
     project_type_specifics: TutorialTaskProjectTypeSpecificInput
 
 
@@ -54,7 +53,6 @@ class TutorialTaskUpdateInput(UserResourceUpdateInputMixin):
     # NOTE: scenario_id will be referenced from parent
 
     reference: strawberry.auto
-    # FIXME(tnagorra): Make this typesafe
     project_type_specifics: TutorialTaskProjectTypeSpecificInput
 
 
@@ -152,7 +150,6 @@ class TutorialInformationPageInput(CudInput[TutorialInformationPageCreateInput, 
 @strawberry_django.input(Tutorial)
 class TutorialCreateInput(UserResourceCreateInputMixin):
     project: strawberry.ID
-    is_draft: strawberry.auto
 
     scenarios: list[TutorialScenarioPageCreateInput]
     information_pages: list[TutorialInformationPageCreateInput]
@@ -162,7 +159,7 @@ class TutorialCreateInput(UserResourceCreateInputMixin):
 @strawberry_django.partial(Tutorial)
 class TutorialUpdateInput(UserResourceTopLevelUpdateInputMixin):
     project: strawberry.ID
-    is_draft: strawberry.auto
+    status: strawberry.auto
 
     scenarios: list[TutorialScenarioPageInput] | None = strawberry.UNSET
     information_pages: list[TutorialInformationPageInput] | None = strawberry.UNSET
