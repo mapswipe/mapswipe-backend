@@ -106,6 +106,7 @@ class TutorialInformationPageType(UserResourceTypeMixin):
 @strawberry_django.type(Tutorial)
 class TutorialType(UserResourceTypeMixin):
     id: strawberry.ID
+    name: strawberry.auto
     project_id: strawberry.ID
     status: strawberry.auto
 

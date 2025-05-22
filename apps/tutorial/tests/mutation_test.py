@@ -213,6 +213,7 @@ class TestTutorialMutation(TestCase):
     def test_tutorial_create(self):
         tutorial_data = {
             "clientId": str(ULID()),
+            "name": "My Tutorial",
             "project": self.project.pk,
             "scenarios": [
                 {

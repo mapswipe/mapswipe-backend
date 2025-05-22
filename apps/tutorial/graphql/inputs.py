@@ -150,6 +150,7 @@ class TutorialInformationPageInput(CudInput[TutorialInformationPageCreateInput, 
 @strawberry_django.input(Tutorial)
 class TutorialCreateInput(UserResourceCreateInputMixin):
     project: strawberry.ID
+    name: strawberry.auto
 
     scenarios: list[TutorialScenarioPageCreateInput]
     information_pages: list[TutorialInformationPageCreateInput]
@@ -159,6 +160,7 @@ class TutorialCreateInput(UserResourceCreateInputMixin):
 @strawberry_django.partial(Tutorial)
 class TutorialUpdateInput(UserResourceTopLevelUpdateInputMixin):
     project: strawberry.ID
+    name: strawberry.auto
     status: strawberry.auto
 
     scenarios: list[TutorialScenarioPageInput] | None = strawberry.UNSET
