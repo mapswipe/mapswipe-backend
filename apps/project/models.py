@@ -204,6 +204,7 @@ class Project(UserResource):
         on_delete=models.SET_NULL,
     )
 
+    # FIXME(tnagorra): We might need to rename this field
     # NOTE: The tutorial should align with what we are looking for.
     tutorial: "Tutorial" = models.ForeignKey(  # type: ignore[reportAssignmentType]
         "tutorial.Tutorial",

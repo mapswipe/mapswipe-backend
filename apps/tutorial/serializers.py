@@ -304,6 +304,7 @@ class TutorialSerializer(UserResourceSerializer[Tutorial]):
         model = Tutorial
         fields = (
             "client_id",
+            "name",
             "project",
             "status",
             "information_pages",
