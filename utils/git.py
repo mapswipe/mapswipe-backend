@@ -102,6 +102,10 @@ class GitHelper:
                 f"https://api.github.com/repos/{repository_name}/commits/{self.commit_sha}",
                 timeout=2,
             )
-            return resp.json()
+            data = resp.json()
+            # NOTE: The 'files' field in the GitHub commit response contains full diffs,
+            # which can be very large and are not needed here
+            data.pop("files", None)
+            return data
         except Exception:
             logger.warning("Failed to fetch commit data from github", exc_info=True)
