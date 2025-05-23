@@ -35,6 +35,8 @@ dependencies = [
     "gdal==3.6.2", # NOTE: version depends on the available libgdal-dev version in debian
     "ogr",
     "python-ulid>=3.0.0",
+    "toml",
+    "httpx",
 ]
 
 [dependency-groups]
