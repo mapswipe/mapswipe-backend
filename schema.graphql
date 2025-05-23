@@ -1217,6 +1217,7 @@ input TutorialCreateInput {
 
   """Project this tutorial is referring to."""
   project: ID!
+  name: String!
   scenarios: [TutorialScenarioPageCreateInput!]!
   informationPages: [TutorialInformationPageCreateInput!]!
 }
@@ -1226,6 +1227,7 @@ Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, projec
 """
 input TutorialFilter {
   id: IDBaseFilterLookup
+  name: StrFilterLookup
   status: TutorialStatusEnumFilterLookup
   AND: TutorialFilter
   OR: TutorialFilter
@@ -1329,6 +1331,7 @@ input TutorialInformationPageUpdateInput {
 
 input TutorialOrder {
   id: Ordering
+  name: Ordering
 }
 
 enum TutorialScenarioIconEnum {
@@ -1548,6 +1551,7 @@ type TutorialType implements UserResourceTypeMixin {
   createdBy: UserType!
   modifiedBy: UserType!
   id: ID!
+  name: String!
 
   """Project this tutorial is referring to."""
   projectId: ID!
@@ -1580,6 +1584,7 @@ input TutorialUpdateInput {
 
   """Project this tutorial is referring to."""
   project: ID!
+  name: String
   status: TutorialStatusEnum
   scenarios: [TutorialScenarioPageInput!]
   informationPages: [TutorialInformationPageInput!]

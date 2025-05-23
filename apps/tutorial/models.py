@@ -43,6 +43,7 @@ class TutorialStatusEnum(models.IntegerChoices):
 
 
 class Tutorial(UserResource):
+    # FIXME(tnagorra): We might need to rename this field
     project = models.ForeignKey(
         Project,
         on_delete=models.PROTECT,
