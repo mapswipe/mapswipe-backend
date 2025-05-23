@@ -6,6 +6,7 @@ from django.urls import path
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from health_check.views import MainView as HealthCheckView
 
+from apps.common.views import HealthCheckCustomView
 from main.graphql.schema import CustomAsyncGraphQLView
 from main.graphql.schema import schema as graphql_schema
 
@@ -27,7 +28,7 @@ urlpatterns = [
     ),
     # Health-check - NOTE: To include ensure_csrf_cookie decorator
     # https://github.com/revsys/django-health-check/blob/master/health_check/urls.py
-    path("health-check/", ensure_csrf_cookie(HealthCheckView.as_view()), name="health_check_home"),
+    path("health-check/", ensure_csrf_cookie(HealthCheckCustomView.as_view()), name="health_check_home"),
     path("health-check/<str:subset>/", ensure_csrf_cookie(HealthCheckView.as_view()), name="health_check_subset"),
 ]
 
