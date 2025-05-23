@@ -1,4 +1,5 @@
 import typing
+import warnings
 from datetime import datetime
 from enum import Enum
 
@@ -100,6 +101,12 @@ class TestCase(BaseTestCase):
         else:
             self.assertResponseNoErrors(response)
         return response.json()
+
+    def assertWarning(self, condition: bool, msg: str):
+        """Custom assertion that warns instead of failing the test."""
+        if not condition:
+            warning_message = msg or "Assertion warning: condition not met."
+            warnings.warn(warning_message, stacklevel=2)
 
     def assertResponseNoErrors(self, resp: typing.Any, msg=None):
         """

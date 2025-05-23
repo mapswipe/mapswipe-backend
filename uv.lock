@@ -856,6 +856,7 @@ dependencies = [
     { name = "flower" },
     { name = "gdal" },
     { name = "gunicorn" },
+    { name = "httpx" },
     { name = "ogr" },
     { name = "pillow" },
     { name = "psycopg2-binary" },
@@ -863,6 +864,7 @@ dependencies = [
     { name = "python-ulid" },
     { name = "sentry-sdk" },
     { name = "strawberry-graphql-django" },
+    { name = "toml" },
 ]
 
 [package.dev-dependencies]
@@ -901,6 +903,7 @@ requires-dist = [
     { name = "flower" },
     { name = "gdal", specifier = "==3.6.2" },
     { name = "gunicorn", specifier = "~=20.1.0" },
+    { name = "httpx" },
     { name = "ogr" },
     { name = "pillow" },
     { name = "psycopg2-binary" },
@@ -908,6 +911,7 @@ requires-dist = [
     { name = "python-ulid", specifier = ">=3.0.0" },
     { name = "sentry-sdk" },
     { name = "strawberry-graphql-django", specifier = "~=0.57.0" },
+    { name = "toml" },
 ]
 
 [package.metadata.requires-dev]
@@ -1541,6 +1545,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/67/a3/84006840ae3b817732823a075f185990b768bdba2b49e4e8955839a336d7/strawberry_graphql_django-0.57.0.tar.gz", hash = "sha256:2fac0a7cd9fff6796d6eb0844fc128d83a2b768a7dc829b1d56d89530dd76878", size = 76662, upload-time = "2025-03-02T11:59:03.492Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e4/33/bbf9cbf69cbbde87a496d5913d6b881a849ea2d3d4d98090ace53c88aaa1/strawberry_graphql_django-0.57.0-py3-none-any.whl", hash = "sha256:944d5a48a8c6e81b30eb89505981f42801023eea18bf8662150489129b2703ed", size = 95931, upload-time = "2025-03-02T11:59:01.972Z" },
+]
+
+[[package]]
+name = "toml"
+version = "0.10.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/be/ba/1f744cdc819428fc6b5084ec34d9b30660f6f9daaf70eead706e3203ec3c/toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f", size = 22253, upload-time = "2020-11-01T01:40:22.204Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/44/6f/7120676b6d73228c96e17f1f794d8ab046fc910d781c8d151120c3f1569e/toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b", size = 16588, upload-time = "2020-11-01T01:40:20.672Z" },
 ]
 
 [[package]]

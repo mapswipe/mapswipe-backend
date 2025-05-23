@@ -7,7 +7,7 @@ import environ
 
 from main.logging import log_render_extra_context
 from main.sentry import SentryConfig
-from utils.git import fetch_git_sha
+from utils.git import GitHelper
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -84,6 +84,7 @@ env = environ.Env(
     PYTEST_XDIST_WORKER=(str, None),
 )
 
+GIT_HELPER = GitHelper(BASE_DIR)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -93,7 +94,7 @@ APP_DOMAIN = env.url("APP_DOMAIN")
 FRONTEND_DOMAIN = env.url("FRONTEND_DOMAIN")
 APP_ENVIRONMENT = env("APP_ENVIRONMENT").upper()
 APP_TYPE = env("APP_TYPE").upper()
-APP_RELEASE = env("APP_RELEASE") or fetch_git_sha(BASE_DIR, raise_on_error=False)
+APP_RELEASE = env("APP_RELEASE") or GIT_HELPER.commit_sha
 SECRET_KEY = env("SECRET_KEY")
 
 DEBUG = env("DEBUG")
