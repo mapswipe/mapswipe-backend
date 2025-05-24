@@ -12,7 +12,7 @@ from apps.project.project_types.tile_map_service.find import project as find_pro
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
-from .models import Project, ProjectAsset, ProjectTypeEnum
+from .models import Organization, Project, ProjectAsset, ProjectTypeEnum
 from .tasks import process_project_task
 
 VALID_PROJECT_STATUS_TRANSITIONS = set(
@@ -289,3 +289,12 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
         # NOTE: User should only bye able to create INPUT type project assets
         validated_data["type"] = ProjectAsset.Type.INPUT
         return super().create(validated_data)
+
+
+class OrganizationCreateSerializer(UserResourceSerializer[Organization]):
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        model = Organization
+        fields = (
+            "client_id",
+            "name",
+        )
