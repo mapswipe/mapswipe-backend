@@ -6,7 +6,7 @@ from apps.common.graphql.inputs import (
     UserResourceCreateInputMixin,
     UserResourceTopLevelUpdateInputMixin,
 )
-from apps.project.models import Project, ProjectAsset
+from apps.project.models import Organization, Project, ProjectAsset
 from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.project_types.tile_map_service.completeness import project as completeness_project
 from apps.project.project_types.tile_map_service.find import project as find_project
@@ -37,6 +37,11 @@ class FindProjectPropertyInput: ...
 
 @strawberry.experimental.pydantic.input(model=completeness_project.CompletenessProjectProperty, all_fields=True)
 class CompletenessProjectPropertyInput: ...
+
+
+@strawberry_django.input(Organization)
+class OrganizationCreateInput(UserResourceCreateInputMixin):
+    name: strawberry.auto
 
 
 @strawberry.input(one_of=True)

@@ -257,6 +257,77 @@ class Mutation:
     """
 
 
+class TestOrganizationMutation(TestCase):
+    class Mutation:
+        CREATE_ORGANIZATION = """
+        mutation CreateOrganization($data: OrganizationCreateInput!) {
+            createOrganization(data: $data) {
+                ... on OperationInfo {
+                  __typename
+                  messages {
+                    code
+                    field
+                    kind
+                    message
+                  }
+                }
+                ... on OrganizationTypeMutationResponseType {
+                    errors
+                    ok
+                    result {
+                        id
+                        name
+                        clientId
+                    }
+                }
+            }
+        }
+        """
+
+    @typing.override
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user = UserFactory.create()
+        cls.user_resource_kwargs = dict(
+            created_by=cls.user,
+            modified_by=cls.user,
+        )
+
+    def test_organization_create(self):
+        organization_data = {
+            "clientId": str(ULID()),
+            "name": "Test Organization",
+        }
+
+        # Creating Organization: Without authentication
+        content = self.query_check(
+            self.Mutation.CREATE_ORGANIZATION,
+            variables={
+                "data": organization_data,
+            },
+        )
+        assert content["data"]["createOrganization"]["messages"] == [
+            {
+                "code": None,
+                "field": "createOrganization",
+                "kind": "PERMISSION",
+                "message": "User is not authenticated.",
+            },
+        ], content
+
+        # Creating Organization: With authentication
+        self.force_login(self.user)
+        content = self.query_check(
+            self.Mutation.CREATE_ORGANIZATION,
+            variables={
+                "data": organization_data,
+            },
+        )
+        resp_data = content["data"]["createOrganization"]
+        assert resp_data["errors"] is None, content
+
+
 class TestProjectMutation(TestCase):
     @typing.override
     @classmethod

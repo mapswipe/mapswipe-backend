@@ -388,6 +388,8 @@ interface ContributorUserUserGroupBaseFilterStatsQuery {
   swipeByProjectGeo: [MapContributionStatsType!]!
 }
 
+union CreateOrganizationPayload = OrganizationTypeMutationResponseType | OperationInfo
+
 union CreateProjectAssetPayload = ProjectAssetTypeMutationResponseType | OperationInfo
 
 union CreateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
@@ -490,6 +492,7 @@ type Mutation {
   updateProject(data: ProjectUpdateInput!, pk: ID!): UpdateProjectPayload! @isAuthenticated
   updateProcessedProject(data: ProcessedProjectUpdateInput!, pk: ID!): UpdateProcessedProjectPayload! @isAuthenticated
   createProjectAsset(data: ProjectAssetCreateInput!): CreateProjectAssetPayload! @isAuthenticated
+  createOrganization(data: OrganizationCreateInput!): CreateOrganizationPayload! @isAuthenticated
   deleteTutorial: DeleteTutorialPayload! @isAuthenticated
   createTutorial(data: TutorialCreateInput!): CreateTutorialPayload! @isAuthenticated
   updateTutorial(data: TutorialUpdateInput!, pk: ID!): UpdateTutorialPayload! @isAuthenticated
@@ -546,6 +549,14 @@ enum Ordering {
 """
 Organization(id, client_id, created_at, modified_at, created_by, modified_by, name, unique_name)
 """
+input OrganizationCreateInput {
+  clientId: String!
+  name: String!
+}
+
+"""
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, name, unique_name)
+"""
 input OrganizationFilter {
   id: IDBaseFilterLookup
   name: StrFilterLookup
@@ -576,6 +587,12 @@ type OrganizationType implements UserResourceTypeMixin {
   modifiedBy: UserType!
   id: ID!
   name: String!
+}
+
+type OrganizationTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: OrganizationType
 }
 
 type OrganizationTypeOffsetPaginated {
