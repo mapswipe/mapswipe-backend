@@ -2,8 +2,11 @@
 # Original https://github.com/orhun/git-cliff/blob/main/release.sh
 set -e
 
+# Future Improvements
+# - We can show last X tags when creating a release (let's document this)
+
 # Update this to archive old changelogs
-# NOTE: Make sure to also update cliff.toml:footer to includes those archvied changelogs as well
+# NOTE: Make sure to also update cliff.toml:footer to includes those archived changelogs as well
 START_COMMIT="6d1ebcd644aaae0801e74d24d2b2277952c841d4"
 
 if ! command -v typos &>/dev/null; then
