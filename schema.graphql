@@ -14,6 +14,7 @@ directive @oneOf on INPUT_OBJECT
 
 type AppEnumCollection {
   TileServerNameEnum: [AppEnumCollectionTileServerNameEnum!]!
+  ValidateObjectSourceTypeEnum: [AppEnumCollectionValidateObjectSourceTypeEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
   ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
   ProjectProcessingStatusEnum: [AppEnumCollectionProjectProcessingStatusEnum!]!
@@ -81,6 +82,11 @@ type AppEnumCollectionTutorialStatusEnum {
   label: String!
 }
 
+type AppEnumCollectionValidateObjectSourceTypeEnum {
+  key: ValidateObjectSourceTypeEnum!
+  label: String!
+}
+
 scalar AreaSqKm
 
 input BoolBaseFilterLookup {
@@ -125,7 +131,7 @@ type CompareProjectPropertyType {
   tileServerBProperty: ProjectTileServerConfig!
 }
 
-union CompareProjectPropertyTypeFindProjectPropertyTypeCompletenessProjectPropertyType = CompareProjectPropertyType | FindProjectPropertyType | CompletenessProjectPropertyType
+union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeCompletenessProjectPropertyType = CompareProjectPropertyType | FindProjectPropertyType | ValidateProjectPropertyType | CompletenessProjectPropertyType
 
 input CompareTutorialTaskPropertyInput {
   tileX: Int!
@@ -139,7 +145,7 @@ type CompareTutorialTaskPropertyType {
   tileZ: Int!
 }
 
-union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType = CompareTutorialTaskPropertyType | FindTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType
+union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType = CompareTutorialTaskPropertyType | FindTutorialTaskPropertyType | ValidateTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType
 
 input CompletenessProjectPropertyInput {
   zoomLevel: Int!
@@ -1002,7 +1008,7 @@ type ProjectType implements UserResourceTypeMixin {
   status: ProjectStatusEnum!
   processingStatus: ProjectProcessingStatusEnum
   progress: Int!
-  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeCompletenessProjectPropertyType
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeCompletenessProjectPropertyType
 }
 
 type ProjectTypeAreaStatsType {
@@ -1013,6 +1019,7 @@ type ProjectTypeAreaStatsType {
 
 enum ProjectTypeEnum {
   FIND
+  VALIDATE
   COMPARE
   COMPLETENESS
 }
@@ -1085,6 +1092,7 @@ input ProjectTypeSpecificInput @oneOf {
   compare: CompareProjectPropertyInput
   find: FindProjectPropertyInput
   completeness: CompletenessProjectPropertyInput
+  validate: ValidateProjectPropertyInput
 }
 
 type ProjectTypeSwipeStatsType {
@@ -1530,6 +1538,7 @@ input TutorialTaskInput {
 input TutorialTaskProjectTypeSpecificInput @oneOf {
   compare: CompareTutorialTaskPropertyInput
   find: FindTutorialTaskPropertyInput
+  validate: ValidateTutorialTaskPropertyInput
   completeness: CompletenessTutorialTaskPropertyInput
 }
 
@@ -1545,7 +1554,7 @@ type TutorialTaskType implements UserResourceTypeMixin {
   id: ID!
   scenarioId: ID!
   reference: Int!
-  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType
+  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType
 }
 
 """
@@ -1669,4 +1678,44 @@ type UserTypeOffsetPaginated {
 
   """List of paginated results."""
   results: [UserType!]!
+}
+
+type ValidateObjectSourceConfig {
+  sourceType: ValidateObjectSourceTypeEnum!
+  taskingManagerProjectId: String
+  aoiGeometry: String
+  ohsomeFilter: String
+  objectGeojsonUrl: String
+}
+
+input ValidateObjectSourceConfigInput {
+  sourceType: ValidateObjectSourceTypeEnum!
+  taskingManagerProjectId: String = null
+  aoiGeometry: String = null
+  ohsomeFilter: String = null
+  objectGeojsonUrl: String = null
+}
+
+enum ValidateObjectSourceTypeEnum {
+  AOI_GEOJSON_FILE
+  OBJECT_GEOJSON_URL
+  TASKING_MANAGER
+}
+
+input ValidateProjectPropertyInput {
+  tileServerProperty: ProjectTileServerConfigInput!
+  objectSource: ValidateObjectSourceConfigInput!
+}
+
+type ValidateProjectPropertyType {
+  tileServerProperty: ProjectTileServerConfig!
+  objectSource: ValidateObjectSourceConfig!
+}
+
+input ValidateTutorialTaskPropertyInput {
+  objectGeometry: String = null
+}
+
+type ValidateTutorialTaskPropertyType {
+  objectGeometry: String
 }

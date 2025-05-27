@@ -9,6 +9,7 @@ from apps.common.serializers import UserResourceSerializer
 from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.project_types.tile_map_service.completeness import project as completeness_project
 from apps.project.project_types.tile_map_service.find import project as find_project
+from apps.project.project_types.validate import project as validate_project
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
@@ -48,6 +49,8 @@ def get_project_property(project_type: ProjectTypeEnum | None):
         return ("compare", compare_project.CompareProjectProperty)
     if project_type == ProjectTypeEnum.FIND:
         return ("find", find_project.FindProjectProperty)
+    if project_type == ProjectTypeEnum.VALIDATE:
+        return ("validate", validate_project.ValidateProjectProperty)
     if project_type == ProjectTypeEnum.COMPLETENESS:
         return ("completeness", completeness_project.CompletenessProjectProperty)
     typing.assert_never(project_type)
