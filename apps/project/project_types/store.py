@@ -5,8 +5,9 @@ from apps.project.models import ProjectTypeEnum
 from .tile_map_service.compare.project import CompareProject
 from .tile_map_service.completeness.project import CompletenessProject
 from .tile_map_service.find.project import FindProject
+from .validate.project import ValidateProject
 
-type ProjectTypeHandlers = type[CompareProject | FindProject | CompletenessProject]
+type ProjectTypeHandlers = type[CompareProject | ValidateProject | FindProject | CompletenessProject]
 
 
 @typing.overload
@@ -23,6 +24,12 @@ def get_project_type_handler(
 
 @typing.overload
 def get_project_type_handler(
+    project_type: typing.Literal[ProjectTypeEnum.VALIDATE],
+) -> type[ValidateProject]: ...
+
+
+@typing.overload
+def get_project_type_handler(
     project_type: typing.Literal[ProjectTypeEnum.COMPLETENESS],
 ) -> type[CompletenessProject]: ...
 
@@ -33,5 +40,7 @@ def get_project_type_handler(project_type: ProjectTypeEnum) -> ProjectTypeHandle
             return FindProject
         case ProjectTypeEnum.COMPARE:
             return CompareProject
+        case ProjectTypeEnum.VALIDATE:
+            return ValidateProject
         case ProjectTypeEnum.COMPLETENESS:
             return CompletenessProject

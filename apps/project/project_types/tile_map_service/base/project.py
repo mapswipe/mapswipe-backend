@@ -231,7 +231,9 @@ class TileMapServiceBaseProject[
 
         extension = Path(aoi_asset.file.name).suffix
         with tempfile.NamedTemporaryFile(suffix=extension, dir=settings.TEMP_DIR) as temp_file:
-            temp_file.write(aoi_asset.file.read())
+            # FIXME(frozenhelium): close the aoi_asset file?
+            with aoi_asset.file.open() as aoi_file:
+                temp_file.write(aoi_file.read())
             temp_file.flush()
 
             aoi_geometry = tile_grouping.get_geometry_from_file(temp_file.name)

@@ -17,6 +17,7 @@ from apps.tutorial.models import (
 from apps.tutorial.project_types.tile_map_service.compare import tutorial as compare_tutorial
 from apps.tutorial.project_types.tile_map_service.completeness import tutorial as completeness_tutorial
 from apps.tutorial.project_types.tile_map_service.find import tutorial as find_tutorial
+from apps.tutorial.project_types.validate import tutorial as validate_tutorial
 from utils.graphql.types import CudInput
 
 
@@ -29,6 +30,10 @@ class CompareTutorialTaskPropertyInput: ...
 class FindTutorialTaskPropertyInput: ...
 
 
+@strawberry.experimental.pydantic.input(model=validate_tutorial.ValidateTutorialTaskProperty, all_fields=True)
+class ValidateTutorialTaskPropertyInput: ...
+
+
 @strawberry.experimental.pydantic.input(model=completeness_tutorial.CompletenessTutorialTaskProperty, all_fields=True)
 class CompletenessTutorialTaskPropertyInput: ...
 
@@ -37,6 +42,7 @@ class CompletenessTutorialTaskPropertyInput: ...
 class TutorialTaskProjectTypeSpecificInput:
     compare: CompareTutorialTaskPropertyInput | None = strawberry.UNSET
     find: FindTutorialTaskPropertyInput | None = strawberry.UNSET
+    validate: ValidateTutorialTaskPropertyInput | None = strawberry.UNSET
     completeness: CompletenessTutorialTaskPropertyInput | None = strawberry.UNSET
 
 

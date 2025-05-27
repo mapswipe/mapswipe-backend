@@ -5,11 +5,13 @@ import strawberry
 from apps.contributor import models as contributor_enums
 from apps.mapping import models as mapping_enums
 from apps.project import models as project_enums
+from apps.project.project_types.validate.project import ValidateObjectSourceTypeEnum
 from apps.tutorial import models as tutorial_enums
 from utils.geo.tile_server.config import TileServerNameEnum
 
 ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     TileServerNameEnum,
+    ValidateObjectSourceTypeEnum,
     project_enums.ProjectTypeEnum,
     project_enums.ProjectStatusEnum,
     project_enums.ProjectProcessingStatusEnum,

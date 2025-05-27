@@ -10,6 +10,7 @@ from apps.project.models import Organization, Project, ProjectAsset
 from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.project_types.tile_map_service.completeness import project as completeness_project
 from apps.project.project_types.tile_map_service.find import project as find_project
+from apps.project.project_types.validate import project as validate_project
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
 
 
@@ -26,6 +27,10 @@ class TileServerCommonConfigInput: ...
 class ProjectTileServerConfigInput: ...
 
 
+@strawberry.experimental.pydantic.input(model=validate_project.ValidateObjectSourceConfig, all_fields=True)
+class ValidateObjectSourceConfigInput: ...
+
+
 # Project Properties
 @strawberry.experimental.pydantic.input(model=compare_project.CompareProjectProperty, all_fields=True)
 class CompareProjectPropertyInput: ...
@@ -39,6 +44,10 @@ class FindProjectPropertyInput: ...
 class CompletenessProjectPropertyInput: ...
 
 
+@strawberry.experimental.pydantic.input(model=validate_project.ValidateProjectProperty, all_fields=True)
+class ValidateProjectPropertyInput: ...
+
+
 @strawberry_django.input(Organization)
 class OrganizationCreateInput(UserResourceCreateInputMixin):
     name: strawberry.auto
@@ -49,6 +58,7 @@ class ProjectTypeSpecificInput:
     compare: CompareProjectPropertyInput | None = strawberry.UNSET
     find: FindProjectPropertyInput | None = strawberry.UNSET
     completeness: CompletenessProjectPropertyInput | None = strawberry.UNSET
+    validate: ValidateProjectPropertyInput | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py

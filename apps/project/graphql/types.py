@@ -8,6 +8,7 @@ from apps.project.models import Organization, Project, ProjectAsset
 from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.project_types.tile_map_service.completeness import project as completeness_project
 from apps.project.project_types.tile_map_service.find import project as find_project
+from apps.project.project_types.validate import project as validate_project
 from apps.tutorial.graphql.types import TutorialType
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
 
@@ -31,6 +32,10 @@ class ProjectTileServerCommonConfig: ...
 class ProjectTileServerConfig: ...
 
 
+@strawberry.experimental.pydantic.type(model=validate_project.ValidateObjectSourceConfig, all_fields=True)
+class ValidateObjectSourceConfig: ...
+
+
 # Project Properties
 @strawberry.experimental.pydantic.type(model=compare_project.CompareProjectProperty, all_fields=True)
 class CompareProjectPropertyType: ...
@@ -38,6 +43,10 @@ class CompareProjectPropertyType: ...
 
 @strawberry.experimental.pydantic.type(model=find_project.FindProjectProperty, all_fields=True)
 class FindProjectPropertyType: ...
+
+
+@strawberry.experimental.pydantic.type(model=validate_project.ValidateProjectProperty, all_fields=True)
+class ValidateProjectPropertyType: ...
 
 
 @strawberry.experimental.pydantic.type(model=completeness_project.CompletenessProjectProperty, all_fields=True)
@@ -79,7 +88,13 @@ class ProjectType(UserResourceTypeMixin):
     async def project_type_specifics(
         self,
         project: strawberry.Parent[Project],
-    ) -> CompareProjectPropertyType | FindProjectPropertyType | CompletenessProjectPropertyType | None:
+    ) -> (
+        CompareProjectPropertyType
+        | FindProjectPropertyType
+        | ValidateProjectPropertyType
+        | CompletenessProjectPropertyType
+        | None
+    ):
         data = project.project_type_specifics
         if data is None:
             return None
@@ -87,6 +102,8 @@ class ProjectType(UserResourceTypeMixin):
             return typing.cast("FindProjectPropertyType", find_project.FindProjectProperty.model_validate(data))
         if project.project_type_enum == Project.Type.COMPARE:
             return typing.cast("CompareProjectPropertyType", compare_project.CompareProjectProperty.model_validate(data))
+        if project.project_type_enum == Project.Type.VALIDATE:
+            return typing.cast("ValidateProjectPropertyType", validate_project.ValidateProjectProperty.model_validate(data))
         if project.project_type_enum == Project.Type.COMPLETENESS:
             return typing.cast(
                 "CompletenessProjectPropertyType",
