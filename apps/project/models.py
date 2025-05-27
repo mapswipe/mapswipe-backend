@@ -46,7 +46,7 @@ class ProjectTypeEnum(models.IntegerChoices):
     FIND = 1, "Find"
     """ Find project type. Previously known as Classification / Build Area. """
 
-    # FOOTPRINT = 2, "Validate"
+    VALIDATE = 2, "Validate"
     # """ Validate project type. Previously known as Footprint """
 
     COMPARE = 3, "Compare"
@@ -393,9 +393,9 @@ class ProjectTask(models.Model):
         related_name="+",
     )
 
-    # NOTE(tnagorra): The geometry is only necessary for footprint project type
+    # NOTE(tnagorra): The geometry is only necessary for validate project type
     # FIXME(thenav56): Existing gid_models.MultiPolygonField(srid=4326, blank=True, null=True)
-    geometry = gis_models.GeometryField(null=True, blank=True, default=None, dim=3)
+    geometry = gis_models.GeometryField(null=True, blank=True, default=None, dim=2)
 
     # TODO(thenav56): Currently this field collects any data not stored by another fields, pulled from firebase.
     # Also, used in SQL queries

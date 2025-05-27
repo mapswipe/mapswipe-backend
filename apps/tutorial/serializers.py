@@ -10,6 +10,7 @@ from apps.project.models import ProjectTypeEnum
 from apps.tutorial.project_types.tile_map_service.compare import tutorial as compare_tutorial
 from apps.tutorial.project_types.tile_map_service.completeness import tutorial as completeness_tutorial
 from apps.tutorial.project_types.tile_map_service.find import tutorial as find_tutorial
+from apps.tutorial.project_types.validate import tutorial as validate_tutorial
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
@@ -24,6 +25,8 @@ def get_tutorial_task_property(project_type: ProjectTypeEnum | None):
         return ("compare", compare_tutorial.CompareTutorialTaskProperty)
     if project_type == ProjectTypeEnum.FIND:
         return ("find", find_tutorial.FindTutorialTaskProperty)
+    if project_type == ProjectTypeEnum.VALIDATE:
+        return ("validate", validate_tutorial.ValidateTutorialTaskProperty)
     if project_type == ProjectTypeEnum.COMPLETENESS:
         return ("completeness", completeness_tutorial.CompletenessTutorialTaskProperty)
     typing.assert_never(project_type)

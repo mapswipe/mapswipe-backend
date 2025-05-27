@@ -16,6 +16,7 @@ from apps.tutorial.models import (
 from apps.tutorial.project_types.tile_map_service.compare import tutorial as compare_tutorial
 from apps.tutorial.project_types.tile_map_service.completeness import tutorial as completeness_tutorial
 from apps.tutorial.project_types.tile_map_service.find import tutorial as find_tutorial
+from apps.tutorial.project_types.validate import tutorial as validate_tutorial
 
 
 # Project Properties
@@ -25,6 +26,9 @@ class CompareTutorialTaskPropertyType: ...
 
 @strawberry.experimental.pydantic.type(model=find_tutorial.FindTutorialTaskProperty, all_fields=True)
 class FindTutorialTaskPropertyType: ...
+
+@strawberry.experimental.pydantic.type(model=validate_tutorial.ValidateTutorialTaskProperty, all_fields=True)
+class ValidateTutorialTaskPropertyType: ...
 
 
 @strawberry.experimental.pydantic.type(model=completeness_tutorial.CompletenessTutorialTaskProperty, all_fields=True)
@@ -46,7 +50,8 @@ class TutorialTaskType(UserResourceTypeMixin):
     async def project_type_specifics(
         self,
         task: strawberry.Parent[TutorialTask],
-    ) -> CompareTutorialTaskPropertyType | FindTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | None:
+    ) -> CompareTutorialTaskPropertyType | FindTutorialTaskPropertyType | ValidateTutorialTaskPropertyType \
+            | CompletenessTutorialTaskPropertyType | None:
         data = task.project_type_specifics
         project_type_enum = ProjectTypeEnum(task.project_type)  # type: ignore[reportAttributeAccessIssue]
 
@@ -54,6 +59,11 @@ class TutorialTaskType(UserResourceTypeMixin):
             return None
         if project_type_enum == Project.Type.FIND:
             return typing.cast("FindTutorialTaskPropertyType", find_tutorial.FindTutorialTaskProperty.model_validate(data))
+        if project_type_enum == Project.Type.VALIDATE:
+            return typing.cast(
+                "ValidateTutorialTaskPropertyType",
+                validate_tutorial.ValidateTutorialTaskProperty.model_validate(data),
+            )
         if project_type_enum == Project.Type.COMPARE:
             return typing.cast(
                 "CompareTutorialTaskPropertyType",

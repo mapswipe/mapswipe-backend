@@ -231,6 +231,7 @@ class TileMapServiceBaseProject[
 
         extension = Path(aoi_asset.file.name).suffix
         with tempfile.NamedTemporaryFile(suffix=extension, dir=settings.TEMP_DIR) as temp_file:
+            # FIXME(frozenhelium): close the aoi_asset file?
             temp_file.write(aoi_asset.file.read())
             temp_file.flush()
 

@@ -615,6 +615,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/49/4f/174743caf64d1999c46ab2ee72b2cb0d77a47bd7ed04f954f863e35a25fd/GDAL-3.6.2.tar.gz", hash = "sha256:a167cde1813707d91a938dad1a22f280f5ad28c45980d42e948fb8c59f890f5a", size = 757691, upload-time = "2023-01-05T07:36:55.213Z" }
 
 [[package]]
+name = "geojson-pydantic"
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/02/8e/283745fd586aeaadc226919fdaff87b75b266195d7678197f761a1735791/geojson_pydantic-2.0.0.tar.gz", hash = "sha256:b62e8b44502dd1ad518b5f739035a81924a76f980cbdb3a4e8916ef913be242e", size = 9243, upload-time = "2025-05-05T21:01:02.498Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ba/e1/2926925dfc37287661f755937df99dff399d3aea2163e11cfd08ca6af3b2/geojson_pydantic-2.0.0-py3-none-any.whl", hash = "sha256:fd75876768a1dcab30dd04c478773191e0c19d678ef74580a9bad7c4576bfe98", size = 8712, upload-time = "2025-05-05T21:01:01.057Z" },
+]
+
+[[package]]
 name = "gitdb"
 version = "4.0.12"
 source = { registry = "https://pypi.org/simple" }
@@ -855,6 +867,7 @@ dependencies = [
     { name = "factory-boy" },
     { name = "flower" },
     { name = "gdal" },
+    { name = "geojson-pydantic" },
     { name = "gunicorn" },
     { name = "httpx" },
     { name = "ogr" },
@@ -865,6 +878,7 @@ dependencies = [
     { name = "sentry-sdk" },
     { name = "strawberry-graphql-django" },
     { name = "toml" },
+    { name = "urllib3" },
 ]
 
 [package.dev-dependencies]
@@ -902,6 +916,7 @@ requires-dist = [
     { name = "factory-boy", specifier = "~=3.2.1" },
     { name = "flower" },
     { name = "gdal", specifier = "==3.6.2" },
+    { name = "geojson-pydantic", specifier = ">=2.0.0" },
     { name = "gunicorn", specifier = "~=20.1.0" },
     { name = "httpx" },
     { name = "ogr" },
@@ -912,6 +927,7 @@ requires-dist = [
     { name = "sentry-sdk" },
     { name = "strawberry-graphql-django", specifier = "~=0.57.0" },
     { name = "toml" },
+    { name = "urllib3", specifier = ">=2.3.0" },
 ]
 
 [package.metadata.requires-dev]
