@@ -10,6 +10,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
 from django.core.serializers.json import DjangoJSONEncoder
 from pydantic import Field, ValidationInfo, model_validator
+from ulid import ULID
 
 from apps.project.models import (
     Project,
@@ -78,21 +79,11 @@ class TileMapServiceProjectTaskProperty(base_project.BaseProjectTaskProperty):
     tile_y: int
 
 
-TileMapServiceProjectPropertyTypeVar = typing.TypeVar(
-    "TileMapServiceProjectPropertyTypeVar",
-    bound=TileMapServiceProjectProperty,
-)
-TileMapServiceProjectTaskGroupPropertyTypeVar = typing.TypeVar(
-    "TileMapServiceProjectTaskGroupPropertyTypeVar",
-    bound=TileMapServiceProjectTaskGroupProperty,
-)
-TileMapServiceProjectTaskPropertyTypeVar = typing.TypeVar(
-    "TileMapServiceProjectTaskPropertyTypeVar",
-    bound=TileMapServiceProjectTaskProperty,
-)
-
-
-class TileMapServiceBaseProject(
+class TileMapServiceBaseProject[
+    TileMapServiceProjectPropertyTypeVar: TileMapServiceProjectProperty,
+    TileMapServiceProjectTaskGroupPropertyTypeVar: TileMapServiceProjectTaskGroupProperty,
+    TileMapServiceProjectTaskPropertyTypeVar: TileMapServiceProjectTaskProperty,
+](
     base_project.BaseProject[
         TileMapServiceProjectPropertyTypeVar,
         TileMapServiceProjectTaskGroupPropertyTypeVar,
@@ -147,6 +138,7 @@ class TileMapServiceBaseProject(
         )
 
         asset = ProjectAsset.objects.create(
+            client_id=str(ULID()),
             project=self.project,
             file=file,
             type=ProjectAssetTypeEnum.OUTPUT,
@@ -239,7 +231,9 @@ class TileMapServiceBaseProject(
 
         extension = Path(aoi_asset.file.name).suffix
         with tempfile.NamedTemporaryFile(suffix=extension, dir=settings.TEMP_DIR) as temp_file:
-            temp_file.write(aoi_asset.file.read())
+            # FIXME(frozenhelium): close the aoi_asset file?
+            with aoi_asset.file.open() as aoi_file:
+                temp_file.write(aoi_file.read())
             temp_file.flush()
 
             aoi_geometry = tile_grouping.get_geometry_from_file(temp_file.name)

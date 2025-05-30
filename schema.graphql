@@ -13,11 +13,16 @@ directive @isAuthenticated repeatable on FIELD_DEFINITION
 directive @oneOf on INPUT_OBJECT
 
 type AppEnumCollection {
-  DummyEnum: [AppEnumCollectionDummyEnum!]!
   TileServerNameEnum: [AppEnumCollectionTileServerNameEnum!]!
+  ValidateObjectSourceTypeEnum: [AppEnumCollectionValidateObjectSourceTypeEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
   ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
+  ProjectProcessingStatusEnum: [AppEnumCollectionProjectProcessingStatusEnum!]!
+  ProjectAssetMimetypeEnum: [AppEnumCollectionProjectAssetMimetypeEnum!]!
+  ProjectAssetTypeEnum: [AppEnumCollectionProjectAssetTypeEnum!]!
+  TutorialStatusEnum: [AppEnumCollectionTutorialStatusEnum!]!
   TutorialInformationPageBlockTypeEnum: [AppEnumCollectionTutorialInformationPageBlockTypeEnum!]!
+  TutorialScenarioIconEnum: [AppEnumCollectionTutorialScenarioIconEnum!]!
   MappingSessionClientTypeEnum: [AppEnumCollectionMappingSessionClientTypeEnum!]!
   ContributorUserGroupMembershipLogActionEnum: [AppEnumCollectionContributorUserGroupMembershipLogActionEnum!]!
 }
@@ -27,13 +32,23 @@ type AppEnumCollectionContributorUserGroupMembershipLogActionEnum {
   label: String!
 }
 
-type AppEnumCollectionDummyEnum {
-  key: DummyEnum!
+type AppEnumCollectionMappingSessionClientTypeEnum {
+  key: MappingSessionClientTypeEnum!
   label: String!
 }
 
-type AppEnumCollectionMappingSessionClientTypeEnum {
-  key: MappingSessionClientTypeEnum!
+type AppEnumCollectionProjectAssetMimetypeEnum {
+  key: ProjectAssetMimetypeEnum!
+  label: String!
+}
+
+type AppEnumCollectionProjectAssetTypeEnum {
+  key: ProjectAssetTypeEnum!
+  label: String!
+}
+
+type AppEnumCollectionProjectProcessingStatusEnum {
+  key: ProjectProcessingStatusEnum!
   label: String!
 }
 
@@ -54,6 +69,21 @@ type AppEnumCollectionTileServerNameEnum {
 
 type AppEnumCollectionTutorialInformationPageBlockTypeEnum {
   key: TutorialInformationPageBlockTypeEnum!
+  label: String!
+}
+
+type AppEnumCollectionTutorialScenarioIconEnum {
+  key: TutorialScenarioIconEnum!
+  label: String!
+}
+
+type AppEnumCollectionTutorialStatusEnum {
+  key: TutorialStatusEnum!
+  label: String!
+}
+
+type AppEnumCollectionValidateObjectSourceTypeEnum {
+  key: ValidateObjectSourceTypeEnum!
   label: String!
 }
 
@@ -101,7 +131,21 @@ type CompareProjectPropertyType {
   tileServerBProperty: ProjectTileServerConfig!
 }
 
-union CompareProjectPropertyTypeFindProjectPropertyTypeCompletenessProjectPropertyType = CompareProjectPropertyType | FindProjectPropertyType | CompletenessProjectPropertyType
+union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeCompletenessProjectPropertyType = CompareProjectPropertyType | FindProjectPropertyType | ValidateProjectPropertyType | CompletenessProjectPropertyType
+
+input CompareTutorialTaskPropertyInput {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
+}
+
+type CompareTutorialTaskPropertyType {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
+}
+
+union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType = CompareTutorialTaskPropertyType | FindTutorialTaskPropertyType | ValidateTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType
 
 input CompletenessProjectPropertyInput {
   zoomLevel: Int!
@@ -115,6 +159,18 @@ type CompletenessProjectPropertyType {
   tileServerProperty: ProjectTileServerConfig!
   aoiGeometry: String!
   tileServerBProperty: ProjectTileServerConfig!
+}
+
+input CompletenessTutorialTaskPropertyInput {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
+}
+
+type CompletenessTutorialTaskPropertyType {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
 }
 
 type ContributorSwipeStatType {
@@ -150,7 +206,7 @@ type ContributorUserFilteredStats implements ContributorUserUserGroupBaseFilterS
 }
 
 """
-ContributorUserGroup(id, created_at, modified_at, created_by, modified_by, old_id, name, description, is_archived, archived_at, archived_by)
+ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, old_id, name, description, is_archived, archived_at, archived_by)
 """
 input ContributorUserGroupFilter {
   id: IDBaseFilterLookup
@@ -247,13 +303,17 @@ type ContributorUserGroupStatsType {
 }
 
 """
-ContributorUserGroup(id, created_at, modified_at, created_by, modified_by, old_id, name, description, is_archived, archived_at, archived_by)
+ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, old_id, name, description, is_archived, archived_at, archived_by)
 """
-type ContributorUserGroupType {
+type ContributorUserGroupType implements UserResourceTypeMixin {
+  clientId: String!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
   id: ID!
   name: String!
   description: String!
-  createdAt: DateTime!
   archivedAt: DateTime
   isArchived: Boolean!
   membersCount: Int!
@@ -334,9 +394,13 @@ interface ContributorUserUserGroupBaseFilterStatsQuery {
   swipeByProjectGeo: [MapContributionStatsType!]!
 }
 
+union CreateOrganizationPayload = OrganizationTypeMutationResponseType | OperationInfo
+
 union CreateProjectAssetPayload = ProjectAssetTypeMutationResponseType | OperationInfo
 
 union CreateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
+
+union CreateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
 
 """A generic type to return error messages"""
 scalar CustomErrorType
@@ -352,15 +416,21 @@ input DateRangeInput {
 """Date with time (isoformat)"""
 scalar DateTime
 
-union DeleteProjectPayload = ProjectType | OperationInfo
-
-input DjangoModelFilterInput {
+input DeleteInput {
   id: ID!
 }
 
-enum DummyEnum {
-  VALUE_1
-  VALUE_2
+union DeleteProjectPayload = ProjectType | OperationInfo
+
+union DeleteTutorialPayload = TutorialType | OperationInfo
+
+type DjangoImageType {
+  name: String!
+  path: String!
+  size: Int!
+  url: String!
+  width: Int!
+  height: Int!
 }
 
 input FindProjectPropertyInput {
@@ -373,6 +443,18 @@ type FindProjectPropertyType {
   zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfig!
   aoiGeometry: String!
+}
+
+input FindTutorialTaskPropertyInput {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
+}
+
+type FindTutorialTaskPropertyType {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
 }
 
 scalar GenericJSON
@@ -402,6 +484,12 @@ enum MappingSessionClientTypeEnum {
   WEB
 }
 
+type MapswipeDjangoFileType {
+  name: String!
+  size: Int!
+  url: String!
+}
+
 type Mutation {
   login(username: String!, password: String!): UserMeType!
   logout: Boolean!
@@ -410,6 +498,10 @@ type Mutation {
   updateProject(data: ProjectUpdateInput!, pk: ID!): UpdateProjectPayload! @isAuthenticated
   updateProcessedProject(data: ProcessedProjectUpdateInput!, pk: ID!): UpdateProcessedProjectPayload! @isAuthenticated
   createProjectAsset(data: ProjectAssetCreateInput!): CreateProjectAssetPayload! @isAuthenticated
+  createOrganization(data: OrganizationCreateInput!): CreateOrganizationPayload! @isAuthenticated
+  deleteTutorial: DeleteTutorialPayload! @isAuthenticated
+  createTutorial(data: TutorialCreateInput!): CreateTutorialPayload! @isAuthenticated
+  updateTutorial(data: TutorialUpdateInput!, pk: ID!): UpdateTutorialPayload! @isAuthenticated
 }
 
 type OffsetPaginationInfo {
@@ -461,7 +553,15 @@ enum Ordering {
 }
 
 """
-Organization(id, created_at, modified_at, created_by, modified_by, name, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, name, unique_name)
+"""
+input OrganizationCreateInput {
+  clientId: String!
+  name: String!
+}
+
+"""
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, name, unique_name)
 """
 input OrganizationFilter {
   id: IDBaseFilterLookup
@@ -483,15 +583,22 @@ type OrganizationSwipeStatsType {
 }
 
 """
-Organization(id, created_at, modified_at, created_by, modified_by, name, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, name, unique_name)
 """
 type OrganizationType implements UserResourceTypeMixin {
+  clientId: String!
   createdAt: DateTime!
   modifiedAt: DateTime!
   createdBy: UserType!
   modifiedBy: UserType!
   id: ID!
   name: String!
+}
+
+type OrganizationTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: OrganizationType
 }
 
 type OrganizationTypeOffsetPaginated {
@@ -505,9 +612,10 @@ type OrganizationTypeOffsetPaginated {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProcessedProjectUpdateInput {
+  clientId: String!
   name: String
 
   """What should the users look for (e.g. buildings, cars, trees)"""
@@ -520,15 +628,19 @@ input ProcessedProjectUpdateInput {
   description: String
   status: ProjectStatusEnum
 
+  """Tutorial used for this project."""
+  tutorial: ID
+
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: ID
   image: ID
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
 """
 input ProjectAssetCreateInput {
+  clientId: String!
   mimetype: ProjectAssetMimetypeEnum!
 
   """The file associated with the asset"""
@@ -537,13 +649,13 @@ input ProjectAssetCreateInput {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
 """
 input ProjectAssetFilter {
   id: IDBaseFilterLookup
   type: ProjectAssetTypeEnumFilterLookup
   mimetype: ProjectAssetMimetypeEnumFilterLookup
-  project: DjangoModelFilterInput
+  projectId: IDBaseFilterLookup
   AND: ProjectAssetFilter
   OR: ProjectAssetFilter
   NOT: ProjectAssetFilter
@@ -610,15 +722,19 @@ input ProjectAssetOrder {
 }
 
 """
-ProjectAsset(id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file, project, marked_as_deleted)
 """
 type ProjectAssetType implements UserResourceTypeMixin {
+  clientId: String!
   createdAt: DateTime!
   modifiedAt: DateTime!
   createdBy: UserType!
   modifiedBy: UserType!
   id: ID!
   type: ProjectAssetTypeEnum!
+
+  """The file associated with the asset"""
+  file: MapswipeDjangoFileType!
   mimetype: ProjectAssetMimetypeEnum!
   projectId: ID!
 
@@ -699,9 +815,10 @@ type ProjectAssetTypeOffsetPaginated {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectCreateInput {
+  clientId: String!
   projectType: ProjectTypeEnum!
 
   """Which group, institution or community is requesting this project?"""
@@ -719,7 +836,7 @@ input ProjectCreateInput {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectFilter {
   id: IDBaseFilterLookup
@@ -727,7 +844,7 @@ input ProjectFilter {
   projectType: ProjectTypeEnumFilterLookup
 
   """Which group, institution or community is requesting this project?"""
-  requestingOrganization: DjangoModelFilterInput
+  requestingOrganizationId: IDBaseFilterLookup
   isFeatured: BoolBaseFilterLookup
   status: ProjectStatusEnumFilterLookup
   AND: ProjectFilter
@@ -841,9 +958,14 @@ type ProjectTileServerCustomConfig {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
-type ProjectType {
+type ProjectType implements UserResourceTypeMixin {
+  clientId: String!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
   id: ID!
   projectType: ProjectTypeEnum!
 
@@ -864,6 +986,12 @@ type ProjectType {
   description: String
   image: ProjectAssetType
 
+  """Tutorial used for this project."""
+  tutorial: TutorialType
+
+  """Tutorial used for this project."""
+  tutorialId: ID
+
   """
   How many people do you want to see every tile before you consider it finished?
   """
@@ -880,7 +1008,7 @@ type ProjectType {
   status: ProjectStatusEnum!
   processingStatus: ProjectProcessingStatusEnum
   progress: Int!
-  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeCompletenessProjectPropertyType
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeCompletenessProjectPropertyType
 }
 
 type ProjectTypeAreaStatsType {
@@ -891,6 +1019,7 @@ type ProjectTypeAreaStatsType {
 
 enum ProjectTypeEnum {
   FIND
+  VALIDATE
   COMPARE
   COMPLETENESS
 }
@@ -963,6 +1092,7 @@ input ProjectTypeSpecificInput @oneOf {
   compare: CompareProjectPropertyInput
   find: FindProjectPropertyInput
   completeness: CompletenessProjectPropertyInput
+  validate: ValidateProjectPropertyInput
 }
 
 type ProjectTypeSwipeStatsType {
@@ -972,9 +1102,10 @@ type ProjectTypeSwipeStatsType {
 }
 
 """
-Project(id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_draft, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
 input ProjectUpdateInput {
+  clientId: String!
   name: String
 
   """What should the users look for (e.g. buildings, cars, trees)"""
@@ -1000,6 +1131,9 @@ input ProjectUpdateInput {
   maxTasksPerUser: Int
   status: ProjectStatusEnum
 
+  """Tutorial used for this project."""
+  tutorial: ID
+
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: ID
   image: ID
@@ -1015,6 +1149,8 @@ type Query {
   projectAssets(pagination: OffsetPaginationInput, filters: ProjectAssetFilter, order: ProjectAssetOrder): ProjectAssetTypeOffsetPaginated! @isAuthenticated
   organization(id: ID!): OrganizationType! @isAuthenticated
   organizations(pagination: OffsetPaginationInput, filters: OrganizationFilter, order: OrganizationOrder): OrganizationTypeOffsetPaginated! @isAuthenticated
+  tutorial(id: ID!): TutorialType! @isAuthenticated
+  tutorials(pagination: OffsetPaginationInput, filters: TutorialFilter, order: TutorialOrder): TutorialTypeOffsetPaginated! @isAuthenticated
   contributorUsers(pagination: OffsetPaginationInput, filters: ContributorUserFilter, order: ContributorUserOrder): ContributorUserTypeOffsetPaginated!
   contributorUser(id: ID!): ContributorUserType!
   contributorUserGroups(pagination: OffsetPaginationInput, filters: ContributorUserGroupFilter, order: ContributorUserGroupOrder): ContributorUserGroupTypeOffsetPaginated!
@@ -1098,14 +1234,393 @@ enum TileServerNameEnum {
   ESRI_BETA
 }
 
+"""
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, name, status)
+"""
+input TutorialCreateInput {
+  clientId: String!
+
+  """Project this tutorial is referring to."""
+  project: ID!
+  name: String!
+  scenarios: [TutorialScenarioPageCreateInput!]!
+  informationPages: [TutorialInformationPageCreateInput!]!
+}
+
+"""
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, name, status)
+"""
+input TutorialFilter {
+  id: IDBaseFilterLookup
+  name: StrFilterLookup
+  status: TutorialStatusEnumFilterLookup
+  AND: TutorialFilter
+  OR: TutorialFilter
+  NOT: TutorialFilter
+  DISTINCT: Boolean
+}
+
+"""
+TutorialInformationPageBlock(id, client_id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
+"""
+input TutorialInformationPageBlockCreateInput {
+  clientId: String!
+  blockNumber: Int!
+  blockType: TutorialInformationPageBlockTypeEnum!
+  text: String
+  image: Upload
+}
+
+input TutorialInformationPageBlockInput {
+  create: TutorialInformationPageBlockCreateInput
+  update: TutorialInformationPageBlockUpdateInput
+  delete: DeleteInput
+}
+
+"""
+TutorialInformationPageBlock(id, client_id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
+"""
+type TutorialInformationPageBlockType implements UserResourceTypeMixin {
+  clientId: String!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
+  id: ID!
+  pageId: ID!
+  blockNumber: Int!
+  blockType: TutorialInformationPageBlockTypeEnum!
+  text: String
+  image: DjangoImageType
+}
+
 enum TutorialInformationPageBlockTypeEnum {
   TEXT
   IMAGE
 }
 
+"""
+TutorialInformationPageBlock(id, client_id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
+"""
+input TutorialInformationPageBlockUpdateInput {
+  id: ID!
+  clientId: String!
+  blockNumber: Int
+  blockType: TutorialInformationPageBlockTypeEnum
+  text: String
+  image: Upload
+}
+
+"""
+TutorialInformationPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
+"""
+input TutorialInformationPageCreateInput {
+  clientId: String!
+  title: String!
+  pageNumber: Int!
+  blocks: [TutorialInformationPageBlockCreateInput!]!
+}
+
+input TutorialInformationPageInput {
+  create: TutorialInformationPageCreateInput
+  update: TutorialInformationPageUpdateInput
+  delete: DeleteInput
+}
+
+"""
+TutorialInformationPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
+"""
+type TutorialInformationPageType implements UserResourceTypeMixin {
+  clientId: String!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
+  id: ID!
+  tutorialId: ID!
+  title: String!
+  pageNumber: Int!
+  blocks: [TutorialInformationPageBlockType!]!
+}
+
+"""
+TutorialInformationPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
+"""
+input TutorialInformationPageUpdateInput {
+  id: ID!
+  clientId: String!
+  title: String
+  pageNumber: Int
+  blocks: [TutorialInformationPageBlockInput!]
+}
+
+input TutorialOrder {
+  id: Ordering
+  name: Ordering
+}
+
+enum TutorialScenarioIconEnum {
+  ADD_OUTLINE
+  ALERT_OUTLINE
+  BAN_OUTLINE
+  CHECK
+  CLOSE_OUTLINE
+  CHECKMARK_OUTLINE
+  EGG_OUTLINE
+  ELLIPSE_OUTLINE
+  FLAG_OUTLINE
+  HAND_LEFT_OUTLINE
+  HAND_RIGHT_OUTLINE
+  HAPPY_OUTLINE
+  HEART_OUTLINE
+  HELP_OUTLINE
+  INFORMATION_OUTLINE
+  PRISM_OUTLINE
+  REFRESH_OUTLINE
+  REMOVE_OUTLINE
+  SAD_OUTLINE
+  SEARCH_OUTLINE
+  SHAPES_OUTLINE
+  SQUARE_OUTLINE
+  STAR_OUTLINE
+  THUMBS_DOWN_OUTLINE
+  THUMBS_UP_OUTLINE
+  TRIANGLE_OUTLINE
+  WARNING_OUTLINE
+  GENERAL_TAP
+  TAP
+  TAP_1
+  TAP_2
+  TAP_3
+  SWIPE_LEFT
+}
+
+"""
+TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_page_number, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
+"""
+input TutorialScenarioPageCreateInput {
+  clientId: String!
+  scenarioPageNumber: Int!
+  instructionsDescription: String!
+  instructionsIcon: TutorialScenarioIconEnum!
+  instructionsTitle: String!
+  hintDescription: String
+  hintIcon: TutorialScenarioIconEnum
+  hintTitle: String
+  successDescription: String
+  successIcon: TutorialScenarioIconEnum
+  successTitle: String
+  tasks: [TutorialTaskCreateInput!]!
+}
+
+"""
+TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
+"""
+input TutorialScenarioPageInput {
+  create: TutorialScenarioPageCreateInput
+  update: TutorialScenarioPageUpdateInput
+  delete: DeleteInput
+}
+
+"""
+TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_page_number, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
+"""
+type TutorialScenarioPageType implements UserResourceTypeMixin {
+  clientId: String!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
+  id: ID!
+  tutorialId: ID!
+  scenarioPageNumber: Int!
+  instructionsDescription: String!
+  instructionsIcon: TutorialScenarioIconEnum!
+  instructionsTitle: String!
+  hintDescription: String
+  hintIcon: TutorialScenarioIconEnum
+  hintTitle: String
+  successDescription: String
+  successIcon: TutorialScenarioIconEnum
+  successTitle: String
+  tasks: [TutorialTaskType!]!
+}
+
+"""
+TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_page_number, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
+"""
+input TutorialScenarioPageUpdateInput {
+  id: ID!
+  clientId: String!
+  scenarioPageNumber: Int
+  instructionsDescription: String
+  instructionsIcon: TutorialScenarioIconEnum
+  instructionsTitle: String
+  hintDescription: String
+  hintIcon: TutorialScenarioIconEnum
+  hintTitle: String
+  successDescription: String
+  successIcon: TutorialScenarioIconEnum
+  successTitle: String
+  tasks: [TutorialTaskInput!]
+}
+
+enum TutorialStatusEnum {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  DISCARDED
+}
+
+input TutorialStatusEnumFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: TutorialStatusEnum
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [TutorialStatusEnum!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: TutorialStatusEnum
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: TutorialStatusEnum
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: TutorialStatusEnum
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: TutorialStatusEnum
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: TutorialStatusEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: TutorialStatusEnum
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: TutorialStatusEnum
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: TutorialStatusEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: TutorialStatusEnum
+}
+
+"""
+TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
+"""
+input TutorialTaskCreateInput {
+  clientId: String!
+  reference: Int!
+  projectTypeSpecifics: TutorialTaskProjectTypeSpecificInput!
+}
+
+input TutorialTaskInput {
+  create: TutorialTaskCreateInput
+  update: TutorialTaskUpdateInput
+  delete: DeleteInput
+}
+
+input TutorialTaskProjectTypeSpecificInput @oneOf {
+  compare: CompareTutorialTaskPropertyInput
+  find: FindTutorialTaskPropertyInput
+  validate: ValidateTutorialTaskPropertyInput
+  completeness: CompletenessTutorialTaskPropertyInput
+}
+
+"""
+TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
+"""
+type TutorialTaskType implements UserResourceTypeMixin {
+  clientId: String!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
+  id: ID!
+  scenarioId: ID!
+  reference: Int!
+  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType
+}
+
+"""
+TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
+"""
+input TutorialTaskUpdateInput {
+  id: ID!
+  clientId: String!
+  reference: Int
+  projectTypeSpecifics: TutorialTaskProjectTypeSpecificInput!
+}
+
+"""
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, name, status)
+"""
+type TutorialType implements UserResourceTypeMixin {
+  clientId: String!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
+  id: ID!
+  name: String!
+
+  """Project this tutorial is referring to."""
+  projectId: ID!
+  status: TutorialStatusEnum!
+  scenarios: [TutorialScenarioPageType!]!
+  informationPages: [TutorialInformationPageType!]!
+}
+
+type TutorialTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: TutorialType
+}
+
+type TutorialTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [TutorialType!]!
+}
+
+"""
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, name, status)
+"""
+input TutorialUpdateInput {
+  clientId: String!
+
+  """Project this tutorial is referring to."""
+  project: ID!
+  name: String
+  status: TutorialStatusEnum
+  scenarios: [TutorialScenarioPageInput!]
+  informationPages: [TutorialInformationPageInput!]
+}
+
 union UpdateProcessedProjectPayload = ProjectTypeMutationResponseType | OperationInfo
 
 union UpdateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
+
+union UpdateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
 
 scalar Upload
 
@@ -1138,6 +1653,7 @@ input UserOrder {
 }
 
 interface UserResourceTypeMixin {
+  clientId: String!
   createdAt: DateTime!
   modifiedAt: DateTime!
   createdBy: UserType!
@@ -1162,4 +1678,44 @@ type UserTypeOffsetPaginated {
 
   """List of paginated results."""
   results: [UserType!]!
+}
+
+type ValidateObjectSourceConfig {
+  sourceType: ValidateObjectSourceTypeEnum!
+  taskingManagerProjectId: String
+  aoiGeometry: String
+  ohsomeFilter: String
+  objectGeojsonUrl: String
+}
+
+input ValidateObjectSourceConfigInput {
+  sourceType: ValidateObjectSourceTypeEnum!
+  taskingManagerProjectId: String = null
+  aoiGeometry: String = null
+  ohsomeFilter: String = null
+  objectGeojsonUrl: String = null
+}
+
+enum ValidateObjectSourceTypeEnum {
+  AOI_GEOJSON_FILE
+  OBJECT_GEOJSON_URL
+  TASKING_MANAGER
+}
+
+input ValidateProjectPropertyInput {
+  tileServerProperty: ProjectTileServerConfigInput!
+  objectSource: ValidateObjectSourceConfigInput!
+}
+
+type ValidateProjectPropertyType {
+  tileServerProperty: ProjectTileServerConfig!
+  objectSource: ValidateObjectSourceConfig!
+}
+
+input ValidateTutorialTaskPropertyInput {
+  objectGeometry: String = null
+}
+
+type ValidateTutorialTaskPropertyType {
+  objectGeometry: String
 }

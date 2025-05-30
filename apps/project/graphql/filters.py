@@ -9,7 +9,7 @@ class ProjectFilter:
     id: strawberry.auto
     name: strawberry.auto
     project_type: strawberry.auto
-    requesting_organization: strawberry.auto
+    requesting_organization_id: strawberry.auto
     is_featured: strawberry.auto
     status: strawberry.auto
 
@@ -19,7 +19,7 @@ class ProjectAssetFilter:
     id: strawberry.auto
     type: strawberry.auto
     mimetype: strawberry.auto
-    project: strawberry.auto
+    project_id: strawberry.auto
 
 
 @strawberry_django.filters.filter(Organization, lookups=True)

@@ -1,12 +1,8 @@
-import typing
-
 from django.db import models
-
-DjangoModel = typing.TypeVar("DjangoModel", bound=models.Model)
 
 
 # -- Helper
-def load_model_objects(
+def load_model_objects[DjangoModel: models.Model](
     Model: type[DjangoModel],
     keys: list[int],
 ) -> list[DjangoModel]:

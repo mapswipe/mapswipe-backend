@@ -2,10 +2,15 @@ import strawberry
 import strawberry_django
 from strawberry.file_uploads import Upload
 
-from apps.project.models import Project, ProjectAsset
+from apps.common.graphql.inputs import (
+    UserResourceCreateInputMixin,
+    UserResourceTopLevelUpdateInputMixin,
+)
+from apps.project.models import Organization, Project, ProjectAsset
 from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.project_types.tile_map_service.completeness import project as completeness_project
 from apps.project.project_types.tile_map_service.find import project as find_project
+from apps.project.project_types.validate import project as validate_project
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
 
 
@@ -22,6 +27,10 @@ class TileServerCommonConfigInput: ...
 class ProjectTileServerConfigInput: ...
 
 
+@strawberry.experimental.pydantic.input(model=validate_project.ValidateObjectSourceConfig, all_fields=True)
+class ValidateObjectSourceConfigInput: ...
+
+
 # Project Properties
 @strawberry.experimental.pydantic.input(model=compare_project.CompareProjectProperty, all_fields=True)
 class CompareProjectPropertyInput: ...
@@ -35,16 +44,26 @@ class FindProjectPropertyInput: ...
 class CompletenessProjectPropertyInput: ...
 
 
+@strawberry.experimental.pydantic.input(model=validate_project.ValidateProjectProperty, all_fields=True)
+class ValidateProjectPropertyInput: ...
+
+
+@strawberry_django.input(Organization)
+class OrganizationCreateInput(UserResourceCreateInputMixin):
+    name: strawberry.auto
+
+
 @strawberry.input(one_of=True)
 class ProjectTypeSpecificInput:
     compare: CompareProjectPropertyInput | None = strawberry.UNSET
     find: FindProjectPropertyInput | None = strawberry.UNSET
     completeness: CompletenessProjectPropertyInput | None = strawberry.UNSET
+    validate: ValidateProjectPropertyInput | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.input(Project)
-class ProjectCreateInput:
+class ProjectCreateInput(UserResourceCreateInputMixin):
     project_type: strawberry.auto
     requesting_organization: strawberry.ID
     name: strawberry.auto
@@ -55,16 +74,16 @@ class ProjectCreateInput:
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.partial(Project)
-class ProjectUpdateInput:
+class ProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
     name: strawberry.auto
     look_for: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
-    # TODO(tnagorra): Add tutorial
     verification_number: strawberry.auto
     group_size: strawberry.auto
     max_tasks_per_user: strawberry.auto
     status: strawberry.auto
+    tutorial: strawberry.ID | None = strawberry.UNSET
     requesting_organization: strawberry.ID | None = strawberry.UNSET
     image: strawberry.ID | None = strawberry.UNSET
     project_type_specifics: ProjectTypeSpecificInput | None = strawberry.UNSET
@@ -72,20 +91,20 @@ class ProjectUpdateInput:
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.partial(Project)
-class ProcessedProjectUpdateInput:
+class ProcessedProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
     name: strawberry.auto
     look_for: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
-    # TODO(tnagorra): Add tutorial
     status: strawberry.auto
+    tutorial: strawberry.ID | None = strawberry.UNSET
     requesting_organization: strawberry.ID | None = strawberry.UNSET
     image: strawberry.ID | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.input(ProjectAsset)
-class ProjectAssetCreateInput:
+class ProjectAssetCreateInput(UserResourceCreateInputMixin):
     mimetype: strawberry.auto
     file: Upload
     project: strawberry.ID

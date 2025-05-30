@@ -1,27 +1,25 @@
 import dataclasses
-from enum import Enum
 
 import strawberry
 
 from apps.contributor import models as contributor_enums
 from apps.mapping import models as mapping_enums
 from apps.project import models as project_enums
+from apps.project.project_types.validate.project import ValidateObjectSourceTypeEnum
 from apps.tutorial import models as tutorial_enums
 from utils.geo.tile_server.config import TileServerNameEnum
 
-
-@strawberry.enum
-class DummyEnum(Enum):
-    VALUE_1 = "Value 1"
-    VALUE_2 = "Value 2"
-
-
 ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
-    DummyEnum,
     TileServerNameEnum,
+    ValidateObjectSourceTypeEnum,
     project_enums.ProjectTypeEnum,
     project_enums.ProjectStatusEnum,
+    project_enums.ProjectProcessingStatusEnum,
+    project_enums.ProjectAssetMimetypeEnum,
+    project_enums.ProjectAssetTypeEnum,
+    tutorial_enums.TutorialStatusEnum,
     tutorial_enums.TutorialInformationPageBlockTypeEnum,
+    tutorial_enums.TutorialScenarioIconEnum,
     mapping_enums.MappingSessionClientTypeEnum,
     contributor_enums.ContributorUserGroupMembershipLogActionEnum,
 ]

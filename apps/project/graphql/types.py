@@ -8,6 +8,8 @@ from apps.project.models import Organization, Project, ProjectAsset
 from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.project_types.tile_map_service.completeness import project as completeness_project
 from apps.project.project_types.tile_map_service.find import project as find_project
+from apps.project.project_types.validate import project as validate_project
+from apps.tutorial.graphql.types import TutorialType
 from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
 
 
@@ -30,6 +32,10 @@ class ProjectTileServerCommonConfig: ...
 class ProjectTileServerConfig: ...
 
 
+@strawberry.experimental.pydantic.type(model=validate_project.ValidateObjectSourceConfig, all_fields=True)
+class ValidateObjectSourceConfig: ...
+
+
 # Project Properties
 @strawberry.experimental.pydantic.type(model=compare_project.CompareProjectProperty, all_fields=True)
 class CompareProjectPropertyType: ...
@@ -37,6 +43,10 @@ class CompareProjectPropertyType: ...
 
 @strawberry.experimental.pydantic.type(model=find_project.FindProjectProperty, all_fields=True)
 class FindProjectPropertyType: ...
+
+
+@strawberry.experimental.pydantic.type(model=validate_project.ValidateProjectProperty, all_fields=True)
+class ValidateProjectPropertyType: ...
 
 
 @strawberry.experimental.pydantic.type(model=completeness_project.CompletenessProjectProperty, all_fields=True)
@@ -47,13 +57,14 @@ class CompletenessProjectPropertyType: ...
 class ProjectAssetType(UserResourceTypeMixin):
     id: strawberry.ID
     type: strawberry.auto
+    file: strawberry.auto
     mimetype: strawberry.auto
     project_id: strawberry.ID
     marked_as_deleted: strawberry.auto
 
 
 @strawberry_django.type(Project)
-class ProjectType:
+class ProjectType(UserResourceTypeMixin):
     id: strawberry.ID
     project_type: strawberry.auto
     requesting_organization_id: strawberry.ID
@@ -63,7 +74,8 @@ class ProjectType:
     additional_info_url: strawberry.auto
     description: strawberry.auto
     image: ProjectAssetType | None
-    # TODO(tnagorra): Add tutorial and tutorial_id
+    tutorial: TutorialType | None
+    tutorial_id: strawberry.ID | None
     verification_number: strawberry.auto
     group_size: strawberry.auto
     max_tasks_per_user: strawberry.auto
@@ -76,7 +88,13 @@ class ProjectType:
     async def project_type_specifics(
         self,
         project: strawberry.Parent[Project],
-    ) -> CompareProjectPropertyType | FindProjectPropertyType | CompletenessProjectPropertyType | None:
+    ) -> (
+        CompareProjectPropertyType
+        | FindProjectPropertyType
+        | ValidateProjectPropertyType
+        | CompletenessProjectPropertyType
+        | None
+    ):
         data = project.project_type_specifics
         if data is None:
             return None
@@ -84,6 +102,8 @@ class ProjectType:
             return typing.cast("FindProjectPropertyType", find_project.FindProjectProperty.model_validate(data))
         if project.project_type_enum == Project.Type.COMPARE:
             return typing.cast("CompareProjectPropertyType", compare_project.CompareProjectProperty.model_validate(data))
+        if project.project_type_enum == Project.Type.VALIDATE:
+            return typing.cast("ValidateProjectPropertyType", validate_project.ValidateProjectProperty.model_validate(data))
         if project.project_type_enum == Project.Type.COMPLETENESS:
             return typing.cast(
                 "CompletenessProjectPropertyType",

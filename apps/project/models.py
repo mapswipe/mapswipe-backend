@@ -46,8 +46,8 @@ class ProjectTypeEnum(models.IntegerChoices):
     FIND = 1, "Find"
     """ Find project type. Previously known as Classification / Build Area. """
 
-    # FOOTPRINT = 2, "Validate"
-    # """ Validate project type. Previously known as Footprint """
+    VALIDATE = 2, "Validate"
+    """ Validate project type. Previously known as Footprint """
 
     COMPARE = 3, "Compare"
     """ Compare project type. Previously known as Change Detection. """
@@ -105,13 +105,13 @@ class ProjectStatusEnum(models.IntegerChoices):
 
     ARCHIVED = 70, "Archived"
     """
-    "Archived" projects are visible to the contributors.
+    "Archived" projects are not visible to the contributors.
     "Archived" projects cannot be "un-archived".
     """
 
     DISCARDED = 80, "Discarded"
     """
-    "Discarded" projects are visible to the contributors.
+    "Discarded" projects are not visible to the contributors.
     "Discarded" projects cannot be "un-discarded".
     """
 
@@ -204,6 +204,7 @@ class Project(UserResource):
         on_delete=models.SET_NULL,
     )
 
+    # FIXME(tnagorra): We might need to rename this field
     # NOTE: The tutorial should align with what we are looking for.
     tutorial: "Tutorial" = models.ForeignKey(  # type: ignore[reportAssignmentType]
         "tutorial.Tutorial",
@@ -253,8 +254,6 @@ class Project(UserResource):
 
     # STATUS
 
-    # TODO(tnagorra): Remove is_draft
-    is_draft = models.BooleanField(default=True, help_text=gettext_lazy("Draft project can be modified"))
     is_featured = models.BooleanField(default=False)
     status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=ProjectStatusEnum,
@@ -394,9 +393,9 @@ class ProjectTask(models.Model):
         related_name="+",
     )
 
-    # NOTE(tnagorra): The geometry is only necessary for footprint project type
+    # NOTE(tnagorra): The geometry is only necessary for validate project type
     # FIXME(thenav56): Existing gid_models.MultiPolygonField(srid=4326, blank=True, null=True)
-    geometry = gis_models.GeometryField(null=True, blank=True, default=None, dim=3)
+    geometry = gis_models.GeometryField(null=True, blank=True, default=None, dim=2)
 
     # TODO(thenav56): Currently this field collects any data not stored by another fields, pulled from firebase.
     # Also, used in SQL queries

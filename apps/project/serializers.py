@@ -9,10 +9,11 @@ from apps.common.serializers import UserResourceSerializer
 from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.project_types.tile_map_service.completeness import project as completeness_project
 from apps.project.project_types.tile_map_service.find import project as find_project
+from apps.project.project_types.validate import project as validate_project
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
-from .models import Project, ProjectAsset, ProjectTypeEnum
+from .models import Organization, Project, ProjectAsset, ProjectTypeEnum
 from .tasks import process_project_task
 
 VALID_PROJECT_STATUS_TRANSITIONS = set(
@@ -48,6 +49,8 @@ def get_project_property(project_type: ProjectTypeEnum | None):
         return ("compare", compare_project.CompareProjectProperty)
     if project_type == ProjectTypeEnum.FIND:
         return ("find", find_project.FindProjectProperty)
+    if project_type == ProjectTypeEnum.VALIDATE:
+        return ("validate", validate_project.ValidateProjectProperty)
     if project_type == ProjectTypeEnum.COMPLETENESS:
         return ("completeness", completeness_project.CompletenessProjectProperty)
     typing.assert_never(project_type)
@@ -58,6 +61,7 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
+            "client_id",
             "project_type",
             "requesting_organization",
             "name",
@@ -73,6 +77,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
+            "client_id",
             "project_type",
             "requesting_organization",
             "name",
@@ -85,10 +90,14 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             "max_tasks_per_user",
             "project_type_specifics",
             "status",
+            "tutorial",
         )
 
-    def validate_status(self, new_status: Project.Status):
+    def validate_status(self, new_status: Project.Status | None):
         assert self.instance is not None
+
+        if new_status is None:
+            return None
 
         if (self.instance.status, new_status) not in VALID_PROJECT_STATUS_TRANSITIONS:
             raise serializers.ValidationError(
@@ -96,8 +105,11 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             )
         return new_status
 
-    def validate_image(self, new_image: ProjectAsset):
+    def validate_image(self, new_image: ProjectAsset | None):
         assert self.instance is not None
+
+        if new_image is None:
+            return None
 
         asset_exists = (
             ProjectAsset.usable_objects()
@@ -196,6 +208,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
+            "client_id",
             "requesting_organization",
             "name",
             "look_for",
@@ -203,19 +216,27 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             "description",
             "image",
             "status",
+            "tutorial",
         )
 
-    def validate_status(self, new_status: Project.Status):
+    def validate_status(self, new_status: Project.Status | None):
         if not self.instance:
             raise Exception("Project does not exist")
+
+        if new_status is None:
+            return None
+
         if (self.instance.status, new_status) not in VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS:
             raise serializers.ValidationError(
                 gettext("Project status cannot be changed from %s to %s") % (self.instance.status, new_status),
             )
         return new_status
 
-    def validate_image(self, new_image: ProjectAsset):
+    def validate_image(self, new_image: ProjectAsset | None):
         assert self.instance is not None
+
+        if new_image is None:
+            return None
 
         asset_exists = (
             ProjectAsset.usable_objects()
@@ -236,6 +257,23 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
         return new_image
 
+    def _validate_tutorial(self, attrs: dict[str, typing.Any]):
+        assert self.instance is not None
+        tutorial = attrs.get("tutorial") or self.instance.tutorial
+        # FIXME: Add validation that tutorial and project types must match
+
+        if tutorial is None and attrs.get("status") == Project.Status.PUBLISHED:
+            raise serializers.ValidationError(
+                {"tutorial": gettext("Tutorial is required before publishing a project.")},
+            )
+
+    @typing.override
+    def validate(self, attrs: dict[str, typing.Any]):
+        assert self.instance is not None
+
+        self._validate_tutorial(attrs)
+        return super().validate(attrs)
+
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 # FIXME(tnagorra): Should we validate the mimetype during upload?
@@ -243,6 +281,7 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = ProjectAsset
         fields = (
+            "client_id",
             "mimetype",
             "file",
             "project",
@@ -253,3 +292,12 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
         # NOTE: User should only bye able to create INPUT type project assets
         validated_data["type"] = ProjectAsset.Type.INPUT
         return super().create(validated_data)
+
+
+class OrganizationCreateSerializer(UserResourceSerializer[Organization]):
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        model = Organization
+        fields = (
+            "client_id",
+            "name",
+        )

@@ -4,6 +4,7 @@ from unittest.mock import call, patch
 
 from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
+from ulid import ULID
 
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
@@ -15,6 +16,7 @@ from apps.project.models import (
 )
 from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.tasks import process_project_task
+from apps.tutorial.factories import TutorialFactory
 from apps.user.factories import UserFactory
 from main.tests import TestCase
 from utils.geo.tile_server.config import TileServerNameEnum
@@ -112,6 +114,7 @@ class Mutation:
               ok
               result {
                 id
+                clientId
                 type
                 mimetype
                 projectId
@@ -137,6 +140,7 @@ class Mutation:
               ok
               result {
                 id
+                clientId
                 projectType
                 requestingOrganizationId
                 requestingOrganization {
@@ -154,6 +158,10 @@ class Mutation:
                 status
                 processingStatus
                 progress
+                tutorialId
+                tutorial {
+                  id
+                }
               }
             }
           }
@@ -176,6 +184,7 @@ class Mutation:
               ok
               result {
                 id
+                clientId
                 projectType
                 requestingOrganizationId
                 requestingOrganization {
@@ -193,6 +202,10 @@ class Mutation:
                 status
                 processingStatus
                 progress
+                tutorialId
+                tutorial {
+                  id
+                }
               }
             }
           }
@@ -215,6 +228,7 @@ class Mutation:
               ok
               result {
                 id
+                clientId
                 projectType
                 requestingOrganizationId
                 requestingOrganization {
@@ -232,11 +246,86 @@ class Mutation:
                 status
                 processingStatus
                 progress
+                tutorialId
+                tutorial {
+                  id
+                }
               }
             }
           }
         }
     """
+
+
+class TestOrganizationMutation(TestCase):
+    class Mutation:
+        CREATE_ORGANIZATION = """
+        mutation CreateOrganization($data: OrganizationCreateInput!) {
+            createOrganization(data: $data) {
+                ... on OperationInfo {
+                  __typename
+                  messages {
+                    code
+                    field
+                    kind
+                    message
+                  }
+                }
+                ... on OrganizationTypeMutationResponseType {
+                    errors
+                    ok
+                    result {
+                        id
+                        name
+                        clientId
+                    }
+                }
+            }
+        }
+        """
+
+    @typing.override
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user = UserFactory.create()
+        cls.user_resource_kwargs = dict(
+            created_by=cls.user,
+            modified_by=cls.user,
+        )
+
+    def test_organization_create(self):
+        organization_data = {
+            "clientId": str(ULID()),
+            "name": "Test Organization",
+        }
+
+        # Creating Organization: Without authentication
+        content = self.query_check(
+            self.Mutation.CREATE_ORGANIZATION,
+            variables={
+                "data": organization_data,
+            },
+        )
+        assert content["data"]["createOrganization"]["messages"] == [
+            {
+                "code": None,
+                "field": "createOrganization",
+                "kind": "PERMISSION",
+                "message": "User is not authenticated.",
+            },
+        ], content
+
+        # Creating Organization: With authentication
+        self.force_login(self.user)
+        content = self.query_check(
+            self.Mutation.CREATE_ORGANIZATION,
+            variables={
+                "data": organization_data,
+            },
+        )
+        resp_data = content["data"]["createOrganization"]
+        assert resp_data["errors"] is None, content
 
 
 class TestProjectMutation(TestCase):
@@ -285,6 +374,7 @@ class TestProjectMutation(TestCase):
 
     def test_project_create(self):
         project_data = {
+            "clientId": str(ULID()),
             "projectType": self.genum(ProjectTypeEnum.FIND),
             "requestingOrganization": self.organization.pk,
             "name": "New Project 101",
@@ -317,6 +407,7 @@ class TestProjectMutation(TestCase):
             ok=True,
             result=dict(
                 id=self.gID(latest_project.pk),
+                clientId=latest_project.client_id,
                 projectType=self.genum(ProjectTypeEnum.FIND),
                 requestingOrganizationId=self.gID(latest_project.requesting_organization.pk),
                 requestingOrganization=dict(
@@ -334,6 +425,8 @@ class TestProjectMutation(TestCase):
                 status=self.genum(Project.Status.DRAFT),
                 processingStatus=None,
                 progress=0,
+                tutorialId=None,
+                tutorial=None,
             ),
         ), content
 
@@ -358,6 +451,7 @@ class TestProjectMutation(TestCase):
             "verificationNumber": 2,
             "groupSize": 16,
             "maxTasksPerUser": 11,
+            "clientId": proj.client_id,
         }
 
         # Updating Project: Without authentication
@@ -382,6 +476,7 @@ class TestProjectMutation(TestCase):
             ok=True,
             result=dict(
                 id=self.gID(latest_project.pk),
+                clientId=latest_project.client_id,
                 projectType=self.genum(ProjectTypeEnum.FIND),
                 requestingOrganizationId=self.gID(latest_project.requesting_organization.pk),
                 requestingOrganization=dict(
@@ -399,19 +494,22 @@ class TestProjectMutation(TestCase):
                 status=self.genum(Project.Status.DRAFT),
                 processingStatus=None,
                 progress=0,
+                tutorialId=None,
+                tutorial=None,
             ),
         ), content
 
         # Updating Project: Status change
         # fails as project specifics is required when changing status to "marked as ready"
         project_data = {
+            "clientId": proj.client_id,
             "status": self.genum(Project.Status.MARKED_AS_READY),
         }
         content = self._update_project_mutation(str(latest_project.pk), project_data)
         assert content["data"]["updateProject"]["errors"] == [
             {
                 "array_errors": None,
-                "client_id": None,
+                "client_id": latest_project.client_id,
                 "field": "projectTypeSpecifics",
                 "messages": "Configuration not provided for Find",
                 "object_errors": None,
@@ -421,6 +519,7 @@ class TestProjectMutation(TestCase):
 
         # Creating AOI Project Asset
         project_asset_data = {
+            "clientId": str(ULID()),
             "project": str(latest_project.pk),
             "mimetype": self.genum(ProjectAssetMimetypeEnum.GEOJSON),
         }
@@ -431,6 +530,7 @@ class TestProjectMutation(TestCase):
 
         # Creating Project Image Asset
         project_asset_data = {
+            "clientId": str(ULID()),
             "project": str(latest_project.pk),
             "mimetype": self.genum(ProjectAssetMimetypeEnum.IMAGE_JPEG),
         }
@@ -441,6 +541,7 @@ class TestProjectMutation(TestCase):
 
         # Updating Project: with empty object as project type specifics
         project_data = {
+            "clientId": proj.client_id,
             "projectTypeSpecifics": {},
         }
         content = self._update_project_mutation(str(latest_project.pk), project_data, assert_errors=True)
@@ -452,6 +553,7 @@ class TestProjectMutation(TestCase):
 
         # Updating Project: with valid but mismatching project type specifics
         project_data = {
+            "clientId": proj.client_id,
             "image": image_asset["id"],
             "projectTypeSpecifics": {
                 "compare": {
@@ -478,7 +580,7 @@ class TestProjectMutation(TestCase):
         assert content["data"]["updateProject"]["errors"] == [
             {
                 "field": "projectTypeSpecifics",
-                "client_id": None,
+                "client_id": latest_project.client_id,
                 "messages": "Configuration not provided for Find",
                 "object_errors": None,
                 "array_errors": None,
@@ -488,6 +590,7 @@ class TestProjectMutation(TestCase):
 
         # Updating Project: with valid project type specifics
         project_data = {
+            "clientId": proj.client_id,
             "image": image_asset["id"],
             "projectTypeSpecifics": {
                 "find": {
@@ -524,6 +627,7 @@ class TestProjectMutation(TestCase):
 
         # Updating Project: Status change
         project_data = {
+            "clientId": proj.client_id,
             "status": self.genum(Project.Status.MARKED_AS_READY),
         }
         content = self._update_project_mutation(str(latest_project.pk), project_data)
@@ -542,6 +646,17 @@ class TestProjectTypeMutation(TestCase):
         )
 
         cls.organization = OrganizationFactory.create(**cls.user_resource_kwargs)
+
+        cls.compare_project = ProjectFactory.create(
+            **cls.user_resource_kwargs,
+            project_type=ProjectTypeEnum.FIND,
+            requesting_organization=cls.organization,
+            project_type_specifics=None,
+        )
+        cls.compare_tutorial = TutorialFactory.create(
+            **cls.user_resource_kwargs,
+            project=cls.compare_project,
+        )
 
         cls.project_data = {
             "name": "New Project 101",
@@ -632,17 +747,20 @@ class TestProjectTypeMutation(TestCase):
         project_data = {
             **self.project_data,
             "projectType": self.genum(ProjectTypeEnum.COMPARE),
+            "clientId": str(ULID()),
         }
         content = self._create_project_mutation(project_data)
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] is None, content
 
         project_id = resp_data["result"]["id"]
+        project_client_id = resp_data["result"]["clientId"]
 
         # Creating AOI Project Asset
         project_asset_data = {
             "project": project_id,
             "mimetype": self.genum(ProjectAssetMimetypeEnum.GEOJSON),
+            "clientId": str(ULID()),
         }
         content = self._create_project_aoi_asset(project_asset_data, assert_errors=True)
         resp_data = content["data"]["createProjectAsset"]
@@ -653,6 +771,7 @@ class TestProjectTypeMutation(TestCase):
         project_asset_data = {
             "project": project_id,
             "mimetype": self.genum(ProjectAssetMimetypeEnum.IMAGE_JPEG),
+            "clientId": str(ULID()),
         }
         content = self._create_project_image_asset(project_asset_data, assert_errors=True)
         resp_data = content["data"]["createProjectAsset"]
@@ -662,6 +781,7 @@ class TestProjectTypeMutation(TestCase):
         # Updating Project
         # fails as project type specifics has empty object as tile server property
         project_data = {
+            "clientId": project_client_id,
             "image": image_asset["id"],
             "projectTypeSpecifics": {
                 "find": {
@@ -677,6 +797,7 @@ class TestProjectTypeMutation(TestCase):
         # Updating Project
         # fails as project type specifics has partial data
         project_data = {
+            "clientId": project_client_id,
             "image": image_asset["id"],
             "projectTypeSpecifics": {
                 "compare": {
@@ -691,6 +812,7 @@ class TestProjectTypeMutation(TestCase):
         # Updating Project
         # fails as project type specifics has one invalid tile server property
         project_data = {
+            "clientId": project_client_id,
             "image": image_asset["id"],
             "projectTypeSpecifics": {
                 "compare": {
@@ -708,6 +830,7 @@ class TestProjectTypeMutation(TestCase):
         # Updating Project
         # fails as project type specifics has one invalid tile server property
         project_data = {
+            "clientId": project_client_id,
             "image": image_asset["id"],
             "projectTypeSpecifics": {
                 "compare": {
@@ -724,6 +847,7 @@ class TestProjectTypeMutation(TestCase):
 
         # Updating Project
         project_data = {
+            "clientId": project_client_id,
             "image": image_asset["id"],
             "projectTypeSpecifics": {
                 "compare": {
@@ -756,6 +880,7 @@ class TestProjectTypeMutation(TestCase):
         # Updating Project:
         # Test project processing
         project_data = {
+            "clientId": project_client_id,
             "status": self.genum(Project.Status.MARKED_AS_READY),
         }
         content = self._update_project_mutation(project_id, project_data)
@@ -880,8 +1005,30 @@ class TestProjectTypeMutation(TestCase):
         }
 
         # Updating Processed Project:
-        # Test project publishing
+        # fails as tutorial is not set when publishing project
         project_data = {
+            "clientId": project_client_id,
+            "status": self.genum(Project.Status.PUBLISHED),
+        }
+        content = self._update_processed_project_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProcessedProject"]
+        assert resp_data["errors"] is not None, content
+
+        # Updating Processed Project:
+        # Attaching tutorial
+        project_data = {
+            "clientId": project_client_id,
+            "tutorial": str(self.compare_tutorial.id),
+        }
+        content = self._update_processed_project_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProcessedProject"]
+        assert resp_data["errors"] is None, content
+        assert resp_data["result"]["tutorialId"] == str(self.compare_tutorial.id)
+
+        # Updating Processed Project:
+        # Publishing project
+        project_data = {
+            "clientId": project_client_id,
             "status": self.genum(Project.Status.PUBLISHED),
         }
         content = self._update_processed_project_mutation(project_id, project_data)

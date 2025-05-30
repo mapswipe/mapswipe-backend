@@ -7,7 +7,7 @@ import environ
 
 from main.logging import log_render_extra_context
 from main.sentry import SentryConfig
-from utils.git import fetch_git_sha
+from utils.git import GitHelper
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -79,11 +79,13 @@ env = environ.Env(
     MAP_IMAGE_MAXAR_PREMIUM_API_KEY=str,
     MAP_IMAGE_ESRI_API_KEY=str,
     MAP_IMAGE_ESRI_BETA_API_KEY=str,
+    OSMCHA_API_KEY=str,  # os.environ["OSMCHA_API_KEY"]
     # MAP_IMAGE_DIGITAL_GLOBE_API_KEY=str,
     # Pytest
     PYTEST_XDIST_WORKER=(str, None),
 )
 
+GIT_HELPER = GitHelper(BASE_DIR)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -93,7 +95,7 @@ APP_DOMAIN = env.url("APP_DOMAIN")
 FRONTEND_DOMAIN = env.url("FRONTEND_DOMAIN")
 APP_ENVIRONMENT = env("APP_ENVIRONMENT").upper()
 APP_TYPE = env("APP_TYPE").upper()
-APP_RELEASE = env("APP_RELEASE") or fetch_git_sha(BASE_DIR, raise_on_error=False)
+APP_RELEASE = env("APP_RELEASE") or GIT_HELPER.commit_sha
 SECRET_KEY = env("SECRET_KEY")
 
 DEBUG = env("DEBUG")
@@ -132,6 +134,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.gis",
     # External
     "strawberry_django",
     "corsheaders",
@@ -362,7 +365,7 @@ CSRF_COOKIE_DOMAIN = env("CSRF_COOKIE_DOMAIN")
 CORS_ALLOWED_ORIGINS = MAPSWIPE_TRUSTED_ORIGINS
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_URLS_REGEX = r"(^/media/.*$)|(^/graphql/$)"
+CORS_URLS_REGEX = r"(^/media/.*$)|(^/graphql/$)|(^/health-check/$)"
 CORS_ALLOW_METHODS = (
     "DELETE",
     "GET",
@@ -402,7 +405,7 @@ if SENTRY_ENABLED:
         traces_sample_rate=env("SENTRY_TRACES_SAMPLE_RATE"),
         profiles_sample_rate=env("SENTRY_PROFILE_SAMPLE_RATE"),
         # Custom configs
-        tags={"site": APP_DOMAIN},
+        tags={"site": APP_DOMAIN.geturl()},
         monitor_celery_beat_tasks=env("SENTRY_MONITOR_CELERY_BEAT_TASKS"),
     )
     SENTRY_CONFIG.init_sentry()
@@ -424,6 +427,8 @@ MAP_IMAGE_MAXAR_PREMIUM_API_KEY = env("MAP_IMAGE_MAXAR_PREMIUM_API_KEY")
 MAP_IMAGE_ESRI_API_KEY = env("MAP_IMAGE_ESRI_API_KEY")
 MAP_IMAGE_ESRI_BETA_API_KEY = env("MAP_IMAGE_ESRI_BETA_API_KEY")
 # MAP_IMAGE_DIGITAL_GLOBE_API_KEY = env("MAP_IMAGE_DIGITAL_GLOBE_API_KEY")
+
+OSMCHA_API_KEY = env("OSMCHA_API_KEY")
 
 # TODO(thenav56): Handle file logs using gunicorn
 LOGGING = {
@@ -511,3 +516,6 @@ if ENABLE_DEBUG_TOOLBAR and not IS_TESTING:
         "127.0.0.1",
         ".".join(socket.gethostbyname(socket.gethostname()).rsplit(".")[:-1]) + ".1",
     ]
+
+# Manual checks
+import main.checks  # noqa: F401 E402

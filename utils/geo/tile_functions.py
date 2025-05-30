@@ -123,4 +123,7 @@ def geometry_from_tile_coords(TileX: float, TileY: float, zoom: int) -> str:
     poly = ogr.Geometry(ogr.wkbPolygon)
     poly.AddGeometry(ring)
 
+    if poly.GetCoordinateDimension() == 3:
+        poly.FlattenTo2D()
+
     return poly.ExportToWkt()

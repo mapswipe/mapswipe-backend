@@ -1,5 +1,4 @@
 import logging
-import typing
 from abc import ABC, abstractmethod
 
 from django.contrib.gis.db.models.functions import Area
@@ -30,8 +29,8 @@ def get_max_time_spend_percentile(project_type: ProjectTypeEnum) -> float:
             return 1.4
         case ProjectTypeEnum.COMPARE:
             return 11.2
-        # case ProjectTypeEnum.FOOTPRINT:
-        #     return 6.1
+        case ProjectTypeEnum.VALIDATE:
+            return 6.1
         # case ProjectTypeEnum.STREET:
         #     return 65
 
@@ -48,22 +47,12 @@ class BaseProjectTaskProperty(BaseModel, ABC): ...
 class ValidateException(Exception): ...
 
 
-ProjectPropertyTypeVar = typing.TypeVar("ProjectPropertyTypeVar", bound=BaseProjectProperty)
-ProjectTaskGroupPropertyTypeVar = typing.TypeVar("ProjectTaskGroupPropertyTypeVar", bound=BaseProjectTaskGroupProperty)
-ProjectTaskPropertyTypeVar = typing.TypeVar("ProjectTaskPropertyTypeVar", bound=BaseProjectTaskProperty)
-
-ValidateResponse = typing.TypeVar("ValidateResponse")
-
-
-class BaseProject(
-    ABC,
-    typing.Generic[
-        ProjectPropertyTypeVar,
-        ProjectTaskGroupPropertyTypeVar,
-        ProjectTaskPropertyTypeVar,
-        ValidateResponse,
-    ],
-):
+class BaseProject[
+    ProjectPropertyTypeVar: BaseProjectProperty,
+    ProjectTaskGroupPropertyTypeVar: BaseProjectTaskGroupProperty,
+    ProjectTaskPropertyTypeVar: BaseProjectTaskProperty,
+    ValidateResponse,
+](ABC):
     project_property_class: type[ProjectPropertyTypeVar]
     project_task_group_property_class: type[ProjectTaskGroupPropertyTypeVar]
     project_task_property_class: type[ProjectTaskPropertyTypeVar]
