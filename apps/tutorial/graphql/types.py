@@ -27,6 +27,7 @@ class CompareTutorialTaskPropertyType: ...
 @strawberry.experimental.pydantic.type(model=find_tutorial.FindTutorialTaskProperty, all_fields=True)
 class FindTutorialTaskPropertyType: ...
 
+
 @strawberry.experimental.pydantic.type(model=validate_tutorial.ValidateTutorialTaskProperty, all_fields=True)
 class ValidateTutorialTaskPropertyType: ...
 
@@ -50,8 +51,13 @@ class TutorialTaskType(UserResourceTypeMixin):
     async def project_type_specifics(
         self,
         task: strawberry.Parent[TutorialTask],
-    ) -> CompareTutorialTaskPropertyType | FindTutorialTaskPropertyType | ValidateTutorialTaskPropertyType \
-            | CompletenessTutorialTaskPropertyType | None:
+    ) -> (
+        CompareTutorialTaskPropertyType
+        | FindTutorialTaskPropertyType
+        | ValidateTutorialTaskPropertyType
+        | CompletenessTutorialTaskPropertyType
+        | None
+    ):
         data = task.project_type_specifics
         project_type_enum = ProjectTypeEnum(task.project_type)  # type: ignore[reportAttributeAccessIssue]
 

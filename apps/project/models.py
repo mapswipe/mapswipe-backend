@@ -47,7 +47,7 @@ class ProjectTypeEnum(models.IntegerChoices):
     """ Find project type. Previously known as Classification / Build Area. """
 
     VALIDATE = 2, "Validate"
-    # """ Validate project type. Previously known as Footprint """
+    """ Validate project type. Previously known as Footprint """
 
     COMPARE = 3, "Compare"
     """ Compare project type. Previously known as Change Detection. """
