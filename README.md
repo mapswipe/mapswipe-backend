@@ -78,6 +78,23 @@ docker compose run --rm web pytest
 docker compose exec web pytest
 ```
 
+## Changelog
+
+We use **git-cliff** to manage changelogs.
+The configuration is in `./cliff.toml`.
+
+### Install
+
+Follow the instructions here: https://git-cliff.org/docs/installation/
+
+### Prepare a release
+
+```bash
+./release.sh v0.1.2
+git push
+git push origin tag v0.1.2
+```
+
 ## Tips
 You can use django `run` command if there are no running instance for temporary commands
 
