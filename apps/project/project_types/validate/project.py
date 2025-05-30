@@ -5,7 +5,6 @@ from typing import Any
 
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
 from django.db import models
 from geojson_pydantic import Feature, FeatureCollection
 from geojson_pydantic.geometries import MultiPolygon, Polygon
@@ -43,6 +42,8 @@ class ValidateRawGroupItem(TypedDict):
 ValidateRawGroup = dict[str, ValidateRawGroupItem]
 
 
+# FIXME(tnagorra): We need to refactor this codeblock
+# Example: We no longer need tutorial parameter
 def group_input_geometries(features: list[ValidFeature], group_size: int, tutorial: bool = False):
     groups: dict[str, ValidateRawGroupItem] = {}
 
@@ -87,11 +88,13 @@ class ValidateObjectSourceTypeEnum(models.TextChoices):
 class ValidateObjectSourceConfig(BaseModel):
     source_type: ValidateObjectSourceTypeEnum
 
-    tasking_manager_project_id: typing.Annotated[str, Field(strict=True, max_length=1000)] | None = None
+    tasking_manager_project_id: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")] | None = None
 
     aoi_geometry: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")] | None = None
     ohsome_filter: typing.Annotated[str, Field(strict=True, max_length=1000)] | None = None
 
+    # FIXME(tnagorra): Add URL validation?
+    # TODO(tnagorra): Check max length
     object_geojson_url: typing.Annotated[str, Field(strict=True, max_length=1000)] | None = None
 
     @field_validator("source_type", mode="before")
@@ -130,9 +133,12 @@ class ValidateProjectTaskGroupProperty(base_project.BaseProjectTaskGroupProperty
 
 
 class ValidateProjectTaskProperty(base_project.BaseProjectTaskProperty):
+    # TODO(tnagorra): We might need to rename this to ohsome_feature_id
     task_id: str
-    geometry: str
+    # TODO(tnagorra): We need to define the type for properties
     properties: dict[str, Any]
+    # NOTE: We need to send geometry to firebase
+    # geometry: str
 
 
 class ValidateProject(
@@ -154,13 +160,13 @@ class ValidateProject(
         self.tile_server = get_tile_server(self.project_type_specifics.tile_server_property)
 
     def _process_polygons(self, geojson_data: dict[str, Any]) -> list[ValidFeature]:
+        """We only want polygon and multipolygon features"""
         try:
             fc = FeatureCollection(**geojson_data)
         except ValidationError as e:
             raise ValueError("Invalid GeoJSON FeatureCollection") from e
 
         polygon_types = (Polygon, MultiPolygon)
-
         filtered_features: list[ValidFeature] = [
             feature for feature in fc.features if isinstance(feature.geometry, polygon_types)
         ]
@@ -184,10 +190,8 @@ class ValidateProject(
             project_id=self.project.pk,
         )
 
-        aoi_file_path = aoi_asset.file.path
-        with default_storage.open(aoi_file_path, "r") as file:
-            content = file.read()
-            geojson = json.loads(content)
+        with aoi_asset.file.open() as aoi_file:
+            geojson = json.loads(aoi_file.read())
 
         feature_collection = FeatureCollection(**geojson)
         ohsome_request = {
@@ -215,7 +219,7 @@ class ValidateProject(
         raise Exception("Only AOI Geojson file source type is currently implemented")
 
     @typing.override
-    def _create_tasks(self, group: ProjectTaskGroup, raw_group: ValidateRawGroupItem) -> int:
+    def _create_tasks(self, group: ProjectTaskGroup, raw_group: ValidateRawGroupItem) -> int:  # type: ignore[reportIncompatibleMethodOverride]
         """Create tasks for a group."""
         bulk_mgr = BulkCreateManager(chunk_size=1000)
 
@@ -242,7 +246,6 @@ class ValidateProject(
                         geometry=geometry_str,
                         project_type_specifics=self.project_task_property_class(
                             task_id=f"t{f_id}",
-                            geometry=str(geometry_str),
                             properties=feature.properties or {},
                         ).model_dump(),
                     ),
