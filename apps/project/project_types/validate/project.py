@@ -147,6 +147,7 @@ class ValidateProject(
         ValidateProjectTaskGroupProperty,
         ValidateProjectTaskProperty,
         list[ValidFeature],
+        ValidateRawGroupItem,
     ],
 ):
     tile_server: AvailableTileServerTypeAlias
@@ -219,7 +220,7 @@ class ValidateProject(
         raise Exception("Only AOI Geojson file source type is currently implemented")
 
     @typing.override
-    def _create_tasks(self, group: ProjectTaskGroup, raw_group: ValidateRawGroupItem) -> int:  # type: ignore[reportIncompatibleMethodOverride]
+    def create_tasks(self, group: ProjectTaskGroup, raw_group: ValidateRawGroupItem) -> int:
         """Create tasks for a group."""
         bulk_mgr = BulkCreateManager(chunk_size=1000)
 
@@ -271,7 +272,7 @@ class ValidateProject(
             )
 
             # Create new tasks for this group
-            total_tasks = self._create_tasks(new_group, raw_group)
+            total_tasks = self.create_tasks(new_group, raw_group)
             logger.info("Created %s tasks for group: %s", total_tasks, new_group.pk)
 
     @typing.override

@@ -39,7 +39,7 @@ class CompareProject(
         self.tile_server_b = get_tile_server(self.project_type_specifics.tile_server_b_property)
 
     @typing.override
-    def _create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:
+    def create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:
         bulk_mgr = BulkCreateManager(chunk_size=1000)
 
         tasks_count = 0
