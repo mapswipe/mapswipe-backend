@@ -27,6 +27,16 @@ class TileServerCommonConfigInput: ...
 class ProjectTileServerConfigInput: ...
 
 
+@strawberry.experimental.pydantic.input(model=completeness_project.VectorTileServerConfig, all_fields=True)
+class ProjectVectorTileServerConfigInput: ...
+
+
+@strawberry.experimental.pydantic.input(model=completeness_project.OverlayTileServerConfig, all_fields=True)
+class ProjectOverlayTileServerConfigInput:
+    raster: TileServerConfig | None = strawberry.UNSET
+    vector: completeness_project.VectorTileServerConfig | None = strawberry.UNSET
+
+
 @strawberry.experimental.pydantic.input(model=validate_project.ValidateObjectSourceConfig, all_fields=True)
 class ValidateObjectSourceConfigInput: ...
 
