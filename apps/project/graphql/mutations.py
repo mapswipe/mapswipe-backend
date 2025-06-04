@@ -2,9 +2,9 @@ import strawberry
 import strawberry_django
 from strawberry_django.permissions import IsAuthenticated
 
-from apps.project.models import Project
+from apps.project.models import Organization, Project
 from apps.project.serializers import (
-    OrganizationCreateSerializer,
+    OrganizationSerializer,
     ProcessedProjectSerializer,
     ProjectAssetSerializer,
     ProjectCreateSerializer,
@@ -16,6 +16,7 @@ from utils.graphql.types import MutationResponseType
 
 from .inputs import (
     OrganizationCreateInput,
+    OrganizationUpdateInput,
     ProcessedProjectUpdateInput,
     ProjectAssetCreateInput,
     ProjectCreateInput,
@@ -66,4 +67,14 @@ class Mutation:
         info: Info,
         data: OrganizationCreateInput,
     ) -> MutationResponseType[OrganizationType]:
-        return await ModelMutation(OrganizationCreateSerializer).handle_create_mutation(data, info, None)
+        return await ModelMutation(OrganizationSerializer).handle_create_mutation(data, info, None)
+
+    @strawberry_django.mutation(extensions=[IsAuthenticated()])
+    async def update_organization(
+        self,
+        info: Info,
+        data: OrganizationUpdateInput,
+        pk: strawberry.ID,
+    ) -> MutationResponseType[OrganizationType]:
+        organization = await Organization.objects.aget(pk=pk)
+        return await ModelMutation(OrganizationSerializer).handle_update_mutation(data, info, organization)

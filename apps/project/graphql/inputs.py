@@ -63,6 +63,11 @@ class OrganizationCreateInput(UserResourceCreateInputMixin):
     name: strawberry.auto
 
 
+@strawberry_django.input(Organization)
+class OrganizationUpdateInput(UserResourceTopLevelUpdateInputMixin):
+    name: strawberry.auto
+
+
 @strawberry.input(one_of=True)
 class ProjectTypeSpecificInput:
     compare: CompareProjectPropertyInput | None = strawberry.UNSET

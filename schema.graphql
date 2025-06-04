@@ -505,6 +505,7 @@ type Mutation {
   updateProcessedProject(data: ProcessedProjectUpdateInput!, pk: ID!): UpdateProcessedProjectPayload! @isAuthenticated
   createProjectAsset(data: ProjectAssetCreateInput!): CreateProjectAssetPayload! @isAuthenticated
   createOrganization(data: OrganizationCreateInput!): CreateOrganizationPayload! @isAuthenticated
+  updateOrganization(data: OrganizationUpdateInput!, pk: ID!): UpdateOrganizationPayload! @isAuthenticated
   deleteTutorial: DeleteTutorialPayload! @isAuthenticated
   createTutorial(data: TutorialCreateInput!): CreateTutorialPayload! @isAuthenticated
   updateTutorial(data: TutorialUpdateInput!, pk: ID!): UpdateTutorialPayload! @isAuthenticated
@@ -620,6 +621,14 @@ type OrganizationTypeOffsetPaginated {
 enum OverlayLayerTypeEnum {
   VECTOR_TILE
   RASTER_TILE
+}
+
+"""
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, name, unique_name)
+"""
+input OrganizationUpdateInput {
+  clientId: String!
+  name: String!
 }
 
 """
@@ -1666,6 +1675,8 @@ input TutorialUpdateInput {
   scenarios: [TutorialScenarioPageInput!]
   informationPages: [TutorialInformationPageInput!]
 }
+
+union UpdateOrganizationPayload = OrganizationTypeMutationResponseType | OperationInfo
 
 union UpdateProcessedProjectPayload = ProjectTypeMutationResponseType | OperationInfo
 

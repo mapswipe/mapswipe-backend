@@ -294,7 +294,7 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
         return super().create(validated_data)
 
 
-class OrganizationCreateSerializer(UserResourceSerializer[Organization]):
+class OrganizationSerializer(UserResourceSerializer[Organization]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Organization
         fields = (
