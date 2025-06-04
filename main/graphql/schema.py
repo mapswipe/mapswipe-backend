@@ -6,6 +6,7 @@ from strawberry_django.optimizer import DjangoOptimizerExtension
 
 import utils.graphql.monkey_patches  # noqa: F401  type: ignore
 from apps.community_dashboard.graphql import queries as community_dashboard_queries
+from apps.contributor.graphql import mutations as contributor_mutations
 from apps.contributor.graphql import queries as contributor_queries
 from apps.project.graphql import mutations as project_mutations
 from apps.project.graphql import queries as project_queries
@@ -48,6 +49,7 @@ class Mutation(
     user_mutations.Mutation,
     project_mutations.Mutation,
     tutorial_mutations.Mutation,
+    contributor_mutations.Mutation,
 ): ...
 
 

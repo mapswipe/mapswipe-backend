@@ -214,6 +214,15 @@ type ContributorUserFilteredStats implements ContributorUserUserGroupBaseFilterS
 """
 ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, old_id, name, description, is_archived, archived_at, archived_by)
 """
+input ContributorUserGroupCreateInput {
+  clientId: String!
+  name: String!
+  description: String!
+}
+
+"""
+ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, old_id, name, description, is_archived, archived_at, archived_by)
+"""
 input ContributorUserGroupFilter {
   id: IDBaseFilterLookup
   name: StrFilterLookup
@@ -326,6 +335,12 @@ type ContributorUserGroupType implements UserResourceTypeMixin {
   userMemberships(pagination: OffsetPaginationInput): ContributorUserGroupMembershipTypeOffsetPaginated!
 }
 
+type ContributorUserGroupTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: ContributorUserGroupType
+}
+
 type ContributorUserGroupTypeOffsetPaginated {
   pageInfo: OffsetPaginationInfo!
 
@@ -334,6 +349,16 @@ type ContributorUserGroupTypeOffsetPaginated {
 
   """List of paginated results."""
   results: [ContributorUserGroupType!]!
+}
+
+"""
+ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, old_id, name, description, is_archived, archived_at, archived_by)
+"""
+input ContributorUserGroupUpdateInput {
+  clientId: String!
+  name: String
+  description: String
+  isArchived: Boolean
 }
 
 type ContributorUserLatestStatsType {
@@ -399,6 +424,8 @@ interface ContributorUserUserGroupBaseFilterStatsQuery {
   swipeByOrganizationName: [OrganizationSwipeStatsType!]!
   swipeByProjectGeo: [MapContributionStatsType!]!
 }
+
+union CreateContributorUserGroupPayload = ContributorUserGroupTypeMutationResponseType | OperationInfo
 
 union CreateOrganizationPayload = OrganizationTypeMutationResponseType | OperationInfo
 
@@ -509,6 +536,8 @@ type Mutation {
   deleteTutorial: DeleteTutorialPayload! @isAuthenticated
   createTutorial(data: TutorialCreateInput!): CreateTutorialPayload! @isAuthenticated
   updateTutorial(data: TutorialUpdateInput!, pk: ID!): UpdateTutorialPayload! @isAuthenticated
+  createContributorUserGroup(data: ContributorUserGroupCreateInput!): CreateContributorUserGroupPayload! @isAuthenticated
+  updateContributorUserGroup(data: ContributorUserGroupUpdateInput!, pk: ID!): UpdateContributorUserGroupPayload! @isAuthenticated
 }
 
 type OffsetPaginationInfo {
@@ -1675,6 +1704,8 @@ input TutorialUpdateInput {
   scenarios: [TutorialScenarioPageInput!]
   informationPages: [TutorialInformationPageInput!]
 }
+
+union UpdateContributorUserGroupPayload = ContributorUserGroupTypeMutationResponseType | OperationInfo
 
 union UpdateOrganizationPayload = OrganizationTypeMutationResponseType | OperationInfo
 
