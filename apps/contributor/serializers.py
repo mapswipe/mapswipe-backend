@@ -11,7 +11,6 @@ class ContributorUserGroupSerializer(UserResourceSerializer[ContributorUserGroup
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = ContributorUserGroup
         fields = (
-            "client_id",
             "name",
             "description",
             "is_archived",

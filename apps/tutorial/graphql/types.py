@@ -126,5 +126,7 @@ class TutorialType(UserResourceTypeMixin):
     project_id: strawberry.ID
     status: strawberry.auto
 
+    # FIXME(tnagorra): The ordering is not always being applied on queries
+    # The tests are failing randomly.
     scenarios: list[TutorialScenarioPageType]
     information_pages: list[TutorialInformationPageType]
