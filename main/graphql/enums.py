@@ -8,10 +8,11 @@ from apps.project import models as project_enums
 from apps.project.project_types.tile_map_service.completeness.project import OverlayLayerTypeEnum
 from apps.project.project_types.validate.project import ValidateObjectSourceTypeEnum
 from apps.tutorial import models as tutorial_enums
-from utils.geo.tile_server.config import TileServerNameEnum
+from utils.geo.tile_server.config import TileServerNameEnum, VectorTileServerNameEnum
 
 ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     TileServerNameEnum,
+    VectorTileServerNameEnum,
     ValidateObjectSourceTypeEnum,
     OverlayLayerTypeEnum,
     project_enums.ProjectTypeEnum,

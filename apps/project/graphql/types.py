@@ -10,9 +10,17 @@ from apps.project.project_types.tile_map_service.completeness import project as 
 from apps.project.project_types.tile_map_service.find import project as find_project
 from apps.project.project_types.validate import project as validate_project
 from apps.tutorial.graphql.types import TutorialType
-from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
+from utils.geo.tile_server.models import (
+    TileServerCommonConfig,
+    TileServerConfig,
+    TileServerCustomConfig,
+    VectorTileServerCommonConfig,
+    VectorTileServerConfig,
+    VectorTileServerCustomConfig,
+)
 
 
+# Organization
 @strawberry_django.type(Organization)
 class OrganizationType(UserResourceTypeMixin):
     id: strawberry.ID
@@ -32,35 +40,56 @@ class ProjectTileServerCommonConfig: ...
 class ProjectTileServerConfig: ...
 
 
-@strawberry.experimental.pydantic.type(model=completeness_project.VectorTileServerConfig, all_fields=True)
+# Vector tile server
+@strawberry.experimental.pydantic.type(model=VectorTileServerCustomConfig, all_fields=True)
+class ProjectVectorTileServerCustomConfig: ...
+
+
+@strawberry.experimental.pydantic.type(model=VectorTileServerCommonConfig, all_fields=True)
+class ProjectVectorTileServerCommonConfig: ...
+
+
+@strawberry.experimental.pydantic.type(model=VectorTileServerConfig, all_fields=True)
 class ProjectVectorTileServerConfig: ...
 
 
-@strawberry.experimental.pydantic.type(model=completeness_project.OverlayTileServerConfig, all_fields=True)
-class ProjectOverlayTileServerConfig: ...
-
-
-@strawberry.experimental.pydantic.type(model=validate_project.ValidateObjectSourceConfig, all_fields=True)
-class ValidateObjectSourceConfig: ...
-
-
-# Project Properties
+# Project Properties: Compare
 @strawberry.experimental.pydantic.type(model=compare_project.CompareProjectProperty, all_fields=True)
 class CompareProjectPropertyType: ...
 
 
+# Project Properties: Find
 @strawberry.experimental.pydantic.type(model=find_project.FindProjectProperty, all_fields=True)
 class FindProjectPropertyType: ...
+
+
+# Project Properties: Validate
+@strawberry.experimental.pydantic.type(model=validate_project.ValidateObjectSourceConfig, all_fields=True)
+class ValidateObjectSourceConfig: ...
 
 
 @strawberry.experimental.pydantic.type(model=validate_project.ValidateProjectProperty, all_fields=True)
 class ValidateProjectPropertyType: ...
 
 
+# Project Properties: Completeness
+@strawberry.experimental.pydantic.type(model=completeness_project.OverlayVectorTileServerConfig, all_fields=True)
+class ProjectOverlayVectorTileServerConfig: ...
+
+
+@strawberry.experimental.pydantic.type(model=completeness_project.OverlayRasterTileServerConfig, all_fields=True)
+class ProjectOverlayRasterTileServerConfig: ...
+
+
+@strawberry.experimental.pydantic.type(model=completeness_project.OverlayTileServerConfig, all_fields=True)
+class ProjectOverlayTileServerConfig: ...
+
+
 @strawberry.experimental.pydantic.type(model=completeness_project.CompletenessProjectProperty, all_fields=True)
 class CompletenessProjectPropertyType: ...
 
 
+# Project
 @strawberry_django.type(ProjectAsset)
 class ProjectAssetType(UserResourceTypeMixin):
     id: strawberry.ID

@@ -14,6 +14,7 @@ directive @oneOf on INPUT_OBJECT
 
 type AppEnumCollection {
   TileServerNameEnum: [AppEnumCollectionTileServerNameEnum!]!
+  VectorTileServerNameEnum: [AppEnumCollectionVectorTileServerNameEnum!]!
   ValidateObjectSourceTypeEnum: [AppEnumCollectionValidateObjectSourceTypeEnum!]!
   OverlayLayerTypeEnum: [AppEnumCollectionOverlayLayerTypeEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
@@ -90,6 +91,11 @@ type AppEnumCollectionTutorialStatusEnum {
 
 type AppEnumCollectionValidateObjectSourceTypeEnum {
   key: ValidateObjectSourceTypeEnum!
+  label: String!
+}
+
+type AppEnumCollectionVectorTileServerNameEnum {
+  key: VectorTileServerNameEnum!
   label: String!
 }
 
@@ -907,16 +913,52 @@ input ProjectOrder {
   name: Ordering
 }
 
+type ProjectOverlayRasterTileServerConfig {
+  tileServer: ProjectTileServerConfig!
+  opacity: Float!
+}
+
+input ProjectOverlayRasterTileServerConfigInput {
+  tileServer: ProjectTileServerConfigInput!
+  opacity: Float!
+}
+
 type ProjectOverlayTileServerConfig {
   type: OverlayLayerTypeEnum!
-  raster: ProjectTileServerConfig
-  vector: ProjectVectorTileServerConfig
+  raster: ProjectOverlayRasterTileServerConfig
+  vector: ProjectOverlayVectorTileServerConfig
 }
 
 input ProjectOverlayTileServerConfigInput {
   type: OverlayLayerTypeEnum!
-  raster: ProjectTileServerConfigInput = null
-  vector: ProjectVectorTileServerConfigInput = null
+  raster: ProjectOverlayRasterTileServerConfigInput = null
+  vector: ProjectOverlayVectorTileServerConfigInput = null
+}
+
+type ProjectOverlayVectorTileServerConfig {
+  tileServer: ProjectVectorTileServerConfig!
+  fillColor: String!
+  fillOpacity: Float!
+  lineColor: String!
+  lineOpacity: Float!
+  lineWidth: Float!
+  lineDasharray: [Int!]!
+  circleColor: String!
+  circleOpacity: Float!
+  circleRadius: Float!
+}
+
+input ProjectOverlayVectorTileServerConfigInput {
+  tileServer: ProjectVectorTileServerConfigInput!
+  fillColor: String!
+  fillOpacity: Float!
+  lineColor: String!
+  lineOpacity: Float!
+  lineWidth: Float!
+  lineDasharray: [Int!]!
+  circleColor: String!
+  circleOpacity: Float!
+  circleRadius: Float!
 }
 
 enum ProjectProcessingStatusEnum {
@@ -1201,32 +1243,31 @@ input ProjectUpdateInput {
   projectTypeSpecifics: ProjectTypeSpecificInput
 }
 
+type ProjectVectorTileServerCommonConfig {
+  sourceName: String
+  credits: String
+}
+
 type ProjectVectorTileServerConfig {
-  url: String!
-  credits: String!
-  sourceName: String!
-  fillColor: String!
-  fillOpacity: Float!
-  lineColor: String!
-  lineOpacity: Float!
-  lineWidth: Float!
-  circleColor: String!
-  circleOpacity: Float!
-  circleRadius: Float!
+  name: VectorTileServerNameEnum!
+  custom: ProjectVectorTileServerCustomConfig
+  openStreetMap: ProjectVectorTileServerCommonConfig
+  openFreeMap: ProjectVectorTileServerCommonConfig
+  versatiles: ProjectVectorTileServerCommonConfig
 }
 
 input ProjectVectorTileServerConfigInput {
+  name: VectorTileServerNameEnum!
+  custom: VectorTileServerCustomConfigInput = null
+  openStreetMap: VectorTileServerCommonConfigInput = null
+  openFreeMap: VectorTileServerCommonConfigInput = null
+  versatiles: VectorTileServerCommonConfigInput = null
+}
+
+type ProjectVectorTileServerCustomConfig {
   url: String!
-  credits: String!
-  sourceName: String!
-  fillColor: String!
-  fillOpacity: Float!
-  lineColor: String!
-  lineOpacity: Float!
-  lineWidth: Float!
-  circleColor: String!
-  circleOpacity: Float!
-  circleRadius: Float!
+  sourceName: String
+  credits: String
 }
 
 type Query {
@@ -1811,4 +1852,22 @@ input ValidateTutorialTaskPropertyInput {
 
 type ValidateTutorialTaskPropertyType {
   objectGeometry: String
+}
+
+input VectorTileServerCommonConfigInput {
+  sourceName: String = null
+  credits: String = null
+}
+
+input VectorTileServerCustomConfigInput {
+  url: String!
+  sourceName: String = null
+  credits: String = null
+}
+
+enum VectorTileServerNameEnum {
+  CUSTOM
+  OPEN_STREET_MAP
+  OPEN_FREE_MAP
+  VERSATILES
 }

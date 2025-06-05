@@ -4,8 +4,15 @@ from abc import ABC
 
 from utils.geo.tile_functions import tile_coords_and_zoom_to_quadKey
 
-from .config import Config, TileServerNameEnum
-from .models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
+from .config import Config, TileServerNameEnum, VectorTileServerNameEnum
+from .models import (
+    TileServerCommonConfig,
+    TileServerConfig,
+    TileServerCustomConfig,
+    VectorTileServerCommonConfig,
+    VectorTileServerConfig,
+    VectorTileServerCustomConfig,
+)
 
 
 class BaseTileServerException(Exception): ...
@@ -178,3 +185,83 @@ def get_tile_server(config: TileServerConfig) -> AvailableTileServerTypeAlias:
         case TileServerNameEnum.ESRI_BETA:
             assert config.esri_beta is not None, "config.esri_beta should be not none"
             return EsriBetaTileServer(config.esri_beta)
+
+
+class BaseVectorTileServer(ABC):
+    """Create a tile server class."""
+
+    type: VectorTileServerNameEnum
+    url: str
+    source_name: str
+    credits: str | None
+
+
+class CustomVectorTileServer(BaseTileServer):
+    type = VectorTileServerNameEnum.CUSTOM
+
+    def __init__(
+        self,
+        config: VectorTileServerCustomConfig,
+    ):
+        self.url = config.url
+        self.source_name = config.source_name
+        self.credits = config.credits
+
+
+class OpenStreetMapVectorTileServer(BaseTileServer):
+    type = VectorTileServerNameEnum.OPEN_STREET_MAP
+    url = Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.OPEN_STREET_MAP]
+
+    def __init__(
+        self,
+        config: VectorTileServerCommonConfig,
+    ):
+        self.source_name = config.source_name
+        self.credits = config.credits
+
+
+class OpenFreeMapVectorTileServer(BaseTileServer):
+    type = VectorTileServerNameEnum.OPEN_FREE_MAP
+    url = Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.OPEN_FREE_MAP]
+
+    def __init__(
+        self,
+        config: VectorTileServerCommonConfig,
+    ):
+        self.source_name = config.source_name
+        self.credits = config.credits
+
+
+class VersatilesVectorTileServer(BaseTileServer):
+    type = VectorTileServerNameEnum.VERSATILES
+    url = Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.VERSATILES]
+
+    def __init__(
+        self,
+        config: VectorTileServerCommonConfig,
+    ):
+        self.source_name = config.source_name
+        self.credits = config.credits
+
+
+type AvailableVectorTileServerTypeAlias = (
+    CustomVectorTileServer | OpenStreetMapVectorTileServer | OpenFreeMapVectorTileServer | VersatilesVectorTileServer
+)
+
+
+def get_vector_tile_server(config: VectorTileServerConfig) -> AvailableVectorTileServerTypeAlias:
+    match config.name:
+        # Custom
+        case VectorTileServerNameEnum.CUSTOM:
+            assert config.custom is not None, "config.custom should be not none"
+            return CustomVectorTileServer(config.custom)
+        # Pre-defined
+        case VectorTileServerNameEnum.OPEN_STREET_MAP:
+            assert config.open_street_map is not None, "config.open_street_map should be not none"
+            return OpenStreetMapVectorTileServer(config.open_street_map)
+        case VectorTileServerNameEnum.OPEN_FREE_MAP:
+            assert config.open_free_map is not None, "config.open_free_map should be not none"
+            return OpenFreeMapVectorTileServer(config.open_free_map)
+        case VectorTileServerNameEnum.VERSATILES:
+            assert config.versatiles is not None, "config.versatiles should be not none"
+            return VersatilesVectorTileServer(config.versatiles)
