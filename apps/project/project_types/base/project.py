@@ -6,7 +6,6 @@ from django.db import models
 from pydantic import BaseModel
 
 from apps.project.models import Project, ProjectAsset, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
-from utils.geo import tile_grouping
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +50,8 @@ class BaseProject[
     ProjectPropertyTypeVar: BaseProjectProperty,
     ProjectTaskGroupPropertyTypeVar: BaseProjectTaskGroupProperty,
     ProjectTaskPropertyTypeVar: BaseProjectTaskProperty,
-    ValidateResponse,
+    ValidatedData,
+    AdditionalGroupData,
 ](ABC):
     project_property_class: type[ProjectPropertyTypeVar]
     project_task_group_property_class: type[ProjectTaskGroupPropertyTypeVar]
@@ -116,14 +116,13 @@ class BaseProject[
     def post_create_groups(self): ...
 
     @abstractmethod
-    def validate(self) -> ValidateResponse: ...
-
-    # FIXME(tnagorra): This is not generic enough
-    @abstractmethod
-    def _create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int: ...
+    def validate(self) -> ValidatedData: ...
 
     @abstractmethod
-    def create_groups(self, resp: ValidateResponse): ...
+    def create_tasks(self, group: ProjectTaskGroup, raw_group: AdditionalGroupData) -> int: ...
+
+    @abstractmethod
+    def create_groups(self, resp: ValidatedData): ...
 
     def process_project(self) -> bool:
         """

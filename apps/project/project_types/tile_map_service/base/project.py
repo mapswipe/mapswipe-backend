@@ -89,6 +89,7 @@ class TileMapServiceBaseProject[
         TileMapServiceProjectTaskGroupPropertyTypeVar,
         TileMapServiceProjectTaskPropertyTypeVar,
         tile_grouping.AoiGeometry,
+        tile_grouping.RawGroup,
     ],
     ABC,
 ):
@@ -154,7 +155,7 @@ class TileMapServiceBaseProject[
         # TODO(thenav56): Calculate: total_area, time_spent_max_allowed
 
     @typing.override
-    def _create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:
+    def create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:
         """Create tasks for a group."""
         bulk_mgr = BulkCreateManager(chunk_size=1000)
 
@@ -214,7 +215,7 @@ class TileMapServiceBaseProject[
                 ).model_dump(),
             )
             # Create new tasks for this group
-            total_tasks = self._create_tasks(new_group, raw_group)
+            total_tasks = self.create_tasks(new_group, raw_group)
             logger.info("Created %s tasks for group: %s", total_tasks, new_group.pk)
 
     @typing.override

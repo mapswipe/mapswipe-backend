@@ -15,7 +15,7 @@ class TileServerNameEnum(models.TextChoices):
 
 class Config:
     IMAGE_URLS = {
-        TileServerNameEnum.BING: ("https://ecn.t0.tiles.virtualearth.net/tiles/a{quad_key}.jpeg?g=7505&token={key}"),
+        TileServerNameEnum.BING: ("https://ecn.t0.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=7505&token={key}"),
         TileServerNameEnum.MAPBOX: ("https://d.tiles.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg?access_token={key}"),
         TileServerNameEnum.MAXAR_PREMIUM: (
             "https://services.digitalglobe.com"

@@ -30,10 +30,10 @@ class BaseTileServer(ABC):
             [substring in url for substring in ["{{x}}", "{{-y}}", "{{z}}"]],
         ):
             return True
-        if "{quad_key}" in url and "{{quad_key}}" not in url:
+        if "{quadkey}" in url and "{{quadkey}}" not in url:
             return True
         raise BaseTileServerException(
-            f"The imagery url {url} must contain {{x}}, {{y}} (or {{-y}}) and {{{{z}}}} or the {{quad_key}} placeholders.",
+            f"The imagery url {url} must contain {{x}}, {{y}} (or {{-y}}) and {{{{z}}}} or the {{quadkey}} placeholders.",
         )
 
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
@@ -58,7 +58,7 @@ class CustomTileServer(BaseTileServer):
 
     @typing.override
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
-        # TODO(tnagorra): We might need to add support for quad_key for custom tile servers
+        # TODO(tnagorra): We might need to add support for quadkey for custom tile servers
         return self.url.format(
             x=tile_x,
             y=tile_y,
@@ -91,10 +91,10 @@ class BingTileServer(CommonTileServer):
 
     @typing.override
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
-        quad_key = tile_coords_and_zoom_to_quadKey(tile_x, tile_y, tile_z)
+        quadkey = tile_coords_and_zoom_to_quadKey(tile_x, tile_y, tile_z)
         return self.url.format(
             key=self.api_key,
-            quad_key=quad_key,
+            quadkey=quadkey,
         )
 
 

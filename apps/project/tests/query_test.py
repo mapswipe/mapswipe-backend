@@ -70,8 +70,24 @@ class TestProjectQuery(TestCase):
                       tileServerProperty {
                         ...TileServerPropertyFields
                       }
-                      tileServerBProperty {
-                        ...TileServerPropertyFields
+                      overlayTileServerProperty {
+                        type
+                        raster {
+                          ...TileServerPropertyFields
+                        }
+                        vector {
+                          url
+                          credits
+                          sourceName
+                          fillColor
+                          fillOpacity
+                          lineColor
+                          lineOpacity
+                          lineWidth
+                          circleColor
+                          circleOpacity
+                          circleRadius
+                        }
                       }
                     }
                   }
@@ -166,18 +182,60 @@ class TestProjectQuery(TestCase):
                         "esri": None,
                         "esri_beta": None,
                     },
-                    "tile_server_b_property": {
-                        "name": "CUSTOM",
-                        "custom": {
-                            "url": "https://hi-there/{x}/{y}/{z}",
+                    "overlay_tile_server_property": {
+                        "type": "RASTER_TILE",
+                        "vector": None,
+                        "raster": {
+                            "name": "CUSTOM",
+                            "custom": {
+                                "url": "https://hi-there/{x}/{y}/{z}",
+                                "credits": "My Map",
+                            },
+                            "bing": None,
+                            "mapbox": None,
+                            "maxar_standard": None,
+                            "maxar_premium": None,
+                            "esri": None,
+                            "esri_beta": None,
+                        },
+                    },
+                },
+            ),
+            ProjectFactory.create(
+                **cls.user_resource_kwargs,
+                requesting_organization=cls.organization,
+                project_type=ProjectTypeEnum.COMPLETENESS,
+                project_type_specifics={
+                    "zoom_level": 14,
+                    "aoi_geometry": "1",
+                    "tile_server_property": {
+                        "name": "BING",
+                        "custom": None,
+                        "bing": {
                             "credits": "My Map",
                         },
-                        "bing": None,
                         "mapbox": None,
                         "maxar_standard": None,
                         "maxar_premium": None,
                         "esri": None,
                         "esri_beta": None,
+                    },
+                    "overlay_tile_server_property": {
+                        "type": "VECTOR_TILE",
+                        "raster": None,
+                        "vector": {
+                            "url": "https://custom-osm-data",
+                            "credits": "custom osm",
+                            "source_name": "custom-source-name",
+                            "fill_color": "#ff00ff",
+                            "fill_opacity": 1.0,
+                            "line_color": "#ffff00",
+                            "line_opacity": 1.0,
+                            "line_width": 1.0,
+                            "circle_color": "#0000ff",
+                            "circle_opacity": 1.0,
+                            "circle_radius": 10.0,
+                        },
                     },
                 },
             ),
@@ -208,7 +266,7 @@ class TestProjectQuery(TestCase):
             **self.g_pagination(
                 offset=0,
                 limit=10,
-                total_count=3,
+                total_count=4,
                 results=[
                     dict(
                         id=self.gID(project.pk),

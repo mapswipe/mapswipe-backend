@@ -15,6 +15,7 @@ directive @oneOf on INPUT_OBJECT
 type AppEnumCollection {
   TileServerNameEnum: [AppEnumCollectionTileServerNameEnum!]!
   ValidateObjectSourceTypeEnum: [AppEnumCollectionValidateObjectSourceTypeEnum!]!
+  OverlayLayerTypeEnum: [AppEnumCollectionOverlayLayerTypeEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
   ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
   ProjectProcessingStatusEnum: [AppEnumCollectionProjectProcessingStatusEnum!]!
@@ -34,6 +35,11 @@ type AppEnumCollectionContributorUserGroupMembershipLogActionEnum {
 
 type AppEnumCollectionMappingSessionClientTypeEnum {
   key: MappingSessionClientTypeEnum!
+  label: String!
+}
+
+type AppEnumCollectionOverlayLayerTypeEnum {
+  key: OverlayLayerTypeEnum!
   label: String!
 }
 
@@ -151,14 +157,14 @@ input CompletenessProjectPropertyInput {
   zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfigInput!
   aoiGeometry: String!
-  tileServerBProperty: ProjectTileServerConfigInput!
+  overlayTileServerProperty: ProjectOverlayTileServerConfigInput!
 }
 
 type CompletenessProjectPropertyType {
   zoomLevel: Int!
   tileServerProperty: ProjectTileServerConfig!
   aoiGeometry: String!
-  tileServerBProperty: ProjectTileServerConfig!
+  overlayTileServerProperty: ProjectOverlayTileServerConfig!
 }
 
 input CompletenessTutorialTaskPropertyInput {
@@ -611,6 +617,11 @@ type OrganizationTypeOffsetPaginated {
   results: [OrganizationType!]!
 }
 
+enum OverlayLayerTypeEnum {
+  VECTOR_TILE
+  RASTER_TILE
+}
+
 """
 Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
 """
@@ -856,6 +867,18 @@ input ProjectFilter {
 input ProjectOrder {
   id: Ordering
   name: Ordering
+}
+
+type ProjectOverlayTileServerConfig {
+  type: OverlayLayerTypeEnum!
+  raster: ProjectTileServerConfig
+  vector: ProjectVectorTileServerConfig
+}
+
+input ProjectOverlayTileServerConfigInput {
+  type: OverlayLayerTypeEnum!
+  raster: ProjectTileServerConfigInput = null
+  vector: ProjectVectorTileServerConfigInput = null
 }
 
 enum ProjectProcessingStatusEnum {
@@ -1138,6 +1161,34 @@ input ProjectUpdateInput {
   requestingOrganization: ID
   image: ID
   projectTypeSpecifics: ProjectTypeSpecificInput
+}
+
+type ProjectVectorTileServerConfig {
+  url: String!
+  credits: String!
+  sourceName: String!
+  fillColor: String!
+  fillOpacity: Float!
+  lineColor: String!
+  lineOpacity: Float!
+  lineWidth: Float!
+  circleColor: String!
+  circleOpacity: Float!
+  circleRadius: Float!
+}
+
+input ProjectVectorTileServerConfigInput {
+  url: String!
+  credits: String!
+  sourceName: String!
+  fillColor: String!
+  fillOpacity: Float!
+  lineColor: String!
+  lineOpacity: Float!
+  lineWidth: Float!
+  circleColor: String!
+  circleOpacity: Float!
+  circleRadius: Float!
 }
 
 type Query {
