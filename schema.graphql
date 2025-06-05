@@ -647,17 +647,17 @@ type OrganizationTypeOffsetPaginated {
   results: [OrganizationType!]!
 }
 
-enum OverlayLayerTypeEnum {
-  VECTOR_TILE
-  RASTER_TILE
-}
-
 """
 Organization(id, client_id, created_at, modified_at, created_by, modified_by, name, unique_name)
 """
 input OrganizationUpdateInput {
   clientId: String!
   name: String!
+}
+
+enum OverlayLayerTypeEnum {
+  VECTOR_TILE
+  RASTER_TILE
 }
 
 """
