@@ -10,6 +10,7 @@ from apps.project.project_types.tile_map_service.completeness import project as 
 from apps.project.project_types.tile_map_service.find import project as find_project
 from apps.project.project_types.validate import project as validate_project
 from apps.tutorial.graphql.types import TutorialType
+from utils.geo.tile_server.config import TileServerNameEnum, VectorTileServerNameEnum
 from utils.geo.tile_server.models import (
     TileServerCommonConfig,
     TileServerConfig,
@@ -18,6 +19,31 @@ from utils.geo.tile_server.models import (
     VectorTileServerConfig,
     VectorTileServerCustomConfig,
 )
+
+
+@strawberry.type
+class VectorTileServerType:
+    type: VectorTileServerNameEnum
+    label: str
+    url: str
+    layers: list[str]
+    min_zoom: int | None
+    max_zoom: int | None
+
+
+@strawberry.type
+class RasterTileServerType:
+    type: TileServerNameEnum
+    label: str
+    url: str
+    # min_zoom: int | None
+    # max_zoom: int | None
+
+
+@strawberry.type
+class TileServersType:
+    vector: list[VectorTileServerType]
+    raster: list[RasterTileServerType]
 
 
 # Organization

@@ -1273,6 +1273,7 @@ type ProjectVectorTileServerCustomConfig {
 type Query {
   users(pagination: OffsetPaginationInput, filters: UserFilter, order: UserOrder): UserTypeOffsetPaginated! @isAuthenticated
   me: UserMeType
+  tileServers: TileServersType! @isAuthenticated
   project(id: ID!): ProjectType! @isAuthenticated
   projects(pagination: OffsetPaginationInput, filters: ProjectFilter, order: ProjectOrder): ProjectTypeOffsetPaginated! @isAuthenticated
   projectAsset(id: ID!): ProjectAssetType! @isAuthenticated
@@ -1295,6 +1296,12 @@ type Query {
   communityUserStats(userUserId: ID!): ContributorUserStats!
   communityUserGroupStats(userGroupId: ID!): ContributorUserGroupStats!
   enums: AppEnumCollection!
+}
+
+type RasterTileServerType {
+  type: TileServerNameEnum!
+  label: String!
+  url: String!
 }
 
 input StrFilterLookup {
@@ -1362,6 +1369,11 @@ enum TileServerNameEnum {
   MAXAR_PREMIUM
   ESRI
   ESRI_BETA
+}
+
+type TileServersType {
+  vector: [VectorTileServerType!]!
+  raster: [RasterTileServerType!]!
 }
 
 """
@@ -1870,4 +1882,13 @@ enum VectorTileServerNameEnum {
   OPEN_STREET_MAP
   OPEN_FREE_MAP
   VERSATILES
+}
+
+type VectorTileServerType {
+  type: VectorTileServerNameEnum!
+  label: String!
+  url: String!
+  layers: [String!]!
+  minZoom: Int
+  maxZoom: Int
 }

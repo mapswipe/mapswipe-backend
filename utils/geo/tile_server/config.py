@@ -27,6 +27,7 @@ class Config:
         VectorTileServerNameEnum.VERSATILES: "https://tiles.versatiles.org/assets/styles/colorful/style.json",
     }
 
+    # FIXME(tnagorra): This will be obsolete soon
     IMAGE_URLS = {
         TileServerNameEnum.BING: ("https://ecn.t0.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=7505&token={key}"),
         TileServerNameEnum.MAPBOX: ("https://d.tiles.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg?access_token={key}"),
@@ -55,6 +56,7 @@ class Config:
         # ),
     }
 
+    # FIXME(tnagorra): This will be obsolete soon
     IMAGE_API_KEYS = {
         TileServerNameEnum.BING: settings.MAP_IMAGE_BING_API_KEY,
         TileServerNameEnum.MAPBOX: settings.MAP_IMAGE_MAPBOX_API_KEY,
@@ -63,4 +65,36 @@ class Config:
         TileServerNameEnum.ESRI: settings.MAP_IMAGE_ESRI_API_KEY,
         TileServerNameEnum.ESRI_BETA: settings.MAP_IMAGE_ESRI_BETA_API_KEY,
         # "digital_globe": settings.MAP_IMAGE_DIGITAL_GLOBE_API_KEY,
+    }
+
+    IMAGE_URLS_WITH_KEY = {
+        TileServerNameEnum.BING: (  # noqa: UP032
+            "https://ecn.t0.tiles.virtualearth.net/tiles/a{{quadkey}}.jpeg?g=7505&token={key}"
+        ).format(key=settings.MAP_IMAGE_BING_API_KEY),
+        TileServerNameEnum.MAPBOX: (  # noqa: UP032
+            "https://d.tiles.mapbox.com/v4/mapbox.satellite/{{z}}/{{x}}/{{y}}.jpg?access_token={key}"
+        ).format(key=settings.MAP_IMAGE_MAPBOX_API_KEY),
+        TileServerNameEnum.MAXAR_PREMIUM: (  # noqa: UP032
+            "https://services.digitalglobe.com"
+            "/earthservice/tmsaccess/tms/1.0.0"
+            "/DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg"
+            "/{{z}}/{{x}}/{{y}}.jpg?connectId={key}"
+        ).format(key=settings.MAP_IMAGE_MAXAR_PREMIUM_API_KEY),
+        TileServerNameEnum.MAXAR_STANDARD: (  # noqa: UP032
+            "https://services.digitalglobe.com"
+            "/earthservice/tmsaccess/tms/1.0.0"
+            "/DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg"
+            "/{{z}}/{{x}}/{{y}}.jpg?connectId={key}"
+        ).format(key=settings.MAP_IMAGE_MAXAR_STANDARD_API_KEY),
+        TileServerNameEnum.ESRI: (
+            "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{{z}}/{{x}}/{{y}}"
+        ),
+        TileServerNameEnum.ESRI_BETA: (
+            "https://clarity.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{{z}}/{{x}}/{{y}}"
+        ),
+        # "sinergise": (
+        #     "https://services.sentinel-hub.com"
+        #     + "/ogc/wmts/{key}?request=getTile&tilematrixset=PopularWebMercator256&"
+        #     + "tilematrix={{z}}&tilecol={{x}}&tilerow={{y}}&layer={{layer}}"
+        # ),
     }

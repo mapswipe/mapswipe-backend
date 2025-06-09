@@ -3,13 +3,137 @@ import strawberry_django
 from strawberry_django.pagination import OffsetPaginated
 from strawberry_django.permissions import IsAuthenticated
 
+from utils.geo.tile_server.config import Config, TileServerNameEnum, VectorTileServerNameEnum
+
 from .filters import OrganizationFilter, ProjectAssetFilter, ProjectFilter
 from .orders import OrganizationOrder, ProjectAssetOrder, ProjectOrder
-from .types import OrganizationType, ProjectAssetType, ProjectType
+from .types import (
+    OrganizationType,
+    ProjectAssetType,
+    ProjectType,
+    RasterTileServerType,
+    TileServersType,
+    VectorTileServerType,
+)
+
+
+def get_tile_servers() -> TileServersType:
+    vector_tiles = [
+        VectorTileServerType(
+            type=VectorTileServerNameEnum.OPEN_STREET_MAP,
+            label=VectorTileServerNameEnum.OPEN_STREET_MAP.label,
+            url=Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.OPEN_STREET_MAP],
+            # FIXME(tnagorra): Need to check what layers we want
+            # FIXME(tnagorra): Should we also include the source: versatiles-shortbread
+            min_zoom=None,
+            max_zoom=None,
+            layers=[
+                "dam_polygons",
+                "ferries",
+                "water_lines",
+                "buildings",
+                "ocean",
+                "street_polygons",
+                "sites",
+                "bridges",
+                "water_polygons",
+                "dam_lines",
+                "boundaries",
+                "land",
+                "streets",
+                "pier_lines",
+                "pier_polygons",
+            ],
+        ),
+        VectorTileServerType(
+            type=VectorTileServerNameEnum.VERSATILES,
+            label=VectorTileServerNameEnum.VERSATILES.label,
+            url=Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.VERSATILES],
+            # FIXME(tnagorra): Need to check what layers we want
+            # FIXME(tnagorra): Should we also include the source: versatiles-shortbread
+            min_zoom=0,
+            max_zoom=14,
+            layers=[
+                "dam_polygons",
+                "ferries",
+                "water_lines",
+                "buildings",
+                "ocean",
+                "street_polygons",
+                "sites",
+                "bridges",
+                "water_polygons",
+                "dam_lines",
+                "boundaries",
+                "land",
+                "streets",
+                "pier_lines",
+                "pier_polygons",
+            ],
+        ),
+        VectorTileServerType(
+            type=VectorTileServerNameEnum.OPEN_FREE_MAP,
+            label=VectorTileServerNameEnum.OPEN_FREE_MAP.label,
+            url=Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.OPEN_FREE_MAP],
+            # FIXME(tnagorra): Need to check what layers we want
+            # FIXME(tnagorra): Should we also include the source: openmaptiles
+            min_zoom=0,
+            max_zoom=14,
+            layers=[
+                "boundary",
+                "aeroway",
+                "landcover",
+                "water",
+                "landuse",
+                "building",
+                "park",
+                "waterway",
+                "transportation",
+            ],
+        ),
+    ]
+    raster_tiles = [
+        RasterTileServerType(
+            type=TileServerNameEnum.BING,
+            label=TileServerNameEnum.BING.label,
+            url=Config.IMAGE_URLS_WITH_KEY[TileServerNameEnum.BING],
+        ),
+        RasterTileServerType(
+            type=TileServerNameEnum.MAPBOX,
+            label=TileServerNameEnum.MAPBOX.label,
+            url=Config.IMAGE_URLS_WITH_KEY[TileServerNameEnum.MAPBOX],
+        ),
+        RasterTileServerType(
+            type=TileServerNameEnum.MAXAR_STANDARD,
+            label=TileServerNameEnum.MAXAR_STANDARD.label,
+            url=Config.IMAGE_URLS_WITH_KEY[TileServerNameEnum.MAXAR_STANDARD],
+        ),
+        RasterTileServerType(
+            type=TileServerNameEnum.MAXAR_PREMIUM,
+            label=TileServerNameEnum.MAXAR_PREMIUM.label,
+            url=Config.IMAGE_URLS_WITH_KEY[TileServerNameEnum.MAXAR_PREMIUM],
+        ),
+        RasterTileServerType(
+            type=TileServerNameEnum.ESRI,
+            label=TileServerNameEnum.ESRI.label,
+            url=Config.IMAGE_URLS_WITH_KEY[TileServerNameEnum.ESRI],
+        ),
+        RasterTileServerType(
+            type=TileServerNameEnum.ESRI_BETA,
+            label=TileServerNameEnum.ESRI_BETA.label,
+            url=Config.IMAGE_URLS_WITH_KEY[TileServerNameEnum.ESRI_BETA],
+        ),
+    ]
+    return TileServersType(
+        vector=vector_tiles,
+        raster=raster_tiles,
+    )
 
 
 @strawberry.type
 class Query:
+    tile_servers: TileServersType = strawberry.field(resolver=get_tile_servers, extensions=[IsAuthenticated()])
+
     # Private --------------------
     project: ProjectType = strawberry_django.field(extensions=[IsAuthenticated()])
 
