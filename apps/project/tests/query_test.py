@@ -16,6 +16,8 @@ class TestProjectQuery(TestCase):
                   credits
                   sourceName
                   url
+                  minZoom
+                  maxZoom
                 }
                 openFreeMap {
                   credits
@@ -257,6 +259,8 @@ class TestProjectQuery(TestCase):
                                     "url": "https://custom-osm-data",
                                     "credits": "custom osm",
                                     "source_name": "custom-source-name",
+                                    "min_zoom": 0,
+                                    "max_zoom": 14,
                                 },
                                 "openStreetMap": None,
                                 "openFreeMap": None,

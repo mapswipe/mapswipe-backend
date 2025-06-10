@@ -26,6 +26,8 @@ class BaseTileServer(ABC):
     api_key: str
     credits: str | None
 
+    # FIXME(tnagorra): We might need to move this to pydantic object
+    # FIXME(tnagorra): We should not support {{x}} syntax as we will be using maplibre
     @staticmethod
     def check_imagery_url(url: str) -> bool:
         """Check if imagery url contains xyz or quad key placeholders."""
@@ -40,7 +42,7 @@ class BaseTileServer(ABC):
         if "{quadkey}" in url and "{{quadkey}}" not in url:
             return True
         raise BaseTileServerException(
-            f"The imagery url {url} must contain {{x}}, {{y}} (or {{-y}}) and {{{{z}}}} or the {{quadkey}} placeholders.",
+            f"The imagery url {url} must contain {{x}}, {{y}} (or {{-y}}) and {{z}} or the {{quadkey}} placeholders.",
         )
 
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
@@ -195,8 +197,25 @@ class BaseVectorTileServer(ABC):
     source_name: str
     credits: str | None
 
+    # FIXME(tnagorra): We might need to move this to pydantic object
+    # FIXME(tnagorra): We should not support {{x}} syntax as we will be using maplibre
+    @staticmethod
+    def check_imagery_url(url: str) -> bool:
+        """Check if imagery url contains xyz or quad key placeholders."""
+        if all([substring in url for substring in ["{x}", "{y}", "{z}"]]) and not any(
+            [substring in url for substring in ["{{x}}", "{{y}}", "{{z}}"]],
+        ):
+            return True
+        if all([substring in url for substring in ["{x}", "{-y}", "{z}"]]) and not any(
+            [substring in url for substring in ["{{x}}", "{{-y}}", "{{z}}"]],
+        ):
+            return True
+        raise BaseTileServerException(
+            f"The imagery url {url} must contain {{x}}, {{y}} (or {{-y}}) and {{z}} placeholders.",
+        )
 
-class CustomVectorTileServer(BaseTileServer):
+
+class CustomVectorTileServer(BaseVectorTileServer):
     type = VectorTileServerNameEnum.CUSTOM
 
     def __init__(
@@ -208,7 +227,7 @@ class CustomVectorTileServer(BaseTileServer):
         self.credits = config.credits
 
 
-class OpenStreetMapVectorTileServer(BaseTileServer):
+class OpenStreetMapVectorTileServer(BaseVectorTileServer):
     type = VectorTileServerNameEnum.OPEN_STREET_MAP
     url = Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.OPEN_STREET_MAP]
 
@@ -220,7 +239,7 @@ class OpenStreetMapVectorTileServer(BaseTileServer):
         self.credits = config.credits
 
 
-class OpenFreeMapVectorTileServer(BaseTileServer):
+class OpenFreeMapVectorTileServer(BaseVectorTileServer):
     type = VectorTileServerNameEnum.OPEN_FREE_MAP
     url = Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.OPEN_FREE_MAP]
 
@@ -232,7 +251,7 @@ class OpenFreeMapVectorTileServer(BaseTileServer):
         self.credits = config.credits
 
 
-class VersatilesVectorTileServer(BaseTileServer):
+class VersatilesVectorTileServer(BaseVectorTileServer):
     type = VectorTileServerNameEnum.VERSATILES
     url = Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.VERSATILES]
 

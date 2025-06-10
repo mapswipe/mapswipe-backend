@@ -10,6 +10,7 @@ from apps.project.models import Project, ProjectAsset, ProjectTask, ProjectTaskG
 logger = logging.getLogger(__name__)
 
 
+# FIXME(tnagorra): We should define these in each project type class
 def get_max_time_spend_percentile(project_type: ProjectTypeEnum) -> float:
     """
     Factor calculated by @Hagellach37
@@ -43,7 +44,7 @@ class BaseProjectTaskGroupProperty(BaseModel, ABC): ...
 class BaseProjectTaskProperty(BaseModel, ABC): ...
 
 
-class ValidateException(Exception): ...
+class ValidationException(Exception): ...
 
 
 class BaseProject[
@@ -156,7 +157,7 @@ class BaseProject[
             self.project.update_processing_status(Project.ProcessingStatus.COMPLETED, True)
             self.project.update_status(Project.Status.READY, True)
             return True
-        except ValidateException as ex:
+        except ValidationException as ex:
             logger.error(ex)
             self.project.update_status(Project.Status.FAILED, True)
             return False

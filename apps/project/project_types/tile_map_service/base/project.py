@@ -242,12 +242,12 @@ class TileMapServiceBaseProject[
 
             POLYGON_COUNT_LIMIT = 20
             if len(aoi_polygons) > POLYGON_COUNT_LIMIT:
-                raise base_project.ValidateException(f"AOI should not have more than {POLYGON_COUNT_LIMIT} polygons")
+                raise base_project.ValidationException(f"AOI should not have more than {POLYGON_COUNT_LIMIT} polygons")
 
             # NOTE: The formula was copied from the validation in manager dashboard
             aoi_area = sum([polygon.area for polygon in aoi_polygons])
             allowed_area = 5 * (4 ** (23 - self.project_type_specifics.zoom_level))
             if aoi_area > allowed_area:
-                raise base_project.ValidateException(f"AOI should not have more than {allowed_area} area")
+                raise base_project.ValidationException(f"AOI should not have more than {allowed_area} area")
 
             return aoi_geometry

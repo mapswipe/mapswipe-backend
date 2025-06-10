@@ -1030,7 +1030,7 @@ input ProjectStatusEnumFilterLookup {
 }
 
 type ProjectTileServerCommonConfig {
-  credits: String
+  credits: String!
 }
 
 type ProjectTileServerConfig {
@@ -1057,7 +1057,7 @@ input ProjectTileServerConfigInput {
 
 type ProjectTileServerCustomConfig {
   url: String!
-  credits: String
+  credits: String!
 }
 
 """
@@ -1244,8 +1244,8 @@ input ProjectUpdateInput {
 }
 
 type ProjectVectorTileServerCommonConfig {
-  sourceName: String
-  credits: String
+  sourceName: String!
+  credits: String!
 }
 
 type ProjectVectorTileServerConfig {
@@ -1266,8 +1266,10 @@ input ProjectVectorTileServerConfigInput {
 
 type ProjectVectorTileServerCustomConfig {
   url: String!
-  sourceName: String
-  credits: String
+  sourceName: String!
+  credits: String!
+  minZoom: Int!
+  maxZoom: Int!
 }
 
 type Query {
@@ -1354,12 +1356,12 @@ input StrFilterLookup {
 }
 
 input TileServerCommonConfigInput {
-  credits: String = null
+  credits: String!
 }
 
 input TileServerCustomConfigInput {
   url: String!
-  credits: String = null
+  credits: String!
 }
 
 enum TileServerNameEnum {
@@ -1868,14 +1870,16 @@ type ValidateTutorialTaskPropertyType {
 }
 
 input VectorTileServerCommonConfigInput {
-  sourceName: String = null
-  credits: String = null
+  sourceName: String!
+  credits: String!
 }
 
 input VectorTileServerCustomConfigInput {
   url: String!
-  sourceName: String = null
-  credits: String = null
+  sourceName: String!
+  credits: String!
+  minZoom: Int!
+  maxZoom: Int!
 }
 
 enum VectorTileServerNameEnum {

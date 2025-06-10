@@ -8,11 +8,11 @@ from .config import TileServerNameEnum, VectorTileServerNameEnum
 class TileServerCustomConfig(BaseModel):
     # NOTE: URL validation is currently defined in BaseTileServer.check_imagery_url
     url: typing.Annotated[str, Field(strict=True, max_length=1000)]
-    credits: typing.Annotated[str | None, Field(strict=True, max_length=1000)] = None
+    credits: typing.Annotated[str, Field(strict=True, max_length=1000)]
 
 
 class TileServerCommonConfig(BaseModel):
-    credits: typing.Annotated[str | None, Field(strict=True, max_length=1000)] = None
+    credits: typing.Annotated[str, Field(strict=True, max_length=1000)]
 
 
 class TileServerConfig(BaseModel):
@@ -78,13 +78,15 @@ class TileServerConfig(BaseModel):
 class VectorTileServerCustomConfig(BaseModel):
     # FIXME(tnagorra): need to add URL validation
     url: typing.Annotated[str, Field(strict=True, max_length=1000)]
-    source_name: typing.Annotated[str | None, Field(strict=True, max_length=1000)] = None
-    credits: typing.Annotated[str | None, Field(strict=True, max_length=1000)] = None
+    source_name: typing.Annotated[str, Field(strict=True, max_length=1000)]
+    credits: typing.Annotated[str, Field(strict=True, max_length=1000)]
+    min_zoom: typing.Annotated[int, Field(strict=True, ge=0, lt=23)]
+    max_zoom: typing.Annotated[int, Field(strict=True, ge=0, lt=23)]
 
 
 class VectorTileServerCommonConfig(BaseModel):
-    source_name: typing.Annotated[str | None, Field(strict=True, max_length=1000)] = None
-    credits: typing.Annotated[str | None, Field(strict=True, max_length=1000)] = None
+    source_name: typing.Annotated[str, Field(strict=True, max_length=1000)]
+    credits: typing.Annotated[str, Field(strict=True, max_length=1000)]
 
 
 class VectorTileServerConfig(BaseModel):

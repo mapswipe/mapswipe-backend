@@ -39,9 +39,6 @@ class ValidateRawGroupItem(TypedDict):
     features: list[ValidFeature]
 
 
-ValidateRawGroup = dict[str, ValidateRawGroupItem]
-
-
 # FIXME(tnagorra): We need to refactor this codeblock
 # Example: We no longer need tutorial parameter
 def group_input_geometries(features: list[ValidFeature], group_size: int, tutorial: bool = False):
