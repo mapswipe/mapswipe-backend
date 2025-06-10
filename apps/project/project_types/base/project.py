@@ -64,7 +64,7 @@ class BaseProject[
 
     @classmethod
     def _inheritance_checks(cls):
-        # TODO(thenav56): Find a better way to skip for base classes
+        # FIXME(thenav56): Find a better way to skip for base classes
         if cls.__name__.endswith("BaseProject"):
             # Skip check for the abstract class
             return

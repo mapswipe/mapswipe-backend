@@ -23,7 +23,7 @@ for _logger in IGNORED_LOGGERS:
     ignore_logger(_logger)
 
 
-# TODO(thenav56): figure out way to import Event and Hint or extract from sentry_sdk.init
+# FIXME(thenav56): figure out way to import Event and Hint or extract from sentry_sdk.init
 # def sentry_before_send(event: Event, hint: Hint):
 def sentry_before_send(event: typing.Any, hint: typing.Any):
     # Check if the exception is a GraphQLError

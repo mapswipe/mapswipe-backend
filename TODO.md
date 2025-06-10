@@ -24,3 +24,8 @@
 ## Project Types
 - [ ] Implement Validate
 - [ ] Update Completeness to support vector tiles and rendering
+
+## Questions
+
+- Should user be able to edit client_id?
+- Should we cache request/response from community dashboard queries?

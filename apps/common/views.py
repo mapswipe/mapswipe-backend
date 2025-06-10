@@ -11,7 +11,7 @@ if typing.TYPE_CHECKING:
     from utils.git import GitHelper
 
 
-# TODO: Maybe a better approach then this?
+# FIXME: Maybe a better approach then this?
 def get_version_from_pyproject(base_path: Path) -> str:
     data = toml.load(settings.BASE_DIR / base_path / "pyproject.toml")
     return data["project"]["version"]

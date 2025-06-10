@@ -200,7 +200,7 @@ class TileMapServiceBaseProject[
 
         for _, raw_group in raw_groups.items():
             # Create new group
-            # TODO(thenav56): Bulk create here as well?
+            # FIXME(thenav56): Bulk create here as well?
             new_group = ProjectTaskGroup.objects.create(
                 project_id=self.project.pk,
                 number_of_tasks=0,
