@@ -3,22 +3,26 @@ import re
 import typing
 
 
-# TODO(tnagorra): We might also need to support iterating in lists
-def clean_up_none_keys(data: dict[typing.Any, typing.Any]):
+def clean_up_none_keys(data: typing.Any):
     """
-    Remove keys with none values (Also supports nested dict)
+    Remove keys with none values (Also supports nested dict and list)
     Input:
      {"a": None, "b": "Hi"}
     Output:
      {"b": "Hi"}
     """
-    _clone_data = copy.deepcopy(data)
-    for key, value in data.items():
-        if value is None:
-            _clone_data.pop(key)
-        if isinstance(value, dict):
-            _clone_data[key] = clean_up_none_keys(value)
-    return _clone_data
+
+    if isinstance(data, list):
+        return [clean_up_none_keys(x) for x in data]
+    if isinstance(data, dict):
+        _clone_data = copy.deepcopy(data)
+        for key, value in data.items():
+            if value is None:
+                _clone_data.pop(key)
+            else:
+                _clone_data[key] = clean_up_none_keys(value)
+        return _clone_data
+    return data
 
 
 # Adapted from this response in Stackoverflow
