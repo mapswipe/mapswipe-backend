@@ -113,10 +113,10 @@ class VectorTileServerConfig(BaseModel):
                     raise ValueError("open street map config is required")
                 return self
             case VectorTileServerNameEnum.OPEN_FREE_MAP:
-                if self.open_street_map is None:
-                    raise ValueError("open street map config is required")
+                if self.open_free_map is None:
+                    raise ValueError("open free map config is required")
                 return self
             case VectorTileServerNameEnum.VERSATILES:
-                if self.open_street_map is None:
-                    raise ValueError("open street map config is required")
+                if self.versatiles is None:
+                    raise ValueError("versatiles config is required")
                 return self

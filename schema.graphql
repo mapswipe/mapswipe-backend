@@ -1302,6 +1302,7 @@ type RasterTileServerType {
   type: TileServerNameEnum!
   label: String!
   url: String!
+  credits: String!
 }
 
 input StrFilterLookup {
@@ -1891,4 +1892,5 @@ type VectorTileServerType {
   layers: [String!]!
   minZoom: Int
   maxZoom: Int
+  credits: String!
 }

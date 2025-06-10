@@ -22,9 +22,12 @@ class TileServerNameEnum(models.TextChoices):
 
 class Config:
     VECTOR_IMAGE_URLS = {
-        VectorTileServerNameEnum.OPEN_STREET_MAP: "https://vector.osm.org/demo/shortbread/colorful.json",
-        VectorTileServerNameEnum.OPEN_FREE_MAP: "https://tiles.openfreemap.org/styles/liberty",
-        VectorTileServerNameEnum.VERSATILES: "https://tiles.versatiles.org/assets/styles/colorful/style.json",
+        # VectorTileServerNameEnum.OPEN_STREET_MAP: "https://vector.osm.org/demo/shortbread/colorful.json",
+        VectorTileServerNameEnum.OPEN_STREET_MAP: "https://vector.osm.org/shortbread_v1/{z}/{x}/{y}.mvt",
+        # VectorTileServerNameEnum.OPEN_FREE_MAP: "https://tiles.openfreemap.org/styles/liberty",
+        VectorTileServerNameEnum.OPEN_FREE_MAP: "https://tiles.openfreemap.org/planet/20250528_001001_pt/{z}/{x}/{y}.pbf",
+        # VectorTileServerNameEnum.VERSATILES: "https://tiles.versatiles.org/assets/styles/colorful/style.json",
+        VectorTileServerNameEnum.VERSATILES: "https://tiles.versatiles.org/tiles/osm/{z}/{x}/{y}",
     }
 
     # FIXME(tnagorra): This will be obsolete soon
@@ -87,10 +90,10 @@ class Config:
             "/{{z}}/{{x}}/{{y}}.jpg?connectId={key}"
         ).format(key=settings.MAP_IMAGE_MAXAR_STANDARD_API_KEY),
         TileServerNameEnum.ESRI: (
-            "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{{z}}/{{x}}/{{y}}"
+            "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         ),
         TileServerNameEnum.ESRI_BETA: (
-            "https://clarity.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{{z}}/{{x}}/{{y}}"
+            "https://clarity.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         ),
         # "sinergise": (
         #     "https://services.sentinel-hub.com"

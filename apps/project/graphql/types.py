@@ -29,6 +29,7 @@ class VectorTileServerType:
     layers: list[str]
     min_zoom: int | None
     max_zoom: int | None
+    credits: str
 
 
 @strawberry.type
@@ -38,6 +39,7 @@ class RasterTileServerType:
     url: str
     # min_zoom: int | None
     # max_zoom: int | None
+    credits: str
 
 
 @strawberry.type
