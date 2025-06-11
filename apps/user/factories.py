@@ -13,7 +13,7 @@ from .models import User
 class UserFactory(DjangoModelFactory):
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
-    email = factory.Sequence(lambda n: f"{n}@xyz.com")
+    email = factory.Sequence(lambda n: f"user{n}@mapswipe.org")
 
     class Meta:
         model = User

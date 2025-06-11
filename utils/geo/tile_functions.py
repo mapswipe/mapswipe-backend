@@ -7,7 +7,7 @@ import math
 from osgeo import ogr
 
 
-class Point:
+class _Point:
     """
     The basic class point representing a Pixel
     Attributes
@@ -23,7 +23,7 @@ class Point:
         self.y = y
 
 
-class Tile:
+class _Tile:
     """
     The basic class tile representing a TMS tile
 
@@ -43,7 +43,7 @@ class Tile:
 def lat_long_zoom_to_pixel_coords(lat: float, lon: float, zoom: int):
     """Compute pixel coordinates from lat-long point at a given zoom level."""
 
-    p = Point()
+    p = _Point()
     sinLat = math.sin(lat * math.pi / 180.0)
     x = ((lon + 180) / 360) * 256 * math.pow(2, zoom)
     y = (
@@ -71,7 +71,7 @@ def pixel_coords_zoom_to_lat_lon(PixelX: float, PixelY: float, zoom: int):
 def pixel_coords_to_tile_address(PixelX: float, PixelY: float):
     """Compute a tile address from pixel coordinates of point within tile."""
 
-    t = Tile()
+    t = _Tile()
     t.x = int(math.floor(PixelX / 256))
     t.y = int(math.floor(PixelY / 256))
     return t

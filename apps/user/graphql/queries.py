@@ -24,6 +24,7 @@ class Query:
 
     # Private --------------------
     # --- Paginated
+    # TODO(tnagorra): We should only list active users
     users: OffsetPaginated[UserType] = strawberry_django.offset_paginated(
         order=UserOrder,
         filters=UserFilter,

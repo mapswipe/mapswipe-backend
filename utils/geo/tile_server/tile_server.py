@@ -21,7 +21,7 @@ from .models import (
 class BaseTileServerException(Exception): ...
 
 
-class BaseTileServer(ABC):
+class _BaseTileServer(ABC):
     """Create a tile server class."""
 
     name: TileServerNameEnum
@@ -47,7 +47,7 @@ class BaseTileServer(ABC):
         )
 
 
-class CustomTileServer(BaseTileServer):
+class CustomTileServer(_BaseTileServer):
     name = TileServerNameEnum.CUSTOM
 
     def __init__(
@@ -68,7 +68,7 @@ class CustomTileServer(BaseTileServer):
         )
 
 
-class CommonTileServer(BaseTileServer):
+class _CommonTileServer(_BaseTileServer):
     def __init__(
         self,
         config: TileServerCommonConfig,
@@ -86,7 +86,7 @@ class CommonTileServer(BaseTileServer):
             raise NotImplementedError(f"Please define url for {cls}")
 
 
-class BingTileServer(CommonTileServer):
+class BingTileServer(_CommonTileServer):
     name = TileServerNameEnum.BING
     url = Config.IMAGE_URLS[TileServerNameEnum.BING]
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.BING]
@@ -100,13 +100,13 @@ class BingTileServer(CommonTileServer):
         )
 
 
-class MapboxTileServer(CommonTileServer):
+class MapboxTileServer(_CommonTileServer):
     name = TileServerNameEnum.MAPBOX
     url = Config.IMAGE_URLS[TileServerNameEnum.MAPBOX]
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.MAPBOX]
 
 
-class MaxarStandardTileServer(CommonTileServer):
+class MaxarStandardTileServer(_CommonTileServer):
     name = TileServerNameEnum.MAXAR_STANDARD
     url = Config.IMAGE_URLS[TileServerNameEnum.MAXAR_STANDARD]
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.MAXAR_STANDARD]
@@ -132,7 +132,7 @@ class MaxarPremiumTileServer(MaxarStandardTileServer):
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.MAXAR_PREMIUM]
 
 
-class EsriTileServer(CommonTileServer):
+class EsriTileServer(_CommonTileServer):
     name = TileServerNameEnum.ESRI
     url = Config.IMAGE_URLS[TileServerNameEnum.ESRI]
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.ESRI]
@@ -182,7 +182,7 @@ def get_tile_server(config: TileServerConfig) -> AvailableTileServerTypeAlias:
             return EsriBetaTileServer(config.esri_beta)
 
 
-class BaseVectorTileServer(ABC):
+class _BaseVectorTileServer(ABC):
     """Create a tile server class."""
 
     type: VectorTileServerNameEnum
@@ -200,7 +200,7 @@ class BaseVectorTileServer(ABC):
             raise BaseTileServerException(e.message) from e
 
 
-class CustomVectorTileServer(BaseVectorTileServer):
+class CustomVectorTileServer(_BaseVectorTileServer):
     type = VectorTileServerNameEnum.CUSTOM
 
     def __init__(
@@ -212,7 +212,7 @@ class CustomVectorTileServer(BaseVectorTileServer):
         self.credits = config.credits
 
 
-class OpenStreetMapVectorTileServer(BaseVectorTileServer):
+class OpenStreetMapVectorTileServer(_BaseVectorTileServer):
     type = VectorTileServerNameEnum.OPEN_STREET_MAP
     url = Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.OPEN_STREET_MAP]
 
@@ -224,7 +224,7 @@ class OpenStreetMapVectorTileServer(BaseVectorTileServer):
         self.credits = config.credits
 
 
-class OpenFreeMapVectorTileServer(BaseVectorTileServer):
+class OpenFreeMapVectorTileServer(_BaseVectorTileServer):
     type = VectorTileServerNameEnum.OPEN_FREE_MAP
     url = Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.OPEN_FREE_MAP]
 
@@ -236,7 +236,7 @@ class OpenFreeMapVectorTileServer(BaseVectorTileServer):
         self.credits = config.credits
 
 
-class VersatilesVectorTileServer(BaseVectorTileServer):
+class VersatilesVectorTileServer(_BaseVectorTileServer):
     type = VectorTileServerNameEnum.VERSATILES
     url = Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.VERSATILES]
 
