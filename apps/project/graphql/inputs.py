@@ -7,11 +7,31 @@ from apps.common.graphql.inputs import (
     UserResourceTopLevelUpdateInputMixin,
 )
 from apps.project.models import Organization, Project, ProjectAsset
-from apps.project.project_types.tile_map_service.compare import project as compare_project
-from apps.project.project_types.tile_map_service.completeness import project as completeness_project
-from apps.project.project_types.tile_map_service.find import project as find_project
-from apps.project.project_types.validate import project as validate_project
-from utils.geo.tile_server.models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
+from project_types.tile_map_service.compare import project as compare_project
+from project_types.tile_map_service.completeness import project as completeness_project
+from project_types.tile_map_service.find import project as find_project
+from project_types.validate import project as validate_project
+from utils.geo.tile_server.models import (
+    TileServerCommonConfig,
+    TileServerConfig,
+    TileServerCustomConfig,
+)
+from utils.geo.vector_tile_server.models import (
+    VectorTileServerCommonConfig,
+    VectorTileServerConfig,
+    VectorTileServerCustomConfig,
+)
+
+
+# Organization
+@strawberry_django.input(Organization)
+class OrganizationCreateInput(UserResourceCreateInputMixin):
+    name: strawberry.auto
+
+
+@strawberry_django.input(Organization)
+class OrganizationUpdateInput(UserResourceTopLevelUpdateInputMixin):
+    name: strawberry.auto
 
 
 # Tile server
@@ -23,51 +43,66 @@ class TileServerCustomConfigInput: ...
 class TileServerCommonConfigInput: ...
 
 
+# FIXME(tnagorra): Add one_of here?
 @strawberry.experimental.pydantic.input(model=TileServerConfig, all_fields=True)
 class ProjectTileServerConfigInput: ...
 
 
-@strawberry.experimental.pydantic.input(model=completeness_project.VectorTileServerConfig, all_fields=True)
+# Vector tile server
+@strawberry.experimental.pydantic.input(model=VectorTileServerCustomConfig, all_fields=True)
+class VectorTileServerCustomConfigInput: ...
+
+
+@strawberry.experimental.pydantic.input(model=VectorTileServerCommonConfig, all_fields=True)
+class VectorTileServerCommonConfigInput: ...
+
+
+# FIXME(tnagorra): Add one_of here?
+@strawberry.experimental.pydantic.input(model=VectorTileServerConfig, all_fields=True)
 class ProjectVectorTileServerConfigInput: ...
 
 
-@strawberry.experimental.pydantic.input(model=completeness_project.OverlayTileServerConfig, all_fields=True)
-class ProjectOverlayTileServerConfigInput:
-    raster: TileServerConfig | None = strawberry.UNSET
-    vector: completeness_project.VectorTileServerConfig | None = strawberry.UNSET
-
-
-@strawberry.experimental.pydantic.input(model=validate_project.ValidateObjectSourceConfig, all_fields=True)
-class ValidateObjectSourceConfigInput: ...
-
-
-# Project Properties
+# Project Properties: Compare
 @strawberry.experimental.pydantic.input(model=compare_project.CompareProjectProperty, all_fields=True)
 class CompareProjectPropertyInput: ...
 
 
+# Project Properties: Find
 @strawberry.experimental.pydantic.input(model=find_project.FindProjectProperty, all_fields=True)
 class FindProjectPropertyInput: ...
+
+
+# Project Properties: Validate
+@strawberry.experimental.pydantic.input(model=validate_project.ValidateObjectSourceConfig, all_fields=True)
+class ValidateObjectSourceConfigInput: ...
+
+
+# FIXME(tnagorra): Add one_of here?
+@strawberry.experimental.pydantic.input(model=validate_project.ValidateProjectProperty, all_fields=True)
+class ValidateProjectPropertyInput: ...
+
+
+# Project Properties: Completeness
+@strawberry.experimental.pydantic.input(model=completeness_project.OverlayVectorTileServerConfig, all_fields=True)
+class ProjectOverlayVectorTileServerConfigInput: ...
+
+
+@strawberry.experimental.pydantic.input(model=completeness_project.OverlayRasterTileServerConfig, all_fields=True)
+class ProjectOverlayRasterTileServerConfigInput: ...
+
+
+# FIXME(tnagorra): Add one_of here?
+@strawberry.experimental.pydantic.input(model=completeness_project.OverlayTileServerConfig, all_fields=True)
+class ProjectOverlayTileServerConfigInput:
+    raster: TileServerConfig | None = strawberry.UNSET
+    vector: completeness_project.OverlayVectorTileServerConfig | None = strawberry.UNSET
 
 
 @strawberry.experimental.pydantic.input(model=completeness_project.CompletenessProjectProperty, all_fields=True)
 class CompletenessProjectPropertyInput: ...
 
 
-@strawberry.experimental.pydantic.input(model=validate_project.ValidateProjectProperty, all_fields=True)
-class ValidateProjectPropertyInput: ...
-
-
-@strawberry_django.input(Organization)
-class OrganizationCreateInput(UserResourceCreateInputMixin):
-    name: strawberry.auto
-
-
-@strawberry_django.input(Organization)
-class OrganizationUpdateInput(UserResourceTopLevelUpdateInputMixin):
-    name: strawberry.auto
-
-
+# Project Properties
 @strawberry.input(one_of=True)
 class ProjectTypeSpecificInput:
     compare: CompareProjectPropertyInput | None = strawberry.UNSET

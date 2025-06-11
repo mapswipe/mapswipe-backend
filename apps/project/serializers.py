@@ -6,10 +6,7 @@ from django.utils.translation import gettext
 from rest_framework import serializers
 
 from apps.common.serializers import UserResourceSerializer
-from apps.project.project_types.tile_map_service.compare import project as compare_project
-from apps.project.project_types.tile_map_service.completeness import project as completeness_project
-from apps.project.project_types.tile_map_service.find import project as find_project
-from apps.project.project_types.validate import project as validate_project
+from project_types.store import get_project_property
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
@@ -39,21 +36,6 @@ VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS = set(
         (Project.Status.PAUSED, Project.Status.PUBLISHED),
     ],
 )
-
-
-# FIXME(tnagorra): Move this to utils
-def get_project_property(project_type: ProjectTypeEnum | None):
-    if project_type is None:
-        return None
-    if project_type == ProjectTypeEnum.COMPARE:
-        return ("compare", compare_project.CompareProjectProperty)
-    if project_type == ProjectTypeEnum.FIND:
-        return ("find", find_project.FindProjectProperty)
-    if project_type == ProjectTypeEnum.VALIDATE:
-        return ("validate", validate_project.ValidateProjectProperty)
-    if project_type == ProjectTypeEnum.COMPLETENESS:
-        return ("completeness", completeness_project.CompletenessProjectProperty)
-    typing.assert_never(project_type)
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py

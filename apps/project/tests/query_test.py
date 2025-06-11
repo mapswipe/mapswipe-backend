@@ -10,6 +10,28 @@ from utils.common import format_object_keys, to_camel_case
 class TestProjectQuery(TestCase):
     class Query:
         PROJECTS = """
+            fragment VectorTileServerPropertyFields on ProjectVectorTileServerConfig {
+                name
+                custom {
+                  credits
+                  sourceName
+                  url
+                  minZoom
+                  maxZoom
+                }
+                openFreeMap {
+                  credits
+                  sourceName
+                }
+                openStreetMap {
+                  credits
+                  sourceName
+                }
+                versatiles {
+                  credits
+                  sourceName
+                }
+            }
             fragment TileServerPropertyFields on ProjectTileServerConfig {
               name
               bing {
@@ -72,21 +94,25 @@ class TestProjectQuery(TestCase):
                       }
                       overlayTileServerProperty {
                         type
-                        raster {
-                          ...TileServerPropertyFields
-                        }
                         vector {
-                          url
-                          credits
-                          sourceName
-                          fillColor
-                          fillOpacity
-                          lineColor
-                          lineOpacity
-                          lineWidth
                           circleColor
                           circleOpacity
                           circleRadius
+                          fillColor
+                          fillOpacity
+                          lineColor
+                          lineDasharray
+                          lineOpacity
+                          lineWidth
+                          tileServer {
+                              ...VectorTileServerPropertyFields
+                          }
+                        }
+                        raster {
+                          opacity
+                          tileServer {
+                              ...TileServerPropertyFields
+                          }
                         }
                       }
                     }
@@ -186,17 +212,20 @@ class TestProjectQuery(TestCase):
                         "type": "RASTER_TILE",
                         "vector": None,
                         "raster": {
-                            "name": "CUSTOM",
-                            "custom": {
-                                "url": "https://hi-there/{x}/{y}/{z}",
-                                "credits": "My Map",
+                            "opacity": 1.0,
+                            "tile_server": {
+                                "name": "CUSTOM",
+                                "custom": {
+                                    "url": "https://hi-there/{x}/{y}/{z}",
+                                    "credits": "My Map",
+                                },
+                                "bing": None,
+                                "mapbox": None,
+                                "maxar_standard": None,
+                                "maxar_premium": None,
+                                "esri": None,
+                                "esri_beta": None,
                             },
-                            "bing": None,
-                            "mapbox": None,
-                            "maxar_standard": None,
-                            "maxar_premium": None,
-                            "esri": None,
-                            "esri_beta": None,
                         },
                     },
                 },
@@ -224,14 +253,25 @@ class TestProjectQuery(TestCase):
                         "type": "VECTOR_TILE",
                         "raster": None,
                         "vector": {
-                            "url": "https://custom-osm-data",
-                            "credits": "custom osm",
-                            "source_name": "custom-source-name",
+                            "tile_server": {
+                                "name": "CUSTOM",
+                                "custom": {
+                                    "url": "https://custom-osm-data",
+                                    "credits": "custom osm",
+                                    "source_name": "custom-source-name",
+                                    "min_zoom": 0,
+                                    "max_zoom": 14,
+                                },
+                                "openStreetMap": None,
+                                "openFreeMap": None,
+                                "versatiles": None,
+                            },
                             "fill_color": "#ff00ff",
                             "fill_opacity": 1.0,
                             "line_color": "#ffff00",
                             "line_opacity": 1.0,
                             "line_width": 1.0,
+                            "line_dasharray": [1, 1],
                             "circle_color": "#0000ff",
                             "circle_opacity": 1.0,
                             "circle_radius": 10.0,

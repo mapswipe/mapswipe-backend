@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from main.graphql.context import Info
 
 
-def custom_prepare_create_update(*args, **kwargs):
+def _custom_prepare_create_update(*args, **kwargs):
     info: Info = kwargs["info"]
     user_id = info.context.request.user.pk
     resp_instance, resp_direct_field_values, resp_m2m = prepare_create_update(*args, **kwargs)
@@ -24,4 +24,4 @@ def custom_prepare_create_update(*args, **kwargs):
     return resp_instance, resp_direct_field_values, resp_m2m
 
 
-strawberry_django.mutations.resolvers.prepare_create_update = custom_prepare_create_update
+strawberry_django.mutations.resolvers.prepare_create_update = _custom_prepare_create_update

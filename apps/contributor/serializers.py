@@ -16,7 +16,7 @@ class ContributorUserGroupSerializer(UserResourceSerializer[ContributorUserGroup
             "is_archived",
         )
 
-    # FIXME(tnagorra): We should be able to make this generic
+    # FIXME(tnagorra): We should be able to make archivable models generic
     @typing.override
     def update(self, instance: ContributorUserGroup, validated_data: dict[str, typing.Any]) -> ContributorUserGroup:
         if validated_data["is_archived"] and not instance.is_archived:

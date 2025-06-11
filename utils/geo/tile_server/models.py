@@ -8,11 +8,11 @@ from .config import TileServerNameEnum
 class TileServerCustomConfig(BaseModel):
     # NOTE: URL validation is currently defined in BaseTileServer.check_imagery_url
     url: typing.Annotated[str, Field(strict=True, max_length=1000)]
-    credits: typing.Annotated[str | None, Field(strict=True, max_length=1000)] = None
+    credits: typing.Annotated[str, Field(strict=True, max_length=1000)]
 
 
 class TileServerCommonConfig(BaseModel):
-    credits: typing.Annotated[str | None, Field(strict=True, max_length=1000)] = None
+    credits: typing.Annotated[str, Field(strict=True, max_length=1000)]
 
 
 class TileServerConfig(BaseModel):

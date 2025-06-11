@@ -76,7 +76,7 @@ def handle_pydantic_validation_error(
     )
 
 
-def serializer_error_to_error_types(
+def _serializer_error_to_error_types(
     errors: dict[str, list[CustomErrorType] | None],
     initial_data: dict[typing.Any, typing.Any] | None = None,
 ) -> list[typing.Any]:
@@ -147,7 +147,7 @@ def serializer_error_to_error_types(
                     array_errors.append(
                         ArrayNestedErrorType(
                             client_id=array_client_id,
-                            object_errors=serializer_error_to_error_types(array_item, initial_data[field][pos]),  # type: ignore[reportArgumentType]
+                            object_errors=_serializer_error_to_error_types(array_item, initial_data[field][pos]),  # type: ignore[reportArgumentType]
                             messages=None,
                         ),
                     )
@@ -173,11 +173,11 @@ def serializer_error_to_error_types(
     return error_types
 
 
-def mutation_is_not_valid(serializer) -> CustomErrorType | None:
+def mutation_is_not_valid(serializer: typing.Any) -> CustomErrorType | None:
     """
     Checks if serializer is valid, if not returns list of errorTypes
     """
     if not serializer.is_valid():
-        errors = serializer_error_to_error_types(serializer.errors, serializer.initial_data)
+        errors = _serializer_error_to_error_types(serializer.errors, serializer.initial_data)
         return CustomErrorType([dict(each) for each in errors])
     return None

@@ -20,7 +20,7 @@ def tb_name(model: type[models.Model]) -> str:
     return model._meta.db_table
 
 
-# TODO(thenav56): Add typing for the field
+# FIXME(thenav56): Add typing for the field
 def fd_name(field: typing.Any) -> str:
     return field.field.column
 

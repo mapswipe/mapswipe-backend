@@ -1,11 +1,12 @@
 import typing
 
+from django.core.exceptions import ValidationError
 from django.http.request import HttpRequest
 from django.utils.translation import gettext
 from rest_framework import serializers
-from ulid import ULID
 
 from apps.common.models import UserResource
+from utils.common import validate_ulid
 
 
 class DrfContextType(typing.TypedDict):
@@ -30,11 +31,11 @@ class UserResourceSerializer[ModelType: UserResource, ContextType: DrfContextTyp
             return None
 
         try:
-            ULID.from_str(new_client_id)
+            validate_ulid(new_client_id)
             return new_client_id
-        except (ValueError, TypeError) as err:
+        except ValidationError as err:
             raise serializers.ValidationError(
-                gettext("Not a valid ULID value '%s'") % (new_client_id),
+                gettext("Not a valid ULID value '%s'") % new_client_id,
             ) from err
 
     @property

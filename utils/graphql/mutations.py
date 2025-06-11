@@ -14,7 +14,7 @@ from .types import CustomErrorType, MutationResponseType
 logger = logging.getLogger(__name__)
 
 
-def get_serializer_context(info: Info, extra_context: dict[typing.Any, typing.Any] | None):
+def _get_serializer_context(info: Info, extra_context: dict[typing.Any, typing.Any] | None):
     return {
         "graphql_info": info,
         "request": info.context.request,
@@ -43,7 +43,7 @@ class ModelMutation:
     ) -> tuple[CustomErrorType | None, models.Model | None]:
         serializer = serializer_class(
             data=data,
-            context=get_serializer_context(info, extra_context=extra_context),
+            context=_get_serializer_context(info, extra_context=extra_context),
             **kwargs,
         )
         if errors := mutation_is_not_valid(serializer):

@@ -2,28 +2,30 @@ import dataclasses
 
 import strawberry
 
-from apps.contributor import models as contributor_enums
-from apps.mapping import models as mapping_enums
-from apps.project import models as project_enums
-from apps.project.project_types.tile_map_service.completeness.project import OverlayLayerTypeEnum
-from apps.project.project_types.validate.project import ValidateObjectSourceTypeEnum
-from apps.tutorial import models as tutorial_enums
+from apps.contributor import models as contributor_models
+from apps.mapping import models as mapping_models
+from apps.project import models as project_models
+from apps.tutorial import models as tutorial_models
+from project_types.tile_map_service.completeness.project import OverlayLayerTypeEnum
+from project_types.validate.project import ValidateObjectSourceTypeEnum
 from utils.geo.tile_server.config import TileServerNameEnum
+from utils.geo.vector_tile_server.config import VectorTileServerNameEnum
 
 ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     TileServerNameEnum,
+    VectorTileServerNameEnum,
     ValidateObjectSourceTypeEnum,
     OverlayLayerTypeEnum,
-    project_enums.ProjectTypeEnum,
-    project_enums.ProjectStatusEnum,
-    project_enums.ProjectProcessingStatusEnum,
-    project_enums.ProjectAssetMimetypeEnum,
-    project_enums.ProjectAssetTypeEnum,
-    tutorial_enums.TutorialStatusEnum,
-    tutorial_enums.TutorialInformationPageBlockTypeEnum,
-    tutorial_enums.TutorialScenarioIconEnum,
-    mapping_enums.MappingSessionClientTypeEnum,
-    contributor_enums.ContributorUserGroupMembershipLogActionEnum,
+    project_models.ProjectTypeEnum,
+    project_models.ProjectStatusEnum,
+    project_models.ProjectProcessingStatusEnum,
+    project_models.ProjectAssetMimetypeEnum,
+    project_models.ProjectAssetTypeEnum,
+    tutorial_models.TutorialStatusEnum,
+    tutorial_models.TutorialInformationPageBlockTypeEnum,
+    tutorial_models.TutorialScenarioIconEnum,
+    mapping_models.MappingSessionClientTypeEnum,
+    contributor_models.ContributorUserGroupMembershipLogActionEnum,
 ]
 
 

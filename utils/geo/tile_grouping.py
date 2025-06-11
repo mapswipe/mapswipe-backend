@@ -14,10 +14,10 @@ from . import tile_functions
 logger = logging.getLogger(__name__)
 
 # NOTE: x_min, y_min, x_max, y_max
-type GeoExtent = tuple[float, float, float, float]
+type _GeoExtent = tuple[float, float, float, float]
 
 
-class HorizontalSliceInfo(typing.TypedDict):
+class _HorizontalSliceInfo(typing.TypedDict):
     tile_y_top: list[int]
     tile_y_bottom: list[int]
     slice_collection: GeometryCollection
@@ -38,7 +38,7 @@ class UnSupportedGeoExtensionException(Exception):
 
 
 class AoiGeometry(typing.TypedDict):
-    extent: GeoExtent
+    extent: _GeoExtent
     polygons: list[Polygon]
 
 
@@ -62,10 +62,10 @@ def get_geometry_from_file(infile: str) -> AoiGeometry:
 
 
 def _get_horizontal_slice(
-    extent: GeoExtent,
+    extent: _GeoExtent,
     polygons: list[Polygon],
     zoom: int,
-) -> HorizontalSliceInfo:
+) -> _HorizontalSliceInfo:
     """
     The function slices all input geometries vertically
     using a height of max 3 tiles per geometry.
@@ -142,7 +142,7 @@ def _get_horizontal_slice(
 
             TileY = TileY + 3
 
-    return HorizontalSliceInfo(
+    return _HorizontalSliceInfo(
         tile_y_top=tile_y_top,
         tile_y_bottom=tile_y_bottom,
         slice_collection=slice_collection,
@@ -150,7 +150,7 @@ def _get_horizontal_slice(
 
 
 def _get_vertical_slice(
-    slice_infos: HorizontalSliceInfo,
+    slice_infos: _HorizontalSliceInfo,
     zoom: int,
     width_threshold: int = 40,
 ) -> dict[str, RawGroup]:
@@ -391,7 +391,7 @@ def _adjust_overlapping_groups(
     return groups_without_overlap, overlaps_total
 
 
-def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, groupSize: int) -> dict[str, RawGroup]:
+def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, group_size: int) -> dict[str, RawGroup]:
     """
     The function to polygon geometries of a given input file
     into horizontal slices and then vertical slices.
@@ -418,7 +418,7 @@ def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, groupSize: int) -> di
     horizontal_slice_infos = _get_horizontal_slice(extent, polygons, zoom)
 
     # then get vertical slices --> columns
-    raw_groups_dict = _get_vertical_slice(horizontal_slice_infos, zoom, groupSize)
+    raw_groups_dict = _get_vertical_slice(horizontal_slice_infos, zoom, group_size)
 
     # finally remove overlapping groups
     groups_dict, overlaps_total = _adjust_overlapping_groups(raw_groups_dict, zoom)

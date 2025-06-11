@@ -8,7 +8,6 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
-from django.core.serializers.json import DjangoJSONEncoder
 from pydantic import Field, ValidationInfo, model_validator
 from ulid import ULID
 
@@ -20,21 +19,14 @@ from apps.project.models import (
     ProjectTask,
     ProjectTaskGroup,
 )
-from apps.project.project_types.base import project as base_project
 from main.bulk_managers import BulkCreateManager
+from project_types.base import project as base_project
+from utils.common import create_json_dump
 from utils.geo import tile_functions, tile_grouping
 from utils.geo.tile_server.models import TileServerConfig
 from utils.geo.tile_server.tile_server import AvailableTileServerTypeAlias, get_tile_server
 
 logger = logging.getLogger(__name__)
-
-
-# FIXME(tnagorra): move this to utils
-def create_json_dump(item: dict[typing.Any, typing.Any]) -> bytes:
-    return json.dumps(
-        item,
-        cls=DjangoJSONEncoder,
-    ).encode("utf-8")
 
 
 class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
@@ -200,7 +192,7 @@ class TileMapServiceBaseProject[
 
         for _, raw_group in raw_groups.items():
             # Create new group
-            # TODO(thenav56): Bulk create here as well?
+            # FIXME(thenav56): Bulk create here as well?
             new_group = ProjectTaskGroup.objects.create(
                 project_id=self.project.pk,
                 number_of_tasks=0,
@@ -242,12 +234,12 @@ class TileMapServiceBaseProject[
 
             POLYGON_COUNT_LIMIT = 20
             if len(aoi_polygons) > POLYGON_COUNT_LIMIT:
-                raise base_project.ValidateException(f"AOI should not have more than {POLYGON_COUNT_LIMIT} polygons")
+                raise base_project.ValidationException(f"AOI should not have more than {POLYGON_COUNT_LIMIT} polygons")
 
             # NOTE: The formula was copied from the validation in manager dashboard
             aoi_area = sum([polygon.area for polygon in aoi_polygons])
             allowed_area = 5 * (4 ** (23 - self.project_type_specifics.zoom_level))
             if aoi_area > allowed_area:
-                raise base_project.ValidateException(f"AOI should not have more than {allowed_area} area")
+                raise base_project.ValidationException(f"AOI should not have more than {allowed_area} area")
 
             return aoi_geometry

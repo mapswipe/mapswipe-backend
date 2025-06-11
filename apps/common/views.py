@@ -11,8 +11,8 @@ if typing.TYPE_CHECKING:
     from utils.git import GitHelper
 
 
-# TODO: Maybe a better approach then this?
-def get_version_from_pyproject(base_path: Path) -> str:
+# FIXME: Maybe a better approach then this?
+def _get_version_from_pyproject(base_path: Path) -> str:
     data = toml.load(settings.BASE_DIR / base_path / "pyproject.toml")
     return data["project"]["version"]
 
@@ -30,7 +30,7 @@ class HealthCheckCustomView(MainView):
             **json.loads(response.content),
             "app": {
                 "environment": settings.APP_ENVIRONMENT,
-                "version": get_version_from_pyproject(settings.BASE_DIR),
+                "version": _get_version_from_pyproject(settings.BASE_DIR),
                 "git": {
                     "branch": git_helper.branch,
                     "commit": git_helper.commit_sha,

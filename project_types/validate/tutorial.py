@@ -3,7 +3,7 @@ import typing
 
 from pydantic import Field
 
-from apps.tutorial.project_types.base.tutorial import BaseTutorialTaskProperty
+from project_types.base.tutorial import BaseTutorialTaskProperty
 
 logger = logging.getLogger(__name__)
 

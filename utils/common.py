@@ -1,24 +1,84 @@
 import copy
+import json
 import re
 import typing
 
+from django.core.exceptions import ValidationError
+from django.core.serializers.json import DjangoJSONEncoder
+from django.utils.translation import gettext
+from ulid import ULID
 
-# TODO(tnagorra): We might also need to support iterating in lists
-def clean_up_none_keys(data: dict[typing.Any, typing.Any]):
+
+def validate_imagery_url(url: str, *, support_quadkey: bool | None = True):
+    """Check if imagery url contains xyz or quad key placeholders."""
+    if all([substring in url for substring in ["{x}", "{y}", "{z}"]]) and not any(
+        [substring in url for substring in ["{{x}}", "{{y}}", "{{z}}"]],
+    ):
+        return
+    if all([substring in url for substring in ["{x}", "{-y}", "{z}"]]) and not any(
+        [substring in url for substring in ["{{x}}", "{{-y}}", "{{z}}"]],
+    ):
+        return
+    if support_quadkey and ("{quadkey}" in url and "{{quadkey}}" not in url):
+        return
+
+    if support_quadkey:
+        raise ValidationError(
+            gettext("The imagery url '%s' must contain {x}, {y} (or {-y}) and {z} or the {quadkey} placeholders.") % url,
+        )
+    raise ValidationError(
+        gettext("The imagery url '%s' must contain {x}, {y} (or {-y}) and {z} placeholders.") % url,
+    )
+
+
+def validate_ulid(val: str):
+    if val == "":
+        raise ValidationError(
+            gettext("Empty string is not a valid ULID value"),
+        )
+    try:
+        ULID.from_str(val)
+    except (ValueError, TypeError) as e:
+        raise ValidationError(
+            gettext("'%s' is not a valid ULID value") % val,
+        ) from e
+
+
+def clean_up_none_keys(data: typing.Any):
     """
-    Remove keys with none values (Also supports nested dict)
+    Remove keys with none values (Also supports nested dict and list)
     Input:
      {"a": None, "b": "Hi"}
     Output:
      {"b": "Hi"}
     """
-    _clone_data = copy.deepcopy(data)
-    for key, value in data.items():
-        if value is None:
-            _clone_data.pop(key)
-        if isinstance(value, dict):
-            _clone_data[key] = clean_up_none_keys(value)
-    return _clone_data
+
+    if isinstance(data, list):
+        return [clean_up_none_keys(x) for x in data]
+    if isinstance(data, dict):
+        _clone_data = copy.deepcopy(data)
+        for key, value in data.items():
+            if value is None:
+                _clone_data.pop(key)
+            else:
+                _clone_data[key] = clean_up_none_keys(value)
+        return _clone_data
+    return data
+
+
+def format_object_keys(
+    obj: dict[typing.Any, typing.Any] | list[typing.Any] | typing.Any,
+    formatter: typing.Callable[[str], str],
+):
+    if isinstance(obj, dict):
+        new_obj = {}
+        for key, value in obj.items():
+            new_key = formatter(key) if isinstance(key, str) else key
+            new_obj[new_key] = format_object_keys(value, formatter)
+        return new_obj
+    if isinstance(obj, list):
+        return [format_object_keys(item, formatter) for item in obj]
+    return obj
 
 
 # Adapted from this response in Stackoverflow
@@ -35,16 +95,8 @@ def to_snake_case(name: str):
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
-def format_object_keys(
-    obj: dict[typing.Any, typing.Any] | list[typing.Any] | typing.Any,
-    formatter: typing.Callable[[str], str],
-):
-    if isinstance(obj, dict):
-        new_obj = {}
-        for key, value in obj.items():
-            new_key = formatter(key) if isinstance(key, str) else key
-            new_obj[new_key] = format_object_keys(value, formatter)
-        return new_obj
-    if isinstance(obj, list):
-        return [format_object_keys(item, formatter) for item in obj]
-    return obj
+def create_json_dump(item: dict[typing.Any, typing.Any]) -> bytes:
+    return json.dumps(
+        item,
+        cls=DjangoJSONEncoder,
+    ).encode("utf-8")

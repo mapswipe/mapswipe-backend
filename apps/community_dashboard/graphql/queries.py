@@ -114,7 +114,7 @@ class Query:
     @strawberry.field
     async def community_filtered_stats(
         self,
-        # TODO(thenav56): Remove the None?
+        # FIXME(thenav56): Remove the None?
         date_range: DateRangeInput | None = None,
     ) -> CommunityFilteredStats:
         return CommunityFilteredStats(date_range=date_range)

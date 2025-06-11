@@ -2,16 +2,23 @@ import math
 import typing
 from abc import ABC
 
+from django.core.exceptions import ValidationError
+
+from utils.common import validate_imagery_url
 from utils.geo.tile_functions import tile_coords_and_zoom_to_quadKey
 
 from .config import Config, TileServerNameEnum
-from .models import TileServerCommonConfig, TileServerConfig, TileServerCustomConfig
+from .models import (
+    TileServerCommonConfig,
+    TileServerConfig,
+    TileServerCustomConfig,
+)
 
 
 class BaseTileServerException(Exception): ...
 
 
-class BaseTileServer(ABC):
+class _BaseTileServer(ABC):
     """Create a tile server class."""
 
     name: TileServerNameEnum
@@ -19,22 +26,14 @@ class BaseTileServer(ABC):
     api_key: str
     credits: str | None
 
+    # FIXME(tnagorra): We might need to move this to pydantic object
     @staticmethod
     def check_imagery_url(url: str) -> bool:
-        """Check if imagery url contains xyz or quad key placeholders."""
-        if all([substring in url for substring in ["{x}", "{y}", "{z}"]]) and not any(
-            [substring in url for substring in ["{{x}}", "{{y}}", "{{z}}"]],
-        ):
+        try:
+            validate_imagery_url(url, support_quadkey=True)
             return True
-        if all([substring in url for substring in ["{x}", "{-y}", "{z}"]]) and not any(
-            [substring in url for substring in ["{{x}}", "{{-y}}", "{{z}}"]],
-        ):
-            return True
-        if "{quadkey}" in url and "{{quadkey}}" not in url:
-            return True
-        raise BaseTileServerException(
-            f"The imagery url {url} must contain {{x}}, {{y}} (or {{-y}}) and {{{{z}}}} or the {{quadkey}} placeholders.",
-        )
+        except ValidationError as e:
+            raise BaseTileServerException(e.message) from e
 
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
         return self.url.format(
@@ -45,7 +44,7 @@ class BaseTileServer(ABC):
         )
 
 
-class CustomTileServer(BaseTileServer):
+class CustomTileServer(_BaseTileServer):
     name = TileServerNameEnum.CUSTOM
 
     def __init__(
@@ -66,7 +65,7 @@ class CustomTileServer(BaseTileServer):
         )
 
 
-class CommonTileServer(BaseTileServer):
+class _CommonTileServer(_BaseTileServer):
     def __init__(
         self,
         config: TileServerCommonConfig,
@@ -84,7 +83,7 @@ class CommonTileServer(BaseTileServer):
             raise NotImplementedError(f"Please define url for {cls}")
 
 
-class BingTileServer(CommonTileServer):
+class BingTileServer(_CommonTileServer):
     name = TileServerNameEnum.BING
     url = Config.IMAGE_URLS[TileServerNameEnum.BING]
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.BING]
@@ -98,13 +97,13 @@ class BingTileServer(CommonTileServer):
         )
 
 
-class MapboxTileServer(CommonTileServer):
+class MapboxTileServer(_CommonTileServer):
     name = TileServerNameEnum.MAPBOX
     url = Config.IMAGE_URLS[TileServerNameEnum.MAPBOX]
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.MAPBOX]
 
 
-class MaxarStandardTileServer(CommonTileServer):
+class MaxarStandardTileServer(_CommonTileServer):
     name = TileServerNameEnum.MAXAR_STANDARD
     url = Config.IMAGE_URLS[TileServerNameEnum.MAXAR_STANDARD]
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.MAXAR_STANDARD]
@@ -130,7 +129,7 @@ class MaxarPremiumTileServer(MaxarStandardTileServer):
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.MAXAR_PREMIUM]
 
 
-class EsriTileServer(CommonTileServer):
+class EsriTileServer(_CommonTileServer):
     name = TileServerNameEnum.ESRI
     url = Config.IMAGE_URLS[TileServerNameEnum.ESRI]
     api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.ESRI]

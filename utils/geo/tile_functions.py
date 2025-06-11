@@ -7,7 +7,7 @@ import math
 from osgeo import ogr
 
 
-class Point:
+class _Point:
     """
     The basic class point representing a Pixel
     Attributes
@@ -23,7 +23,7 @@ class Point:
         self.y = y
 
 
-class Tile:
+class _Tile:
     """
     The basic class tile representing a TMS tile
 
@@ -43,7 +43,7 @@ class Tile:
 def lat_long_zoom_to_pixel_coords(lat: float, lon: float, zoom: int):
     """Compute pixel coordinates from lat-long point at a given zoom level."""
 
-    p = Point()
+    p = _Point()
     sinLat = math.sin(lat * math.pi / 180.0)
     x = ((lon + 180) / 360) * 256 * math.pow(2, zoom)
     y = (
@@ -56,62 +56,62 @@ def lat_long_zoom_to_pixel_coords(lat: float, lon: float, zoom: int):
     return p
 
 
-def pixel_coords_zoom_to_lat_lon(PixelX: float, PixelY: float, zoom: int):
+def pixel_coords_zoom_to_lat_lon(pile_x: float, pile_y: float, zoom: int):
     """Compute latitude, longitude from pixel coordinates at a given zoom level."""
 
     MapSize = 256 * math.pow(2, zoom)
-    x = (PixelX / MapSize) - 0.5
-    y = 0.5 - (PixelY / MapSize)
+    x = (pile_x / MapSize) - 0.5
+    y = 0.5 - (pile_y / MapSize)
     lon = 360 * x
     lat = 90 - 360 * math.atan(math.exp(-y * 2 * math.pi)) / math.pi
 
     return lon, lat
 
 
-def pixel_coords_to_tile_address(PixelX: float, PixelY: float):
+def pixel_coords_to_tile_address(pixel_x: float, pixel_y: float):
     """Compute a tile address from pixel coordinates of point within tile."""
 
-    t = Tile()
-    t.x = int(math.floor(PixelX / 256))
-    t.y = int(math.floor(PixelY / 256))
+    t = _Tile()
+    t.x = int(math.floor(pixel_x / 256))
+    t.y = int(math.floor(pixel_y / 256))
     return t
 
 
-def tile_coords_and_zoom_to_quadKey(TileX: int, TileY: int, zoom: int) -> str:
+def tile_coords_and_zoom_to_quadKey(tile_x: int, tile_y: int, zoom: int) -> str:
     """Create a quadkey for use with certain tileservers that use them, e.g. Bing."""
 
     quadKey = ""
     for i in range(zoom, 0, -1):
         digit = 0
         mask = 1 << (i - 1)
-        if (TileX & mask) != 0:
+        if (tile_x & mask) != 0:
             digit += 1
-        if (TileY & mask) != 0:
+        if (tile_y & mask) != 0:
             digit += 2
         quadKey += str(digit)
     return quadKey
 
 
 # FIXME(tnagorra): This is not used.
-def quadKey_to_Bing_URL(quadKey: str, api_key: str):
+def quadkey_to_bing_url(quadkey: str, api_key: str):
     """Create a tile image URL linking to a Bing tile server."""
     # FIXME(tnagorra): We should not hardcode the urls
-    return f"https://ecn.t0.tiles.virtualearth.net/tiles/a{quadKey}.jpeg?g=7505&mkt=en-US&token={api_key}"
+    return f"https://ecn.t0.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=7505&mkt=en-US&token={api_key}"
 
 
 # FIXME(tnagorra): Add typings for osgeo
-def geometry_from_tile_coords(TileX: float, TileY: float, zoom: int) -> str:
+def geometry_from_tile_coords(tile_x: float, tile_y: float, zoom: int) -> str:
     """Compute the polygon geometry of a tile map service tile."""
 
     # Calculate lat, lon of upper left corner of tile
-    PixelX = TileX * 256
-    PixelY = TileY * 256
-    lon_left, lat_top = pixel_coords_zoom_to_lat_lon(PixelX, PixelY, zoom)
+    pixel_x = tile_x * 256
+    pixel_y = tile_y * 256
+    lon_left, lat_top = pixel_coords_zoom_to_lat_lon(pixel_x, pixel_y, zoom)
 
     # Calculate lat, lon of lower right corner of tile
-    PixelX = (TileX + 1) * 256
-    PixelY = (TileY + 1) * 256
-    lon_right, lat_bottom = pixel_coords_zoom_to_lat_lon(PixelX, PixelY, zoom)
+    pixel_x = (tile_x + 1) * 256
+    pixel_y = (tile_y + 1) * 256
+    lon_right, lat_bottom = pixel_coords_zoom_to_lat_lon(pixel_x, pixel_y, zoom)
 
     # Create Geometry
     ring = ogr.Geometry(ogr.wkbLinearRing)
