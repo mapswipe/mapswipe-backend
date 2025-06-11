@@ -17,11 +17,13 @@ class DrfContextType(typing.TypedDict):
 class UserResourceSerializer[ModelType: UserResource, ContextType: DrfContextType = DrfContextType](
     serializers.ModelSerializer[ModelType],
 ):
-    modified_at = serializers.DateTimeField(read_only=True)
-    modified_by = serializers.PrimaryKeyRelatedField(read_only=True)
-    client_id = serializers.CharField()
-
     instance: ModelType | None  # type: ignore[override]
+
+    @typing.override
+    def get_fields(self):
+        fields = super().get_fields()
+        fields["client_id"] = serializers.CharField()
+        return fields
 
     def validate_client_id(self, new_client_id: str | None):
         if new_client_id is None:

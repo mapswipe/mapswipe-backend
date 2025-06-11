@@ -283,6 +283,30 @@ class TestOrganizationMutation(TestCase):
             }
         }
         """
+        UPDATE_ORGANIZATION = """
+        mutation UpdateOrganization($data: OrganizationUpdateInput!, $pk: ID!) {
+            updateOrganization(data: $data, pk: $pk) {
+                ... on OperationInfo {
+                  __typename
+                  messages {
+                    code
+                    field
+                    kind
+                    message
+                  }
+                }
+                ... on OrganizationTypeMutationResponseType {
+                    errors
+                    ok
+                    result {
+                        id
+                        name
+                        clientId
+                    }
+                }
+            }
+        }
+        """
 
     @typing.override
     @classmethod
@@ -294,7 +318,7 @@ class TestOrganizationMutation(TestCase):
             modified_by=cls.user,
         )
 
-    def test_organization_create(self):
+    def test_organization(self):
         organization_data = {
             "clientId": str(ULID()),
             "name": "Test Organization",
@@ -325,6 +349,20 @@ class TestOrganizationMutation(TestCase):
             },
         )
         resp_data = content["data"]["createOrganization"]
+        assert resp_data["errors"] is None, content
+
+        # Updating Organization
+        content = self.query_check(
+            self.Mutation.UPDATE_ORGANIZATION,
+            variables={
+                "data": {
+                    "name": "Test Org",
+                    "clientId": resp_data["result"]["clientId"],
+                },
+                "pk": resp_data["result"]["id"],
+            },
+        )
+        resp_data = content["data"]["updateOrganization"]
         assert resp_data["errors"] is None, content
 
 

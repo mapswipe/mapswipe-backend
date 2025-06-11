@@ -61,7 +61,6 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
-            "client_id",
             "project_type",
             "requesting_organization",
             "name",
@@ -77,7 +76,6 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
-            "client_id",
             "project_type",
             "requesting_organization",
             "name",
@@ -208,7 +206,6 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
-            "client_id",
             "requesting_organization",
             "name",
             "look_for",
@@ -281,7 +278,6 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = ProjectAsset
         fields = (
-            "client_id",
             "mimetype",
             "file",
             "project",
@@ -294,10 +290,7 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
         return super().create(validated_data)
 
 
-class OrganizationCreateSerializer(UserResourceSerializer[Organization]):
+class OrganizationSerializer(UserResourceSerializer[Organization]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Organization
-        fields = (
-            "client_id",
-            "name",
-        )
+        fields = ("name",)
