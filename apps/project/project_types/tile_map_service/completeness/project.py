@@ -5,11 +5,14 @@ from pydantic import BaseModel, field_validator, model_validator
 
 from apps.project.models import Project, ProjectTypeEnum
 from apps.project.project_types.tile_map_service.base import project as base_project
-from utils.geo.tile_server.models import TileServerConfig, VectorTileServerConfig
+from utils.geo.tile_server.models import TileServerConfig
 from utils.geo.tile_server.tile_server import (
     AvailableTileServerTypeAlias,
-    AvailableVectorTileServerTypeAlias,
     get_tile_server,
+)
+from utils.geo.vector_tile_server.models import VectorTileServerConfig
+from utils.geo.vector_tile_server.tile_server import (
+    AvailableVectorTileServerTypeAlias,
     get_vector_tile_server,
 )
 

@@ -15,6 +15,8 @@ from utils.geo.tile_server.models import (
     TileServerCommonConfig,
     TileServerConfig,
     TileServerCustomConfig,
+)
+from utils.geo.vector_tile_server.models import (
     VectorTileServerCommonConfig,
     VectorTileServerConfig,
     VectorTileServerCustomConfig,

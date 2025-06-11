@@ -3,7 +3,8 @@ import strawberry_django
 from strawberry_django.pagination import OffsetPaginated
 from strawberry_django.permissions import IsAuthenticated
 
-from utils.geo.tile_server.config import Config, TileServerNameEnum, VectorTileServerNameEnum
+from utils.geo.tile_server.config import Config, TileServerNameEnum
+from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum
 
 from .filters import OrganizationFilter, ProjectAssetFilter, ProjectFilter
 from .orders import OrganizationOrder, ProjectAssetOrder, ProjectOrder
@@ -22,7 +23,7 @@ def get_tile_servers() -> TileServersType:
         VectorTileServerType(
             type=VectorTileServerNameEnum.OPEN_STREET_MAP,
             label=VectorTileServerNameEnum.OPEN_STREET_MAP.label,
-            url=Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.OPEN_STREET_MAP],
+            url=VectorConfig.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.OPEN_STREET_MAP],
             # FIXME(tnagorra): Need to check what layers we want
             # FIXME(tnagorra): Should we also include the source: versatiles-shortbread
             min_zoom=0,
@@ -49,7 +50,7 @@ def get_tile_servers() -> TileServersType:
         VectorTileServerType(
             type=VectorTileServerNameEnum.VERSATILES,
             label=VectorTileServerNameEnum.VERSATILES.label,
-            url=Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.VERSATILES],
+            url=VectorConfig.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.VERSATILES],
             # FIXME(tnagorra): Need to check what layers we want
             # FIXME(tnagorra): Should we also include the source: versatiles-shortbread
             min_zoom=0,
@@ -76,7 +77,7 @@ def get_tile_servers() -> TileServersType:
         VectorTileServerType(
             type=VectorTileServerNameEnum.OPEN_FREE_MAP,
             label=VectorTileServerNameEnum.OPEN_FREE_MAP.label,
-            url=Config.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.OPEN_FREE_MAP],
+            url=VectorConfig.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.OPEN_FREE_MAP],
             # FIXME(tnagorra): Need to check what layers we want
             # FIXME(tnagorra): Should we also include the source: openmaptiles
             min_zoom=0,

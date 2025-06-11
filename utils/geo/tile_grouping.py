@@ -391,7 +391,7 @@ def _adjust_overlapping_groups(
     return groups_without_overlap, overlaps_total
 
 
-def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, groupSize: int) -> dict[str, RawGroup]:
+def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, group_size: int) -> dict[str, RawGroup]:
     """
     The function to polygon geometries of a given input file
     into horizontal slices and then vertical slices.
@@ -418,7 +418,7 @@ def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, groupSize: int) -> di
     horizontal_slice_infos = _get_horizontal_slice(extent, polygons, zoom)
 
     # then get vertical slices --> columns
-    raw_groups_dict = _get_vertical_slice(horizontal_slice_infos, zoom, groupSize)
+    raw_groups_dict = _get_vertical_slice(horizontal_slice_infos, zoom, group_size)
 
     # finally remove overlapping groups
     groups_dict, overlaps_total = _adjust_overlapping_groups(raw_groups_dict, zoom)
