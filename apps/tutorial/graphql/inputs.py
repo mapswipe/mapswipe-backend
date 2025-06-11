@@ -14,10 +14,10 @@ from apps.tutorial.models import (
     TutorialScenarioPage,
     TutorialTask,
 )
-from apps.tutorial.project_types.tile_map_service.compare import tutorial as compare_tutorial
-from apps.tutorial.project_types.tile_map_service.completeness import tutorial as completeness_tutorial
-from apps.tutorial.project_types.tile_map_service.find import tutorial as find_tutorial
-from apps.tutorial.project_types.validate import tutorial as validate_tutorial
+from project_types.tile_map_service.compare import tutorial as compare_tutorial
+from project_types.tile_map_service.completeness import tutorial as completeness_tutorial
+from project_types.tile_map_service.find import tutorial as find_tutorial
+from project_types.validate import tutorial as validate_tutorial
 from utils.graphql.types import CudInput
 
 

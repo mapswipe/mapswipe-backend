@@ -5,11 +5,11 @@ import strawberry_django
 
 from apps.common.graphql.types import UserResourceTypeMixin
 from apps.project.models import Organization, Project, ProjectAsset
-from apps.project.project_types.tile_map_service.compare import project as compare_project
-from apps.project.project_types.tile_map_service.completeness import project as completeness_project
-from apps.project.project_types.tile_map_service.find import project as find_project
-from apps.project.project_types.validate import project as validate_project
 from apps.tutorial.graphql.types import TutorialType
+from project_types.tile_map_service.compare import project as compare_project
+from project_types.tile_map_service.completeness import project as completeness_project
+from project_types.tile_map_service.find import project as find_project
+from project_types.validate import project as validate_project
 from utils.geo.tile_server.config import TileServerNameEnum
 from utils.geo.tile_server.models import (
     TileServerCommonConfig,

@@ -19,9 +19,9 @@ from apps.mapping.factories import (
 )
 from apps.project.factories import OrganizationFactory, ProjectFactory, ProjectTaskFactory, ProjectTaskGroupFactory
 from apps.project.models import Project, ProjectTypeEnum
-from apps.project.project_types.base.project import BaseProject as BaseProjectHandler
 from apps.user.factories import UserFactory
 from main.tests import TestCase
+from project_types.base.project import BaseProject as BaseProjectHandler
 
 
 class FakeBaseProjectHandler(typing.NamedTuple):

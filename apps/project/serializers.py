@@ -6,11 +6,11 @@ from django.utils.translation import gettext
 from rest_framework import serializers
 
 from apps.common.serializers import UserResourceSerializer
+from project_types.store import get_project_property
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
 from .models import Organization, Project, ProjectAsset, ProjectTypeEnum
-from .project_types.store import get_project_property
 from .tasks import process_project_task
 
 VALID_PROJECT_STATUS_TRANSITIONS = set(

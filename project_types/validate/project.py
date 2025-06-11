@@ -21,10 +21,10 @@ from apps.project.models import (
     ProjectTask,
     ProjectTaskGroup,
 )
-from apps.project.project_types.base import project as base_project
-from apps.project.project_types.tile_map_service.base.project import create_json_dump
-from apps.project.project_types.validate.api_calls import ohsome
 from main.bulk_managers import BulkCreateManager
+from project_types.base import project as base_project
+from project_types.tile_map_service.base.project import create_json_dump
+from project_types.validate.api_calls import ohsome
 from utils.geo.tile_server.models import TileServerConfig
 from utils.geo.tile_server.tile_server import AvailableTileServerTypeAlias, get_tile_server
 

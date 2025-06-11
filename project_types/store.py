@@ -2,10 +2,29 @@ import typing
 
 from apps.project.models import ProjectTypeEnum
 
+from .tile_map_service.compare import tutorial as compare_tutorial
 from .tile_map_service.compare.project import CompareProject, CompareProjectProperty
+from .tile_map_service.completeness import tutorial as completeness_tutorial
 from .tile_map_service.completeness.project import CompletenessProject, CompletenessProjectProperty
+from .tile_map_service.find import tutorial as find_tutorial
 from .tile_map_service.find.project import FindProject, FindProjectProperty
+from .validate import tutorial as validate_tutorial
 from .validate.project import ValidateProject, ValidateProjectProperty
+
+
+# FIXME(tnagorra): Move this to store
+def get_tutorial_task_property(project_type: ProjectTypeEnum | None):
+    if project_type is None:
+        return None
+    if project_type == ProjectTypeEnum.COMPARE:
+        return ("compare", compare_tutorial.CompareTutorialTaskProperty)
+    if project_type == ProjectTypeEnum.FIND:
+        return ("find", find_tutorial.FindTutorialTaskProperty)
+    if project_type == ProjectTypeEnum.VALIDATE:
+        return ("validate", validate_tutorial.ValidateTutorialTaskProperty)
+    if project_type == ProjectTypeEnum.COMPLETENESS:
+        return ("completeness", completeness_tutorial.CompletenessTutorialTaskProperty)
+    typing.assert_never(project_type)
 
 
 def get_project_property(project_type: ProjectTypeEnum | None):

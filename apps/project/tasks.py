@@ -3,8 +3,8 @@ import logging
 from celery import shared_task
 
 from apps.project.models import Project
-from apps.project.project_types.store import get_project_type_handler
 from main.cache import CeleryLock
+from project_types.store import get_project_type_handler
 
 logger = logging.getLogger(__name__)
 

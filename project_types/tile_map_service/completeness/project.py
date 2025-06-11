@@ -4,7 +4,7 @@ from django.db import models
 from pydantic import BaseModel, field_validator, model_validator
 
 from apps.project.models import Project, ProjectTypeEnum
-from apps.project.project_types.tile_map_service.base import project as base_project
+from project_types.tile_map_service.base import project as base_project
 from utils.geo.tile_server.models import TileServerConfig
 from utils.geo.tile_server.tile_server import (
     AvailableTileServerTypeAlias,

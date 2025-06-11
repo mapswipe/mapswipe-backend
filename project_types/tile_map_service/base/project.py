@@ -19,8 +19,8 @@ from apps.project.models import (
     ProjectTask,
     ProjectTaskGroup,
 )
-from apps.project.project_types.base import project as base_project
 from main.bulk_managers import BulkCreateManager
+from project_types.base import project as base_project
 from utils.common import create_json_dump
 from utils.geo import tile_functions, tile_grouping
 from utils.geo.tile_server.models import TileServerConfig

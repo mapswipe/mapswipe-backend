@@ -1,7 +1,7 @@
 import typing
 
 from apps.project.models import Project, ProjectTypeEnum
-from apps.project.project_types.tile_map_service.base import project as tile_map_service_project
+from project_types.tile_map_service.base import project as tile_map_service_project
 
 
 class FindProjectProperty(tile_map_service_project.TileMapServiceProjectProperty): ...

@@ -1,6 +1,6 @@
 import logging
 
-from apps.tutorial.project_types.base import tutorial as base_tutorial
+from project_types.base import tutorial as base_tutorial
 
 logger = logging.getLogger(__name__)
 

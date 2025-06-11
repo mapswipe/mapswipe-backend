@@ -14,11 +14,11 @@ from apps.project.models import (
     ProjectTaskGroup,
     ProjectTypeEnum,
 )
-from apps.project.project_types.tile_map_service.compare import project as compare_project
 from apps.project.tasks import process_project_task
 from apps.tutorial.factories import TutorialFactory
 from apps.user.factories import UserFactory
 from main.tests import TestCase
+from project_types.tile_map_service.compare import project as compare_project
 from utils.geo.tile_server.config import TileServerNameEnum
 
 BASE_DIR = Path(__file__).resolve().parent
