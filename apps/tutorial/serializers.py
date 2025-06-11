@@ -17,7 +17,7 @@ from utils.graphql.drf import handle_pydantic_validation_error
 from .models import Tutorial, TutorialInformationPage, TutorialInformationPageBlock, TutorialScenarioPage, TutorialTask
 
 
-# FIXME(tnagorra): Move this to utils
+# FIXME(tnagorra): Move this to store
 def get_tutorial_task_property(project_type: ProjectTypeEnum | None):
     if project_type is None:
         return None

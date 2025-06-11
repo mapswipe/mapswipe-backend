@@ -2,6 +2,9 @@ import math
 import typing
 from abc import ABC
 
+from django.core.exceptions import ValidationError
+
+from utils.common import validate_imagery_url
 from utils.geo.tile_functions import tile_coords_and_zoom_to_quadKey
 
 from .config import Config, TileServerNameEnum, VectorTileServerNameEnum
@@ -27,23 +30,13 @@ class BaseTileServer(ABC):
     credits: str | None
 
     # FIXME(tnagorra): We might need to move this to pydantic object
-    # FIXME(tnagorra): We should not support {{x}} syntax as we will be using maplibre
     @staticmethod
     def check_imagery_url(url: str) -> bool:
-        """Check if imagery url contains xyz or quad key placeholders."""
-        if all([substring in url for substring in ["{x}", "{y}", "{z}"]]) and not any(
-            [substring in url for substring in ["{{x}}", "{{y}}", "{{z}}"]],
-        ):
+        try:
+            validate_imagery_url(url, allow_quadkey=False)
             return True
-        if all([substring in url for substring in ["{x}", "{-y}", "{z}"]]) and not any(
-            [substring in url for substring in ["{{x}}", "{{-y}}", "{{z}}"]],
-        ):
-            return True
-        if "{quadkey}" in url and "{{quadkey}}" not in url:
-            return True
-        raise BaseTileServerException(
-            f"The imagery url {url} must contain {{x}}, {{y}} (or {{-y}}) and {{z}} or the {{quadkey}} placeholders.",
-        )
+        except ValidationError as e:
+            raise BaseTileServerException(e.message) from e
 
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
         return self.url.format(
@@ -198,21 +191,13 @@ class BaseVectorTileServer(ABC):
     credits: str | None
 
     # FIXME(tnagorra): We might need to move this to pydantic object
-    # FIXME(tnagorra): We should not support {{x}} syntax as we will be using maplibre
     @staticmethod
     def check_imagery_url(url: str) -> bool:
-        """Check if imagery url contains xyz or quad key placeholders."""
-        if all([substring in url for substring in ["{x}", "{y}", "{z}"]]) and not any(
-            [substring in url for substring in ["{{x}}", "{{y}}", "{{z}}"]],
-        ):
+        try:
+            validate_imagery_url(url, allow_quadkey=False)
             return True
-        if all([substring in url for substring in ["{x}", "{-y}", "{z}"]]) and not any(
-            [substring in url for substring in ["{{x}}", "{{-y}}", "{{z}}"]],
-        ):
-            return True
-        raise BaseTileServerException(
-            f"The imagery url {url} must contain {{x}}, {{y}} (or {{-y}}) and {{z}} placeholders.",
-        )
+        except ValidationError as e:
+            raise BaseTileServerException(e.message) from e
 
 
 class CustomVectorTileServer(BaseVectorTileServer):

@@ -8,7 +8,6 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
-from django.core.serializers.json import DjangoJSONEncoder
 from pydantic import Field, ValidationInfo, model_validator
 from ulid import ULID
 
@@ -22,19 +21,12 @@ from apps.project.models import (
 )
 from apps.project.project_types.base import project as base_project
 from main.bulk_managers import BulkCreateManager
+from utils.common import create_json_dump
 from utils.geo import tile_functions, tile_grouping
 from utils.geo.tile_server.models import TileServerConfig
 from utils.geo.tile_server.tile_server import AvailableTileServerTypeAlias, get_tile_server
 
 logger = logging.getLogger(__name__)
-
-
-# FIXME(tnagorra): move this to utils
-def create_json_dump(item: dict[typing.Any, typing.Any]) -> bytes:
-    return json.dumps(
-        item,
-        cls=DjangoJSONEncoder,
-    ).encode("utf-8")
 
 
 class TileMapServiceProjectProperty(base_project.BaseProjectProperty):

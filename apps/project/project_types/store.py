@@ -2,10 +2,25 @@ import typing
 
 from apps.project.models import ProjectTypeEnum
 
-from .tile_map_service.compare.project import CompareProject
-from .tile_map_service.completeness.project import CompletenessProject
-from .tile_map_service.find.project import FindProject
-from .validate.project import ValidateProject
+from .tile_map_service.compare.project import CompareProject, CompareProjectProperty
+from .tile_map_service.completeness.project import CompletenessProject, CompletenessProjectProperty
+from .tile_map_service.find.project import FindProject, FindProjectProperty
+from .validate.project import ValidateProject, ValidateProjectProperty
+
+
+def get_project_property(project_type: ProjectTypeEnum | None):
+    if project_type is None:
+        return None
+    if project_type == ProjectTypeEnum.COMPARE:
+        return ("compare", CompareProjectProperty)
+    if project_type == ProjectTypeEnum.FIND:
+        return ("find", FindProjectProperty)
+    if project_type == ProjectTypeEnum.VALIDATE:
+        return ("validate", ValidateProjectProperty)
+    if project_type == ProjectTypeEnum.COMPLETENESS:
+        return ("completeness", CompletenessProjectProperty)
+    typing.assert_never(project_type)
+
 
 type ProjectTypeHandlers = type[CompareProject | ValidateProject | FindProject | CompletenessProject]
 
