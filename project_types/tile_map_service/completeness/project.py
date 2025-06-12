@@ -5,13 +5,13 @@ from pydantic import BaseModel, field_validator, model_validator
 
 from apps.project.models import Project, ProjectTypeEnum
 from project_types.tile_map_service.base import project as base_project
-from utils.geo.tile_server.models import TileServerConfig
-from utils.geo.tile_server.tile_server import (
-    AvailableTileServerTypeAlias,
-    get_tile_server,
+from utils.geo.raster_tile_server.models import RasterTileServerConfig
+from utils.geo.raster_tile_server.raster_tile_server import (
+    AvailableRasterTileServerTypeAlias,
+    get_raster_tile_server,
 )
 from utils.geo.vector_tile_server.models import VectorTileServerConfig
-from utils.geo.vector_tile_server.tile_server import (
+from utils.geo.vector_tile_server.vector_tile_server import (
     AvailableVectorTileServerTypeAlias,
     get_vector_tile_server,
 )
@@ -24,7 +24,7 @@ class OverlayLayerTypeEnum(models.TextChoices):
 
 # FIXME(tnagorra): Add validations
 class OverlayRasterTileServerConfig(BaseModel):
-    tile_server: TileServerConfig
+    tile_server: RasterTileServerConfig
     opacity: float
 
 
@@ -88,7 +88,7 @@ class CompletenessProject(
         CompletenessProjectTaskProperty,
     ],
 ):
-    overlay_raster_tile_server: AvailableTileServerTypeAlias | None
+    overlay_raster_tile_server: AvailableRasterTileServerTypeAlias | None
     overlay_vector_tile_server: AvailableVectorTileServerTypeAlias | None
 
     project_property_class = CompletenessProjectProperty
@@ -107,7 +107,7 @@ class CompletenessProject(
             else None
         )
         self.overlay_raster_tile_server = (
-            get_tile_server(prop.raster.tile_server)
+            get_raster_tile_server(prop.raster.tile_server)
             if prop.type == OverlayLayerTypeEnum.RASTER_TILE and prop.raster is not None
             else None
         )

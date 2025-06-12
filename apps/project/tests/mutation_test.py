@@ -19,7 +19,7 @@ from apps.tutorial.factories import TutorialFactory
 from apps.user.factories import UserFactory
 from main.tests import TestCase
 from project_types.tile_map_service.compare import project as compare_project
-from utils.geo.tile_server.config import TileServerNameEnum
+from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -598,14 +598,14 @@ class TestProjectMutation(TestCase):
                     "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": {
-                        "name": self.genum(TileServerNameEnum.CUSTOM),
+                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
                         "custom": {
                             "url": "https://hi-there/{x}/{y}/{z}",
                             "credits": "My Map",
                         },
                     },
                     "tileServerBProperty": {
-                        "name": self.genum(TileServerNameEnum.CUSTOM),
+                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
                         "custom": {
                             "url": "https://hi-there-2/{x}/{y}/{z}",
                             "credits": "My Map 2",
@@ -635,7 +635,7 @@ class TestProjectMutation(TestCase):
                     "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": {
-                        "name": self.genum(TileServerNameEnum.CUSTOM),
+                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
                         "custom": {
                             "url": "https://hi-there/{x}/{y}/{z}",
                             "credits": "My Map",
@@ -655,7 +655,7 @@ class TestProjectMutation(TestCase):
             "zoom_level": 15,
             "aoi_geometry": aoi_geometry_asset["id"],
             "tile_server_property": {
-                "name": TileServerNameEnum.CUSTOM.value,
+                "name": RasterTileServerNameEnum.CUSTOM.value,
                 "custom": {
                     "credits": "My Map",
                     "url": "https://hi-there/{x}/{y}/{z}",
@@ -704,28 +704,28 @@ class TestProjectTypeMutation(TestCase):
 
         cls.tile_server_property = {
             "valid_custom": {
-                "name": cls.genum(TileServerNameEnum.CUSTOM),
+                "name": cls.genum(RasterTileServerNameEnum.CUSTOM),
                 "custom": {
                     "url": "https://hi-there/{x}/{y}/{z}",
                     "credits": "My Map",
                 },
             },
             "valid_custom_02": {
-                "name": cls.genum(TileServerNameEnum.CUSTOM),
+                "name": cls.genum(RasterTileServerNameEnum.CUSTOM),
                 "custom": {
                     "url": "https://hi-here/{x}/{y}/{z}",
                     "credits": "My Map",
                 },
             },
             "invalid_custom": {
-                "name": cls.genum(TileServerNameEnum.CUSTOM),
+                "name": cls.genum(RasterTileServerNameEnum.CUSTOM),
                 "custom": {
                     "url": "https://hi-there",
                     "credits": "My Map",
                 },
             },
             "invalid_custom_02": {
-                "name": cls.genum(TileServerNameEnum.CUSTOM),
+                "name": cls.genum(RasterTileServerNameEnum.CUSTOM),
                 "custom": {
                     "url": "https://hi-there/{{x}}/{{y}}/{{z}}",
                     "credits": "My Map",

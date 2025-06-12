@@ -13,7 +13,7 @@ directive @isAuthenticated repeatable on FIELD_DEFINITION
 directive @oneOf on INPUT_OBJECT
 
 type AppEnumCollection {
-  TileServerNameEnum: [AppEnumCollectionTileServerNameEnum!]!
+  RasterTileServerNameEnum: [AppEnumCollectionRasterTileServerNameEnum!]!
   VectorTileServerNameEnum: [AppEnumCollectionVectorTileServerNameEnum!]!
   ValidateObjectSourceTypeEnum: [AppEnumCollectionValidateObjectSourceTypeEnum!]!
   OverlayLayerTypeEnum: [AppEnumCollectionOverlayLayerTypeEnum!]!
@@ -69,8 +69,8 @@ type AppEnumCollectionProjectTypeEnum {
   label: String!
 }
 
-type AppEnumCollectionTileServerNameEnum {
-  key: TileServerNameEnum!
+type AppEnumCollectionRasterTileServerNameEnum {
+  key: RasterTileServerNameEnum!
   label: String!
 }
 
@@ -131,16 +131,16 @@ type CommunityStatsType {
 
 input CompareProjectPropertyInput {
   zoomLevel: Int!
-  tileServerProperty: ProjectTileServerConfigInput!
+  tileServerProperty: ProjectRasterTileServerConfigInput!
   aoiGeometry: String!
-  tileServerBProperty: ProjectTileServerConfigInput!
+  tileServerBProperty: ProjectRasterTileServerConfigInput!
 }
 
 type CompareProjectPropertyType {
   zoomLevel: Int!
-  tileServerProperty: ProjectTileServerConfig!
+  tileServerProperty: ProjectRasterTileServerConfig!
   aoiGeometry: String!
-  tileServerBProperty: ProjectTileServerConfig!
+  tileServerBProperty: ProjectRasterTileServerConfig!
 }
 
 union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeCompletenessProjectPropertyType = CompareProjectPropertyType | FindProjectPropertyType | ValidateProjectPropertyType | CompletenessProjectPropertyType
@@ -161,14 +161,14 @@ union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutoria
 
 input CompletenessProjectPropertyInput {
   zoomLevel: Int!
-  tileServerProperty: ProjectTileServerConfigInput!
+  tileServerProperty: ProjectRasterTileServerConfigInput!
   aoiGeometry: String!
   overlayTileServerProperty: ProjectOverlayTileServerConfigInput!
 }
 
 type CompletenessProjectPropertyType {
   zoomLevel: Int!
-  tileServerProperty: ProjectTileServerConfig!
+  tileServerProperty: ProjectRasterTileServerConfig!
   aoiGeometry: String!
   overlayTileServerProperty: ProjectOverlayTileServerConfig!
 }
@@ -474,13 +474,13 @@ type DjangoImageType {
 
 input FindProjectPropertyInput {
   zoomLevel: Int!
-  tileServerProperty: ProjectTileServerConfigInput!
+  tileServerProperty: ProjectRasterTileServerConfigInput!
   aoiGeometry: String!
 }
 
 type FindProjectPropertyType {
   zoomLevel: Int!
-  tileServerProperty: ProjectTileServerConfig!
+  tileServerProperty: ProjectRasterTileServerConfig!
   aoiGeometry: String!
 }
 
@@ -914,12 +914,12 @@ input ProjectOrder {
 }
 
 type ProjectOverlayRasterTileServerConfig {
-  tileServer: ProjectTileServerConfig!
+  tileServer: ProjectRasterTileServerConfig!
   opacity: Float!
 }
 
 input ProjectOverlayRasterTileServerConfigInput {
-  tileServer: ProjectTileServerConfigInput!
+  tileServer: ProjectRasterTileServerConfigInput!
   opacity: Float!
 }
 
@@ -968,6 +968,37 @@ enum ProjectProcessingStatusEnum {
   ANALYZING_GROUPS_AND_TASK
   GENERATING_TASKS_GEOJSON
   COMPLETED
+}
+
+type ProjectRasterTileServerCommonConfig {
+  credits: String!
+}
+
+type ProjectRasterTileServerConfig {
+  name: RasterTileServerNameEnum!
+  custom: ProjectRasterTileServerCustomConfig
+  bing: ProjectRasterTileServerCommonConfig
+  mapbox: ProjectRasterTileServerCommonConfig
+  maxarStandard: ProjectRasterTileServerCommonConfig
+  maxarPremium: ProjectRasterTileServerCommonConfig
+  esri: ProjectRasterTileServerCommonConfig
+  esriBeta: ProjectRasterTileServerCommonConfig
+}
+
+input ProjectRasterTileServerConfigInput {
+  name: RasterTileServerNameEnum!
+  custom: RasterTileServerCustomConfigInput = null
+  bing: RasterTileServerCommonConfigInput = null
+  mapbox: RasterTileServerCommonConfigInput = null
+  maxarStandard: RasterTileServerCommonConfigInput = null
+  maxarPremium: RasterTileServerCommonConfigInput = null
+  esri: RasterTileServerCommonConfigInput = null
+  esriBeta: RasterTileServerCommonConfigInput = null
+}
+
+type ProjectRasterTileServerCustomConfig {
+  url: String!
+  credits: String!
 }
 
 enum ProjectStatusEnum {
@@ -1027,37 +1058,6 @@ input ProjectStatusEnumFilterLookup {
   Case-insensitive regular expression match. Filter will be skipped on `null` value
   """
   iRegex: ProjectStatusEnum
-}
-
-type ProjectTileServerCommonConfig {
-  credits: String!
-}
-
-type ProjectTileServerConfig {
-  name: TileServerNameEnum!
-  custom: ProjectTileServerCustomConfig
-  bing: ProjectTileServerCommonConfig
-  mapbox: ProjectTileServerCommonConfig
-  maxarStandard: ProjectTileServerCommonConfig
-  maxarPremium: ProjectTileServerCommonConfig
-  esri: ProjectTileServerCommonConfig
-  esriBeta: ProjectTileServerCommonConfig
-}
-
-input ProjectTileServerConfigInput {
-  name: TileServerNameEnum!
-  custom: TileServerCustomConfigInput = null
-  bing: TileServerCommonConfigInput = null
-  mapbox: TileServerCommonConfigInput = null
-  maxarStandard: TileServerCommonConfigInput = null
-  maxarPremium: TileServerCommonConfigInput = null
-  esri: TileServerCommonConfigInput = null
-  esriBeta: TileServerCommonConfigInput = null
-}
-
-type ProjectTileServerCustomConfig {
-  url: String!
-  credits: String!
 }
 
 """
@@ -1275,7 +1275,7 @@ type ProjectVectorTileServerCustomConfig {
 type Query {
   users(pagination: OffsetPaginationInput, filters: UserFilter, order: UserOrder): UserTypeOffsetPaginated! @isAuthenticated
   me: UserMeType
-  tileServers: TileServersType! @isAuthenticated
+  tileServers: RasterTileServersType! @isAuthenticated
   project(id: ID!): ProjectType! @isAuthenticated
   projects(pagination: OffsetPaginationInput, filters: ProjectFilter, order: ProjectOrder): ProjectTypeOffsetPaginated! @isAuthenticated
   projectAsset(id: ID!): ProjectAssetType! @isAuthenticated
@@ -1300,11 +1300,35 @@ type Query {
   enums: AppEnumCollection!
 }
 
+input RasterTileServerCommonConfigInput {
+  credits: String!
+}
+
+input RasterTileServerCustomConfigInput {
+  url: String!
+  credits: String!
+}
+
+enum RasterTileServerNameEnum {
+  CUSTOM
+  BING
+  MAPBOX
+  MAXAR_STANDARD
+  MAXAR_PREMIUM
+  ESRI
+  ESRI_BETA
+}
+
 type RasterTileServerType {
-  type: TileServerNameEnum!
+  type: RasterTileServerNameEnum!
   label: String!
   url: String!
   credits: String!
+}
+
+type RasterTileServersType {
+  vector: [VectorTileServerType!]!
+  raster: [RasterTileServerType!]!
 }
 
 input StrFilterLookup {
@@ -1353,30 +1377,6 @@ input StrFilterLookup {
   Case-insensitive regular expression match. Filter will be skipped on `null` value
   """
   iRegex: String
-}
-
-input TileServerCommonConfigInput {
-  credits: String!
-}
-
-input TileServerCustomConfigInput {
-  url: String!
-  credits: String!
-}
-
-enum TileServerNameEnum {
-  CUSTOM
-  BING
-  MAPBOX
-  MAXAR_STANDARD
-  MAXAR_PREMIUM
-  ESRI
-  ESRI_BETA
-}
-
-type TileServersType {
-  vector: [VectorTileServerType!]!
-  raster: [RasterTileServerType!]!
 }
 
 """
@@ -1852,12 +1852,12 @@ enum ValidateObjectSourceTypeEnum {
 }
 
 input ValidateProjectPropertyInput {
-  tileServerProperty: ProjectTileServerConfigInput!
+  tileServerProperty: ProjectRasterTileServerConfigInput!
   objectSource: ValidateObjectSourceConfigInput!
 }
 
 type ValidateProjectPropertyType {
-  tileServerProperty: ProjectTileServerConfig!
+  tileServerProperty: ProjectRasterTileServerConfig!
   objectSource: ValidateObjectSourceConfig!
 }
 

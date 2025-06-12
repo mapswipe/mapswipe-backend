@@ -6,7 +6,7 @@ from .config import VectorTileServerNameEnum
 
 
 class VectorTileServerCustomConfig(BaseModel):
-    # FIXME(tnagorra): need to add URL validation
+    # NOTE: URL validation is currently defined in BaseVectorTileServer.check_imagery_url
     url: typing.Annotated[str, Field(strict=True, max_length=1000)]
     source_name: typing.Annotated[str, Field(strict=True, max_length=1000)]
     credits: typing.Annotated[str, Field(strict=True, max_length=1000)]

@@ -23,15 +23,15 @@ from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
 from utils.common import create_json_dump
 from utils.geo import tile_functions, tile_grouping
-from utils.geo.tile_server.models import TileServerConfig
-from utils.geo.tile_server.tile_server import AvailableTileServerTypeAlias, get_tile_server
+from utils.geo.raster_tile_server.models import RasterTileServerConfig
+from utils.geo.raster_tile_server.raster_tile_server import AvailableRasterTileServerTypeAlias, get_raster_tile_server
 
 logger = logging.getLogger(__name__)
 
 
 class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
     zoom_level: typing.Annotated[int, Field(strict=True, gt=13, lt=23)]
-    tile_server_property: TileServerConfig
+    tile_server_property: RasterTileServerConfig
     aoi_geometry: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")]
 
     @model_validator(mode="after")
@@ -85,11 +85,11 @@ class TileMapServiceBaseProject[
     ],
     ABC,
 ):
-    tile_server: AvailableTileServerTypeAlias
+    tile_server: AvailableRasterTileServerTypeAlias
 
     def __init__(self, project: Project):
         super().__init__(project)
-        self.tile_server = get_tile_server(self.project_type_specifics.tile_server_property)
+        self.tile_server = get_raster_tile_server(self.project_type_specifics.tile_server_property)
 
     @typing.override
     def post_create_groups(self):

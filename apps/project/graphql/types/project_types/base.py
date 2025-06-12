@@ -1,10 +1,10 @@
 import strawberry
 
-from utils.geo.tile_server.config import TileServerNameEnum
-from utils.geo.tile_server.models import (
-    TileServerCommonConfig,
-    TileServerConfig,
-    TileServerCustomConfig,
+from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
+from utils.geo.raster_tile_server.models import (
+    RasterTileServerCommonConfig,
+    RasterTileServerConfig,
+    RasterTileServerCustomConfig,
 )
 from utils.geo.vector_tile_server.config import VectorTileServerNameEnum
 from utils.geo.vector_tile_server.models import (
@@ -27,7 +27,7 @@ class VectorTileServerType:
 
 @strawberry.type
 class RasterTileServerType:
-    type: TileServerNameEnum
+    type: RasterTileServerNameEnum
     label: str
     url: str
     # FIXME(tnagorra): We can implement min_zoom and max_zoom
@@ -36,22 +36,22 @@ class RasterTileServerType:
 
 
 @strawberry.type
-class TileServersType:
+class RasterTileServersType:
     vector: list[VectorTileServerType]
     raster: list[RasterTileServerType]
 
 
 # Tile server
-@strawberry.experimental.pydantic.type(model=TileServerCustomConfig, all_fields=True)
-class ProjectTileServerCustomConfig: ...
+@strawberry.experimental.pydantic.type(model=RasterTileServerCustomConfig, all_fields=True)
+class ProjectRasterTileServerCustomConfig: ...
 
 
-@strawberry.experimental.pydantic.type(model=TileServerCommonConfig, all_fields=True)
-class ProjectTileServerCommonConfig: ...
+@strawberry.experimental.pydantic.type(model=RasterTileServerCommonConfig, all_fields=True)
+class ProjectRasterTileServerCommonConfig: ...
 
 
-@strawberry.experimental.pydantic.type(model=TileServerConfig, all_fields=True)
-class ProjectTileServerConfig: ...
+@strawberry.experimental.pydantic.type(model=RasterTileServerConfig, all_fields=True)
+class ProjectRasterTileServerConfig: ...
 
 
 # Vector tile server

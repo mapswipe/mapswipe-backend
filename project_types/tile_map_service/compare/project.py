@@ -4,12 +4,12 @@ from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectT
 from main.bulk_managers import BulkCreateManager
 from project_types.tile_map_service.base import project as base_project
 from utils.geo import tile_functions, tile_grouping
-from utils.geo.tile_server.models import TileServerConfig
-from utils.geo.tile_server.tile_server import AvailableTileServerTypeAlias, get_tile_server
+from utils.geo.raster_tile_server.models import RasterTileServerConfig
+from utils.geo.raster_tile_server.raster_tile_server import AvailableRasterTileServerTypeAlias, get_raster_tile_server
 
 
 class CompareProjectProperty(base_project.TileMapServiceProjectProperty):
-    tile_server_b_property: TileServerConfig
+    tile_server_b_property: RasterTileServerConfig
 
 
 class CompareProjectTaskGroupProperty(base_project.TileMapServiceProjectTaskGroupProperty): ...
@@ -26,7 +26,7 @@ class CompareProject(
         CompareProjectTaskProperty,
     ],
 ):
-    tile_server_b: AvailableTileServerTypeAlias
+    tile_server_b: AvailableRasterTileServerTypeAlias
 
     project_property_class = CompareProjectProperty
     project_task_group_property_class = CompareProjectTaskGroupProperty
@@ -36,7 +36,7 @@ class CompareProject(
         super().__init__(project)
         if typing.TYPE_CHECKING:
             assert project.project_type == ProjectTypeEnum.COMPARE, f"{type(self)} is defined for COMPARE"
-        self.tile_server_b = get_tile_server(self.project_type_specifics.tile_server_b_property)
+        self.tile_server_b = get_raster_tile_server(self.project_type_specifics.tile_server_b_property)
 
     @typing.override
     def create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:

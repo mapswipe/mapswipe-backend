@@ -7,21 +7,21 @@ from django.core.exceptions import ValidationError
 from utils.common import validate_imagery_url
 from utils.geo.tile_functions import tile_coords_and_zoom_to_quadKey
 
-from .config import Config, TileServerNameEnum
+from .config import Config, RasterTileServerNameEnum
 from .models import (
-    TileServerCommonConfig,
-    TileServerConfig,
-    TileServerCustomConfig,
+    RasterTileServerCommonConfig,
+    RasterTileServerConfig,
+    RasterTileServerCustomConfig,
 )
 
 
-class BaseTileServerException(Exception): ...
+class BaseVectorTileServerException(Exception): ...
 
 
-class _BaseTileServer(ABC):
+class _BaseRasterTileServer(ABC):
     """Create a tile server class."""
 
-    name: TileServerNameEnum
+    name: RasterTileServerNameEnum
     url: str
     api_key: str
     credits: str | None
@@ -33,7 +33,7 @@ class _BaseTileServer(ABC):
             validate_imagery_url(url, support_quadkey=True)
             return True
         except ValidationError as e:
-            raise BaseTileServerException(e.message) from e
+            raise BaseVectorTileServerException(e.message) from e
 
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
         return self.url.format(
@@ -44,12 +44,12 @@ class _BaseTileServer(ABC):
         )
 
 
-class CustomTileServer(_BaseTileServer):
-    name = TileServerNameEnum.CUSTOM
+class CustomRasterTileServer(_BaseRasterTileServer):
+    name = RasterTileServerNameEnum.CUSTOM
 
     def __init__(
         self,
-        config: TileServerCustomConfig,
+        config: RasterTileServerCustomConfig,
     ):
         self.url = config.url
         self.credits = config.credits
@@ -65,10 +65,10 @@ class CustomTileServer(_BaseTileServer):
         )
 
 
-class _CommonTileServer(_BaseTileServer):
+class _CommonRasterTileServer(_BaseRasterTileServer):
     def __init__(
         self,
-        config: TileServerCommonConfig,
+        config: RasterTileServerCommonConfig,
     ):
         self.credits = config.credits
 
@@ -83,10 +83,10 @@ class _CommonTileServer(_BaseTileServer):
             raise NotImplementedError(f"Please define url for {cls}")
 
 
-class BingTileServer(_CommonTileServer):
-    name = TileServerNameEnum.BING
-    url = Config.IMAGE_URLS[TileServerNameEnum.BING]
-    api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.BING]
+class BingRasterTileServer(_CommonRasterTileServer):
+    name = RasterTileServerNameEnum.BING
+    url = Config.IMAGE_URLS[RasterTileServerNameEnum.BING]
+    api_key = Config.IMAGE_API_KEYS[RasterTileServerNameEnum.BING]
 
     @typing.override
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
@@ -97,16 +97,16 @@ class BingTileServer(_CommonTileServer):
         )
 
 
-class MapboxTileServer(_CommonTileServer):
-    name = TileServerNameEnum.MAPBOX
-    url = Config.IMAGE_URLS[TileServerNameEnum.MAPBOX]
-    api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.MAPBOX]
+class MapboxRasterTileServer(_CommonRasterTileServer):
+    name = RasterTileServerNameEnum.MAPBOX
+    url = Config.IMAGE_URLS[RasterTileServerNameEnum.MAPBOX]
+    api_key = Config.IMAGE_API_KEYS[RasterTileServerNameEnum.MAPBOX]
 
 
-class MaxarStandardTileServer(_CommonTileServer):
-    name = TileServerNameEnum.MAXAR_STANDARD
-    url = Config.IMAGE_URLS[TileServerNameEnum.MAXAR_STANDARD]
-    api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.MAXAR_STANDARD]
+class MaxarStandardRasterTileServer(_CommonRasterTileServer):
+    name = RasterTileServerNameEnum.MAXAR_STANDARD
+    url = Config.IMAGE_URLS[RasterTileServerNameEnum.MAXAR_STANDARD]
+    api_key = Config.IMAGE_API_KEYS[RasterTileServerNameEnum.MAXAR_STANDARD]
 
     @typing.override
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
@@ -123,57 +123,57 @@ class MaxarStandardTileServer(_CommonTileServer):
         )
 
 
-class MaxarPremiumTileServer(MaxarStandardTileServer):
-    name = TileServerNameEnum.MAXAR_PREMIUM
-    url = Config.IMAGE_URLS[TileServerNameEnum.MAXAR_PREMIUM]
-    api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.MAXAR_PREMIUM]
+class MaxarPremiumRasterTileServer(MaxarStandardRasterTileServer):
+    name = RasterTileServerNameEnum.MAXAR_PREMIUM
+    url = Config.IMAGE_URLS[RasterTileServerNameEnum.MAXAR_PREMIUM]
+    api_key = Config.IMAGE_API_KEYS[RasterTileServerNameEnum.MAXAR_PREMIUM]
 
 
-class EsriTileServer(_CommonTileServer):
-    name = TileServerNameEnum.ESRI
-    url = Config.IMAGE_URLS[TileServerNameEnum.ESRI]
-    api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.ESRI]
+class EsriRasterTileServer(_CommonRasterTileServer):
+    name = RasterTileServerNameEnum.ESRI
+    url = Config.IMAGE_URLS[RasterTileServerNameEnum.ESRI]
+    api_key = Config.IMAGE_API_KEYS[RasterTileServerNameEnum.ESRI]
 
 
-class EsriBetaTileServer(EsriTileServer):
-    name = TileServerNameEnum.ESRI_BETA
-    url = Config.IMAGE_URLS[TileServerNameEnum.ESRI_BETA]
-    api_key = Config.IMAGE_API_KEYS[TileServerNameEnum.ESRI_BETA]
+class EsriBetaRasterTileServer(EsriRasterTileServer):
+    name = RasterTileServerNameEnum.ESRI_BETA
+    url = Config.IMAGE_URLS[RasterTileServerNameEnum.ESRI_BETA]
+    api_key = Config.IMAGE_API_KEYS[RasterTileServerNameEnum.ESRI_BETA]
 
 
-type AvailableTileServerTypeAlias = (
-    CustomTileServer
-    | BingTileServer
-    | MapboxTileServer
-    | MaxarStandardTileServer
-    | MaxarPremiumTileServer
-    | EsriTileServer
-    | EsriBetaTileServer
+type AvailableRasterTileServerTypeAlias = (
+    CustomRasterTileServer
+    | BingRasterTileServer
+    | MapboxRasterTileServer
+    | MaxarStandardRasterTileServer
+    | MaxarPremiumRasterTileServer
+    | EsriRasterTileServer
+    | EsriBetaRasterTileServer
 )
 
 
-def get_tile_server(config: TileServerConfig) -> AvailableTileServerTypeAlias:
+def get_raster_tile_server(config: RasterTileServerConfig) -> AvailableRasterTileServerTypeAlias:
     match config.name:
         # Custom
-        case TileServerNameEnum.CUSTOM:
+        case RasterTileServerNameEnum.CUSTOM:
             assert config.custom is not None, "config.custom should be not none"
-            return CustomTileServer(config.custom)
+            return CustomRasterTileServer(config.custom)
         # Pre-defined
-        case TileServerNameEnum.BING:
+        case RasterTileServerNameEnum.BING:
             assert config.bing is not None, "config.bing should be not none"
-            return BingTileServer(config.bing)
-        case TileServerNameEnum.MAPBOX:
+            return BingRasterTileServer(config.bing)
+        case RasterTileServerNameEnum.MAPBOX:
             assert config.mapbox is not None, "config.mapbox should be not none"
-            return MapboxTileServer(config.mapbox)
-        case TileServerNameEnum.MAXAR_STANDARD:
+            return MapboxRasterTileServer(config.mapbox)
+        case RasterTileServerNameEnum.MAXAR_STANDARD:
             assert config.maxar_standard is not None, "config.maxar_standard should be not none"
-            return MaxarStandardTileServer(config.maxar_standard)
-        case TileServerNameEnum.MAXAR_PREMIUM:
+            return MaxarStandardRasterTileServer(config.maxar_standard)
+        case RasterTileServerNameEnum.MAXAR_PREMIUM:
             assert config.maxar_premium is not None, "config.maxar_premium should be not none"
-            return MaxarPremiumTileServer(config.maxar_premium)
-        case TileServerNameEnum.ESRI:
+            return MaxarPremiumRasterTileServer(config.maxar_premium)
+        case RasterTileServerNameEnum.ESRI:
             assert config.esri is not None, "config.esri should be not none"
-            return EsriTileServer(config.esri)
-        case TileServerNameEnum.ESRI_BETA:
+            return EsriRasterTileServer(config.esri)
+        case RasterTileServerNameEnum.ESRI_BETA:
             assert config.esri_beta is not None, "config.esri_beta should be not none"
-            return EsriBetaTileServer(config.esri_beta)
+            return EsriBetaRasterTileServer(config.esri_beta)

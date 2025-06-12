@@ -1,9 +1,9 @@
 import strawberry
 
-from utils.geo.tile_server.models import (
-    TileServerCommonConfig,
-    TileServerConfig,
-    TileServerCustomConfig,
+from utils.geo.raster_tile_server.models import (
+    RasterTileServerCommonConfig,
+    RasterTileServerConfig,
+    RasterTileServerCustomConfig,
 )
 from utils.geo.vector_tile_server.models import (
     VectorTileServerCommonConfig,
@@ -13,17 +13,17 @@ from utils.geo.vector_tile_server.models import (
 
 
 # Tile server
-@strawberry.experimental.pydantic.input(model=TileServerCustomConfig, all_fields=True)
-class TileServerCustomConfigInput: ...
+@strawberry.experimental.pydantic.input(model=RasterTileServerCustomConfig, all_fields=True)
+class RasterTileServerCustomConfigInput: ...
 
 
-@strawberry.experimental.pydantic.input(model=TileServerCommonConfig, all_fields=True)
-class TileServerCommonConfigInput: ...
+@strawberry.experimental.pydantic.input(model=RasterTileServerCommonConfig, all_fields=True)
+class RasterTileServerCommonConfigInput: ...
 
 
 # FIXME(tnagorra): Add one_of here?
-@strawberry.experimental.pydantic.input(model=TileServerConfig, all_fields=True)
-class ProjectTileServerConfigInput: ...
+@strawberry.experimental.pydantic.input(model=RasterTileServerConfig, all_fields=True)
+class ProjectRasterTileServerConfigInput: ...
 
 
 # Vector tile server

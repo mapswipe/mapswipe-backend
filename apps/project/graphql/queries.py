@@ -3,12 +3,12 @@ import strawberry_django
 from strawberry_django.pagination import OffsetPaginated
 from strawberry_django.permissions import IsAuthenticated
 
-from utils.geo.tile_server.config import Config, TileServerNameEnum
+from utils.geo.raster_tile_server.config import Config, RasterTileServerNameEnum
 from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum
 
 from .filters import OrganizationFilter, ProjectAssetFilter, ProjectFilter
 from .orders import OrganizationOrder, ProjectAssetOrder, ProjectOrder
-from .types.project_types.base import RasterTileServerType, TileServersType, VectorTileServerType
+from .types.project_types.base import RasterTileServersType, RasterTileServerType, VectorTileServerType
 from .types.types import (
     OrganizationType,
     ProjectAssetType,
@@ -16,7 +16,7 @@ from .types.types import (
 )
 
 
-def get_tile_servers() -> TileServersType:
+def get_tile_servers() -> RasterTileServersType:
     vector_tiles = [
         VectorTileServerType(
             type=VectorTileServerNameEnum.OPEN_STREET_MAP,
@@ -96,43 +96,43 @@ def get_tile_servers() -> TileServersType:
     ]
     raster_tiles = [
         RasterTileServerType(
-            type=TileServerNameEnum.BING,
-            label=TileServerNameEnum.BING.label,
-            url=Config.IMAGE_URLS_WITH_KEY[TileServerNameEnum.BING],
+            type=RasterTileServerNameEnum.BING,
+            label=RasterTileServerNameEnum.BING.label,
+            url=Config.IMAGE_URLS_WITH_KEY[RasterTileServerNameEnum.BING],
             credits="© 2019 Microsoft Corporation, Earthstar Geographics SIO",
         ),
         RasterTileServerType(
-            type=TileServerNameEnum.MAPBOX,
-            label=TileServerNameEnum.MAPBOX.label,
-            url=Config.IMAGE_URLS_WITH_KEY[TileServerNameEnum.MAPBOX],
+            type=RasterTileServerNameEnum.MAPBOX,
+            label=RasterTileServerNameEnum.MAPBOX.label,
+            url=Config.IMAGE_URLS_WITH_KEY[RasterTileServerNameEnum.MAPBOX],
             credits="© 2019 MapBox",
         ),
         RasterTileServerType(
-            type=TileServerNameEnum.MAXAR_STANDARD,
-            label=TileServerNameEnum.MAXAR_STANDARD.label,
-            url=Config.IMAGE_URLS_WITH_KEY[TileServerNameEnum.MAXAR_STANDARD],
+            type=RasterTileServerNameEnum.MAXAR_STANDARD,
+            label=RasterTileServerNameEnum.MAXAR_STANDARD.label,
+            url=Config.IMAGE_URLS_WITH_KEY[RasterTileServerNameEnum.MAXAR_STANDARD],
             credits="© 2019 Maxar",
         ),
         RasterTileServerType(
-            type=TileServerNameEnum.MAXAR_PREMIUM,
-            label=TileServerNameEnum.MAXAR_PREMIUM.label,
-            url=Config.IMAGE_URLS_WITH_KEY[TileServerNameEnum.MAXAR_PREMIUM],
+            type=RasterTileServerNameEnum.MAXAR_PREMIUM,
+            label=RasterTileServerNameEnum.MAXAR_PREMIUM.label,
+            url=Config.IMAGE_URLS_WITH_KEY[RasterTileServerNameEnum.MAXAR_PREMIUM],
             credits="© 2019 Maxar",
         ),
         RasterTileServerType(
-            type=TileServerNameEnum.ESRI,
-            label=TileServerNameEnum.ESRI.label,
-            url=Config.IMAGE_URLS_WITH_KEY[TileServerNameEnum.ESRI],
+            type=RasterTileServerNameEnum.ESRI,
+            label=RasterTileServerNameEnum.ESRI.label,
+            url=Config.IMAGE_URLS_WITH_KEY[RasterTileServerNameEnum.ESRI],
             credits="© 2019 ESRI",
         ),
         RasterTileServerType(
-            type=TileServerNameEnum.ESRI_BETA,
-            label=TileServerNameEnum.ESRI_BETA.label,
-            url=Config.IMAGE_URLS_WITH_KEY[TileServerNameEnum.ESRI_BETA],
+            type=RasterTileServerNameEnum.ESRI_BETA,
+            label=RasterTileServerNameEnum.ESRI_BETA.label,
+            url=Config.IMAGE_URLS_WITH_KEY[RasterTileServerNameEnum.ESRI_BETA],
             credits="© 2019 ESRI",
         ),
     ]
-    return TileServersType(
+    return RasterTileServersType(
         vector=vector_tiles,
         raster=raster_tiles,
     )
@@ -140,7 +140,7 @@ def get_tile_servers() -> TileServersType:
 
 @strawberry.type
 class Query:
-    tile_servers: TileServersType = strawberry.field(resolver=get_tile_servers, extensions=[IsAuthenticated()])
+    tile_servers: RasterTileServersType = strawberry.field(resolver=get_tile_servers, extensions=[IsAuthenticated()])
 
     # Private --------------------
     project: ProjectType = strawberry_django.field(extensions=[IsAuthenticated()])

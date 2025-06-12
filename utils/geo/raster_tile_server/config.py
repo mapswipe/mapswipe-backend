@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models
 
 
-class TileServerNameEnum(models.TextChoices):
+class RasterTileServerNameEnum(models.TextChoices):
     CUSTOM = "CUSTOM", "Custom"
     BING = "BING", "Bing"
     MAPBOX = "MAPBOX", "Mapbox"
@@ -16,24 +16,26 @@ class TileServerNameEnum(models.TextChoices):
 class Config:
     # FIXME(tnagorra): This will be obsolete soon
     IMAGE_URLS = {
-        TileServerNameEnum.BING: ("https://ecn.t0.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=7505&token={key}"),
-        TileServerNameEnum.MAPBOX: ("https://d.tiles.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg?access_token={key}"),
-        TileServerNameEnum.MAXAR_PREMIUM: (
+        RasterTileServerNameEnum.BING: ("https://ecn.t0.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=7505&token={key}"),
+        RasterTileServerNameEnum.MAPBOX: (
+            "https://d.tiles.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg?access_token={key}"
+        ),
+        RasterTileServerNameEnum.MAXAR_PREMIUM: (
             "https://services.digitalglobe.com"
             "/earthservice/tmsaccess/tms/1.0.0/"
             "DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg/"
             "{z}/{x}/{y}.jpg?connectId={key}"
         ),
-        TileServerNameEnum.MAXAR_STANDARD: (
+        RasterTileServerNameEnum.MAXAR_STANDARD: (
             "https://services.digitalglobe.com"
             "/earthservice/tmsaccess/tms/1.0.0/"
             "DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg/"
             "{z}/{x}/{y}.jpg?connectId={key}"
         ),
-        TileServerNameEnum.ESRI: (
+        RasterTileServerNameEnum.ESRI: (
             "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         ),
-        TileServerNameEnum.ESRI_BETA: (
+        RasterTileServerNameEnum.ESRI_BETA: (
             "https://clarity.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         ),
         # "sinergise": (
@@ -45,41 +47,41 @@ class Config:
 
     # FIXME(tnagorra): This will be obsolete soon
     IMAGE_API_KEYS = {
-        TileServerNameEnum.BING: settings.MAP_IMAGE_BING_API_KEY,
-        TileServerNameEnum.MAPBOX: settings.MAP_IMAGE_MAPBOX_API_KEY,
-        TileServerNameEnum.MAXAR_STANDARD: settings.MAP_IMAGE_MAXAR_STANDARD_API_KEY,
-        TileServerNameEnum.MAXAR_PREMIUM: settings.MAP_IMAGE_MAXAR_PREMIUM_API_KEY,
-        TileServerNameEnum.ESRI: settings.MAP_IMAGE_ESRI_API_KEY,
-        TileServerNameEnum.ESRI_BETA: settings.MAP_IMAGE_ESRI_BETA_API_KEY,
+        RasterTileServerNameEnum.BING: settings.MAP_IMAGE_BING_API_KEY,
+        RasterTileServerNameEnum.MAPBOX: settings.MAP_IMAGE_MAPBOX_API_KEY,
+        RasterTileServerNameEnum.MAXAR_STANDARD: settings.MAP_IMAGE_MAXAR_STANDARD_API_KEY,
+        RasterTileServerNameEnum.MAXAR_PREMIUM: settings.MAP_IMAGE_MAXAR_PREMIUM_API_KEY,
+        RasterTileServerNameEnum.ESRI: settings.MAP_IMAGE_ESRI_API_KEY,
+        RasterTileServerNameEnum.ESRI_BETA: settings.MAP_IMAGE_ESRI_BETA_API_KEY,
         # "digital_globe": settings.MAP_IMAGE_DIGITAL_GLOBE_API_KEY,
     }
 
     IMAGE_URLS_WITH_KEY = {
-        TileServerNameEnum.BING: (
+        RasterTileServerNameEnum.BING: (
             f"https://ecn.t0.tiles.virtualearth.net/tiles/a{{quadkey}}.jpeg?g=7505&token={settings.MAP_IMAGE_BING_API_KEY}"
         ),
-        TileServerNameEnum.MAPBOX: (
+        RasterTileServerNameEnum.MAPBOX: (
             "https://d.tiles.mapbox.com"
             "/v4/mapbox.satellite"
             "/{z}/{x}/{y}.jpg"
             f"?access_token={settings.MAP_IMAGE_MAPBOX_API_KEY}"
         ),
-        TileServerNameEnum.MAXAR_PREMIUM: (
+        RasterTileServerNameEnum.MAXAR_PREMIUM: (
             "https://services.digitalglobe.com"
             "/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg"
             "/{z}/{x}/{y}.jpg"
             f"?connectId={settings.MAP_IMAGE_MAXAR_PREMIUM_API_KEY}"
         ),
-        TileServerNameEnum.MAXAR_STANDARD: (
+        RasterTileServerNameEnum.MAXAR_STANDARD: (
             "https://services.digitalglobe.com"
             "/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg"
             "/{z}/{x}/{y}.jpg"
             f"?connectId={settings.MAP_IMAGE_MAXAR_STANDARD_API_KEY}"
         ),
-        TileServerNameEnum.ESRI: (
+        RasterTileServerNameEnum.ESRI: (
             "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         ),
-        TileServerNameEnum.ESRI_BETA: (
+        RasterTileServerNameEnum.ESRI_BETA: (
             "https://clarity.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         ),
         # "sinergise": (

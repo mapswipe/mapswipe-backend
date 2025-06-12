@@ -1,7 +1,7 @@
 import strawberry
 
 from project_types.tile_map_service.completeness import project as completeness_project
-from utils.geo.tile_server.models import TileServerConfig
+from utils.geo.raster_tile_server.models import RasterTileServerConfig
 
 # NOTE: We are importing base just for side-effect
 from . import base  # type: ignore[reportUnusedImport]  # noqa: F401
@@ -18,7 +18,7 @@ class ProjectOverlayRasterTileServerConfigInput: ...
 # FIXME(tnagorra): Add one_of here?
 @strawberry.experimental.pydantic.input(model=completeness_project.OverlayTileServerConfig, all_fields=True)
 class ProjectOverlayTileServerConfigInput:
-    raster: TileServerConfig | None = strawberry.UNSET
+    raster: RasterTileServerConfig | None = strawberry.UNSET
     vector: completeness_project.OverlayVectorTileServerConfig | None = strawberry.UNSET
 
 
