@@ -5,7 +5,7 @@ import strawberry_django
 
 from apps.common.graphql.types import UserResourceTypeMixin
 from apps.project.models import Organization, Project, ProjectAsset
-from apps.tutorial.graphql.types import TutorialType
+from apps.tutorial.graphql.types.types import TutorialType
 from project_types.tile_map_service.compare import project as compare_project
 from project_types.tile_map_service.completeness import project as completeness_project
 from project_types.tile_map_service.find import project as find_project
