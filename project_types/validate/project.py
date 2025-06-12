@@ -63,14 +63,13 @@ def group_input_geometries(features: list[ValidFeature], group_size: int, tutori
         # since we are not sure that GetFID returns unique values
         if not tutorial:
             groups[group_id_string]["feature_ids"].append(feature_count)
-        else:
-            # In the tutorial the feature id is defined by the "screen" attribute.
-            # We do this so that we can sort by the feature id later and
-            # get the screens displayed in the right order on the app.
-            if feature.properties is not None:
-                groups[group_id_string]["feature_ids"].append(
-                    feature.properties["screen"],
-                )
+        # In the tutorial the feature id is defined by the "screen" attribute.
+        # We do this so that we can sort by the feature id later and
+        # get the screens displayed in the right order on the app.
+        elif feature.properties is not None:
+            groups[group_id_string]["feature_ids"].append(
+                feature.properties["screen"],
+            )
         groups[group_id_string]["features"].append(feature)
 
     return groups

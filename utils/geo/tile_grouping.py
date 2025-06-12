@@ -106,7 +106,7 @@ def _get_horizontal_slice(
 
         ############################################################
 
-        for _ in range(0, rows + 1):
+        for _ in range(rows + 1):
             # Calculate lat, lon of upper left corner of tile
             PixelX = TileX_left * 256
             PixelY = TileY * 256
@@ -234,7 +234,7 @@ def _get_vertical_slice(
         if step_size % 2 == 1:
             step_size += 1
 
-        for i in range(0, cols):
+        for i in range(cols):
             # we need to make sure that geometries are not clipped at the edge
             if i == (cols - 1):
                 step_size = TileX_right - TileX + 1

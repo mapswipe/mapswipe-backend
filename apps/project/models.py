@@ -128,7 +128,7 @@ class ProjectProcessingStatusEnum(models.IntegerChoices):
 class UploadHelper:
     @staticmethod
     def project_asset(instance: "ProjectAsset", filename: str):
-        return f"project/{instance.project_id}/asset/{instance.type}/{str(ulid.ULID())}/{filename}"
+        return f"project/{instance.project_id}/asset/{instance.type}/{ulid.ULID()!s}/{filename}"
 
     @staticmethod
     # FIXME: This is not be used anymore

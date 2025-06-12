@@ -46,11 +46,7 @@ def lat_long_zoom_to_pixel_coords(lat: float, lon: float, zoom: int):
     p = _Point()
     sinLat = math.sin(lat * math.pi / 180.0)
     x = ((lon + 180) / 360) * 256 * math.pow(2, zoom)
-    y = (
-        (0.5 - math.log((1 + sinLat) / (1 - sinLat)) / (4 * math.pi))
-        * 256  # noqa: W503
-        * math.pow(2, zoom)  # noqa: W503
-    )
+    y = (0.5 - math.log((1 + sinLat) / (1 - sinLat)) / (4 * math.pi)) * 256 * math.pow(2, zoom)
     p.x = int(math.floor(x))
     p.y = int(math.floor(y))
     return p

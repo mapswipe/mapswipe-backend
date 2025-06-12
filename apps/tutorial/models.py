@@ -15,7 +15,7 @@ from apps.project.models import Project
 class UploadHelper:
     @staticmethod
     def information_page_block_image(instance: "TutorialInformationPageBlock", filename: str):
-        return f"tutorial/{instance.page.tutorial_id}/block-image/{str(ulid.ULID())}/{filename}"
+        return f"tutorial/{instance.page.tutorial_id}/block-image/{ulid.ULID()!s}/{filename}"
 
 
 class TutorialStatusEnum(models.IntegerChoices):
