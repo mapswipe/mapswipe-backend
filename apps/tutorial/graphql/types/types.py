@@ -18,22 +18,10 @@ from project_types.tile_map_service.completeness import tutorial as completeness
 from project_types.tile_map_service.find import tutorial as find_tutorial
 from project_types.validate import tutorial as validate_tutorial
 
-
-# Project Properties
-@strawberry.experimental.pydantic.type(model=compare_tutorial.CompareTutorialTaskProperty, all_fields=True)
-class CompareTutorialTaskPropertyType: ...
-
-
-@strawberry.experimental.pydantic.type(model=find_tutorial.FindTutorialTaskProperty, all_fields=True)
-class FindTutorialTaskPropertyType: ...
-
-
-@strawberry.experimental.pydantic.type(model=validate_tutorial.ValidateTutorialTaskProperty, all_fields=True)
-class ValidateTutorialTaskPropertyType: ...
-
-
-@strawberry.experimental.pydantic.type(model=completeness_tutorial.CompletenessTutorialTaskProperty, all_fields=True)
-class CompletenessTutorialTaskPropertyType: ...
+from .project_types.compare import CompareTutorialTaskPropertyType
+from .project_types.completeness import CompletenessTutorialTaskPropertyType
+from .project_types.find import FindTutorialTaskPropertyType
+from .project_types.validate import ValidateTutorialTaskPropertyType
 
 
 @strawberry_django.type(TutorialTask)

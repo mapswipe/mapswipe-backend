@@ -8,13 +8,11 @@ from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNa
 
 from .filters import OrganizationFilter, ProjectAssetFilter, ProjectFilter
 from .orders import OrganizationOrder, ProjectAssetOrder, ProjectOrder
+from .types.project_types.base import RasterTileServerType, TileServersType, VectorTileServerType
 from .types.types import (
     OrganizationType,
     ProjectAssetType,
     ProjectType,
-    RasterTileServerType,
-    TileServersType,
-    VectorTileServerType,
 )
 
 

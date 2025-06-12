@@ -10,45 +10,11 @@ from project_types.tile_map_service.compare import project as compare_project
 from project_types.tile_map_service.completeness import project as completeness_project
 from project_types.tile_map_service.find import project as find_project
 from project_types.validate import project as validate_project
-from utils.geo.tile_server.config import TileServerNameEnum
-from utils.geo.tile_server.models import (
-    TileServerCommonConfig,
-    TileServerConfig,
-    TileServerCustomConfig,
-)
-from utils.geo.vector_tile_server.config import VectorTileServerNameEnum
-from utils.geo.vector_tile_server.models import (
-    VectorTileServerCommonConfig,
-    VectorTileServerConfig,
-    VectorTileServerCustomConfig,
-)
 
-
-@strawberry.type
-class VectorTileServerType:
-    type: VectorTileServerNameEnum
-    label: str
-    url: str
-    layers: list[str]
-    min_zoom: int | None
-    max_zoom: int | None
-    credits: str
-
-
-@strawberry.type
-class RasterTileServerType:
-    type: TileServerNameEnum
-    label: str
-    url: str
-    # FIXME(tnagorra): We can implement min_zoom and max_zoom
-    # after we update rendering of tiles in the app from images to maplibre
-    credits: str
-
-
-@strawberry.type
-class TileServersType:
-    vector: list[VectorTileServerType]
-    raster: list[RasterTileServerType]
+from .project_types.compare import CompareProjectPropertyType
+from .project_types.completeness import CompletenessProjectPropertyType
+from .project_types.find import FindProjectPropertyType
+from .project_types.validate import ValidateProjectPropertyType
 
 
 # Organization
@@ -56,68 +22,6 @@ class TileServersType:
 class OrganizationType(UserResourceTypeMixin):
     id: strawberry.ID
     name: strawberry.auto
-
-
-# Tile server
-@strawberry.experimental.pydantic.type(model=TileServerCustomConfig, all_fields=True)
-class ProjectTileServerCustomConfig: ...
-
-
-@strawberry.experimental.pydantic.type(model=TileServerCommonConfig, all_fields=True)
-class ProjectTileServerCommonConfig: ...
-
-
-@strawberry.experimental.pydantic.type(model=TileServerConfig, all_fields=True)
-class ProjectTileServerConfig: ...
-
-
-# Vector tile server
-@strawberry.experimental.pydantic.type(model=VectorTileServerCustomConfig, all_fields=True)
-class ProjectVectorTileServerCustomConfig: ...
-
-
-@strawberry.experimental.pydantic.type(model=VectorTileServerCommonConfig, all_fields=True)
-class ProjectVectorTileServerCommonConfig: ...
-
-
-@strawberry.experimental.pydantic.type(model=VectorTileServerConfig, all_fields=True)
-class ProjectVectorTileServerConfig: ...
-
-
-# Project Properties: Compare
-@strawberry.experimental.pydantic.type(model=compare_project.CompareProjectProperty, all_fields=True)
-class CompareProjectPropertyType: ...
-
-
-# Project Properties: Find
-@strawberry.experimental.pydantic.type(model=find_project.FindProjectProperty, all_fields=True)
-class FindProjectPropertyType: ...
-
-
-# Project Properties: Validate
-@strawberry.experimental.pydantic.type(model=validate_project.ValidateObjectSourceConfig, all_fields=True)
-class ValidateObjectSourceConfig: ...
-
-
-@strawberry.experimental.pydantic.type(model=validate_project.ValidateProjectProperty, all_fields=True)
-class ValidateProjectPropertyType: ...
-
-
-# Project Properties: Completeness
-@strawberry.experimental.pydantic.type(model=completeness_project.OverlayVectorTileServerConfig, all_fields=True)
-class ProjectOverlayVectorTileServerConfig: ...
-
-
-@strawberry.experimental.pydantic.type(model=completeness_project.OverlayRasterTileServerConfig, all_fields=True)
-class ProjectOverlayRasterTileServerConfig: ...
-
-
-@strawberry.experimental.pydantic.type(model=completeness_project.OverlayTileServerConfig, all_fields=True)
-class ProjectOverlayTileServerConfig: ...
-
-
-@strawberry.experimental.pydantic.type(model=completeness_project.CompletenessProjectProperty, all_fields=True)
-class CompletenessProjectPropertyType: ...
 
 
 # Project
