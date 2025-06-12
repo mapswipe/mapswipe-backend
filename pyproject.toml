@@ -39,6 +39,7 @@ dependencies = [
     "httpx",
     "urllib3>=2.3.0",
     "geojson-pydantic>=2.0.0",
+    "firebase-admin==6.9.0",
 ]
 
 [dependency-groups]

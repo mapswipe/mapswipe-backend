@@ -1,4 +1,5 @@
 # type: ignore[reportAttributeAccessIssue]
+import os
 import socket
 import sys
 from pathlib import Path
@@ -7,6 +8,7 @@ import environ
 
 from main.logging import log_render_extra_context
 from main.sentry import SentryConfig
+from utils.firebase import FirebaseHelper
 from utils.git import GitHelper
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -81,6 +83,17 @@ env = environ.Env(
     MAP_IMAGE_ESRI_BETA_API_KEY=str,
     OSMCHA_API_KEY=str,  # os.environ["OSMCHA_API_KEY"]
     # MAP_IMAGE_DIGITAL_GLOBE_API_KEY=str,
+    # Firebase
+    FIREBASE_EMULATOR_USE=(bool, False),
+    # -- Emulator (If FIREBASE_EMULATOR_USE is True)
+    # -- NOTE: Using non standard emulator ENV variable for enabling firebase emulator
+    #    to allow custom logics to enable/disable emulator use by firebase-admin
+    FIREBASE_EMULATOR_PROJECT_ID=str,  # FIREBASE_DB_URL also uses this value
+    FIREBASE_EMULATOR_DATABASE_HOST=str,
+    # -- Real (If FIREBASE_EMULATOR_USE is False)
+    FIREBASE_DB_URL=str,  # https://mapswipe-dev.firebaseio.com
+    FIREBASE_CREDENTIALS_B64_GZ=(str, None),  # gzip -cn credential.json | base64 -w 0
+    GOOGLE_APPLICATION_CREDENTIALS=str,
     # Pytest
     PYTEST_XDIST_WORKER=(str, None),
 )
@@ -429,6 +442,24 @@ MAP_IMAGE_ESRI_BETA_API_KEY = env("MAP_IMAGE_ESRI_BETA_API_KEY")
 # MAP_IMAGE_DIGITAL_GLOBE_API_KEY = env("MAP_IMAGE_DIGITAL_GLOBE_API_KEY")
 
 OSMCHA_API_KEY = env("OSMCHA_API_KEY")
+
+# Firebase
+FIREBASE_EMULATOR_USE = env("FIREBASE_EMULATOR_USE")
+FIREBASE_CREDENTIALS_B64_GZ = env("FIREBASE_CREDENTIALS_B64_GZ")
+if FIREBASE_EMULATOR_USE:
+    # NOTE: Adding environment variable programmatically
+    os.environ["FIREBASE_DATABASE_EMULATOR_HOST"] = env.url("FIREBASE_EMULATOR_DATABASE_HOST").geturl()
+    os.environ["GCLOUD_PROJECT"] = env("FIREBASE_EMULATOR_PROJECT_ID")
+    FIREBASE_DB_URL = "https://" + env("FIREBASE_EMULATOR_PROJECT_ID")
+else:
+    FIREBASE_DB_URL = env.url("FIREBASE_DB_URL").geturl()
+
+FIREBASE_HELPER = FirebaseHelper(
+    FIREBASE_DB_URL,
+    credential_b64_gz=FIREBASE_CREDENTIALS_B64_GZ,
+    using_emulator=FIREBASE_EMULATOR_USE,
+)
+
 
 # TODO(thenav56): Handle file logs using gunicorn
 LOGGING = {
