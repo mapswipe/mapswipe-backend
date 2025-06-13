@@ -19,6 +19,7 @@ def validate_imagery_url(url: str, *, support_quadkey: bool | None = True):
         [substring in url for substring in ["{{x}}", "{{-y}}", "{{z}}"]],
     ):
         return
+    # NOTE: We are using quadkey instead of quad_key because client-side libraries directly supports quadkey
     if support_quadkey and ("{quadkey}" in url and "{{quadkey}}" not in url):
         return
 

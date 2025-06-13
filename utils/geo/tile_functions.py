@@ -46,22 +46,18 @@ def lat_long_zoom_to_pixel_coords(lat: float, lon: float, zoom: int):
     p = _Point()
     sinLat = math.sin(lat * math.pi / 180.0)
     x = ((lon + 180) / 360) * 256 * math.pow(2, zoom)
-    y = (
-        (0.5 - math.log((1 + sinLat) / (1 - sinLat)) / (4 * math.pi))
-        * 256  # noqa: W503
-        * math.pow(2, zoom)  # noqa: W503
-    )
+    y = (0.5 - math.log((1 + sinLat) / (1 - sinLat)) / (4 * math.pi)) * 256 * math.pow(2, zoom)
     p.x = int(math.floor(x))
     p.y = int(math.floor(y))
     return p
 
 
-def pixel_coords_zoom_to_lat_lon(pile_x: float, pile_y: float, zoom: int):
+def pixel_coords_zoom_to_lat_lon(pixel_x: float, pixel_y: float, zoom: int):
     """Compute latitude, longitude from pixel coordinates at a given zoom level."""
 
     MapSize = 256 * math.pow(2, zoom)
-    x = (pile_x / MapSize) - 0.5
-    y = 0.5 - (pile_y / MapSize)
+    x = (pixel_x / MapSize) - 0.5
+    y = 0.5 - (pixel_y / MapSize)
     lon = 360 * x
     lat = 90 - 360 * math.atan(math.exp(-y * 2 * math.pi)) / math.pi
 

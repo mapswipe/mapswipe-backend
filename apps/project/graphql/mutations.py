@@ -14,7 +14,7 @@ from main.graphql.context import Info
 from utils.graphql.mutations import ModelMutation
 from utils.graphql.types import MutationResponseType
 
-from .inputs import (
+from .inputs.inputs import (
     OrganizationCreateInput,
     OrganizationUpdateInput,
     ProcessedProjectUpdateInput,
@@ -22,7 +22,7 @@ from .inputs import (
     ProjectCreateInput,
     ProjectUpdateInput,
 )
-from .types import OrganizationType, ProjectAssetType, ProjectType
+from .types.types import OrganizationType, ProjectAssetType, ProjectType
 
 
 @strawberry.type

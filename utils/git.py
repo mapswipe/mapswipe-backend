@@ -24,8 +24,7 @@ class GitHelper:
             user_host, repo_path = url.split(":", 1)
             host = user_host[4:]
             # Remove trailing .git if present
-            if repo_path.endswith(".git"):
-                repo_path = repo_path[:-4]
+            repo_path = repo_path.removesuffix(".git")
             return f"https://{host}/{repo_path}"
         # Also remove .git if URL is already https and ends with it
         if url.endswith(".git"):

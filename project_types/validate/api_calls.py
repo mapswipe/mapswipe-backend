@@ -7,6 +7,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from main.config import Config
+from main.logging import log_extra_response
 
 logger = logging.getLogger(__name__)
 
@@ -58,10 +59,11 @@ def query_osmcha(changeset_ids: list, changeset_results: dict):
     url = Config.OSMCHA_API_LINK + f"changesets/?ids={id_string}"
     response = retry_get(url, to_osmcha=True)
     if response.status_code != 200:
-        err = f"osmcha request failed: {response.status_code}"
-        logger.warning(f"{err}")  # noqa E501
-        logger.warning(response.json())
-        raise ValidateApiCallError(err)
+        logger.warning(
+            "osmcha request failed",
+            extra=log_extra_response(response=response),
+        )
+        raise ValidateApiCallError
     response = response.json()
     for feature in response["features"]:
         changeset_results[int(feature["id"])] = {
@@ -81,11 +83,12 @@ def query_osm(changeset_ids: list, changeset_results: dict):
     url = Config.OSM_API_LINK + f"changesets?changesets={id_string}"
     response = retry_get(url)
     if response.status_code != 200:
-        err = f"osm request failed: {response.status_code}"
-        logger.warning(f"{err}")  # noqa E501
-        logger.warning(response.json())
-        raise ValidateApiCallError(err)
-    tree = ET.fromstring(response.content)
+        logger.warning(
+            "osm request failed",
+            extra=log_extra_response(response=response),
+        )
+        raise ValidateApiCallError
+    tree = ET.fromstring(response.content)  # noqa: S314
 
     for changeset in tree.iter("changeset"):
         changeset_id = changeset.attrib["id"]
@@ -135,26 +138,26 @@ def remove_noise_and_add_user_info(json: dict[str, Any]) -> dict[str, Any]:
     # add info
     len_osm = len(changeset_results.keys())
     batches = int(len(changeset_results.keys()) / batch_size) + 1
-    logger.info(
-        f"""{len_osm} changesets will be queried in roughly {batches} batches from osmCHA"""  # noqa E501
-    )
+    logger.info("%s changesets will be queried in roughly %s batches from osmCHA", len_osm, batches)
 
     chunk_list = chunks(list(changeset_results.keys()), batch_size)
     for i, subset in enumerate(chunk_list):
         changeset_results = query_osmcha(subset, changeset_results)
         progress = round(100 * ((i + 1) / len(chunk_list)), 1)
-        logger.info(f"finished query {i + 1}/{len(chunk_list)}, {progress}")  # noqa E501
+        logger.info("finished query %s/%s, %s", i + 1, len(chunk_list), progress)
 
     missing_ids = [i for i, v in changeset_results.items() if v is None]
     chunk_list = chunks(missing_ids, batch_size)
     batches = int(len(missing_ids) / batch_size) + 1
     logger.info(
-        f"""{len(missing_ids)} changesets where missing from osmCHA and are now queried via osmAPI in {batches} batches"""  # noqa E501
+        "%s changesets where missing from osmCHA and are now queried via osmAPI in %s batches",
+        len(missing_ids),
+        batches,
     )
     for i, subset in enumerate(chunk_list):
         changeset_results = query_osm(subset, changeset_results)
         progress = round(100 * ((i + 1) / len(chunk_list)), 1)
-        logger.info(f"finished query {i + 1}/{len(chunk_list)}, {progress}")  # noqa E501
+        logger.info("finished query %s/%s, %s", i + 1, len(chunk_list), progress)
 
     for feature in json["features"]:
         changeset = changeset_results[int(feature["properties"]["changesetId"])]
@@ -166,7 +169,7 @@ def remove_noise_and_add_user_info(json: dict[str, Any]) -> dict[str, Any]:
 
     logger.info("finished filtering and adding extra info")
     if any(x > 0 for x in missing_rows.values()):
-        logger.warning(f"features missing values:\n{missing_rows}")  # noqa E501
+        logger.warning("features missing values:\n %s", missing_rows)
 
     return json
 
@@ -177,16 +180,16 @@ def ohsome(request: dict[str, Any], area: str, properties: str | None = None) ->
     data = {"bpolys": area, "filter": request["filter"]}
     if properties:
         data["properties"] = properties
-    logger.info("Target: " + url)  # noqa E501
-    logger.info("Filter: " + request["filter"])  # noqa E501
-    response = requests.post(url, data=data)
+    logger.info("Target: %s", url)
+    logger.info("Filter: %s", request["filter"])
+    # FIXME(tnagorra): Need to check what the timeout should be
+    response = requests.post(url, data=data, timeout=100)
     if response.status_code != 200:
-        err = f"ohsome request failed: {response.status_code}"
         logger.warning(
-            f"{err} - check for errors in filter or geometries - {request['filter']}",  # noqa E501
+            "ohsome request failed: check for errors in filter or geometries",
+            extra=log_extra_response(response=response),
         )
-        logger.warning(response.json())
-        raise ValidateApiCallError(err)
+        raise ValidateApiCallError
     logger.info("Query successful.")
 
     response = response.json()

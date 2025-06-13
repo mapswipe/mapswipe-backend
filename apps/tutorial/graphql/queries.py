@@ -5,7 +5,7 @@ from strawberry_django.permissions import IsAuthenticated
 
 from .filters import TutorialFilter
 from .orders import TutorialOrder
-from .types import TutorialType
+from .types.types import TutorialType
 
 
 @strawberry.type

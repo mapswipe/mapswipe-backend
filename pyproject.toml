@@ -77,14 +77,75 @@ extend-exclude = [
 
 [tool.ruff.lint]
 flake8-builtins.builtins-strict-checking = false
-ignore = [
-    "C901",
-    "E701",
-    "E203",
-    "DJ001",
-    "G201", # FIXME(thenav56): Check if we can enable this and keep sending logs to sentry
+extend-select = [
+    "I",  # isort
+    "E",  # pycodestyle
+    "F",  # pyflakes
+    "B",  # flake8-bugbear
+    "A",  # flake8-builtins
+    "W",  # pycodestyle
+    "DJ",  # flake8-django
+    "AIR",  # airflow
+    "COM",  # flake8-commas
+    "INT",  # flake8-gettext
+    "ISC",  # flake8-implicit-str-concat
+    "ICN",  # flake8-import-conventions
+    "LOG",  # flake8-logging
+    "G",  # flake8-logging-format
+    "T20",  # flake8-print
+    "TID",  # flake8-tidy-imports
+    "PT",  # flake8-pytest-style
+    "Q",  # flake8-quotes
+    "RET",  # flake8-return
+    "SIM",  # flake8-simplify
+    "TC",  # flake8-type-checking
+    "PTH",  # flake8-use-pathlib
+    "UP",  # pyupgrad
+
+    "ASYNC",  # flake8-async
+    "S",  # flake8-bandit
+    "BLE",  # blind-except
+    # "FBT",  # flake8-boolean-trap
+    # "C4",  # flake8-comprehensions
+    # "DTZ",  # flake8-datetimez
+    # "EM",  # flake8-errmsg
+    "FA",  # flake8-future-annotations
+    "INP",  # flake8-no-pep420
+    "PIE",  # flake8-pie
+    "RSE",  # flake8-raise
+    # "SLF",  # flake8-self
+    "SLOT",  # flake8-slots
+    "FLY",  # flynt
+    "C90",  # mccabe
+    # "N",  # pep8-naming
+    # "PERF",  # Perflint
+    "PGH",  # pygrep-hooks
+    "PLC",  # Convention
+    "PLE",  # Error
+    # "PLR",  # Refactor
+    "PLW",  # Warning
+    "FURB",  # refurb
+    "RUF",  # Ruff-specific rules
+    "TRY",  # tryceratops
 ]
-extend-select = ["I", "E", "F", "B", "A", "W", "DJ", "AIR", "COM", "INT", "ISC", "ICN", "LOG", "G", "T20", "TID", "PT", "Q", "RET", "SIM", "TC", "PTH", "UP"]
+ignore = [
+    "C901",  # C90 complex-structure
+    "E701",  # E multiple-statements-on-one-line-colon
+    "E203",  # E whitespace-before-punctuation
+    "DJ001",  # DJ django-nullable-model-string-field
+    # FIXME(thenav56): Check if we can enable G201 and keep sending logs to sentry
+    "G201",  # G logging-exc-info
+
+    "BLE001",  # BLE blind-except (NOTE: "except Exception" is already explicitly defined)
+    "S101",  # S assert
+    "S608",  # hardcoded-sql-expression
+    "RUF012",  # mutable-class-default
+    "TRY300",  # try-consider-else
+    "TRY003",  # raise-vanilla-args
+    "TRY002",  # raise-vanilla-class
+    "TRY301",  # raise-within-try
+    "TRY400",  # error-instead-of-exception
+]
 # TODO(thenav56): Use this instead `select = ["ALL"]` and add rules to ignore
 #   ruff check --statistics ./
 

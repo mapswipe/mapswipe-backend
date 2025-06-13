@@ -4,7 +4,9 @@ from strawberry.django.views import AsyncGraphQLView
 from strawberry.file_uploads import Upload
 from strawberry_django.optimizer import DjangoOptimizerExtension
 
-import utils.graphql.monkey_patches  # noqa: F401  type: ignore
+# NOTE: We are importing monkey_patches for side-effect
+# The patch is required by the following graphql imports
+import utils.graphql.monkey_patches  # noqa: F401  # isort: skip # type: ignore[reportUnusedImport]
 from apps.community_dashboard.graphql import queries as community_dashboard_queries
 from apps.contributor.graphql import mutations as contributor_mutations
 from apps.contributor.graphql import queries as contributor_queries

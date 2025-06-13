@@ -25,8 +25,7 @@ from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
 from project_types.tile_map_service.base.project import create_json_dump
 from project_types.validate.api_calls import ohsome
-from utils.geo.tile_server.models import TileServerConfig
-from utils.geo.tile_server.tile_server import AvailableTileServerTypeAlias, get_tile_server
+from utils.geo.raster_tile_server.models import RasterTileServerConfig
 
 logger = logging.getLogger(__name__)
 
@@ -63,14 +62,13 @@ def group_input_geometries(features: list[ValidFeature], group_size: int, tutori
         # since we are not sure that GetFID returns unique values
         if not tutorial:
             groups[group_id_string]["feature_ids"].append(feature_count)
-        else:
-            # In the tutorial the feature id is defined by the "screen" attribute.
-            # We do this so that we can sort by the feature id later and
-            # get the screens displayed in the right order on the app.
-            if feature.properties is not None:
-                groups[group_id_string]["feature_ids"].append(
-                    feature.properties["screen"],
-                )
+        # In the tutorial the feature id is defined by the "screen" attribute.
+        # We do this so that we can sort by the feature id later and
+        # get the screens displayed in the right order on the app.
+        elif feature.properties is not None:
+            groups[group_id_string]["feature_ids"].append(
+                feature.properties["screen"],
+            )
         groups[group_id_string]["features"].append(feature)
 
     return groups
@@ -122,7 +120,7 @@ class ValidateObjectSourceConfig(BaseModel):
 
 
 class ValidateProjectProperty(base_project.BaseProjectProperty):
-    tile_server_property: TileServerConfig
+    tile_server_property: RasterTileServerConfig
     object_source: ValidateObjectSourceConfig
 
 
@@ -147,15 +145,12 @@ class ValidateProject(
         ValidateRawGroupItem,
     ],
 ):
-    tile_server: AvailableTileServerTypeAlias
-
     project_property_class = ValidateProjectProperty
     project_task_group_property_class = ValidateProjectTaskGroupProperty
     project_task_property_class = ValidateProjectTaskProperty
 
     def __init__(self, project: Project):
         super().__init__(project)
-        self.tile_server = get_tile_server(self.project_type_specifics.tile_server_property)
 
     def _process_polygons(self, geojson_data: dict[str, Any]) -> list[ValidFeature]:
         """We only want polygon and multipolygon features"""

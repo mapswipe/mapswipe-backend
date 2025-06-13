@@ -14,28 +14,12 @@ from apps.tutorial.models import (
     TutorialScenarioPage,
     TutorialTask,
 )
-from project_types.tile_map_service.compare import tutorial as compare_tutorial
-from project_types.tile_map_service.completeness import tutorial as completeness_tutorial
-from project_types.tile_map_service.find import tutorial as find_tutorial
-from project_types.validate import tutorial as validate_tutorial
 from utils.graphql.types import CudInput
 
-
-# Project Properties
-@strawberry.experimental.pydantic.input(model=compare_tutorial.CompareTutorialTaskProperty, all_fields=True)
-class CompareTutorialTaskPropertyInput: ...
-
-
-@strawberry.experimental.pydantic.input(model=find_tutorial.FindTutorialTaskProperty, all_fields=True)
-class FindTutorialTaskPropertyInput: ...
-
-
-@strawberry.experimental.pydantic.input(model=validate_tutorial.ValidateTutorialTaskProperty, all_fields=True)
-class ValidateTutorialTaskPropertyInput: ...
-
-
-@strawberry.experimental.pydantic.input(model=completeness_tutorial.CompletenessTutorialTaskProperty, all_fields=True)
-class CompletenessTutorialTaskPropertyInput: ...
+from .project_types.compare import CompareTutorialTaskPropertyInput
+from .project_types.completeness import CompletenessTutorialTaskPropertyInput
+from .project_types.find import FindTutorialTaskPropertyInput
+from .project_types.validate import ValidateTutorialTaskPropertyInput
 
 
 @strawberry.input(one_of=True)

@@ -1,22 +1,23 @@
 import typing
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, field_validator, model_validator
+
+from utils import fields as custom_fields
 
 from .config import VectorTileServerNameEnum
 
 
 class VectorTileServerCustomConfig(BaseModel):
-    # FIXME(tnagorra): need to add URL validation
-    url: typing.Annotated[str, Field(strict=True, max_length=1000)]
-    source_name: typing.Annotated[str, Field(strict=True, max_length=1000)]
-    credits: typing.Annotated[str, Field(strict=True, max_length=1000)]
-    min_zoom: typing.Annotated[int, Field(strict=True, ge=0, lt=23)]
-    max_zoom: typing.Annotated[int, Field(strict=True, ge=0, lt=23)]
+    url: custom_fields.PydanticVectorTileServerUrl
+    source_name: custom_fields.PydanticLongText
+    credits: custom_fields.PydanticLongText
+    min_zoom: custom_fields.PydanticZoomLevel
+    max_zoom: custom_fields.PydanticZoomLevel
 
 
 class VectorTileServerCommonConfig(BaseModel):
-    source_name: typing.Annotated[str, Field(strict=True, max_length=1000)]
-    credits: typing.Annotated[str, Field(strict=True, max_length=1000)]
+    source_name: custom_fields.PydanticLongText
+    credits: custom_fields.PydanticLongText
 
 
 class VectorTileServerConfig(BaseModel):
@@ -27,6 +28,7 @@ class VectorTileServerConfig(BaseModel):
     open_free_map: VectorTileServerCommonConfig | None = None
     versatiles: VectorTileServerCommonConfig | None = None
 
+    # FIXME(tnagorra): Do we need this?
     @field_validator("name", mode="before")
     def ensure_name_enum(cls, value: str | VectorTileServerNameEnum | None):
         if isinstance(value, str):

@@ -13,8 +13,8 @@ CMD = "celery -A main worker -E --concurrency=2 -l info"
 
 def restart_celery(*args: typing.Any, **kwargs: typing.Any):
     kill_worker_cmd = "pkill -9 celery"
-    subprocess.call(shlex.split(kill_worker_cmd))
-    subprocess.call(shlex.split(CMD))
+    subprocess.call(shlex.split(kill_worker_cmd))  # noqa: S603
+    subprocess.call(shlex.split(CMD))  # noqa: S603
 
 
 class Command(BaseCommand):

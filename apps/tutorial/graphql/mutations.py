@@ -15,8 +15,8 @@ from utils.graphql.common import DataclassInstance
 from utils.graphql.mutations import ModelMutation
 from utils.graphql.types import CudInput, MutationResponseType
 
-from .inputs import TutorialCreateInput, TutorialUpdateInput
-from .types import TutorialType
+from .inputs.inputs import TutorialCreateInput, TutorialUpdateInput
+from .types.types import TutorialType
 
 
 @strawberry.type

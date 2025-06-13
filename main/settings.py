@@ -40,7 +40,7 @@ env = environ.Env(
     # Storage
     MEDIA_URL=(str, "media/"),
     STATIC_URL=(str, "static/"),
-    TEMP_DIR=(str, "/tmp/"),
+    TEMP_DIR=(str, "/tmp/"),  # noqa: S108
     # -- S3 storage
     AWS_S3_ENABLED=(bool, False),
     AWS_S3_ENDPOINT_URL=(str, None),

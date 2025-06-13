@@ -30,9 +30,7 @@ class ContributorUserGroupFilter:
         )
 
         return queryset, models.Q(
-            **{
-                "id__in": membership_qs.values("user_group_id"),
-            },
+            id__in=membership_qs.values("user_group_id"),
         )
 
     @strawberry_django.filter_field

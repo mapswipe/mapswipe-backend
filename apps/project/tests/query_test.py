@@ -32,7 +32,7 @@ class TestProjectQuery(TestCase):
                   sourceName
                 }
             }
-            fragment TileServerPropertyFields on ProjectTileServerConfig {
+            fragment RasterTileServerPropertyFields on ProjectRasterTileServerConfig {
               name
               bing {
                 credits
@@ -73,24 +73,24 @@ class TestProjectQuery(TestCase):
                       zoomLevel
                       aoiGeometry
                       tileServerProperty {
-                        ...TileServerPropertyFields
+                        ...RasterTileServerPropertyFields
                       }
                     }
                     ... on CompareProjectPropertyType {
                       zoomLevel
                       aoiGeometry
                       tileServerProperty {
-                        ...TileServerPropertyFields
+                        ...RasterTileServerPropertyFields
                       }
                       tileServerBProperty {
-                        ...TileServerPropertyFields
+                        ...RasterTileServerPropertyFields
                       }
                     }
                     ... on CompletenessProjectPropertyType {
                       zoomLevel
                       aoiGeometry
                       tileServerProperty {
-                        ...TileServerPropertyFields
+                        ...RasterTileServerPropertyFields
                       }
                       overlayTileServerProperty {
                         type
@@ -111,7 +111,7 @@ class TestProjectQuery(TestCase):
                         raster {
                           opacity
                           tileServer {
-                              ...TileServerPropertyFields
+                              ...RasterTileServerPropertyFields
                           }
                         }
                       }
@@ -256,7 +256,7 @@ class TestProjectQuery(TestCase):
                             "tile_server": {
                                 "name": "CUSTOM",
                                 "custom": {
-                                    "url": "https://custom-osm-data",
+                                    "url": "https://custom-osm-data/{x}/{y}/{z}.pbf",
                                     "credits": "custom osm",
                                     "source_name": "custom-source-name",
                                     "min_zoom": 0,
