@@ -3,7 +3,7 @@ import strawberry_django
 from strawberry_django.pagination import OffsetPaginated
 from strawberry_django.permissions import IsAuthenticated
 
-from utils.geo.raster_tile_server.config import Config, RasterTileServerNameEnum
+from utils.geo.raster_tile_server.config import RasterConfig, RasterTileServerNameEnum
 from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum
 
 from .filters import OrganizationFilter, ProjectAssetFilter, ProjectFilter
@@ -21,115 +21,49 @@ def get_tile_servers() -> RasterTileServersType:
         VectorTileServerType(
             type=VectorTileServerNameEnum.OPEN_STREET_MAP,
             label=VectorTileServerNameEnum.OPEN_STREET_MAP.label,
-            url=VectorConfig.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.OPEN_STREET_MAP],
-            # FIXME(tnagorra): Need to check what layers we want
-            # FIXME(tnagorra): Should we also include the source: versatiles-shortbread
-            min_zoom=0,
-            max_zoom=14,
-            layers=[
-                "buildings",
-                "boundaries",
-                "bridges",
-                "dam_lines",
-                "dam_polygons",
-                "ferries",
-                "land",
-                "ocean",
-                "pier_lines",
-                "pier_polygons",
-                "sites",
-                "street_polygons",
-                "streets",
-                "water_lines",
-                "water_polygons",
-            ],
-            credits="Map data from OpenStreetMap",
+            **VectorConfig.get_config(VectorTileServerNameEnum.OPEN_STREET_MAP),
         ),
         VectorTileServerType(
             type=VectorTileServerNameEnum.VERSATILES,
             label=VectorTileServerNameEnum.VERSATILES.label,
-            url=VectorConfig.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.VERSATILES],
-            # FIXME(tnagorra): Need to check what layers we want
-            # FIXME(tnagorra): Should we also include the source: versatiles-shortbread
-            min_zoom=0,
-            max_zoom=14,
-            layers=[
-                "buildings",
-                "boundaries",
-                "bridges",
-                "dam_lines",
-                "dam_polygons",
-                "ferries",
-                "land",
-                "ocean",
-                "pier_lines",
-                "pier_polygons",
-                "sites",
-                "street_polygons",
-                "streets",
-                "water_lines",
-                "water_polygons",
-            ],
-            credits="Map data from OpenStreetMap",
+            **VectorConfig.get_config(VectorTileServerNameEnum.VERSATILES),
         ),
         VectorTileServerType(
             type=VectorTileServerNameEnum.OPEN_FREE_MAP,
             label=VectorTileServerNameEnum.OPEN_FREE_MAP.label,
-            url=VectorConfig.VECTOR_IMAGE_URLS[VectorTileServerNameEnum.OPEN_FREE_MAP],
-            # FIXME(tnagorra): Need to check what layers we want
-            # FIXME(tnagorra): Should we also include the source: openmaptiles
-            min_zoom=0,
-            max_zoom=14,
-            layers=[
-                "building",
-                "aeroway",
-                "boundary",
-                "landcover",
-                "landuse",
-                "park",
-                "transportation",
-                "water",
-                "waterway",
-            ],
-            credits="OpenFreeMap © OpenMapTiles Data from OpenStreetMap",
+            **VectorConfig.get_config(VectorTileServerNameEnum.OPEN_FREE_MAP),
         ),
     ]
     raster_tiles = [
         RasterTileServerType(
             type=RasterTileServerNameEnum.BING,
             label=RasterTileServerNameEnum.BING.label,
-            url=Config.IMAGE_URLS_WITH_KEY[RasterTileServerNameEnum.BING],
-            credits="© 2019 Microsoft Corporation, Earthstar Geographics SIO",
+            **RasterConfig.get_config(RasterTileServerNameEnum.BING),
         ),
         RasterTileServerType(
             type=RasterTileServerNameEnum.MAPBOX,
             label=RasterTileServerNameEnum.MAPBOX.label,
-            url=Config.IMAGE_URLS_WITH_KEY[RasterTileServerNameEnum.MAPBOX],
-            credits="© 2019 MapBox",
+            **RasterConfig.get_config(RasterTileServerNameEnum.MAPBOX),
         ),
         RasterTileServerType(
             type=RasterTileServerNameEnum.MAXAR_STANDARD,
             label=RasterTileServerNameEnum.MAXAR_STANDARD.label,
-            url=Config.IMAGE_URLS_WITH_KEY[RasterTileServerNameEnum.MAXAR_STANDARD],
-            credits="© 2019 Maxar",
+            **RasterConfig.get_config(RasterTileServerNameEnum.MAXAR_STANDARD),
         ),
         RasterTileServerType(
             type=RasterTileServerNameEnum.MAXAR_PREMIUM,
             label=RasterTileServerNameEnum.MAXAR_PREMIUM.label,
-            url=Config.IMAGE_URLS_WITH_KEY[RasterTileServerNameEnum.MAXAR_PREMIUM],
-            credits="© 2019 Maxar",
+            **RasterConfig.get_config(RasterTileServerNameEnum.MAXAR_PREMIUM),
         ),
         RasterTileServerType(
             type=RasterTileServerNameEnum.ESRI,
             label=RasterTileServerNameEnum.ESRI.label,
-            url=Config.IMAGE_URLS_WITH_KEY[RasterTileServerNameEnum.ESRI],
-            credits="© 2019 ESRI",
+            **RasterConfig.get_config(RasterTileServerNameEnum.ESRI),
         ),
         RasterTileServerType(
             type=RasterTileServerNameEnum.ESRI_BETA,
             label=RasterTileServerNameEnum.ESRI_BETA.label,
-            url=Config.IMAGE_URLS_WITH_KEY[RasterTileServerNameEnum.ESRI_BETA],
-            credits="© 2019 ESRI",
+            **RasterConfig.get_config(RasterTileServerNameEnum.ESRI_BETA),
         ),
     ]
     return RasterTileServersType(

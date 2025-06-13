@@ -3,9 +3,9 @@ import typing
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
 from main.bulk_managers import BulkCreateManager
 from project_types.tile_map_service.base import project as base_project
+from utils import fields as custom_fields
 from utils.geo import tile_functions, tile_grouping
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
-from utils.geo.raster_tile_server.raster_tile_server import AvailableRasterTileServerTypeAlias, get_raster_tile_server
 
 
 class CompareProjectProperty(base_project.TileMapServiceProjectProperty):
@@ -16,7 +16,7 @@ class CompareProjectTaskGroupProperty(base_project.TileMapServiceProjectTaskGrou
 
 
 class CompareProjectTaskProperty(base_project.TileMapServiceProjectTaskProperty):
-    url_b: str
+    url_b: custom_fields.PydanticUrl
 
 
 class CompareProject(
@@ -26,8 +26,6 @@ class CompareProject(
         CompareProjectTaskProperty,
     ],
 ):
-    tile_server_b: AvailableRasterTileServerTypeAlias
-
     project_property_class = CompareProjectProperty
     project_task_group_property_class = CompareProjectTaskGroupProperty
     project_task_property_class = CompareProjectTaskProperty
@@ -36,7 +34,6 @@ class CompareProject(
         super().__init__(project)
         if typing.TYPE_CHECKING:
             assert project.project_type == ProjectTypeEnum.COMPARE, f"{type(self)} is defined for COMPARE"
-        self.tile_server_b = get_raster_tile_server(self.project_type_specifics.tile_server_b_property)
 
     @typing.override
     def create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:
@@ -50,13 +47,13 @@ class CompareProject(
                     tile_y,
                     self.project_type_specifics.zoom_level,
                 )
-                url = self.tile_server.generate_url(
+                url = self.project_type_specifics.tile_server_property.generate_url(
                     tile_x,
                     tile_y,
                     self.project_type_specifics.zoom_level,
                 )
                 # Additional
-                url_b = self.tile_server_b.generate_url(
+                url_b = self.project_type_specifics.tile_server_b_property.generate_url(
                     tile_x,
                     tile_y,
                     self.project_type_specifics.zoom_level,

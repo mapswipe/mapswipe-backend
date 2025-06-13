@@ -8,7 +8,7 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
-from pydantic import Field, ValidationInfo, model_validator
+from pydantic import ValidationInfo, model_validator
 from ulid import ULID
 
 from apps.project.models import (
@@ -21,18 +21,18 @@ from apps.project.models import (
 )
 from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
+from utils import fields as custom_fields
 from utils.common import create_json_dump
 from utils.geo import tile_functions, tile_grouping
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
-from utils.geo.raster_tile_server.raster_tile_server import AvailableRasterTileServerTypeAlias, get_raster_tile_server
 
 logger = logging.getLogger(__name__)
 
 
 class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
-    zoom_level: typing.Annotated[int, Field(strict=True, gt=13, lt=23)]
+    zoom_level: custom_fields.PydanticRestrictedZoomLevel
     tile_server_property: RasterTileServerConfig
-    aoi_geometry: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")]
+    aoi_geometry: custom_fields.PydanticId
 
     @model_validator(mode="after")
     def check_aoi_geometry_exists(self, info: ValidationInfo) -> typing.Self:
@@ -66,7 +66,7 @@ class TileMapServiceProjectTaskGroupProperty(base_project.BaseProjectTaskGroupPr
 
 
 class TileMapServiceProjectTaskProperty(base_project.BaseProjectTaskProperty):
-    url: str
+    url: custom_fields.PydanticUrl
     tile_x: int
     tile_y: int
 
@@ -85,11 +85,8 @@ class TileMapServiceBaseProject[
     ],
     ABC,
 ):
-    tile_server: AvailableRasterTileServerTypeAlias
-
     def __init__(self, project: Project):
         super().__init__(project)
-        self.tile_server = get_raster_tile_server(self.project_type_specifics.tile_server_property)
 
     @typing.override
     def post_create_groups(self):
@@ -159,7 +156,7 @@ class TileMapServiceBaseProject[
                     tile_y,
                     self.project_type_specifics.zoom_level,
                 )
-                url = self.tile_server.generate_url(
+                url = self.project_type_specifics.tile_server_property.generate_url(
                     tile_x,
                     tile_y,
                     self.project_type_specifics.zoom_level,

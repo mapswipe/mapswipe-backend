@@ -1,18 +1,20 @@
 import typing
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 
-from .config import RasterTileServerNameEnum
+from utils import fields as custom_fields
+from utils.geo.tile_functions import tile_coords_and_zoom_to_quadKey
+
+from .config import RasterConfig, RasterTileServerNameEnum
 
 
 class RasterTileServerCustomConfig(BaseModel):
-    # NOTE: URL validation is currently defined in BaseRasterTileServer.check_imagery_url
-    url: typing.Annotated[str, Field(strict=True, max_length=1000)]
-    credits: typing.Annotated[str, Field(strict=True, max_length=1000)]
+    url: custom_fields.PydanticRasterTileServerUrl
+    credits: custom_fields.PydanticLongText
 
 
 class RasterTileServerCommonConfig(BaseModel):
-    credits: typing.Annotated[str, Field(strict=True, max_length=1000)]
+    credits: custom_fields.PydanticLongText
 
 
 class RasterTileServerConfig(BaseModel):
@@ -26,6 +28,26 @@ class RasterTileServerConfig(BaseModel):
     esri: RasterTileServerCommonConfig | None = None
     esri_beta: RasterTileServerCommonConfig | None = None
 
+    def get_url(self) -> str:
+        if self.name == RasterTileServerNameEnum.CUSTOM:
+            assert self.custom is not None
+            return self.custom.url
+        return RasterConfig.get_config(self.name)["url"]
+
+    def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
+        url = self.get_url()
+        if "{quadkey}" in url:
+            quadkey = tile_coords_and_zoom_to_quadKey(tile_x, tile_y, tile_z)
+            return url.format(
+                quadkey=quadkey,
+            )
+        return url.format(
+            x=tile_x,
+            y=tile_y,
+            z=tile_z,
+        )
+
+    # FIXME(tnagorra): Do we need this?
     @field_validator("name", mode="before")
     def ensure_name_enum(cls, value: str | RasterTileServerNameEnum | None):
         if isinstance(value, str):
@@ -63,13 +85,3 @@ class RasterTileServerConfig(BaseModel):
                 if self.esri_beta is None:
                     raise ValueError("ESRI (Beta) config is required")
                 return self
-
-    @model_validator(mode="after")
-    def check_raster_tile_server_config(self) -> typing.Self:
-        from .raster_tile_server import BaseVectorTileServerException, get_raster_tile_server
-
-        try:
-            get_raster_tile_server(self)
-        except BaseVectorTileServerException as e:
-            raise ValueError(e) from None
-        return self

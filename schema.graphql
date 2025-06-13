@@ -915,11 +915,15 @@ input ProjectOrder {
 
 type ProjectOverlayRasterTileServerConfig {
   tileServer: ProjectRasterTileServerConfig!
+
+  """A valid opacity like 0.2 or 1.0"""
   opacity: Float!
 }
 
 input ProjectOverlayRasterTileServerConfigInput {
   tileServer: ProjectRasterTileServerConfigInput!
+
+  """A valid opacity like 0.2 or 1.0"""
   opacity: Float!
 }
 
@@ -937,27 +941,59 @@ input ProjectOverlayTileServerConfigInput {
 
 type ProjectOverlayVectorTileServerConfig {
   tileServer: ProjectVectorTileServerConfig!
+
+  """A valid hex color string like '#fff' or '#ffffff'"""
   fillColor: String!
+
+  """A valid opacity like 0.2 or 1.0"""
   fillOpacity: Float!
+
+  """A valid hex color string like '#fff' or '#ffffff'"""
   lineColor: String!
+
+  """A valid opacity like 0.2 or 1.0"""
   lineOpacity: Float!
+
+  """A positive float value"""
   lineWidth: Float!
   lineDasharray: [Int!]!
+
+  """A valid hex color string like '#fff' or '#ffffff'"""
   circleColor: String!
+
+  """A valid opacity like 0.2 or 1.0"""
   circleOpacity: Float!
+
+  """A positive float value"""
   circleRadius: Float!
 }
 
 input ProjectOverlayVectorTileServerConfigInput {
   tileServer: ProjectVectorTileServerConfigInput!
+
+  """A valid hex color string like '#fff' or '#ffffff'"""
   fillColor: String!
+
+  """A valid opacity like 0.2 or 1.0"""
   fillOpacity: Float!
+
+  """A valid hex color string like '#fff' or '#ffffff'"""
   lineColor: String!
+
+  """A valid opacity like 0.2 or 1.0"""
   lineOpacity: Float!
+
+  """A positive float value"""
   lineWidth: Float!
   lineDasharray: [Int!]!
+
+  """A valid hex color string like '#fff' or '#ffffff'"""
   circleColor: String!
+
+  """A valid opacity like 0.2 or 1.0"""
   circleOpacity: Float!
+
+  """A positive float value"""
   circleRadius: Float!
 }
 

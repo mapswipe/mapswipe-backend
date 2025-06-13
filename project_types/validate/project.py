@@ -26,7 +26,6 @@ from project_types.base import project as base_project
 from project_types.tile_map_service.base.project import create_json_dump
 from project_types.validate.api_calls import ohsome
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
-from utils.geo.raster_tile_server.raster_tile_server import AvailableRasterTileServerTypeAlias, get_raster_tile_server
 
 logger = logging.getLogger(__name__)
 
@@ -146,15 +145,12 @@ class ValidateProject(
         ValidateRawGroupItem,
     ],
 ):
-    tile_server: AvailableRasterTileServerTypeAlias
-
     project_property_class = ValidateProjectProperty
     project_task_group_property_class = ValidateProjectTaskGroupProperty
     project_task_property_class = ValidateProjectTaskProperty
 
     def __init__(self, project: Project):
         super().__init__(project)
-        self.tile_server = get_raster_tile_server(self.project_type_specifics.tile_server_property)
 
     def _process_polygons(self, geojson_data: dict[str, Any]) -> list[ValidFeature]:
         """We only want polygon and multipolygon features"""

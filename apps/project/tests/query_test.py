@@ -256,7 +256,7 @@ class TestProjectQuery(TestCase):
                             "tile_server": {
                                 "name": "CUSTOM",
                                 "custom": {
-                                    "url": "https://custom-osm-data",
+                                    "url": "https://custom-osm-data/{x}/{y}/{z}.pbf",
                                     "credits": "custom osm",
                                     "source_name": "custom-source-name",
                                     "min_zoom": 0,
