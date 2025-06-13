@@ -8,6 +8,10 @@ from apps.common.graphql.inputs import (
 )
 from apps.project.models import Organization, Project, ProjectAsset
 
+# NOTE: We are importing base for side-effect
+# The tile server inputs are required by the following imports
+from .project_types import base  # noqa: F401  # isort: skip # type: ignore[reportUnusedImport]
+
 from .project_types.compare import CompareProjectPropertyInput
 from .project_types.completeness import CompletenessProjectPropertyInput
 from .project_types.find import FindProjectPropertyInput

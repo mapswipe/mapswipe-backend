@@ -3,9 +3,6 @@ import strawberry
 from project_types.tile_map_service.completeness import project as completeness_project
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
 
-# NOTE: We are importing base just for side-effect
-from . import base  # type: ignore[reportUnusedImport]  # noqa: F401
-
 
 @strawberry.experimental.pydantic.input(model=completeness_project.OverlayVectorTileServerConfig, all_fields=True)
 class ProjectOverlayVectorTileServerConfigInput: ...
