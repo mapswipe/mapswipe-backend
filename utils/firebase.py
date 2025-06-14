@@ -1,6 +1,5 @@
 # pyright: reportMissingTypeStubs=false
 import logging
-import typing
 
 import firebase_admin
 from firebase_admin.db import reference as firebase_db_reference
@@ -12,9 +11,9 @@ logger = logging.getLogger(__name__)
 
 def get_firebase_app(
     database_url: str,
-    credential: typing.Any = None,
+    credential: firebase_admin.credentials.Certificate | None = None,
     using_emulator: bool = False,
-):
+) -> firebase_admin.App:
     try:
         # Is an App instance already initialized?
         return firebase_admin.get_app()
@@ -37,7 +36,9 @@ def get_firebase_app(
         return firebase_admin.get_app()
 
 
-def _get_firebase_creds(credential_b64_gz: str):
+def _get_firebase_creds(credential_b64_gz: str | None):
+    if not credential_b64_gz:
+        return None
     service_account_info = parse_b64gzjson_to_dict(credential_b64_gz)
     return firebase_admin.credentials.Certificate(service_account_info)
 
@@ -51,7 +52,7 @@ class FirebaseHelper:
     ):
         self.app = get_firebase_app(
             database_url,
-            credential=credential_b64_gz and _get_firebase_creds(credential_b64_gz),
+            credential=_get_firebase_creds(credential_b64_gz),
             using_emulator=using_emulator,
         )
         self.ref = firebase_db_reference("", app=self.app)
