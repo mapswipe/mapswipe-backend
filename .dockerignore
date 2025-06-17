@@ -8,6 +8,7 @@ wheels/
 media
 postgres-data
 redis-data
+/.data
 
 production.env
 
@@ -157,3 +158,6 @@ deploy/eb/
 .mypy_cache/
 
 rest-media-temp/
+
+# firebase
+/firebase

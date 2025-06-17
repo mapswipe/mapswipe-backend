@@ -1,4 +1,7 @@
+import base64
 import copy
+import gzip
+import io
 import json
 import re
 import typing
@@ -101,3 +104,13 @@ def create_json_dump(item: dict[typing.Any, typing.Any]) -> bytes:
         item,
         cls=DjangoJSONEncoder,
     ).encode("utf-8")
+
+
+def parse_b64gzjson_to_dict(text: str) -> dict[str, typing.Any]:
+    """
+    Parse output of `gzip -cn file.json | base64 -w 0` to dict
+    """
+    gzipped_bytes = base64.b64decode(text)
+    with gzip.GzipFile(fileobj=io.BytesIO(gzipped_bytes)) as f:
+        json_bytes = f.read()
+        return json.loads(json_bytes.decode("utf-8"))

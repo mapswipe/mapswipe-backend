@@ -43,6 +43,10 @@ x-server: &base_server_setup
     MAP_IMAGE_ESRI_BETA_API_KEY: ${MAP_IMAGE_ESRI_BETA_API_KEY:-dummy-esri-beta}
     # MAP_IMAGE_DIGITAL_GLOBE_API_KEY: ${MAP_IMAGE_DIGITAL_GLOBE_API_KEY:-dummy-digital-globe}
     OSMCHA_API_KEY: ${OSMCHA_API_KEY:-dummy-osmcha-api-key}
+    # Firebase
+    FIREBASE_EMULATOR_USE: ${FIREBASE_EMULATOR_USE:-true}
+    FIREBASE_EMULATOR_PROJECT_ID: ${FIREBASE_EMULATOR_PROJECT_ID:-dev-mapswipe}
+    FIREBASE_EMULATOR_DATABASE_HOST: ${FIREBASE_EMULATOR_DATABASE_HOST:-firebase:9000}
   env_file:
     - path: ${BACKEND_ENV_FILE:-.env}
       required: false
@@ -55,6 +59,7 @@ x-server: &base_server_setup
     - db
     - redis
     - mailpit
+    - firebase
 
 x-worker: &base_worker_setup
   <<: *base_server_setup
@@ -79,6 +84,25 @@ services:
     image: redis:7
     volumes:
       - redis_data:/data
+
+  firebase:
+    build:
+      context: ./firebase/
+    stop_grace_period: 30s
+    tty: true
+    entrypoint: ["./docker_entrypoint.sh"]
+    environment:
+      FIREBASE_EMULATOR_DATA_DIR: "/data/emulator"
+    volumes:
+      - ./firebase:/firebase
+      - ./.data/firebase:/data/
+    ports:
+      - "127.0.0.1:4000:4000" # ui
+      - "127.0.0.1:4400:4400" # hub
+      - "127.0.0.1:4600:4600" # logging
+      - "127.0.0.1:9000:9000" # database
+      - "127.0.0.1:9099:9099" # auth
+      - "127.0.0.1:5001:5001" # functions
 
   mailpit:
       image: axllent/mailpit:latest
