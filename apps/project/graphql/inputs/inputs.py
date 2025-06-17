@@ -16,6 +16,7 @@ from .project_types.compare import CompareProjectPropertyInput
 from .project_types.completeness import CompletenessProjectPropertyInput
 from .project_types.find import FindProjectPropertyInput
 from .project_types.validate import ValidateProjectPropertyInput
+from .project_types.validate_image import ValidateImageProjectPropertyInput
 
 
 # Organization
@@ -36,6 +37,7 @@ class ProjectTypeSpecificInput:
     find: FindProjectPropertyInput | None = strawberry.UNSET
     completeness: CompletenessProjectPropertyInput | None = strawberry.UNSET
     validate: ValidateProjectPropertyInput | None = strawberry.UNSET
+    validate_image: ValidateImageProjectPropertyInput | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py

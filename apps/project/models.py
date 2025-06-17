@@ -49,6 +49,9 @@ class ProjectTypeEnum(models.IntegerChoices):
     VALIDATE = 2, "Validate"
     """ Validate project type. Previously known as Footprint """
 
+    VALIDATE_IMAGE = 10, "Validate Image"
+    """ Validate image project type. """
+
     COMPARE = 3, "Compare"
     """ Compare project type. Previously known as Change Detection. """
 

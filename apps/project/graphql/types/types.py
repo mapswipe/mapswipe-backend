@@ -10,6 +10,7 @@ from project_types.tile_map_service.compare import project as compare_project
 from project_types.tile_map_service.completeness import project as completeness_project
 from project_types.tile_map_service.find import project as find_project
 from project_types.validate import project as validate_project
+from project_types.validate_image import project as validate_image_project
 
 # NOTE: We are importing base for side-effect
 # The tile server types are required by the following imports
@@ -19,6 +20,7 @@ from .project_types.compare import CompareProjectPropertyType
 from .project_types.completeness import CompletenessProjectPropertyType
 from .project_types.find import FindProjectPropertyType
 from .project_types.validate import ValidateProjectPropertyType
+from .project_types.validate_image import ValidateImageProjectPropertyType
 
 
 # Organization
@@ -68,6 +70,7 @@ class ProjectType(UserResourceTypeMixin):
         CompareProjectPropertyType
         | FindProjectPropertyType
         | ValidateProjectPropertyType
+        | ValidateImageProjectPropertyType
         | CompletenessProjectPropertyType
         | None
     ):
@@ -80,6 +83,11 @@ class ProjectType(UserResourceTypeMixin):
             return typing.cast("CompareProjectPropertyType", compare_project.CompareProjectProperty.model_validate(data))
         if project.project_type_enum == Project.Type.VALIDATE:
             return typing.cast("ValidateProjectPropertyType", validate_project.ValidateProjectProperty.model_validate(data))
+        if project.project_type_enum == Project.Type.VALIDATE_IMAGE:
+            return typing.cast(
+                "ValidateProjectPropertyType",
+                validate_image_project.ValidateImageProjectProperty.model_validate(data),
+            )
         if project.project_type_enum == Project.Type.COMPLETENESS:
             return typing.cast(
                 "CompletenessProjectPropertyType",

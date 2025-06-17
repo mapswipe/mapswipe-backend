@@ -31,6 +31,8 @@ def get_max_time_spend_percentile(project_type: ProjectTypeEnum) -> float:
             return 11.2
         case ProjectTypeEnum.VALIDATE:
             return 6.1
+        case ProjectTypeEnum.VALIDATE_IMAGE:
+            return 6.1
         # case ProjectTypeEnum.STREET:
         #     return 65
 

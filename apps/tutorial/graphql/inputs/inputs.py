@@ -20,6 +20,7 @@ from .project_types.compare import CompareTutorialTaskPropertyInput
 from .project_types.completeness import CompletenessTutorialTaskPropertyInput
 from .project_types.find import FindTutorialTaskPropertyInput
 from .project_types.validate import ValidateTutorialTaskPropertyInput
+from .project_types.validate_image import ValidateImageTutorialTaskPropertyInput
 
 
 @strawberry.input(one_of=True)
@@ -27,6 +28,7 @@ class TutorialTaskProjectTypeSpecificInput:
     compare: CompareTutorialTaskPropertyInput | None = strawberry.UNSET
     find: FindTutorialTaskPropertyInput | None = strawberry.UNSET
     validate: ValidateTutorialTaskPropertyInput | None = strawberry.UNSET
+    validate_image: ValidateImageTutorialTaskPropertyInput | None = strawberry.UNSET
     completeness: CompletenessTutorialTaskPropertyInput | None = strawberry.UNSET
 
 
