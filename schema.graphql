@@ -1515,6 +1515,9 @@ input TutorialFilter {
   id: IDBaseFilterLookup
   name: StrFilterLookup
   status: TutorialStatusEnumFilterLookup
+
+  """Project this tutorial is referring to."""
+  project: ProjectFilter
   AND: TutorialFilter
   OR: TutorialFilter
   NOT: TutorialFilter

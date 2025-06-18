@@ -132,7 +132,7 @@ class TestProjectFiltersAndOrders(TestCase):
         self.force_login(self.user)
         content = self._query(
             filters={
-                "projectType": {"exact": ProjectTypeEnum.FIND.name},  # type: ignore[attr-defined]
+                "projectType": {"exact": self.genum(ProjectTypeEnum.FIND)},
             },
         )
         assert content["data"]["projects"]["totalCount"] == 2
@@ -141,7 +141,7 @@ class TestProjectFiltersAndOrders(TestCase):
         self.force_login(self.user)
         content = self._query(
             filters={
-                "status": {"exact": ProjectStatusEnum.READY.name},  # type: ignore[attr-defined]
+                "status": {"exact": self.genum(ProjectStatusEnum.READY)},
             },
         )
         assert content["data"]["projects"]["totalCount"] == 3
