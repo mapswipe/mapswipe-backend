@@ -40,6 +40,7 @@ dependencies = [
     "urllib3>=2.3.0",
     "geojson-pydantic>=2.0.0",
     "firebase-admin==6.9.0",
+    "pyfirebase-mapswipe",
 ]
 
 [dependency-groups]
@@ -58,6 +59,13 @@ test = [
     "pytest-ordering",
     "pytest-profiling",
 ]
+
+[tool.uv.workspace]
+members = [
+    "firebase/functions/generated/pyfirebase",
+]
+[tool.uv.sources]
+pyfirebase_mapswipe = { workspace = true }
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "main.settings"

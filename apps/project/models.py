@@ -42,6 +42,13 @@ class ProjectAssetTypeEnum(models.IntegerChoices):
         return "Unknown"
 
 
+class FirebasePushStatusEnum(models.IntegerChoices):
+    PENDING = 1, "Pending"
+    PROCESSING = 2, "Processing"
+    SUCCESS = 3, "Success"
+    FAILED = 4, "Failed"
+
+
 class ProjectTypeEnum(models.IntegerChoices):
     FIND = 1, "Find"
     """ Find project type. Previously known as Classification / Build Area. """
@@ -274,6 +281,19 @@ class Project(UserResource):
     required_results = models.IntegerField(default=0)
     result_count = models.IntegerField(default=0)  # NOTE: All project have 0 in production database
 
+    # FIREBASE FIELDS
+
+    firebase_push_status: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=FirebasePushStatusEnum,
+        null=True,
+        blank=True,
+    )
+    firebase_last_pushed = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=gettext_lazy("The latest time when project was pushed to firebase"),
+    )
+
     # Type hints
     requesting_organization_id: int
     tutorial_id: int | None
@@ -284,10 +304,6 @@ class Project(UserResource):
     def __str__(self):
         return self.name
 
-    @property
-    def project_type_enum(self):
-        return ProjectTypeEnum(self.project_type)
-
     def update_status(self, status: ProjectStatusEnum, commit: bool = True):
         self.status = status
         if commit:
@@ -297,6 +313,25 @@ class Project(UserResource):
         self.processing_status = status
         if commit:
             self.save(update_fields=("processing_status",))
+
+    def update_firebase_push_status(self, firebase_push_status: FirebasePushStatusEnum, *, commit: bool = True):
+        self.firebase_push_status = firebase_push_status
+        if commit:
+            self.save(update_fields=("firebase_push_status",))
+
+    @property
+    def project_type_enum(self):
+        return ProjectTypeEnum(self.project_type)
+
+    @property
+    def status_enum(self):
+        return ProjectStatusEnum(self.status)
+
+    @property
+    def firebase_push_status_enum(self):
+        if self.firebase_push_status:
+            return FirebasePushStatusEnum(self.firebase_push_status)
+        return None
 
     @typing.override
     def clean(self):

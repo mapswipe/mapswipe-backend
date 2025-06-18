@@ -1,11 +1,17 @@
 import logging
+import typing
 from abc import ABC, abstractmethod
 
 from django.contrib.gis.db.models.functions import Area
 from django.db import models
+from django.utils import timezone
+from firebase_admin.db import Reference as FbReference
 from pydantic import BaseModel
 
-from apps.project.models import Project, ProjectAsset, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
+from apps.project.models import FirebasePushStatusEnum, Project, ProjectAsset, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
+from main.config import Config
+from main.logging import log_extra
+from utils.firebase import FbProject
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +69,8 @@ class BaseProject[
     def __init__(self, project: Project):
         self.project = project
         self.project_type_specifics = self.project_property_class(**project.project_type_specifics)
+
+        self.firebase_helper = Config.FIREBASE_HELPER
 
     @classmethod
     def _inheritance_checks(cls):
@@ -163,3 +171,55 @@ class BaseProject[
             logger.error(ex)
             self.project.update_status(Project.Status.FAILED, True)
             return False
+
+    @abstractmethod
+    def handle_new_project_on_firebase(self, project_ref: FbReference): ...
+
+    # TODO(tnagorra): Get type of fb_project from pydantic
+    @abstractmethod
+    def handle_project_update_on_firebase(self, project_ref: FbReference, fb_project: FbProject): ...
+
+    def push_to_firebase(self):
+        if self.project.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
+            logger.warning("%s - push_to_firebase called when push is not required", self.project.pk)
+            return
+
+        self.project.update_firebase_push_status(FirebasePushStatusEnum.PROCESSING)
+
+        try:
+            project_ref = self.firebase_helper.ref(
+                Config.FirebaseKeys.project(self.project.id),
+            )
+            # TODO(tnagorra): Use pydantic class
+            # TODO(tnagorra): We need to make this type more specific on project specific handlers
+            fb_project: typing.Any = project_ref.get()
+
+            if not self.project.firebase_last_pushed:
+                if fb_project is not None:
+                    logger.error(
+                        "push_to_firebase found a project already in firebase when creating a project",
+                        extra=log_extra({"project": self.project.pk}),
+                    )
+                    raise Exception
+                self.handle_new_project_on_firebase(project_ref)
+            else:
+                if fb_project is None:
+                    logger.error(
+                        "push_to_firebase found did not find project in firebase when updating a project",
+                        extra=log_extra({"project": self.project.pk}),
+                    )
+                    raise Exception
+                valid_project = FbProject.model_validate(obj=fb_project)
+                self.handle_project_update_on_firebase(project_ref, valid_project)
+        except Exception as ex:
+            self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
+            raise ex from ex
+        else:
+            self.project.firebase_last_pushed = timezone.now()
+            self.project.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS, commit=False)
+            self.project.save(
+                update_fields=[
+                    "firebase_last_pushed",
+                    "firebase_push_status",
+                ],
+            )

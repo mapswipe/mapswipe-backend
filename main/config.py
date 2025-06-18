@@ -17,6 +17,11 @@ class Config:
 
     FIREBASE_HELPER = typing.cast("FirebaseHelper", settings.FIREBASE_HELPER)
 
+    class FirebaseKeys:
+        @staticmethod
+        def project(project_id: str | int):
+            return f"/v2/projects/{project_id}"
+
 
 # FIXME: Import utils/geo/raster_tile_server/config.py here
 # FIXME: Import utils/geo/vector_tile_server/config.py here
