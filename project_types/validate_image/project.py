@@ -1,5 +1,7 @@
 import logging
-from typing import Any
+import typing
+
+from pydantic import BaseModel
 
 from apps.project.models import Project
 from project_types.base import project as base_project
@@ -25,8 +27,8 @@ class ValidateImageProject(
         ValidateImageProjectProperty,
         ValidateImageProjectTaskGroupProperty,
         ValidateImageProjectTaskProperty,
-        Any,
-        Any,
+        typing.Any,
+        typing.Any,
     ],
 ):
     project_property_class = ValidateImageProjectProperty
@@ -35,3 +37,9 @@ class ValidateImageProject(
 
     def __init__(self, project: Project):
         super().__init__(project)
+
+    @typing.override
+    def get_project_specifics_for_firebase(self, project_ref):
+        class EmptyModel(BaseModel): ...
+
+        return EmptyModel()

@@ -1,10 +1,8 @@
 # pyright: reportMissingTypeStubs=false
 import logging
-import typing
 
 import firebase_admin
 from firebase_admin.db import reference as firebase_db_reference
-from pyfirebase_mapswipe import models as firebase_models
 
 from utils.common import parse_b64gzjson_to_dict
 
@@ -60,20 +58,3 @@ class FirebaseHelper:
 
     def ref(self, key: str):
         return firebase_db_reference(key, app=self.app)
-
-
-# TODO(tnagorra): Move this to firebase repo
-class FbProject(
-    firebase_models.FbProjectCreateOnlyInput,
-    firebase_models.FbProjectUpdateInput,
-    firebase_models.FbProjectReadonlyType,
-):
-    class Config:  # type: ignore[reportIncompatibleVariableOverride]
-        use_enum_values = True
-        extra = "forbid"
-
-    @typing.override
-    def __setattr__(self, name: str, value: typing.Any) -> None:
-        super(firebase_models.FbProjectReadonlyType).__setattr__(name, value)
-        super(firebase_models.FbProjectCreateOnlyInput).__setattr__(name, value)
-        super(firebase_models.FbProjectUpdateInput).__setattr__(name, value)

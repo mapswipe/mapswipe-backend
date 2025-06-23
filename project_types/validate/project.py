@@ -311,3 +311,9 @@ class ValidateProject(
         )
         self.project.project_type_specific_output = asset
         self.project.save(update_fields=("project_type_specific_output",))
+
+    @typing.override
+    def get_project_specifics_for_firebase(self, project_ref):
+        class EmptyModel(BaseModel): ...
+
+        return EmptyModel()

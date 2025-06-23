@@ -7,13 +7,27 @@ from django.db import models
 from django.utils import timezone
 from firebase_admin.db import Reference as FbReference
 from pydantic import BaseModel
+from pyfirebase_mapswipe import extended_models as firebase_ext_models
+from pyfirebase_mapswipe import models as firebase_models
+from pyfirebase_mapswipe import utils as firebase_utils
 
-from apps.project.models import FirebasePushStatusEnum, Project, ProjectAsset, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
+from apps.project.models import (
+    FirebasePushStatusEnum,
+    Project,
+    ProjectAsset,
+    ProjectStatusEnum,
+    ProjectTask,
+    ProjectTaskGroup,
+    ProjectTypeEnum,
+)
 from main.config import Config
 from main.logging import log_extra
-from utils.firebase import FbProject
+from project_types.firebase import project_type_enum_to_firebase
 
 logger = logging.getLogger(__name__)
+
+
+class InvalidProjectPushException(Exception): ...
 
 
 # FIXME(tnagorra): We should define these in each project type class
@@ -38,6 +52,7 @@ def get_max_time_spend_percentile(project_type: ProjectTypeEnum) -> float:
         case ProjectTypeEnum.VALIDATE:
             return 6.1
         case ProjectTypeEnum.VALIDATE_IMAGE:
+            # FIXME(tnagorra): We need to update this value once the feature is deployed
             return 6.1
         # case ProjectTypeEnum.STREET:
         #     return 65
@@ -173,11 +188,110 @@ class BaseProject[
             return False
 
     @abstractmethod
-    def handle_new_project_on_firebase(self, project_ref: FbReference): ...
+    def get_project_specifics_for_firebase(self, project_ref: FbReference) -> BaseModel: ...
 
-    # TODO(tnagorra): Get type of fb_project from pydantic
-    @abstractmethod
-    def handle_project_update_on_firebase(self, project_ref: FbReference, fb_project: FbProject): ...
+    def handle_new_project_on_firebase(self, project_ref: FbReference):
+        assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
+        assert self.project.tutorial is not None, "Tutorial is required before project can be pushed to firebase"
+
+        # FIXME: If taskId is defined, should be private_inactive
+        status = firebase_models.FbEnumProjectStatus.INACTIVE
+        if self.project.status_enum == ProjectStatusEnum.PUBLISHED:
+            # FIXME: If taskId is defined, should be private_active
+            status = firebase_models.FbEnumProjectStatus.PRIVATE_ACTIVE
+
+        project_data = firebase_ext_models.FbProject(
+            created=self.project.created_at,
+            createdBy=self.project.created_by.old_id or str(self.project.created_by_id),
+            # FIXME(tnagorra): We need to provide full url
+            # FIXME(tnagorra): Looks like this is required in model currently
+            image=self.project.image.file.url if self.project.image else firebase_models.UNDEFINED,
+            isFeatured=self.project.is_featured,
+            lookFor=self.project.look_for,
+            manualUrl=self.project.additional_info_url or firebase_models.UNDEFINED,
+            maxTasksPerUser=self.project.max_tasks_per_user or firebase_models.UNDEFINED,
+            groupMaxSize=self.project.group_size,  # this is zero
+            contributorCount=0,
+            progress=0,
+            resultCount=0,
+            groupSize=self.project.group_size,
+            projectId=self.project.old_id or str(self.project.id),
+            projectDetails=self.project.description or "n/a",
+            name=self.project.name,
+            # FIXME(tnagorra): Fill these when implemented
+            projectNumber=1,
+            projectRegion="",
+            projectTopic="",
+            projectTopicKey="",
+            projectType=project_type_enum_to_firebase(self.project.project_type_enum),
+            # project_type=project_type_enum_to_firebase(self.project.project_type_enum), # not needed here
+            requestingOrganisation=self.project.requesting_organization.name,  # str
+            # FIXME(tnagorra): need to calculate this
+            requiredResults=0,  # no. of results
+            status=status,
+            # FIXME(tnagorra): Fill this when implemented
+            teamId=firebase_models.UNDEFINED,
+            # FIXME(tnagorra): Need to check how we get this?
+            language="en-us",
+            tutorialId=self.project.tutorial.old_id or str(self.project.tutorial_id),
+            verificationNumber=self.project.verification_number,
+        )
+
+        project_specific_data = self.get_project_specifics_for_firebase(project_ref)
+
+        project_ref.set(
+            value={
+                **firebase_utils.serialize(project_data),
+                **firebase_utils.serialize(project_specific_data),
+            },
+        )
+
+    def handle_project_update_on_firebase(self, project_ref: FbReference, fb_project: firebase_ext_models.FbProject):
+        assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
+
+        status = fb_project.status
+        if (
+            status
+            in [
+                firebase_models.FbEnumProjectStatus.INACTIVE,
+                firebase_models.FbEnumProjectStatus.PRIVATE_INACTIVE,
+            ]
+            and self.project.status_enum == ProjectStatusEnum.PUBLISHED
+        ):
+            # FIXME: If taskId is defined, should be private_active
+            status = firebase_models.FbEnumProjectStatus.ACTIVE
+        elif status in [
+            firebase_models.FbEnumProjectStatus.ACTIVE,
+            firebase_models.FbEnumProjectStatus.PRIVATE_ACTIVE,
+        ] and self.project.status_enum in [ProjectStatusEnum.ARCHIVED, ProjectStatusEnum.PAUSED]:
+            # FIXME: If taskId is defined, should be private_inactive
+            status = firebase_models.FbEnumProjectStatus.INACTIVE
+
+        project_ref.update(
+            value=firebase_utils.serialize(
+                firebase_models.FbProjectUpdateInput(
+                    # FIXME(tnagorra): We need to provide full url
+                    # FIXME(tnagorra): Looks like this is required in model currently
+                    image=self.project.image.file.url if self.project.image else firebase_models.UNDEFINED,
+                    isFeatured=self.project.is_featured,
+                    lookFor=self.project.look_for,
+                    name=self.project.name,
+                    # FIXME(tnagorra): Fill these when implemented
+                    projectNumber=1,
+                    projectRegion="",
+                    projectTopic="",
+                    projectTopicKey="",
+                    projectDetails=self.project.description or "n/a",
+                    requestingOrganisation=self.project.requesting_organization.name,
+                    tutorialId=str(self.project.tutorial_id),
+                    status=status,
+                    # FIXME(tnagorra): Fill this when implemented
+                    teamId=firebase_models.UNDEFINED,
+                    # FIXME(tnagorra): Need to check how we get this?
+                    language="en-us",
+                ),
+            ),
+        )
 
     def push_to_firebase(self):
         if self.project.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
@@ -190,8 +304,6 @@ class BaseProject[
             project_ref = self.firebase_helper.ref(
                 Config.FirebaseKeys.project(self.project.id),
             )
-            # TODO(tnagorra): Use pydantic class
-            # TODO(tnagorra): We need to make this type more specific on project specific handlers
             fb_project: typing.Any = project_ref.get()
 
             if not self.project.firebase_last_pushed:
@@ -200,7 +312,7 @@ class BaseProject[
                         "push_to_firebase found a project already in firebase when creating a project",
                         extra=log_extra({"project": self.project.pk}),
                     )
-                    raise Exception
+                    raise InvalidProjectPushException
                 self.handle_new_project_on_firebase(project_ref)
             else:
                 if fb_project is None:
@@ -208,12 +320,18 @@ class BaseProject[
                         "push_to_firebase found did not find project in firebase when updating a project",
                         extra=log_extra({"project": self.project.pk}),
                     )
-                    raise Exception
-                valid_project = FbProject.model_validate(obj=fb_project)
+                    raise InvalidProjectPushException
+                valid_project = firebase_ext_models.FbProject.model_validate(obj=fb_project)
                 self.handle_project_update_on_firebase(project_ref, valid_project)
-        except Exception as ex:
+        except InvalidProjectPushException:
             self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
-            raise ex from ex
+        except Exception:
+            logger.error(
+                "push_to_firebase failed",
+                extra=log_extra({"project": self.project.pk}),
+                exc_info=True,
+            )
+            self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
         else:
             self.project.firebase_last_pushed = timezone.now()
             self.project.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS, commit=False)

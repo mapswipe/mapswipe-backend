@@ -90,3 +90,9 @@ class CompletenessProject(
         super().__init__(project)
         if typing.TYPE_CHECKING:
             assert project.project_type == ProjectTypeEnum.COMPLETENESS, f"{type(self)} is defined for COMPLETENESS"
+
+    @typing.override
+    def get_project_specifics_for_firebase(self, project_ref):
+        class EmptyModel(BaseModel): ...
+
+        return EmptyModel()

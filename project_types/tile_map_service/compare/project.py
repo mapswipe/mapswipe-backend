@@ -1,5 +1,7 @@
 import typing
 
+from pydantic import BaseModel
+
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
 from main.bulk_managers import BulkCreateManager
 from project_types.tile_map_service.base import project as base_project
@@ -74,3 +76,9 @@ class CompareProject(
                 tasks_count += 1
         bulk_mgr.done()
         return tasks_count
+
+    @typing.override
+    def get_project_specifics_for_firebase(self, project_ref):
+        class EmptyModel(BaseModel): ...
+
+        return EmptyModel()
