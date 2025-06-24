@@ -16,6 +16,7 @@ from apps.project.models import (
 )
 from apps.project.tasks import process_project_task
 from apps.tutorial.factories import TutorialFactory
+from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
 from main.tests import TestCase
 from project_types.tile_map_service.compare import project as compare_project
@@ -402,13 +403,24 @@ class TestProjectMutation(TestCase):
         )
 
     def _update_project_mutation(self, pk: str, project_data: dict, **kwargs):
-        return update_project_query(
-            query_check_func=self.query_check,
-            query=Mutation.UPDATE_PROJECT,
-            pk=pk,
-            project_data=project_data,
-            **kwargs,
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            return update_project_query(
+                query_check_func=self.query_check,
+                query=Mutation.UPDATE_PROJECT,
+                pk=pk,
+                project_data=project_data,
+                **kwargs,
+            )
+
+    def _update_processed_project_mutation(self, pk: str, project_data: dict, **kwargs):
+        with self.captureOnCommitCallbacks(execute=True):
+            return update_project_query(
+                query_check_func=self.query_check,
+                query=Mutation.UPDATE_PROCESSED_PROJECT,
+                pk=pk,
+                project_data=project_data,
+                **kwargs,
+            )
 
     def test_project_create(self):
         project_data = {
@@ -468,7 +480,8 @@ class TestProjectMutation(TestCase):
             ),
         ), content
 
-    def test_project_update(self):
+    @patch("apps.project.serializers.process_project_task.delay")
+    def test_project_update(self, mock_requests):
         proj = ProjectFactory.create(
             **self.user_resource_kwargs,
             project_type=ProjectTypeEnum.FIND,
@@ -671,6 +684,49 @@ class TestProjectMutation(TestCase):
         content = self._update_project_mutation(str(latest_project.pk), project_data)
         assert content["data"]["updateProject"]["errors"] is None
 
+        mock_requests.assert_called_once()
+        mock_requests.assert_has_calls([call(latest_project.pk)])
+
+        process_project_task(latest_project.pk)
+
+        latest_project.refresh_from_db()
+
+        assert latest_project.status == Project.Status.READY
+
+        # Attaching Tutorial to Project
+        # fails as tutorial is archived
+        archived_tutorial = TutorialFactory.create(
+            **self.user_resource_kwargs,
+            project=latest_project,
+            status=Tutorial.Status.ARCHIVED,
+        )
+        project_data = {
+            "clientId": proj.client_id,
+            "status": self.genum(Project.Status.PUBLISHED),
+            "tutorial": self.gID(archived_tutorial.pk),
+        }
+        content = self._update_project_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProject"]["errors"] is not None
+
+        # Unarchiving Tutorial
+        archived_tutorial.status = Tutorial.Status.PUBLISHED
+        archived_tutorial.save(update_fields=["status"])
+
+        content = self._update_processed_project_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProcessedProject"]["errors"] is None, content
+
+        # Archiving tutorial
+        # Test Pass as archiving tutorial does not affect project on published projects
+        archived_tutorial.status = Tutorial.Status.ARCHIVED
+        archived_tutorial.save(update_fields=["status"])
+
+        project_data = {
+            "clientId": proj.client_id,
+            "tutorial": self.gID(archived_tutorial.pk),
+        }
+        content = self._update_processed_project_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProcessedProject"]["errors"] is None, content
+
 
 class TestProjectTypeMutation(TestCase):
     @typing.override
@@ -687,7 +743,7 @@ class TestProjectTypeMutation(TestCase):
 
         cls.compare_project = ProjectFactory.create(
             **cls.user_resource_kwargs,
-            project_type=ProjectTypeEnum.FIND,
+            project_type=ProjectTypeEnum.COMPARE,
             requesting_organization=cls.organization,
             project_type_specifics=None,
         )

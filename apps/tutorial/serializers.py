@@ -6,7 +6,7 @@ from django.utils.translation import gettext
 from rest_framework import serializers
 
 from apps.common.serializers import DrfContextType, UserResourceSerializer
-from apps.project.models import ProjectTypeEnum
+from apps.project.models import Project, ProjectTypeEnum
 from project_types.store import get_tutorial_task_property
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
@@ -277,6 +277,15 @@ class TutorialInformationPageSerializer(
         return page
 
 
+VALID_TUTORIAL_STATUS_TRANSITIONS: set[tuple[Tutorial.Status, Tutorial.Status]] = set(
+    [
+        (Tutorial.Status.DRAFT, Tutorial.Status.PUBLISHED),
+        (Tutorial.Status.DRAFT, Tutorial.Status.DISCARDED),
+        (Tutorial.Status.PUBLISHED, Tutorial.Status.ARCHIVED),
+    ],
+)
+
+
 class TutorialSerializer(UserResourceSerializer[Tutorial]):
     scenarios = TutorialScenarioPageSerializer(many=True)
     information_pages = TutorialInformationPageSerializer(many=True)
@@ -290,6 +299,34 @@ class TutorialSerializer(UserResourceSerializer[Tutorial]):
             "information_pages",
             "scenarios",
         )
+
+    def validate_status(self, new_status: Tutorial.Status | int) -> Tutorial.Status:
+        if not self.instance and new_status:
+            raise serializers.ValidationError(
+                gettext("Cannot set status for a new tutorial. Status can only be set for existing tutorials."),
+            )
+
+        if isinstance(new_status, int):
+            new_status = Tutorial.Status(new_status)
+
+        if (
+            self.instance
+            and self.instance.status_enum != new_status
+            and (self.instance.status_enum, new_status) not in VALID_TUTORIAL_STATUS_TRANSITIONS
+        ):
+            raise serializers.ValidationError(
+                gettext("Tutorial status cannot be changed from %s to %s")
+                % (Tutorial.Status(self.instance.status).label, new_status.label),
+            )
+        return new_status
+
+    def validate_project(self, project: Project) -> Project:
+        if self.instance and self.instance.project and self.instance.project.project_type != project.project_type:
+            raise serializers.ValidationError(
+                gettext("Existing tutorial project type '%s' does not match new project type '%s'")
+                % (Project.Type(self.instance.project.project_type).label, Project.Type(project.project_type).label),
+            )
+        return project
 
     @typing.override
     def create(self, validated_data: dict[typing.Any, typing.Any]):
@@ -325,8 +362,8 @@ class TutorialSerializer(UserResourceSerializer[Tutorial]):
 
     @typing.override
     def update(self, instance: Tutorial, validated_data: dict[typing.Any, typing.Any]):
-        scenarios_data = self.initial_data["scenarios"] or []
-        information_pages_data = self.initial_data["information_pages"] or []
+        scenarios_data = self.initial_data.get("scenarios") or []
+        information_pages_data = self.initial_data.get("information_pages") or []
         validated_data.pop("scenarios", None)
         validated_data.pop("information_pages", None)
         tutorial = super().update(instance, validated_data)

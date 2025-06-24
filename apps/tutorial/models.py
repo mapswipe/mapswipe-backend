@@ -46,6 +46,8 @@ class Tutorial(UserResource):
     # FIXME(tnagorra): We might need to skip the indexing
     old_id = models.CharField(max_length=30, db_index=True, null=True)
 
+    Status = TutorialStatusEnum
+
     # FIXME(tnagorra): We might need to rename this field
     project = models.ForeignKey(
         Project,
@@ -64,6 +66,10 @@ class Tutorial(UserResource):
     project_id: int
     scenarios: RelatedManager["TutorialScenarioPage"]
     information_pages: RelatedManager["TutorialInformationPage"]
+
+    @property
+    def status_enum(self) -> TutorialStatusEnum:
+        return TutorialStatusEnum(self.status)
 
 
 class TutorialScenarioIconEnum(models.IntegerChoices):
