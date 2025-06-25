@@ -4,8 +4,7 @@ import typing
 from django.db import models
 from django_choices_field import IntegerChoicesField
 
-from apps.common.models import UserResource
-from apps.user.models import User
+from apps.common.models import ArchivableResource, UserResource
 
 
 # NOTE: Users are created from Apps (Web/Mobile)
@@ -17,6 +16,13 @@ class ContributorUser(models.Model):
         unique=True,
         help_text="Firebase User ID",
     )
+    team = models.OneToOneField(
+        "ContributorTeam",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="user",
+    )
     username = models.CharField(max_length=255)
     created_at = models.DateTimeField(null=True)
     modified_at = models.DateTimeField(null=True)
@@ -26,23 +32,10 @@ class ContributorUser(models.Model):
         return self.username
 
 
-class ContributorUserGroup(UserResource):
+class ContributorUserGroup(ArchivableResource, UserResource):  # type: ignore[reportIncompatibleVariableOverride]
     old_id = models.CharField(max_length=30, db_index=True, null=True)
     name = models.CharField(max_length=255)
     description = models.TextField()
-
-    is_archived = models.BooleanField(default=False)
-    archived_at = models.DateTimeField(null=True, blank=True)
-    archived_by = models.ForeignKey(
-        User,
-        related_name="+",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
-
-    # Type hints
-    archived_by_id: int | None
 
     @typing.override
     def __str__(self):
@@ -82,3 +75,12 @@ class ContributorUserGroupMembershipLog(models.Model):
     @typing.override
     def __str__(self):
         return f"membership={self.membership_id}, action={self.action}"
+
+
+# TEAM
+class ContributorTeam(ArchivableResource, UserResource):  # type: ignore[reportIncompatibleVariableOverride]
+    name = models.CharField(max_length=255)
+
+    @typing.override
+    def __str__(self):
+        return self.name

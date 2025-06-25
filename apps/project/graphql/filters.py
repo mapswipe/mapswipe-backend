@@ -12,6 +12,8 @@ class ProjectFilter:
     requesting_organization_id: strawberry.auto
     is_featured: strawberry.auto
     status: strawberry.auto
+    team: strawberry.auto
+    is_private: strawberry.auto
 
 
 @strawberry_django.filters.filter(ProjectAsset, lookups=True)

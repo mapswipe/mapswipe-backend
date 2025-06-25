@@ -44,3 +44,22 @@ class UserResource(Model):
     @typing.override
     def __str__(self):
         return str(self.pk)
+
+
+class ArchivableResource(Model):
+    is_archived = models.BooleanField(default=False)
+    archived_at = models.DateTimeField(null=True, blank=True)
+    archived_by = models.ForeignKey(
+        User,
+        related_name="+",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+
+    # Type hints
+    archived_by_id: int | None
+
+    class Meta(TypedModelMeta):  # type: ignore[reportIncompatibleVariableOverride]
+        abstract = True
+        ordering = ["-id"]
