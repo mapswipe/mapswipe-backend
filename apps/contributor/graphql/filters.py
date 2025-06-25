@@ -9,6 +9,7 @@ from apps.contributor.models import ContributorUser, ContributorUserGroup, Contr
 class ContributorUserFilter:
     id: strawberry.auto
     username: strawberry.auto
+    team_id: strawberry.auto
 
 
 @strawberry_django.filters.filter(ContributorUserGroup, lookups=True)

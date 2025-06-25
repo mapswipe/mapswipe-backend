@@ -72,6 +72,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             "project_type_specifics",
             "status",
             "tutorial",
+            "team",
         )
 
     def validate_status(self, new_status: Project.Status | int) -> Project.Status:
@@ -219,6 +220,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             "image",
             "status",
             "tutorial",
+            "team",
         )
 
     def validate_status(self, new_status: Project.Status | int | None):

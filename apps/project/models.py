@@ -4,11 +4,13 @@ import typing
 import ulid
 from django.contrib.gis.db import models as gis_models
 from django.db import models
+from django.db.models import ExpressionWrapper, Q
 from django.db.models.functions import Lower
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
 
 from apps.common.models import UserResource
+from apps.contributor.models import ContributorTeam
 from utils.fields import validate_percentage
 
 if typing.TYPE_CHECKING:
@@ -275,6 +277,28 @@ class Project(UserResource):
         blank=True,
     )
 
+    # TEAM
+
+    # NOTE: If any team is attached to the project, then project should only visible to the team members.
+    team: ContributorTeam | None = models.OneToOneField(  # type: ignore[reportAssignmentType]
+        ContributorTeam,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+    is_private = models.GeneratedField(
+        expression=ExpressionWrapper(
+            Q(team__isnull=False),
+            output_field=models.BooleanField(),
+        ),
+        output_field=models.BooleanField(),
+        db_persist=True,
+        help_text=gettext_lazy(
+            "If the project is private, then it is only visible to the team members.",
+        ),
+    )
+
     # CALCULATED FIELDS
 
     progress = models.PositiveSmallIntegerField(default=0, validators=[validate_percentage])
@@ -298,6 +322,7 @@ class Project(UserResource):
     requesting_organization_id: int
     tutorial_id: int | None
     image_id: int | None
+    team_id: int | None
     project_type_specific_output_id: int | None
 
     @typing.override

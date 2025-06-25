@@ -61,6 +61,8 @@ class ProjectType(UserResourceTypeMixin):
     status: strawberry.auto
     processing_status: strawberry.auto
     progress: strawberry.auto
+    team: strawberry.auto
+    is_private: strawberry.auto
 
     @strawberry_django.field(only=["project_type_specifics", "project_type"])
     async def project_type_specifics(
