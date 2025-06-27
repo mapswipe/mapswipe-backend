@@ -22,11 +22,13 @@ from .project_types.validate import ValidateProjectPropertyInput
 @strawberry_django.input(Organization)
 class OrganizationCreateInput(UserResourceCreateInputMixin):
     name: strawberry.auto
+    description: strawberry.auto
 
 
 @strawberry_django.input(Organization)
 class OrganizationUpdateInput(UserResourceTopLevelUpdateInputMixin):
     name: strawberry.auto
+    description: strawberry.auto
 
 
 # Project Properties
