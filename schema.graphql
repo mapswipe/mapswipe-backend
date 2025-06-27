@@ -1455,8 +1455,8 @@ type ProjectVectorTileServerCustomConfig {
 }
 
 type Query {
-  users(pagination: OffsetPaginationInput, filters: UserFilter, order: UserOrder): UserTypeOffsetPaginated! @isAuthenticated
   me: UserMeType
+  users(filters: UserFilter, order: UserOrder, pagination: OffsetPaginationInput): UserTypeOffsetPaginated! @isAuthenticated
   tileServers: RasterTileServersType! @isAuthenticated
   project(id: ID!): ProjectType! @isAuthenticated
   projects(pagination: OffsetPaginationInput, filters: ProjectFilter, order: ProjectOrder): ProjectTypeOffsetPaginated! @isAuthenticated
@@ -1981,6 +1981,7 @@ type UserMeType {
   firstName: String!
   lastName: String!
   displayName: String!
+  anonymizeEmail: String!
   email: String!
 }
 
@@ -2005,6 +2006,7 @@ type UserType {
   firstName: String!
   lastName: String!
   displayName: String!
+  anonymizeEmail: String!
 }
 
 type UserTypeOffsetPaginated {
