@@ -1,14 +1,28 @@
 import json
+import logging
 import typing
 from pathlib import Path
 
 import toml
 from django.conf import settings
+from django.contrib.auth import login
 from django.http import JsonResponse
+from django.utils.translation import gettext
+from drf_spectacular.utils import extend_schema
 from health_check.views import MainView
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .serializers import FirebaseAuthRequestSerializer
+
+logger = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
+    from rest_framework.request import Request
+
     from utils.git import GitHelper
+
+    from .types import FirebaseDecodedIdToken
 
 
 # FIXME: Maybe a better approach then this?
@@ -47,3 +61,28 @@ class HealthCheckCustomView(MainView):
             data,
             status=response.status_code,
         )
+
+
+# https://firebase.google.com/docs/auth/admin/verify-id-tokens
+class FirebaseAuthView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    @extend_schema(
+        description=gettext("use firebase id_token to authenticate"),
+        request=FirebaseAuthRequestSerializer,
+        responses=None,
+    )
+    def post(self, request: "Request"):
+        token_serializer = FirebaseAuthRequestSerializer(data=request.data)
+        if not token_serializer.is_valid():
+            return Response(token_serializer.errors, 400)
+        token: FirebaseDecodedIdToken = token_serializer.validated_data["token"]
+        user = token_serializer.validated_data["user"]
+
+        user.fb_uid = token.uid
+        user.save(update_fields=("fb_uid",))
+
+        login(request, user)
+
+        return Response(status=200)

@@ -1,13 +1,20 @@
+import logging
 import typing
 
 from django.core.exceptions import ValidationError
 from django.http.request import HttpRequest
 from django.utils import timezone
 from django.utils.translation import gettext
+from firebase_admin import auth
 from rest_framework import serializers
 
 from apps.common.models import ArchivableResource, UserResource
+from apps.user.models import User
 from utils.common import validate_ulid
+
+from .types import FirebaseDecodedIdToken
+
+logger = logging.getLogger(__name__)
 
 
 class DrfContextType(typing.TypedDict):
@@ -98,3 +105,58 @@ class ArchivableResourceSerializer[ModelType: ArchivableResource, ContextType: D
     def update(self, instance: ModelType, validated_data: dict[str, typing.Any]) -> ModelType:
         self._set_archive_fields(validated_data, instance)
         return super().update(instance, validated_data)
+
+
+class FirebaseAuthRequestSerializer(serializers.Serializer[typing.Any]):
+    token = serializers.CharField(required=True)
+
+    def validate_token(self, token: str) -> FirebaseDecodedIdToken:
+        try:
+            decoded_id_token_raw = auth.verify_id_token(token, check_revoked=True)
+            decoded_id_token = FirebaseDecodedIdToken.model_validate(decoded_id_token_raw)
+        except auth.RevokedIdTokenError as err:
+            logger.warning("FirebaseRevokedIdTokenError", exc_info=True)
+            raise serializers.ValidationError(gettext("provided token was revoked")) from err
+        except auth.UserDisabledError as err:
+            logger.warning("FirebaseUserDisabledError", exc_info=True)
+            raise serializers.ValidationError(gettext("provided token is for disabled user")) from err
+        except auth.InvalidIdTokenError as err:
+            logger.warning("FirebaseInvalidIdTokenError", exc_info=True)
+            raise serializers.ValidationError(gettext("provided token is invalid")) from err
+        except Exception as err:
+            logger.error("FirebaseAuthUnknown", exc_info=True)
+            raise serializers.ValidationError(gettext("failed to process firebase login")) from err
+
+        if not decoded_id_token.email_verified:
+            raise serializers.ValidationError(gettext("user email is not verified"))
+        return decoded_id_token
+
+    @typing.override
+    def validate(self, attrs: dict[str, typing.Any]):
+        attrs = super().validate(attrs)
+
+        decoded_id_token: FirebaseDecodedIdToken = attrs["token"]
+
+        existing_user = User.objects.filter(email=decoded_id_token.email_lower).first()
+        if existing_user is None:
+            logger.warning("user (email=%s) not invited as manager yet", decoded_id_token.email_lower)
+            raise serializers.ValidationError(
+                {
+                    "non_field_errors": gettext("user not invited as manager yet. please contact admin"),
+                },
+            )
+
+        if not existing_user.is_active:
+            raise serializers.ValidationError(
+                {
+                    "non_field_errors": gettext("user is inactive. please contact admin"),
+                },
+            )
+
+        attrs["user"] = existing_user
+        return attrs
+
+
+class FirebaseAuthResponseSerializer(serializers.Serializer[typing.Any]):
+    ok = serializers.BooleanField(required=True)
+    error = serializers.CharField()

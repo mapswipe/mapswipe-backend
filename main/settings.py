@@ -155,6 +155,8 @@ INSTALLED_APPS = [
     "django_premailer",
     "django_celery_beat",
     "djangoql",
+    "rest_framework",
+    "drf_spectacular",
     # - Health-check
     "health_check",  # required
     "health_check.db",
@@ -549,6 +551,30 @@ if ENABLE_DEBUG_TOOLBAR and not IS_TESTING:
         "127.0.0.1",
         ".".join(socket.gethostbyname(socket.gethostname()).rsplit(".")[:-1]) + ".1",
     ]
+
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.SessionAuthentication",),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 50,
+    "DEFAULT_FILTER_BACKENDS": (
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ),
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+if DEBUG:
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = (
+        *REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"],
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    )
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Mapswipe-Backend REST API",
+    "VERSION": "0.0.1",
+}
 
 # Manual checks
 import main.checks  # noqa: F401 E402

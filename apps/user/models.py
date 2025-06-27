@@ -3,6 +3,7 @@ import typing
 # from __future__ import annotations
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils.translation import gettext
 
 from .managers import CustomUserManager
 
@@ -18,6 +19,13 @@ class User(AbstractUser):
     # TODO(tnagorra): Rename this to firebase_userid
     old_id = models.CharField(max_length=30, db_index=True, null=True)
 
+    fb_uid = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        unique=True,
+        help_text=gettext("firebase user uuid"),
+    )
     objects: CustomUserManager = CustomUserManager()  # type: ignore[reportAssignmentType]
 
     @typing.override
