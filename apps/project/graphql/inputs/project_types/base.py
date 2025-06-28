@@ -1,5 +1,6 @@
 import strawberry
 
+from utils.custom_options.models import CustomOption, CustomSubOption
 from utils.geo.raster_tile_server.models import (
     RasterTileServerCommonConfig,
     RasterTileServerConfig,
@@ -10,6 +11,15 @@ from utils.geo.vector_tile_server.models import (
     VectorTileServerConfig,
     VectorTileServerCustomConfig,
 )
+
+
+# Custom option
+@strawberry.experimental.pydantic.input(model=CustomSubOption, all_fields=True)
+class CustomSubOptionInput: ...
+
+
+@strawberry.experimental.pydantic.input(model=CustomOption, all_fields=True)
+class CustomOptionInput: ...
 
 
 # Tile server

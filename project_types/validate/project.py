@@ -25,6 +25,7 @@ from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
 from project_types.tile_map_service.base.project import create_json_dump
 from project_types.validate.api_calls import ohsome
+from utils.custom_options.models import CustomOption
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
 
 logger = logging.getLogger(__name__)
@@ -122,6 +123,7 @@ class ValidateObjectSourceConfig(BaseModel):
 class ValidateProjectProperty(base_project.BaseProjectProperty):
     tile_server_property: RasterTileServerConfig
     object_source: ValidateObjectSourceConfig
+    custom_options: list[CustomOption] | None = None
 
 
 class ValidateProjectTaskGroupProperty(base_project.BaseProjectTaskGroupProperty): ...

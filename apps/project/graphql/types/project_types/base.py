@@ -1,5 +1,6 @@
 import strawberry
 
+from utils.custom_options.models import CustomOption, CustomSubOption
 from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
 from utils.geo.raster_tile_server.models import (
     RasterTileServerCommonConfig,
@@ -14,6 +15,16 @@ from utils.geo.vector_tile_server.models import (
 )
 
 
+# Custom options
+@strawberry.experimental.pydantic.type(model=CustomSubOption, all_fields=True)
+class ProjectCustomSubOption: ...
+
+
+@strawberry.experimental.pydantic.type(model=CustomOption, all_fields=True)
+class ProjectCustomOption: ...
+
+
+# Static tile servers
 @strawberry.type
 class VectorTileServerType:
     type: VectorTileServerNameEnum

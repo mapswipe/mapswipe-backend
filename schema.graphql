@@ -13,6 +13,7 @@ directive @isAuthenticated repeatable on FIELD_DEFINITION
 directive @oneOf on INPUT_OBJECT
 
 type AppEnumCollection {
+  CustomOptionIconEnum: [AppEnumCollectionCustomOptionIconEnum!]!
   RasterTileServerNameEnum: [AppEnumCollectionRasterTileServerNameEnum!]!
   VectorTileServerNameEnum: [AppEnumCollectionVectorTileServerNameEnum!]!
   ValidateObjectSourceTypeEnum: [AppEnumCollectionValidateObjectSourceTypeEnum!]!
@@ -31,6 +32,11 @@ type AppEnumCollection {
 
 type AppEnumCollectionContributorUserGroupMembershipLogActionEnum {
   key: ContributorUserGroupMembershipLogActionEnum!
+  label: String!
+}
+
+type AppEnumCollectionCustomOptionIconEnum {
+  key: CustomOptionIconEnum!
   label: String!
 }
 
@@ -443,6 +449,60 @@ union CreateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
 
 """A generic type to return error messages"""
 scalar CustomErrorType
+
+enum CustomOptionIconEnum {
+  ADD_OUTLINE
+  ALERT_OUTLINE
+  BAN_OUTLINE
+  CHECK
+  CLOSE_OUTLINE
+  CHECKMARK_OUTLINE
+  EGG_OUTLINE
+  ELLIPSE_OUTLINE
+  FLAG_OUTLINE
+  HAND_LEFT_OUTLINE
+  HAND_RIGHT_OUTLINE
+  HAPPY_OUTLINE
+  HEART_OUTLINE
+  HELP_OUTLINE
+  INFORMATION_OUTLINE
+  PRISM_OUTLINE
+  REFRESH_OUTLINE
+  REMOVE_OUTLINE
+  SAD_OUTLINE
+  SEARCH_OUTLINE
+  SHAPES_OUTLINE
+  SQUARE_OUTLINE
+  STAR_OUTLINE
+  THUMBS_DOWN_OUTLINE
+  THUMBS_UP_OUTLINE
+  TRIANGLE_OUTLINE
+  WARNING_OUTLINE
+  GENERAL_TAP
+  TAP
+  TAP_1
+  TAP_2
+  TAP_3
+  SWIPE_LEFT
+}
+
+input CustomOptionInput {
+  """A positive int value"""
+  value: Int!
+  title: String!
+  description: String!
+  icon: CustomOptionIconEnum!
+
+  """A valid hex color string like '#fff' or '#ffffff'"""
+  iconColor: String!
+  subOptions: [CustomSubOptionInput!]
+}
+
+input CustomSubOptionInput {
+  """A positive int value"""
+  value: Int!
+  description: String!
+}
 
 """Date (isoformat)"""
 scalar Date
@@ -888,6 +948,24 @@ input ProjectCreateInput {
   """
   additionalInfoUrl: String
   description: String
+}
+
+type ProjectCustomOption {
+  """A positive int value"""
+  value: Int!
+  title: String!
+  description: String!
+  icon: CustomOptionIconEnum!
+
+  """A valid hex color string like '#fff' or '#ffffff'"""
+  iconColor: String!
+  subOptions: [ProjectCustomSubOption!]
+}
+
+type ProjectCustomSubOption {
+  """A positive int value"""
+  value: Int!
+  description: String!
 }
 
 """
@@ -1869,13 +1947,13 @@ type UserTypeOffsetPaginated {
 }
 
 input ValidateImageProjectPropertyInput {
-  annotationsFile: String!
-  baseQuestion: String!
+  annotationsFile: String = null
+  customOptions: [CustomOptionInput!] = null
 }
 
 type ValidateImageProjectPropertyType {
-  annotationsFile: String!
-  baseQuestion: String!
+  annotationsFile: String
+  customOptions: [ProjectCustomOption!]
 }
 
 input ValidateImageTutorialTaskPropertyInput {
@@ -1911,11 +1989,13 @@ enum ValidateObjectSourceTypeEnum {
 input ValidateProjectPropertyInput {
   tileServerProperty: ProjectRasterTileServerConfigInput!
   objectSource: ValidateObjectSourceConfigInput!
+  customOptions: [CustomOptionInput!] = null
 }
 
 type ValidateProjectPropertyType {
   tileServerProperty: ProjectRasterTileServerConfig!
   objectSource: ValidateObjectSourceConfig!
+  customOptions: [ProjectCustomOption!]
 }
 
 input ValidateTutorialTaskPropertyInput {

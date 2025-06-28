@@ -6,20 +6,22 @@ from pydantic import BaseModel
 from apps.project.models import Project
 from project_types.base import project as base_project
 from utils import fields as custom_fields
+from utils.custom_options.models import CustomOption
 
 logger = logging.getLogger(__name__)
 
 
 class ValidateImageProjectProperty(base_project.BaseProjectProperty):
-    annotations_file: custom_fields.PydanticId
-    base_question: custom_fields.PydanticLongText
+    annotations_file: custom_fields.PydanticId | None = None
+    # base_question: custom_fields.PydanticLongText
+    custom_options: list[CustomOption] | None = None
 
 
 class ValidateImageProjectTaskGroupProperty(base_project.BaseProjectTaskGroupProperty): ...
 
 
 class ValidateImageProjectTaskProperty(base_project.BaseProjectTaskProperty):
-    question: custom_fields.PydanticLongText
+    question: custom_fields.PydanticLongText | None = None
 
 
 class ValidateImageProject(
