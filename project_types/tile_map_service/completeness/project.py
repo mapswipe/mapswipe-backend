@@ -2,8 +2,10 @@ import typing
 
 from django.db import models
 from pydantic import BaseModel, field_validator, model_validator
+from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import Project, ProjectTypeEnum
+from project_types.firebase import raster_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base import project as base_project
 from utils import fields as custom_fields
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
@@ -93,6 +95,37 @@ class CompletenessProject(
 
     @typing.override
     def get_project_specifics_for_firebase(self, project_ref):
-        class EmptyModel(BaseModel): ...
+        tsp = self.project_type_specifics.tile_server_property
+        tsp_overlay = self.project_type_specifics.overlay_tile_server_property
 
-        return EmptyModel()
+        fb_tile_server = firebase_models.FbObjRasterTileServer(
+            name=raster_tile_server_name_enum_to_firebase(tsp.name),
+            credits=tsp.get_credits(),
+            url=tsp.get_url(),
+            # NOTE: We already replace apiKey in the url so apiKey is empty
+            apiKey=firebase_models.UNDEFINED,
+            # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
+            wmtsLayerName=firebase_models.UNDEFINED,
+        )
+
+        # NOTE: Setting background layer as fallback for overlay layer
+        fb_overlay_tile_server = fb_tile_server
+        # FIXME(tnagorra): Handle vector tiles in the future
+        if tsp_overlay.type == OverlayLayerTypeEnum.RASTER_TILE and tsp_overlay.raster:
+            fb_overlay_tile_server = firebase_models.FbObjRasterTileServer(
+                name=raster_tile_server_name_enum_to_firebase(tsp_overlay.raster.tile_server.name),
+                credits=tsp_overlay.raster.tile_server.get_credits(),
+                url=tsp_overlay.raster.tile_server.get_url(),
+                # NOTE: We already replace apiKey in the url so apiKey is empty
+                apiKey=firebase_models.UNDEFINED,
+                # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
+                wmtsLayerName=firebase_models.UNDEFINED,
+            )
+
+        # TODO(tnagorra): Create groups
+        # TODO(tnagorra): Create tasks (if necessary)
+        return firebase_models.FbProjectCompareCreateOnlyInput(
+            zoomLevel=self.project_type_specifics.zoom_level,
+            tileServer=fb_tile_server,
+            tileServerB=fb_overlay_tile_server,
+        )

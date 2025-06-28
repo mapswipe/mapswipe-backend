@@ -1,9 +1,10 @@
 import typing
 
-from pydantic import BaseModel
+from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
 from main.bulk_managers import BulkCreateManager
+from project_types.firebase import raster_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base import project as base_project
 from utils import fields as custom_fields
 from utils.geo import tile_functions, tile_grouping
@@ -79,6 +80,28 @@ class CompareProject(
 
     @typing.override
     def get_project_specifics_for_firebase(self, project_ref):
-        class EmptyModel(BaseModel): ...
-
-        return EmptyModel()
+        tsp = self.project_type_specifics.tile_server_property
+        tsp_b = self.project_type_specifics.tile_server_b_property
+        # TODO(tnagorra): Create groups
+        # TODO(tnagorra): Create tasks (if necessary)
+        return firebase_models.FbProjectCompareCreateOnlyInput(
+            zoomLevel=self.project_type_specifics.zoom_level,
+            tileServer=firebase_models.FbObjRasterTileServer(
+                name=raster_tile_server_name_enum_to_firebase(tsp.name),
+                credits=tsp.get_credits(),
+                url=tsp.get_url(),
+                # NOTE: We already replace apiKey in the url so apiKey is empty
+                apiKey=firebase_models.UNDEFINED,
+                # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
+                wmtsLayerName=firebase_models.UNDEFINED,
+            ),
+            tileServerB=firebase_models.FbObjRasterTileServer(
+                name=raster_tile_server_name_enum_to_firebase(tsp_b.name),
+                credits=tsp_b.get_credits(),
+                url=tsp_b.get_url(),
+                # NOTE: We already replace apiKey in the url so apiKey is empty
+                apiKey=firebase_models.UNDEFINED,
+                # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
+                wmtsLayerName=firebase_models.UNDEFINED,
+            ),
+        )
