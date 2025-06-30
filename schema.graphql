@@ -196,6 +196,50 @@ type ContributorSwipeStatType {
   totalSwipes: Int!
 }
 
+"""
+ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name)
+"""
+input ContributorTeamFilter {
+  id: IDBaseFilterLookup
+  name: StrFilterLookup
+  isArchived: BoolBaseFilterLookup
+  AND: ContributorTeamFilter
+  OR: ContributorTeamFilter
+  NOT: ContributorTeamFilter
+  DISTINCT: Boolean
+}
+
+input ContributorTeamOrder {
+  id: Ordering
+  name: Ordering
+}
+
+"""
+ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name)
+"""
+type ContributorTeamType implements UserResourceTypeMixin {
+  clientId: String!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  createdBy: UserType!
+  modifiedBy: UserType!
+  id: ID!
+  name: String!
+  archivedAt: DateTime
+  isArchived: Boolean!
+  membersCount: Int!
+}
+
+type ContributorTeamTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [ContributorTeamType!]!
+}
+
 type ContributorTimeStatType {
   date: Date!
 
@@ -537,10 +581,6 @@ input DjangoModelFilterInput {
   id: ID!
 }
 
-type DjangoModelType {
-  pk: ID!
-}
-
 input FindProjectPropertyInput {
   zoomLevel: Int!
   tileServerProperty: ProjectRasterTileServerConfigInput!
@@ -736,9 +776,7 @@ enum OverlayLayerTypeEnum {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 input ProcessedProjectUpdateInput {
   clientId: String!
@@ -960,6 +998,7 @@ input ProjectCreateInput {
   """
   additionalInfoUrl: String
   description: String
+  team: ID
 }
 
 type ProjectCustomOption {
@@ -1243,13 +1282,13 @@ type ProjectType implements UserResourceTypeMixin {
   status: ProjectStatusEnum!
   processingStatus: ProjectProcessingStatusEnum
   progress: Int!
-  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyType
-  team: DjangoModelType
+  team: ContributorTeamType
 
   """
   If the project is private, then it is only visible to the team members.
   """
   isPrivate: Boolean!
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyType
 }
 
 type ProjectTypeAreaStatsType {
@@ -1345,7 +1384,7 @@ type ProjectTypeSwipeStatsType {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress,, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 input ProjectUpdateInput {
   clientId: String!
@@ -1430,6 +1469,8 @@ type Query {
   contributorUserGroups(pagination: OffsetPaginationInput, filters: ContributorUserGroupFilter, order: ContributorUserGroupOrder): ContributorUserGroupTypeOffsetPaginated!
   contributorUserGroup(id: ID!): ContributorUserGroupType!
   contributorUserGroupMembers(pagination: OffsetPaginationInput, filters: ContributorUserGroupMembershipFilter, order: ContributorUserGroupMembershipOrder): ContributorUserGroupMembershipTypeOffsetPaginated!
+  contributorTeam(id: ID!): ContributorTeamType!
+  contributorTeams(pagination: OffsetPaginationInput, filters: ContributorTeamFilter, order: ContributorTeamOrder): ContributorTeamTypeOffsetPaginated!
   contributorUserByUserId(userId: ID!): ContributorUserType!
   communityStats: CommunityStatsType!
 

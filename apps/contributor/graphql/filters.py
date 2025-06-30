@@ -2,7 +2,7 @@ import strawberry
 import strawberry_django
 from django.db import models
 
-from apps.contributor.models import ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
+from apps.contributor.models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
 
 @strawberry_django.filters.filter(ContributorUser, lookups=True)
@@ -57,3 +57,10 @@ class ContributorUserGroupFilter:
 class ContributorUserGroupMembershipFilter:
     id: strawberry.auto
     user_group_id: strawberry.auto
+
+
+@strawberry_django.filters.filter(ContributorTeam, lookups=True)
+class ContributorTeamFilter:
+    id: strawberry.auto
+    name: strawberry.auto
+    is_archived: strawberry.auto

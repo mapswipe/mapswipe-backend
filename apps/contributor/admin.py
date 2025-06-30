@@ -9,6 +9,8 @@ class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     list_display = (
         "user_id",
         "username",
+        "created_at",
+        "modified_at",
     )
     list_filter = ("team",)
 

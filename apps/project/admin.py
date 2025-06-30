@@ -10,9 +10,9 @@ from djangoql.admin import DjangoQLSearchMixin
 from .models import Organization, Project, ProjectAsset
 
 
-class HasTeamFilter(admin.SimpleListFilter):
-    title = _("Has Team")
-    parameter_name = "has_team"
+class IncludedInTeamFilter(admin.SimpleListFilter):
+    title = _("Included in Team")
+    parameter_name = "included_in_team"
 
     @typing.override
     def lookups(self, request: HttpRequest, model_admin: admin.ModelAdmin) -> list[tuple[Literal["yes", "no"], str]]:
@@ -42,7 +42,7 @@ class OrganizationAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
 @admin.register(Project)
 class ProjectAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     list_display = ("name", "requesting_organization", "project_type", "is_private")
-    list_filter = (HasTeamFilter, "name", "project_type", "is_private")
+    list_filter = (IncludedInTeamFilter, "name", "project_type", "is_private")
     list_select_related = True
     autocomplete_fields = ("requesting_organization", "tutorial", "image", "created_by", "team")
 
