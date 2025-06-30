@@ -49,6 +49,7 @@ class ProjectCreateInput(UserResourceCreateInputMixin):
     look_for: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
+    team: strawberry.ID | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py

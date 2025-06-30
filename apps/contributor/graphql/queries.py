@@ -7,8 +7,18 @@ from strawberry_django.pagination import OffsetPaginated
 
 from apps.contributor.models import ContributorUser
 
-from .filters import ContributorUserFilter, ContributorUserGroupFilter, ContributorUserGroupMembershipFilter
-from .orders import ContributorUserGroupMembershipOrder, ContributorUserGroupOrder, ContributorUserOrder
+from .filters import (
+    ContributorTeamFilter,
+    ContributorUserFilter,
+    ContributorUserGroupFilter,
+    ContributorUserGroupMembershipFilter,
+)
+from .orders import (
+    ContributorTeamOrder,
+    ContributorUserGroupMembershipOrder,
+    ContributorUserGroupOrder,
+    ContributorUserOrder,
+)
 from .types import ContributorTeamType, ContributorUserGroupMembershipType, ContributorUserGroupType, ContributorUserType
 
 
@@ -35,7 +45,10 @@ class Query:
 
     # Team
     contributor_team: ContributorTeamType = strawberry_django.field()
-    contributor_teams: OffsetPaginated[ContributorTeamType] = strawberry_django.offset_paginated()
+    contributor_teams: OffsetPaginated[ContributorTeamType] = strawberry_django.offset_paginated(
+        order=ContributorTeamOrder,
+        filters=ContributorTeamFilter,
+    )
 
     @strawberry.field
     async def contributor_user_by_user_id(self, user_id: strawberry.ID) -> ContributorUserType:

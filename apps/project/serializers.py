@@ -50,6 +50,7 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
             "additional_info_url",
             "description",
             "image",
+            "team",
         )
 
 
