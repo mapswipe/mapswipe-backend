@@ -6,7 +6,7 @@ from strawberry_django.pagination import OffsetPaginated
 
 from apps.common.graphql.types import UserResourceTypeMixin
 from apps.community_dashboard.models import AggregatedUserGroupStatData, AggregatedUserStatData
-from apps.contributor.models import ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
+from apps.contributor.models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
 
 # TODO(thenav56): Test N+1
@@ -123,3 +123,11 @@ class ContributorUserGroupMembershipType:
     total_swipe_time: int = strawberry_django.field(
         annotate=generate_aggregated_user_group_stat_data_annotate(models.Sum("total_time")),
     )
+
+
+@strawberry_django.type(ContributorTeam)
+class ContributorTeamType(UserResourceTypeMixin):
+    id: strawberry.ID
+    name: strawberry.auto
+    archived_at: strawberry.auto
+    is_archived: strawberry.auto
