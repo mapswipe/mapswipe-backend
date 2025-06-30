@@ -193,6 +193,24 @@ type ContributorSwipeStatType {
 """
 ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name)
 """
+input ContributorTeamFilter {
+  id: IDBaseFilterLookup
+  name: StrFilterLookup
+  isArchived: BoolBaseFilterLookup
+  AND: ContributorTeamFilter
+  OR: ContributorTeamFilter
+  NOT: ContributorTeamFilter
+  DISTINCT: Boolean
+}
+
+input ContributorTeamOrder {
+  id: Ordering
+  name: Ordering
+}
+
+"""
+ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name)
+"""
 type ContributorTeamType implements UserResourceTypeMixin {
   clientId: String!
   createdAt: DateTime!
@@ -923,6 +941,7 @@ input ProjectCreateInput {
   """
   additionalInfoUrl: String
   description: String
+  team: ID
 }
 
 """
@@ -1374,7 +1393,7 @@ type Query {
   contributorUserGroup(id: ID!): ContributorUserGroupType!
   contributorUserGroupMembers(pagination: OffsetPaginationInput, filters: ContributorUserGroupMembershipFilter, order: ContributorUserGroupMembershipOrder): ContributorUserGroupMembershipTypeOffsetPaginated!
   contributorTeam(id: ID!): ContributorTeamType!
-  contributorTeams(pagination: OffsetPaginationInput): ContributorTeamTypeOffsetPaginated!
+  contributorTeams(pagination: OffsetPaginationInput, filters: ContributorTeamFilter, order: ContributorTeamOrder): ContributorTeamTypeOffsetPaginated!
   contributorUserByUserId(userId: ID!): ContributorUserType!
   communityStats: CommunityStatsType!
 
