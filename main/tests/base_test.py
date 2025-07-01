@@ -8,6 +8,8 @@ from django.db import models
 from django.test import TestCase as BaseTestCase
 from django.test import override_settings
 
+from main.config import Config
+
 TEST_CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -51,7 +53,21 @@ class TestCase(BaseTestCase):
 
         # Clear all test cache
         cache.clear()
+
+        # Clear firebase data
+        self.clear_firebase_data()
+
         super().setUp()
+
+    def clear_firebase_data(self):
+        assert Config.FIREBASE_EMULATOR_USE is True, "Cannot reset firebase because emulator is not used"
+        assert Config.FIREBASE_EMULATOR_TEST_HOST is not None, "Cannot reset firebase without defining a whitelist"
+        assert Config.FIREBASE_EMULATOR_HOST == Config.FIREBASE_EMULATOR_TEST_HOST, (
+            "Cannot reset firebase because host is not whitelisted"
+        )
+
+        ref = Config.FIREBASE_HELPER.ref(Config.FirebaseKeys.v2())
+        ref.delete()
 
     def force_login(self, user):
         self.client.force_login(user)

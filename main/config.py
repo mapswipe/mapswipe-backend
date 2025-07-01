@@ -16,8 +16,19 @@ class Config:
     OSM_API_LINK = "https://www.openstreetmap.org/api/0.6/"
 
     FIREBASE_HELPER = typing.cast("FirebaseHelper", settings.FIREBASE_HELPER)
+    FIREBASE_EMULATOR_USE = typing.cast("str | None", settings.FIREBASE_EMULATOR_USE)
+    FIREBASE_EMULATOR_TEST_HOST = typing.cast("str | None", settings.FIREBASE_EMULATOR_TEST_HOST)
+    FIREBASE_EMULATOR_HOST = os.environ.get("FIREBASE_DATABASE_EMULATOR_HOST")
 
     class FirebaseKeys:
+        @staticmethod
+        def backend_wait():
+            return "/backendWait"
+
+        @staticmethod
+        def v2():
+            return "/v2"
+
         @staticmethod
         def project(project_id: str | int):
             return f"/v2/projects/{project_id}"

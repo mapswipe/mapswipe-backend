@@ -9,7 +9,10 @@ from django.core.cache import cache
 from django.core.management.base import BaseCommand, CommandParser
 from django.db import connections
 from django.db.utils import OperationalError
+from django.utils import timezone
 from redis.exceptions import ConnectionError as RedisConnectionError
+
+from main.config import Config
 
 
 class TimeoutException(Exception): ...
@@ -38,6 +41,27 @@ class Command(BaseCommand):
             time.sleep(1)
 
         self.stdout.write(self.style.SUCCESS(f"DB is available after {time.time() - start_time} seconds"))
+
+    def wait_for_firebase(self):
+        self.stdout.write("Waiting for Firebase...")
+        fb_ref = Config.FIREBASE_HELPER.ref(Config.FirebaseKeys.backend_wait())
+        start_time = time.time()
+        while True:
+            try:
+                fb_ref.update(
+                    value={
+                        "ok": True,
+                        "timestamp": timezone.now().isoformat(),
+                    },
+                )
+                break
+            except Exception:
+                ...
+            # Try again
+            self.stdout.write(self.style.WARNING("Firebase not available, waiting..."))
+            time.sleep(1)
+
+        self.stdout.write(self.style.SUCCESS(f"Firebase is available after {time.time() - start_time} seconds"))
 
     def wait_for_redis(self):
         self.stdout.write("Waiting for Redis...")
@@ -93,6 +117,7 @@ class Command(BaseCommand):
         parser.add_argument("--celery-queue", action="store_true", help="Wait for Celery queue to be available")
         parser.add_argument("--redis", action="store_true", help="Wait for Redis to be available")
         parser.add_argument("--minio", action="store_true", help="Wait for MinIO (S3) storage to be available")
+        parser.add_argument("--firebase", action="store_true", help="Wait for Firebase to be available")
         parser.add_argument("--all", action="store_true", help="Wait for all to be available")
 
     @typing.override
@@ -113,6 +138,8 @@ class Command(BaseCommand):
                 self.wait_for_redis()
             if _all or kwargs["celery_queue"]:
                 self.wait_for_redis()
+            if _all or kwargs["firebase"]:
+                self.wait_for_firebase()
         except TimeoutException:
             ...
         finally:
