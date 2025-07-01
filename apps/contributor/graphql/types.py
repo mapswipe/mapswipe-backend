@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models.functions import Coalesce
 from strawberry_django.pagination import OffsetPaginated
 
-from apps.common.graphql.types import UserResourceTypeMixin
+from apps.common.graphql.types import ArchivableResourceTypeMixin, UserResourceTypeMixin
 from apps.community_dashboard.models import AggregatedUserGroupStatData, AggregatedUserStatData
 from apps.contributor.models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
@@ -65,12 +65,10 @@ class ContributorUserType:
 
 
 @strawberry_django.type(ContributorUserGroup)
-class ContributorUserGroupType(UserResourceTypeMixin):
+class ContributorUserGroupType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
     id: strawberry.ID
     name: strawberry.auto
     description: strawberry.auto
-    archived_at: strawberry.auto
-    is_archived: strawberry.auto
 
     members_count: int = strawberry_django.field(
         annotate=Coalesce(
@@ -126,8 +124,6 @@ class ContributorUserGroupMembershipType:
 
 
 @strawberry_django.type(ContributorTeam)
-class ContributorTeamType(UserResourceTypeMixin):
+class ContributorTeamType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
     id: strawberry.ID
     name: strawberry.auto
-    archived_at: strawberry.auto
-    is_archived: strawberry.auto
