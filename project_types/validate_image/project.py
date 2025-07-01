@@ -1,7 +1,7 @@
 import logging
 import typing
 
-from pydantic import BaseModel
+from pyfirebase_mapswipe import extended_models as firebase_ext_models
 
 from apps.project.models import Project
 from project_types.base import project as base_project
@@ -41,7 +41,13 @@ class ValidateImageProject(
         super().__init__(project)
 
     @typing.override
-    def get_project_specifics_for_firebase(self, project_ref):
-        class EmptyModel(BaseModel): ...
+    def get_task_project_specifics_for_firebase(self, task):
+        return firebase_ext_models.FbEmptyModel()
 
-        return EmptyModel()
+    @typing.override
+    def get_group_project_specifics_for_firebase(self, group):
+        return firebase_ext_models.FbEmptyModel()
+
+    @typing.override
+    def get_project_specifics_for_firebase(self):
+        return firebase_ext_models.FbEmptyModel()

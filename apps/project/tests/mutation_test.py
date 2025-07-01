@@ -887,6 +887,7 @@ class TestProjectTypeMutation(TestCase):
         project_data = {
             "clientId": project_client_id,
             "image": image_asset["id"],
+            "verificationNumber": 10,
             "projectTypeSpecifics": {
                 "compare": {
                     "aoiGeometry": aoi_geometry_asset["id"],
@@ -932,9 +933,21 @@ class TestProjectTypeMutation(TestCase):
 
         process_project_task(int(project_id))
 
-        expected_task_groups = [
+        class TaskGroupSpecificsType(typing.TypedDict):
+            x_max: int
+            x_min: int
+            y_max: int
+            y_min: int
+
+        class TaskGroupType(typing.TypedDict):
+            number_of_tasks: int
+            required_count: int
+            project_type_specifics: TaskGroupSpecificsType
+
+        expected_task_groups: list[TaskGroupType] = [
             {
                 "number_of_tasks": 18,
+                "required_count": 18 * 10,
                 "project_type_specifics": {
                     "x_max": 24152,
                     "x_min": 24147,
@@ -944,6 +957,7 @@ class TestProjectTypeMutation(TestCase):
             },
             {
                 "number_of_tasks": 24,
+                "required_count": 24 * 10,
                 "project_type_specifics": {
                     "x_max": 24153,
                     "x_min": 24146,
@@ -953,6 +967,7 @@ class TestProjectTypeMutation(TestCase):
             },
             {
                 "number_of_tasks": 24,
+                "required_count": 24 * 10,
                 "project_type_specifics": {
                     "x_max": 24153,
                     "x_min": 24146,
@@ -962,6 +977,7 @@ class TestProjectTypeMutation(TestCase):
             },
             {
                 "number_of_tasks": 6,
+                "required_count": 6 * 10,
                 "project_type_specifics": {
                     "x_max": 24150,
                     "x_min": 24149,
@@ -1018,10 +1034,12 @@ class TestProjectTypeMutation(TestCase):
         project_task_qs = ProjectTask.objects.filter(task_group__project=latest_project)
 
         assert {
+            "required_results": sum(task_group["required_count"] for task_group in expected_task_groups),
             "tasks_groups_count": project_task_group_qs.count(),
             "tasks_groups": list(
                 project_task_group_qs.order_by("id").values(
                     "number_of_tasks",
+                    "required_count",
                     "project_type_specifics",
                 ),
             ),
@@ -1034,9 +1052,10 @@ class TestProjectTypeMutation(TestCase):
             "status": latest_project.status,
             "processing_status": latest_project.processing_status,
         } == {
+            "required_results": latest_project.required_results,
             "tasks_groups_count": len(expected_task_groups),
-            "tasks_count": 72,
             "tasks_groups": expected_task_groups,
+            "tasks_count": 72,
             "tasks": expected_last_5_tasks,
             "status": Project.Status.READY,
             "processing_status": Project.ProcessingStatus.COMPLETED,

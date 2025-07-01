@@ -1,5 +1,6 @@
 import typing
 
+from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
@@ -79,7 +80,15 @@ class CompareProject(
         return tasks_count
 
     @typing.override
-    def get_project_specifics_for_firebase(self, project_ref):
+    def get_task_project_specifics_for_firebase(self, task):
+        return firebase_ext_models.FbEmptyModel()
+
+    @typing.override
+    def get_group_project_specifics_for_firebase(self, group):
+        return firebase_ext_models.FbEmptyModel()
+
+    @typing.override
+    def get_project_specifics_for_firebase(self):
         tsp = self.project_type_specifics.tile_server_property
         tsp_b = self.project_type_specifics.tile_server_b_property
         # TODO(tnagorra): Create groups

@@ -1,3 +1,4 @@
+import os
 import typing
 
 from django.conf import settings
@@ -32,6 +33,14 @@ class Config:
         @staticmethod
         def project(project_id: str | int):
             return f"/v2/projects/{project_id}"
+
+        @staticmethod
+        def project_groups(project_id: str | int):
+            return f"/v2/groups/{project_id}/"
+
+        @staticmethod
+        def project_tasks(project_id: str | int):
+            return f"/v2/groups/{project_id}/"
 
 
 # FIXME: Import utils/geo/raster_tile_server/config.py here

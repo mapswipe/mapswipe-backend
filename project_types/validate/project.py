@@ -10,6 +10,7 @@ from geojson_pydantic import Feature, FeatureCollection
 from geojson_pydantic.geometries import MultiPolygon, Polygon
 from osgeo import ogr
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
+from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from typing_extensions import TypedDict
 from ulid import ULID
 
@@ -315,7 +316,13 @@ class ValidateProject(
         self.project.save(update_fields=("project_type_specific_output",))
 
     @typing.override
-    def get_project_specifics_for_firebase(self, project_ref):
-        class EmptyModel(BaseModel): ...
+    def get_task_project_specifics_for_firebase(self, task):
+        return firebase_ext_models.FbEmptyModel()
 
-        return EmptyModel()
+    @typing.override
+    def get_group_project_specifics_for_firebase(self, group):
+        return firebase_ext_models.FbEmptyModel()
+
+    @typing.override
+    def get_project_specifics_for_firebase(self):
+        return firebase_ext_models.FbEmptyModel()

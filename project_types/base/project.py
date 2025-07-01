@@ -133,10 +133,19 @@ class BaseProject[
 
         # NOTE: After number_of_tasks is calculated
         project_task_groups_qs.update(
+            required_count=models.F("number_of_tasks") * self.project.verification_number,
             time_spent_max_allowed=(
                 models.F("number_of_tasks") * get_max_time_spend_percentile(self.project.project_type_enum)
             ),
         )
+
+        self.project.required_results = (
+            ProjectTaskGroup.objects.filter(project_id=self.project.pk)
+            .values("project_id")
+            .annotate(required_results=models.Sum("required_count"))
+            .values("required_results")[:1]
+        )
+        self.project.save(update_fields=(["required_results"]))
 
     @abstractmethod
     def post_create_groups(self): ...
@@ -166,7 +175,7 @@ class BaseProject[
         self.project.update_processing_status(Project.ProcessingStatus.PREPARING, True)
         ProjectTaskGroup.objects.filter(project=self.project.pk).delete()
         # TODO(tnagorra): We need to add a CRON to delete these project assets
-        # FIXME(tnagorra): Do we also cleanup the user INPUT?
+        # FIXME(tnagorra): Do we also clean up the user INPUT?
         # We need to be careful not to delete assets that are currently used
         ProjectAsset.usable_objects().filter(
             project=self.project.pk,
@@ -187,18 +196,76 @@ class BaseProject[
             self.project.update_status(Project.Status.FAILED, True)
             return False
 
+    def handle_new_tasks_on_firebase(self, task_ref: FbReference):
+        tasks = ProjectTask.objects.filter(task_group__project_id=self.project.pk)
+        fb_tasks: dict[str, dict[str, dict[str, dict]]] = {}
+        for task in tasks.iterator():
+            task_data = firebase_models.FbMappingTaskCreateOnlyInput(
+                projectId=str(self.project.pk),
+                groupId=str(task.task_group_id),
+                taskId=str(task.pk),
+            )
+            task_project_specific_data = self.get_task_project_specifics_for_firebase(task)
+            fb_tasks[task.pk] = {
+                **firebase_utils.serialize(task_data),
+                **firebase_utils.serialize(task_project_specific_data),
+            }
+
+        # FIXME(tnagorra): Use bulk uploader
+        task_ref.set(value=fb_tasks)
+
+    def handle_new_groups_on_firebase(self, group_ref: FbReference):
+        groups = ProjectTaskGroup.objects.filter(project_id=self.project.pk)
+        fb_groups: dict[str, dict[str, dict]] = {}
+        for group in groups.iterator():
+            group_data = firebase_ext_models.FbMappingGroup(
+                finishedCount=0,
+                progress=0,
+                projectId=str(self.project.pk),
+                groupId=str(group.pk),
+                numberOfTasks=group.number_of_tasks,
+                requiredCount=group.required_count,
+            )
+            group_project_specific_data = self.get_group_project_specifics_for_firebase(group)
+            fb_groups[group.pk] = {
+                **firebase_utils.serialize(group_data),
+                **firebase_utils.serialize(group_project_specific_data),
+            }
+
+        # FIXME(tnagorra): Use bulk uploader
+        group_ref.set(value=fb_groups)
+
     @abstractmethod
-    def get_project_specifics_for_firebase(self, project_ref: FbReference) -> BaseModel: ...
+    def get_task_project_specifics_for_firebase(self, task: ProjectTask) -> BaseModel: ...
+
+    @abstractmethod
+    def get_group_project_specifics_for_firebase(self, group: ProjectTaskGroup) -> BaseModel: ...
+
+    @abstractmethod
+    def get_project_specifics_for_firebase(self) -> BaseModel: ...
 
     def handle_new_project_on_firebase(self, project_ref: FbReference):
         assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
         assert self.project.tutorial is not None, "Tutorial is required before project can be pushed to firebase"
+
+        # NOTE: We are not reading data from group_ref as it's an expensive operation
+        # FIXME(tnagorra): We need to check if the key exists later
+        group_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.project_groups(self.project.id),
+        )
+        # FIXME(tnagorra): We need to check if the key exists later
+        task_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.project_tasks(self.project.id),
+        )
 
         # FIXME: If taskId is defined, should be private_inactive
         status = firebase_models.FbEnumProjectStatus.INACTIVE
         if self.project.status_enum == ProjectStatusEnum.PUBLISHED:
             # FIXME: If taskId is defined, should be private_active
             status = firebase_models.FbEnumProjectStatus.PRIVATE_ACTIVE
+
+        self.handle_new_tasks_on_firebase(task_ref)
+        self.handle_new_groups_on_firebase(group_ref)
 
         project_data = firebase_ext_models.FbProject(
             created=self.project.created_at,
@@ -226,8 +293,7 @@ class BaseProject[
             projectType=project_type_enum_to_firebase(self.project.project_type_enum),
             # project_type=project_type_enum_to_firebase(self.project.project_type_enum), # not needed here
             requestingOrganisation=self.project.requesting_organization.name,  # str
-            # FIXME(tnagorra): need to calculate this
-            requiredResults=0,  # no. of results
+            requiredResults=self.project.required_results,
             status=status,
             # FIXME(tnagorra): Fill this when implemented
             teamId=firebase_models.UNDEFINED,
@@ -237,7 +303,7 @@ class BaseProject[
             verificationNumber=self.project.verification_number,
         )
 
-        project_specific_data = self.get_project_specifics_for_firebase(project_ref)
+        project_specific_data = self.get_project_specifics_for_firebase()
 
         project_ref.set(
             value={
