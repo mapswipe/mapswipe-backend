@@ -187,8 +187,10 @@ class TestTutorialMutation(TestCase):
         cls.project = ProjectFactory.create(
             **cls.user_resource_kwargs,
             project_type=ProjectTypeEnum.FIND,
+            topic="New Project",
+            region="Test Region",
+            project_number=1,
             requesting_organization=cls.organization,
-            name="New Project 101",
             look_for="",
             additional_info_url="https://hi-there/about.html",
             description="The new **project** from hi-there.",

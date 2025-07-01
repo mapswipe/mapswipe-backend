@@ -624,6 +624,39 @@ input IDBaseFilterLookup {
   inList: [ID!]
 }
 
+input IntComparisonFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: Int
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [Int!]
+
+  """Greater than. Filter will be skipped on `null` value"""
+  gt: Int
+
+  """Greater than or equal to. Filter will be skipped on `null` value"""
+  gte: Int
+
+  """Less than. Filter will be skipped on `null` value"""
+  lt: Int
+
+  """Less than or equal to. Filter will be skipped on `null` value"""
+  lte: Int
+
+  """Inclusive range test (between)"""
+  range: IntRangeLookup
+}
+
+input IntRangeLookup {
+  start: Int = null
+  end: Int = null
+}
+
 type MapContributionStatsType {
   geojson: GenericJSON!
   totalContribution: Int!
@@ -791,11 +824,13 @@ enum OverlayLayerTypeEnum {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 input ProcessedProjectUpdateInput {
   clientId: String!
-  name: String
+  topic: String
+  region: String
+  projectNumber: Int
 
   """What should the users look for (e.g. buildings, cars, trees)"""
   lookFor: String
@@ -995,15 +1030,17 @@ type ProjectAssetTypeOffsetPaginated {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 input ProjectCreateInput {
   clientId: String!
+  topic: String!
+  region: String!
+  projectNumber: Int!
   projectType: ProjectTypeEnum!
 
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: ID!
-  name: String!
 
   """What should the users look for (e.g. buildings, cars, trees)"""
   lookFor: String!
@@ -1035,11 +1072,13 @@ type ProjectCustomSubOption {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 input ProjectFilter {
   id: IDBaseFilterLookup
-  name: StrFilterLookup
+  topic: StrFilterLookup
+  projectNumber: IntComparisonFilterLookup
+  region: StrFilterLookup
   projectType: ProjectTypeEnumFilterLookup
 
   """Which group, institution or community is requesting this project?"""
@@ -1056,6 +1095,7 @@ input ProjectFilter {
   OR: ProjectFilter
   NOT: ProjectFilter
   DISTINCT: Boolean
+  name: String
 }
 
 input ProjectOrder {
@@ -1247,7 +1287,7 @@ input ProjectStatusEnumFilterLookup {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 type ProjectType implements UserResourceTypeMixin {
   clientId: String!
@@ -1263,7 +1303,9 @@ type ProjectType implements UserResourceTypeMixin {
 
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: OrganizationType!
-  name: String!
+  topic: String!
+  region: String!
+  projectNumber: Int!
 
   """What should the users look for (e.g. buildings, cars, trees)"""
   lookFor: String!
@@ -1399,11 +1441,13 @@ type ProjectTypeSwipeStatsType {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 input ProjectUpdateInput {
   clientId: String!
-  name: String
+  topic: String
+  region: String
+  projectNumber: Int
 
   """What should the users look for (e.g. buildings, cars, trees)"""
   lookFor: String

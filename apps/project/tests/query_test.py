@@ -66,7 +66,9 @@ class TestProjectQuery(TestCase):
                 }
                 results {
                   id
-                  name
+                  topic
+                  region
+                  projectNumber
                   projectType
                   projectTypeSpecifics {
                     ... on FindProjectPropertyType {
@@ -309,8 +311,10 @@ class TestProjectQuery(TestCase):
                 total_count=4,
                 results=[
                     dict(
+                        topic=project.topic,
+                        region=project.region,
+                        projectNumber=project.project_number,
                         id=self.gID(project.pk),
-                        name=project.name,
                         projectType=self.genum(project.project_type_enum),
                         projectTypeSpecifics=format_object_keys(project.project_type_specifics, to_camel_case),
                     )

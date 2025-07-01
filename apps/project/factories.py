@@ -31,7 +31,9 @@ class ProjectFactory(DjangoModelFactory):
         model = Project
 
     client_id = factory.LazyFunction(lambda: str(ULID()))
-    name = factory.Sequence(lambda n: f"Project {n}")
+    topic = factory.Sequence(lambda n: f"Project Topic {n}")
+    region = factory.Sequence(lambda n: f"Region {n}")
+    project_number = factory.Sequence(lambda n: n + 1)
 
     project_type = Project.Type.FIND
     project_type_specifics = None

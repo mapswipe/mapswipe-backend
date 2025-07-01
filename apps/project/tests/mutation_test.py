@@ -149,7 +149,9 @@ class Mutation:
                   id
                   name
                 }
-                name
+                topic
+                region
+                projectNumber
                 lookFor
                 additionalInfoUrl
                 description
@@ -193,7 +195,9 @@ class Mutation:
                   id
                   name
                 }
-                name
+                topic
+                region
+                projectNumber
                 lookFor
                 additionalInfoUrl
                 description
@@ -237,7 +241,9 @@ class Mutation:
                   id
                   name
                 }
-                name
+                topic
+                region
+                projectNumber
                 lookFor
                 additionalInfoUrl
                 description
@@ -455,8 +461,10 @@ class TestProjectMutation(TestCase):
         project_data = {
             "clientId": str(ULID()),
             "projectType": self.genum(ProjectTypeEnum.FIND),
+            "topic": "New Project 101",
+            "region": "Test Region",
+            "projectNumber": 1,
             "requestingOrganization": self.organization.pk,
-            "name": "New Project 101",
             "lookFor": "Buildings",
             "additionalInfoUrl": "https://hi-there/about.html",
             "description": "The new **project** from hi-there.",
@@ -493,7 +501,9 @@ class TestProjectMutation(TestCase):
                     id=self.gID(latest_project.requesting_organization.pk),
                     name=latest_project.requesting_organization.name,
                 ),
-                name=latest_project.name,
+                topic=latest_project.topic,
+                region=latest_project.region,
+                projectNumber=latest_project.project_number,
                 lookFor=latest_project.look_for,
                 additionalInfoUrl=latest_project.additional_info_url,
                 description=latest_project.description,
@@ -524,8 +534,10 @@ class TestProjectMutation(TestCase):
         proj = ProjectFactory.create(
             **self.user_resource_kwargs,
             project_type=ProjectTypeEnum.FIND,
+            topic="Test Project",
+            region="Test Region",
+            project_number=1,
             requesting_organization=self.organization,
-            name="New Project 101",
             look_for="Buildings",
             additional_info_url="https://hi-there/about.html",
             description="The new **project** from hi-there.",
@@ -534,7 +546,6 @@ class TestProjectMutation(TestCase):
 
         project_data = {
             "requestingOrganization": self.organization.pk,
-            "name": "New Project 101 - Updated",
             "lookFor": "Buildings and Houses",
             "additionalInfoUrl": "https://hi-there/about.html?code=1",
             "description": "The new updated **project** from hi-there.",
@@ -573,7 +584,9 @@ class TestProjectMutation(TestCase):
                     id=self.gID(latest_project.requesting_organization.pk),
                     name=latest_project.requesting_organization.name,
                 ),
-                name=latest_project.name,
+                topic=latest_project.topic,
+                region=latest_project.region,
+                projectNumber=latest_project.project_number,
                 lookFor=latest_project.look_for,
                 additionalInfoUrl=latest_project.additional_info_url,
                 description=latest_project.description,
@@ -821,7 +834,9 @@ class TestProjectTypeMutation(TestCase):
         )
 
         cls.project_data = {
-            "name": "New Project 101",
+            "topic": "Test Project",
+            "region": "Test Region",
+            "projectNumber": 1,
             "requestingOrganization": cls.organization.pk,
             "lookFor": "Buildings",
         }

@@ -50,7 +50,9 @@ class ProjectType(UserResourceTypeMixin):
     project_type: strawberry.auto
     requesting_organization_id: strawberry.ID
     requesting_organization: OrganizationType
-    name: strawberry.auto
+    topic: strawberry.auto
+    region: strawberry.auto
+    project_number: strawberry.auto
     look_for: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
@@ -66,6 +68,13 @@ class ProjectType(UserResourceTypeMixin):
     progress: strawberry.auto
     team: ContributorTeamType | None
     is_private: strawberry.auto
+
+    @strawberry_django.field(
+        only=["topic", "region", "project_number", "requesting_organization__name"],
+        description="Project name generated from topic, region, project number, and requesting organization name.",
+    )
+    def name(self, project: strawberry.Parent[Project]) -> str:
+        return f"{project.topic} {project.region} {project.project_number} {project.requesting_organization.name}"
 
     @strawberry_django.field(only=["project_type_specifics", "project_type"])
     async def project_type_specifics(

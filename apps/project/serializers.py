@@ -50,8 +50,10 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
         model = Project
         fields = (
             "project_type",
+            "topic",
+            "region",
+            "project_number",
             "requesting_organization",
-            "name",
             "look_for",
             "additional_info_url",
             "description",
@@ -71,8 +73,10 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         model = Project
         fields = (
             "project_type",
+            "topic",
+            "region",
+            "project_number",
             "requesting_organization",
-            "name",
             "look_for",
             "additional_info_url",
             "description",
@@ -230,7 +234,9 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
         model = Project
         fields = (
             "requesting_organization",
-            "name",
+            "topic",
+            "region",
+            "project_number",
             "look_for",
             "additional_info_url",
             "description",

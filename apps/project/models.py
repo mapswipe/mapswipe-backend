@@ -206,7 +206,9 @@ class Project(UserResource):
     # TODO(tnagorra): Do we add uniqueness on project topic?
 
     # Generate in manager dashboard based on topic, region, project number, requesting org
-    name = models.CharField(max_length=255)
+    topic = models.CharField(max_length=255)
+    region = models.CharField(max_length=255)
+    project_number = models.PositiveIntegerField()
 
     # TODO(tnagorra): Max length is 25 in manager dashboard.
     # TODO(frozenhelium): We should discuss if we need this field.
@@ -347,9 +349,17 @@ class Project(UserResource):
     team_id: int | None
     project_type_specific_output_id: int | None
 
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        constraints = [
+            models.UniqueConstraint(
+                fields=("topic", "region", "project_number", "requesting_organization"),
+                name="unique_project_name",
+            ),
+        ]
+
     @typing.override
-    def __str__(self):
-        return self.name
+    def __str__(self) -> str:
+        return f"{self.topic} {self.region} {self.project_number} {self.requesting_organization.name}"
 
     def update_status(self, status: ProjectStatusEnum, commit: bool = True):
         self.status = status
