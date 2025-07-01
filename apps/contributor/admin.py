@@ -22,5 +22,10 @@ class ContributorUserGroupAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
 
 @admin.register(ContributorTeam)
 class ContributorTeamAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
-    list_display = ("name", "is_archived")
+    list_display = (
+        "name",
+        "is_archived",
+        "created_at",
+        "modified_at",
+    )
     list_filter = ("is_archived",)
