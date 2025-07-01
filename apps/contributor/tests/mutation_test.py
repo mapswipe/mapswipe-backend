@@ -58,6 +58,9 @@ class TestContributorUserGroupMutation(TestCase):
                         description
                         clientId
                         isArchived
+                        archivedBy {
+                            id
+                        }
                     }
                 }
             }
@@ -122,3 +125,20 @@ class TestContributorUserGroupMutation(TestCase):
         )
         resp_data = content["data"]["updateContributorUserGroup"]
         assert resp_data["errors"] is None, content
+
+        # Updating ContributorUserGroup with isArchived
+        content = self.query_check(
+            self.Mutation.UPDATE_CONTRIBUTOR_USER_GROUP,
+            variables={
+                "data": {
+                    "name": "Test Contributor User Group",
+                    "clientId": resp_data["result"]["clientId"],
+                    "isArchived": True,
+                },
+                "pk": resp_data["result"]["id"],
+            },
+        )
+        resp_data = content["data"]["updateContributorUserGroup"]
+        assert resp_data["errors"] is None, content
+        assert resp_data["result"]["isArchived"] is True, content
+        assert resp_data["result"]["archivedBy"]["id"] == self.gID(self.user.pk), content

@@ -223,10 +223,11 @@ type ContributorTeamType implements UserResourceTypeMixin {
   modifiedAt: DateTime!
   createdBy: UserType!
   modifiedBy: UserType!
+  isArchived: Boolean!
+  archivedAt: DateTime
+  archivedBy: UserType
   id: ID!
   name: String!
-  archivedAt: DateTime
-  isArchived: Boolean!
   membersCount: Int!
 }
 
@@ -383,11 +384,12 @@ type ContributorUserGroupType implements UserResourceTypeMixin {
   modifiedAt: DateTime!
   createdBy: UserType!
   modifiedBy: UserType!
+  isArchived: Boolean!
+  archivedAt: DateTime
+  archivedBy: UserType
   id: ID!
   name: String!
   description: String!
-  archivedAt: DateTime
-  isArchived: Boolean!
   membersCount: Int!
   userMemberships(pagination: OffsetPaginationInput): ContributorUserGroupMembershipTypeOffsetPaginated!
 }
