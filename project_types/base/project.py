@@ -202,8 +202,6 @@ class BaseProject[
         for task in tasks.iterator():
             task_data = firebase_models.FbMappingTaskCreateOnlyInput(
                 projectId=str(self.project.pk),
-                groupId=str(task.task_group_id),
-                taskId=str(task.pk),
             )
             task_project_specific_data = self.get_task_project_specifics_for_firebase(task)
             fb_tasks[task.pk] = {
@@ -222,7 +220,6 @@ class BaseProject[
                 finishedCount=0,
                 progress=0,
                 projectId=str(self.project.pk),
-                groupId=str(group.pk),
                 numberOfTasks=group.number_of_tasks,
                 requiredCount=group.required_count,
             )
@@ -244,6 +241,9 @@ class BaseProject[
     @abstractmethod
     def get_project_specifics_for_firebase(self) -> BaseModel: ...
 
+    def skip_tasks_for_firebase(self) -> bool:
+        return False
+
     def handle_new_project_on_firebase(self, project_ref: FbReference):
         assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
         assert self.project.tutorial is not None, "Tutorial is required before project can be pushed to firebase"
@@ -264,7 +264,8 @@ class BaseProject[
             # FIXME: If taskId is defined, should be private_active
             status = firebase_models.FbEnumProjectStatus.PRIVATE_ACTIVE
 
-        self.handle_new_tasks_on_firebase(task_ref)
+        if not self.skip_tasks_for_firebase():
+            self.handle_new_tasks_on_firebase(task_ref)
         self.handle_new_groups_on_firebase(group_ref)
 
         project_data = firebase_ext_models.FbProject(

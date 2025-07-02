@@ -14,7 +14,6 @@ from .validate_image import tutorial as validate_image_tutorial
 from .validate_image.project import ValidateImageProject, ValidateImageProjectProperty
 
 
-# FIXME(tnagorra): Move this to store
 def get_tutorial_task_property(project_type: ProjectTypeEnum | None):
     if project_type is None:
         return None

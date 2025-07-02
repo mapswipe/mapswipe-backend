@@ -1,6 +1,5 @@
 import typing
 
-from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import Project, ProjectTypeEnum
@@ -34,18 +33,8 @@ class FindProject(
             assert project.project_type == ProjectTypeEnum.FIND, f"{type(self)} is defined for FIND"
 
     @typing.override
-    def get_task_project_specifics_for_firebase(self, task):
-        return firebase_ext_models.FbEmptyModel()
-
-    @typing.override
-    def get_group_project_specifics_for_firebase(self, group):
-        return firebase_ext_models.FbEmptyModel()
-
-    @typing.override
     def get_project_specifics_for_firebase(self):
         tsp = self.project_type_specifics.tile_server_property
-        # TODO(tnagorra): Create groups
-        # TODO(tnagorra): Create tasks (if necessary)
         return firebase_models.FbProjectFindCreateOnlyInput(
             zoomLevel=self.project_type_specifics.zoom_level,
             tileServer=firebase_models.FbObjRasterTileServer(

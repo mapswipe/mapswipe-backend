@@ -35,10 +35,6 @@ def push_project_to_firebase(project_id: int):
             return None
 
     project = Project.objects.get(pk=project_id)
-    try:
-        project_type_handler = get_project_type_handler(project.project_type_enum)(project)
-        project_type_handler.push_to_firebase()
-        return True
-    except Exception:
-        logger.error("Push project to firebase failed", exc_info=True)
-        return False
+    project_type_handler = get_project_type_handler(project.project_type_enum)(project)
+    project_type_handler.push_to_firebase()
+    return True

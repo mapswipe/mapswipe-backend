@@ -8,7 +8,9 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
-from pydantic import ValidationInfo, model_validator
+from pydantic import BaseModel, ValidationInfo, model_validator
+from pyfirebase_mapswipe import extended_models as firebase_ext_models
+from pyfirebase_mapswipe import models as firebase_models
 from ulid import ULID
 
 from apps.project.models import (
@@ -240,3 +242,25 @@ class TileMapServiceBaseProject[
                 raise base_project.ValidationException(f"AOI should not have more than {allowed_area} area")
 
             return aoi_geometry
+
+    @typing.override
+    def skip_tasks_for_firebase(self) -> bool:
+        return True
+
+    @typing.override
+    def get_task_project_specifics_for_firebase(self, task) -> BaseModel:
+        return firebase_ext_models.FbEmptyModel()
+
+    @typing.override
+    def get_group_project_specifics_for_firebase(self, group) -> BaseModel:
+        task_group_specifics = self.project_task_group_property_class(
+            **group.project_type_specifics,
+        )
+        return firebase_models.FbMappingGroupTileMapServiceCreateOnlyInput(
+            # FIXME(tnagorra): We should use group_old_fashioned_id
+            groupId=str(group.pk),
+            xMax=task_group_specifics.x_max,
+            xMin=task_group_specifics.x_min,
+            yMax=task_group_specifics.y_max,
+            yMin=task_group_specifics.y_min,
+        )
