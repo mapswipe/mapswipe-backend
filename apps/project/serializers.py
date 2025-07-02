@@ -1,7 +1,9 @@
+import mimetypes
 import typing
 
 import pydantic
 from django.db import transaction
+from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext
 from rest_framework import serializers
 
@@ -16,6 +18,9 @@ from utils.graphql.drf import handle_pydantic_validation_error
 
 from .models import Organization, Project, ProjectAsset, ProjectTypeEnum
 from .tasks import process_project_task, push_project_to_firebase
+
+if typing.TYPE_CHECKING:
+    from django.core.files.base import ContentFile
 
 VALID_PROJECT_STATUS_TRANSITIONS = set(
     [
@@ -366,6 +371,35 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
             "file",
             "project",
         )
+
+    def _validate_file(self, attrs: dict[str, typing.Any]):
+        file_content: ContentFile[bytes] = attrs["file"]
+        file_size = file_content.size
+
+        if file_size > ProjectAsset.MAX_FILE_SIZE:
+            raise serializers.ValidationError(
+                gettext("Filesize should be less than: %s. Current is: %s")
+                % (
+                    filesizeformat(ProjectAsset.MAX_FILE_SIZE),
+                    filesizeformat(file_size),
+                ),
+            )
+
+        # https://docs.python.org/3/library/mimetypes.html#mimetypes.guess_type
+        mimetype, _ = mimetypes.guess_type(file_content.name)  # type: ignore[reportUnknownArgumentType]
+        assert mimetype is not None, "Mimetype should not be None"
+
+        if not ProjectAsset.Mimetype.is_valid_mimetype(mimetype):
+            raise serializers.ValidationError(
+                gettext("File mimetype is not supported: %s") % mimetype,
+            )
+
+        attrs["mimetype"] = ProjectAsset.Mimetype.get_mimetype_by_label(mimetype)
+
+    @typing.override
+    def validate(self, attrs: dict[str, typing.Any]):
+        self._validate_file(attrs)
+        return super().validate(attrs)
 
     @typing.override
     def create(self, validated_data: dict[str, typing.Any]) -> ProjectAsset:

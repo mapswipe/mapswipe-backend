@@ -31,6 +31,20 @@ class ProjectAssetMimetypeEnum(models.IntegerChoices):
             return str(cls(value).label)
         return "Unknown"
 
+    @classmethod
+    def is_valid_mimetype(cls, mimetype: str) -> bool:
+        """
+        Check if the given mimetype is valid for project assets.
+        """
+        return mimetype in [choice.label for choice in cls]
+
+    @classmethod
+    def get_mimetype_by_label(cls, label: str) -> typing.Self | None:
+        for choice in cls:
+            if choice.label == label:
+                return choice
+        return None
+
 
 # FIXME(tnagorra): Finalize the enum labels
 class ProjectAssetTypeEnum(models.IntegerChoices):
@@ -410,6 +424,7 @@ class Project(UserResource, FirebaseResource):  # type: ignore[reportIncompatibl
 class ProjectAsset(UserResource):
     Type = ProjectAssetTypeEnum
     Mimetype = ProjectAssetMimetypeEnum
+    MAX_FILE_SIZE: int = 100 * 1024 * 1024  # MB
 
     type = IntegerChoicesField(
         choices_enum=ProjectAssetTypeEnum,
