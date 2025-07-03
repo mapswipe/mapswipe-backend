@@ -4,6 +4,7 @@ import strawberry
 import strawberry_django
 
 from apps.common.graphql.types import UserResourceTypeMixin
+from apps.contributor.graphql.types import ContributorTeamType
 from apps.project.models import Organization, Project, ProjectAsset
 from apps.tutorial.graphql.types.types import TutorialType
 from project_types.tile_map_service.compare import project as compare_project
@@ -59,7 +60,7 @@ class ProjectType(UserResourceTypeMixin):
     status: strawberry.auto
     processing_status: strawberry.auto
     progress: strawberry.auto
-    team: strawberry.auto
+    team: ContributorTeamType | None
     is_private: strawberry.auto
 
     @strawberry_django.field(only=["project_type_specifics", "project_type"])
