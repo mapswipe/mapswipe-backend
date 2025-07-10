@@ -5,7 +5,7 @@ from django.db import transaction
 from django.utils.translation import gettext
 from rest_framework import serializers
 
-from apps.common.serializers import UserResourceSerializer
+from apps.common.serializers import ArchivableResourceSerializer, UserResourceSerializer
 from apps.tutorial.models import Tutorial
 from project_types.store import get_project_property
 from utils.common import clean_up_none_keys
@@ -330,7 +330,7 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
         return super().create(validated_data)
 
 
-class OrganizationSerializer(UserResourceSerializer[Organization]):
+class OrganizationSerializer(UserResourceSerializer[Organization], ArchivableResourceSerializer[Organization]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Organization
-        fields = ("name",)
+        fields = ("name", "description", "is_archived")

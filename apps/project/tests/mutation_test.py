@@ -279,6 +279,7 @@ class TestOrganizationMutation(TestCase):
                         id
                         name
                         clientId
+                        description
                     }
                 }
             }
@@ -303,6 +304,8 @@ class TestOrganizationMutation(TestCase):
                         id
                         name
                         clientId
+                        description
+                        isArchived
                     }
                 }
             }
@@ -323,6 +326,7 @@ class TestOrganizationMutation(TestCase):
         organization_data = {
             "clientId": str(ULID()),
             "name": "Test Organization",
+            "description": "Test description",
         }
 
         # Creating Organization: Without authentication
@@ -359,12 +363,30 @@ class TestOrganizationMutation(TestCase):
                 "data": {
                     "name": "Test Org",
                     "clientId": resp_data["result"]["clientId"],
+                    "description": "Update description",
                 },
                 "pk": resp_data["result"]["id"],
             },
         )
         resp_data = content["data"]["updateOrganization"]
         assert resp_data["errors"] is None, content
+
+        # Archive Organization
+        content = self.query_check(
+            self.Mutation.UPDATE_ORGANIZATION,
+            variables={
+                "data": {
+                    "name": "Test Archive Org",
+                    "clientId": resp_data["result"]["clientId"],
+                    "description": "Update description",
+                    "isArchived": True,
+                },
+                "pk": resp_data["result"]["id"],
+            },
+        )
+        resp_data = content["data"]["updateOrganization"]
+        assert resp_data["errors"] is None, content
+        assert resp_data["result"]["isArchived"]
 
 
 class TestProjectMutation(TestCase):
