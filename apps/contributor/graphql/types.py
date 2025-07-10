@@ -127,3 +127,19 @@ class ContributorUserGroupMembershipType:
 class ContributorTeamType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
     id: strawberry.ID
     name: strawberry.auto
+
+    members_count: int = strawberry_django.field(
+        annotate=Coalesce(
+            models.Subquery(
+                ContributorUser.objects.filter(
+                    team_id=models.OuterRef("id"),
+                )
+                .order_by()
+                .values("team_id")
+                .annotate(c=models.Count("user_id"))
+                .values("c")[:1],
+                output_field=models.IntegerField(),
+            ),
+            0,
+        ),
+    )
