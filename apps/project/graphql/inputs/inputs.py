@@ -6,6 +6,7 @@ from apps.common.graphql.inputs import (
     UserResourceCreateInputMixin,
     UserResourceTopLevelUpdateInputMixin,
 )
+from apps.common.graphql.types import ArchivableResourceTypeMixin
 from apps.project.models import Organization, Project, ProjectAsset
 
 # NOTE: We are importing base for side-effect
@@ -23,11 +24,13 @@ from .project_types.validate_image import ValidateImageProjectPropertyInput
 @strawberry_django.input(Organization)
 class OrganizationCreateInput(UserResourceCreateInputMixin):
     name: strawberry.auto
+    description: strawberry.auto
 
 
 @strawberry_django.input(Organization)
-class OrganizationUpdateInput(UserResourceTopLevelUpdateInputMixin):
+class OrganizationUpdateInput(UserResourceTopLevelUpdateInputMixin, ArchivableResourceTypeMixin):
     name: strawberry.auto
+    description: strawberry.auto
 
 
 # Project Properties

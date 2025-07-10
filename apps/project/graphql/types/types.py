@@ -3,7 +3,7 @@ import typing
 import strawberry
 import strawberry_django
 
-from apps.common.graphql.types import UserResourceTypeMixin
+from apps.common.graphql.types import ArchivableResourceTypeMixin, UserResourceTypeMixin
 from apps.contributor.graphql.types import ContributorTeamType
 from apps.project.models import Organization, Project, ProjectAsset
 from apps.tutorial.graphql.types.types import TutorialType
@@ -26,9 +26,10 @@ from .project_types.validate_image import ValidateImageProjectPropertyType
 
 # Organization
 @strawberry_django.type(Organization)
-class OrganizationType(UserResourceTypeMixin):
+class OrganizationType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
     id: strawberry.ID
     name: strawberry.auto
+    description: strawberry.auto
 
 
 # Project

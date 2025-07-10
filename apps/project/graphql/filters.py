@@ -28,3 +28,4 @@ class ProjectAssetFilter:
 class OrganizationFilter:
     id: strawberry.auto
     name: strawberry.auto
+    is_archived: strawberry.auto
