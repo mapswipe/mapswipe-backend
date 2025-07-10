@@ -222,6 +222,7 @@ type ContributorTeamType implements UserResourceTypeMixin {
   archivedBy: UserType
   id: ID!
   name: String!
+  membersCount: Int!
 }
 
 type ContributorTeamTypeOffsetPaginated {
