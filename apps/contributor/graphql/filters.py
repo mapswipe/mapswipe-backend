@@ -16,6 +16,7 @@ class ContributorUserFilter:
 class ContributorUserGroupFilter:
     id: strawberry.auto
     name: strawberry.auto
+    is_archived: strawberry.auto
 
     @staticmethod
     def filter_by_user(

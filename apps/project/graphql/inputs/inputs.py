@@ -27,6 +27,8 @@ class OrganizationCreateInput(UserResourceCreateInputMixin):
 @strawberry_django.input(Organization)
 class OrganizationUpdateInput(UserResourceTopLevelUpdateInputMixin):
     name: strawberry.auto
+    description: strawberry.auto
+    is_archived: strawberry.auto
 
 
 # Project Properties
