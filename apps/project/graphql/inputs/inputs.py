@@ -29,6 +29,7 @@ class OrganizationCreateInput(UserResourceCreateInputMixin):
 class OrganizationUpdateInput(UserResourceTopLevelUpdateInputMixin):
     name: strawberry.auto
     description: strawberry.auto
+    is_archived: strawberry.auto
 
 
 # Project Properties

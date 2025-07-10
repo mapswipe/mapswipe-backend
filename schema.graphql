@@ -278,6 +278,7 @@ ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modifie
 input ContributorUserGroupFilter {
   id: IDBaseFilterLookup
   name: StrFilterLookup
+  isArchived: BoolBaseFilterLookup
   AND: ContributorUserGroupFilter
   OR: ContributorUserGroupFilter
   NOT: ContributorUserGroupFilter
@@ -646,7 +647,7 @@ enum Ordering {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, name, description, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, unique_name)
 """
 input OrganizationCreateInput {
   clientId: String!
@@ -655,11 +656,12 @@ input OrganizationCreateInput {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, name, description, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, unique_name)
 """
 input OrganizationFilter {
   id: IDBaseFilterLookup
   name: StrFilterLookup
+  isArchived: BoolBaseFilterLookup
   AND: OrganizationFilter
   OR: OrganizationFilter
   NOT: OrganizationFilter
@@ -677,7 +679,7 @@ type OrganizationSwipeStatsType {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, name, description, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, unique_name)
 """
 type OrganizationType implements UserResourceTypeMixin {
   clientId: String!
@@ -688,6 +690,7 @@ type OrganizationType implements UserResourceTypeMixin {
   id: ID!
   name: String!
   description: String
+  isArchived: Boolean!
 }
 
 type OrganizationTypeMutationResponseType {
@@ -707,12 +710,13 @@ type OrganizationTypeOffsetPaginated {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, name, description, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, unique_name)
 """
 input OrganizationUpdateInput {
   clientId: String!
   name: String!
   description: String
+  isArchived: Boolean
 }
 
 enum OverlayLayerTypeEnum {

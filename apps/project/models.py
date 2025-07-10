@@ -9,7 +9,7 @@ from django.db.models.functions import Lower
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
 
-from apps.common.models import UserResource
+from apps.common.models import ArchivableResource, UserResource
 from apps.contributor.models import ContributorTeam
 from utils.fields import validate_percentage
 
@@ -138,7 +138,7 @@ class UploadHelper:
         return f"project/{instance.pk}/image/{filename}"
 
 
-class Organization(UserResource):
+class Organization(UserResource, ArchivableResource):
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     # TODO: Add icon?

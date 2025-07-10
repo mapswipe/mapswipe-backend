@@ -28,6 +28,7 @@ class OrganizationType(UserResourceTypeMixin):
     id: strawberry.ID
     name: strawberry.auto
     description: strawberry.auto
+    is_archived: strawberry.auto
 
 
 # Project
