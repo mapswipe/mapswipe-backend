@@ -23,6 +23,7 @@ VALID_PROJECT_STATUS_TRANSITIONS = set(
     ],
 )
 
+
 VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS = set(
     [
         # NOTE: Transition from MARKED_AS_READY are updated by the system
@@ -56,7 +57,7 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
-class ProjectUpdateSerializer(UserResourceSerializer[Project]):
+class ProjectUpdateSerializer(UserResourceSerializer[Project], ArchivableResourceSerializer[Organization]):  # type: ignore[reportIncompatibleVariableOverride]
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
@@ -199,7 +200,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         return super().validate(attrs)
 
     @typing.override
-    def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:
+    def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:  # type: ignore[reportIncompatibleMethodOverride]
         old_status_enum = instance.status_enum
         new_project = super().update(instance, validated_data)
 
@@ -330,7 +331,7 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
         return super().create(validated_data)
 
 
-class OrganizationSerializer(UserResourceSerializer[Organization], ArchivableResourceSerializer[Organization]):
+class OrganizationSerializer(UserResourceSerializer[Organization], ArchivableResourceSerializer[Organization]):  # type: ignore[reportIncompatibleVariableOverride]
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Organization
-        fields = ("name", "description", "is_archived")
+        fields = ("name", "description", "abbreviation")

@@ -223,7 +223,7 @@ type ContributorTeamType implements UserResourceTypeMixin {
   modifiedAt: DateTime!
   createdBy: UserType!
   modifiedBy: UserType!
-  isArchived: Boolean!
+  isArchived: Boolean
   archivedAt: DateTime
   archivedBy: UserType
   id: ID!
@@ -385,7 +385,7 @@ type ContributorUserGroupType implements UserResourceTypeMixin {
   modifiedAt: DateTime!
   createdBy: UserType!
   modifiedBy: UserType!
-  isArchived: Boolean!
+  isArchived: Boolean
   archivedAt: DateTime
   archivedBy: UserType
   id: ID!
@@ -668,10 +668,6 @@ input OffsetPaginationInput {
   limit: Int
 }
 
-input OneToManyInput {
-  set: ID
-}
-
 type OperationInfo {
   """List of messages returned by the operation."""
   messages: [OperationMessage!]!
@@ -711,16 +707,17 @@ enum Ordering {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name)
 """
 input OrganizationCreateInput {
   clientId: String!
   name: String!
   description: String
+  abbreviation: String
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name)
 """
 input OrganizationFilter {
   id: IDBaseFilterLookup
@@ -743,7 +740,7 @@ type OrganizationSwipeStatsType {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name)
 """
 type OrganizationType implements UserResourceTypeMixin {
   clientId: String!
@@ -751,12 +748,13 @@ type OrganizationType implements UserResourceTypeMixin {
   modifiedAt: DateTime!
   createdBy: UserType!
   modifiedBy: UserType!
-  isArchived: Boolean!
+  isArchived: Boolean
   archivedAt: DateTime
   archivedBy: UserType
   id: ID!
   name: String!
   description: String
+  abbreviation: String
 }
 
 type OrganizationTypeMutationResponseType {
@@ -776,15 +774,14 @@ type OrganizationTypeOffsetPaginated {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name)
 """
 input OrganizationUpdateInput {
   clientId: String!
-  isArchived: Boolean!
-  archivedAt: DateTime
-  archivedBy: OneToManyInput
-  name: String!
+  isArchived: Boolean
+  name: String
   description: String
+  abbreviation: String
 }
 
 enum OverlayLayerTypeEnum {
@@ -793,7 +790,7 @@ enum OverlayLayerTypeEnum {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 input ProcessedProjectUpdateInput {
   clientId: String!
@@ -997,7 +994,7 @@ type ProjectAssetTypeOffsetPaginated {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 input ProjectCreateInput {
   clientId: String!
@@ -1037,7 +1034,7 @@ type ProjectCustomSubOption {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 input ProjectFilter {
   id: IDBaseFilterLookup
@@ -1249,7 +1246,7 @@ input ProjectStatusEnumFilterLookup {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 type ProjectType implements UserResourceTypeMixin {
   clientId: String!
@@ -1257,6 +1254,9 @@ type ProjectType implements UserResourceTypeMixin {
   modifiedAt: DateTime!
   createdBy: UserType!
   modifiedBy: UserType!
+  isArchived: Boolean
+  archivedAt: DateTime
+  archivedBy: UserType
   id: ID!
   projectType: ProjectTypeEnum!
 
@@ -1401,10 +1401,11 @@ type ProjectTypeSwipeStatsType {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 input ProjectUpdateInput {
   clientId: String!
+  isArchived: Boolean
   name: String
 
   """What should the users look for (e.g. buildings, cars, trees)"""

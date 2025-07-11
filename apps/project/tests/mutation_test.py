@@ -203,6 +203,7 @@ class Mutation:
                 status
                 processingStatus
                 progress
+                isArchived
                 tutorialId
                 tutorial {
                   id
@@ -327,6 +328,7 @@ class TestOrganizationMutation(TestCase):
             "clientId": str(ULID()),
             "name": "Test Organization",
             "description": "Test description",
+            "abbreviation": "TO",
         }
 
         # Creating Organization: Without authentication
@@ -361,9 +363,10 @@ class TestOrganizationMutation(TestCase):
             self.Mutation.UPDATE_ORGANIZATION,
             variables={
                 "data": {
-                    "name": "Test Org",
+                    "name": "Test Org Updated",
                     "clientId": resp_data["result"]["clientId"],
                     "description": "Update description",
+                    "abbreviation": "YOU",
                 },
                 "pk": resp_data["result"]["id"],
             },
@@ -569,6 +572,7 @@ class TestProjectMutation(TestCase):
                 progress=0,
                 tutorialId=None,
                 tutorial=None,
+                isArchived=False,
             ),
         ), content
 
@@ -589,6 +593,15 @@ class TestProjectMutation(TestCase):
                 "pydantic_errors": None,
             },
         ]
+
+        # Archive project
+        project_data = {
+            "clientId": proj.client_id,
+            "isArchived": True,
+        }
+        content = self._update_project_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProject"]["errors"] is None
+        assert content["data"]["updateProject"]["result"]["isArchived"]
 
         # Creating AOI Project Asset
         project_asset_data = {

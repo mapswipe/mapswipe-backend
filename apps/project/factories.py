@@ -23,6 +23,7 @@ class OrganizationFactory(DjangoModelFactory):
     client_id = factory.LazyFunction(lambda: str(ULID()))
     name = factory.Sequence(lambda n: f"Organization {n}")
     description = "Test description"
+    abbreviation = "TD"
 
 
 class ProjectFactory(DjangoModelFactory):

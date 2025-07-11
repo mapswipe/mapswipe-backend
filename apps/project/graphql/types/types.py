@@ -30,6 +30,7 @@ class OrganizationType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
     id: strawberry.ID
     name: strawberry.auto
     description: strawberry.auto
+    abbreviation: strawberry.auto
 
 
 # Project
@@ -44,7 +45,7 @@ class ProjectAssetType(UserResourceTypeMixin):
 
 
 @strawberry_django.type(Project)
-class ProjectType(UserResourceTypeMixin):
+class ProjectType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
     id: strawberry.ID
     project_type: strawberry.auto
     requesting_organization_id: strawberry.ID
