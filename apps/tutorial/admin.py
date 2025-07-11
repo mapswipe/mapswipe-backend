@@ -6,4 +6,7 @@ from .models import Tutorial
 
 @admin.register(Tutorial)
 class TutorialAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
-    pass
+    list_display = ("name", "project", "status")
+    list_filter = ("status",)
+    list_select_related = True
+    autocomplete_fields = ("project", "created_by")
