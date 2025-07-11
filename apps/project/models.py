@@ -151,6 +151,7 @@ class UploadHelper:
 class Organization(UserResource, ArchivableResource):  # type: ignore[reportIncompatibleVariableOverride]
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
+    abbreviation = models.CharField(max_length=50, null=True, blank=True)
     # TODO(Rup-Narayan-Rajbanshi): Add icon?
 
     unique_name = models.GeneratedField(  # type: ignore[reportAttributeAccessIssue]

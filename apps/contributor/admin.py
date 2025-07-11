@@ -1,7 +1,7 @@
 from django.contrib import admin
 from djangoql.admin import DjangoQLSearchMixin
 
-from .models import ContributorTeam, ContributorUser, ContributorUserGroup
+from .models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
 
 @admin.register(ContributorUser)
@@ -29,3 +29,12 @@ class ContributorTeamAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
         "modified_at",
     )
     list_filter = ("is_archived",)
+
+
+@admin.register(ContributorUserGroupMembership)
+class ContributorUserGroupMembershipAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    list_display = (
+        "user",
+        "user_group",
+        "is_active",
+    )

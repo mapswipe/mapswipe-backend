@@ -3,10 +3,10 @@ import strawberry_django
 from strawberry.file_uploads import Upload
 
 from apps.common.graphql.inputs import (
+    ArchivableResourceInputMixin,
     UserResourceCreateInputMixin,
     UserResourceTopLevelUpdateInputMixin,
 )
-from apps.common.graphql.types import ArchivableResourceTypeMixin
 from apps.project.models import Organization, Project, ProjectAsset
 
 # NOTE: We are importing base for side-effect
@@ -25,12 +25,14 @@ from .project_types.validate_image import ValidateImageProjectPropertyInput
 class OrganizationCreateInput(UserResourceCreateInputMixin):
     name: strawberry.auto
     description: strawberry.auto
+    abbreviation: strawberry.auto
 
 
-@strawberry_django.input(Organization)
-class OrganizationUpdateInput(UserResourceTopLevelUpdateInputMixin, ArchivableResourceTypeMixin):
+@strawberry_django.partial(Organization)
+class OrganizationUpdateInput(UserResourceTopLevelUpdateInputMixin, ArchivableResourceInputMixin):
     name: strawberry.auto
     description: strawberry.auto
+    abbreviation: strawberry.auto
 
 
 # Project Properties

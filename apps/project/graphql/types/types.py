@@ -30,6 +30,7 @@ class OrganizationType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
     id: strawberry.ID
     name: strawberry.auto
     description: strawberry.auto
+    abbreviation: strawberry.auto
 
 
 # Project

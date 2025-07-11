@@ -85,6 +85,16 @@ class TestProjectFiltersAndOrders(TestCase):
             look_for="water",
         )
 
+        cls.archived_project = ProjectFactory.create(
+            **cls.user_resource_kwargs,
+            name="Archived Project",
+            requesting_organization=cls.organization2,
+            project_type=ProjectTypeEnum.VALIDATE,
+            is_featured=False,
+            status=ProjectStatusEnum.ARCHIVED,
+            look_for="water",
+        )
+
     def _query(
         self,
         filters: dict[str, typing.Any] | None = None,
@@ -126,7 +136,7 @@ class TestProjectFiltersAndOrders(TestCase):
                 "name": {"iContains": "project"},
             },
         )
-        assert content["data"]["projects"]["totalCount"] == 4
+        assert content["data"]["projects"]["totalCount"] == 5
 
     def test_filter_by_project_type(self):
         self.force_login(self.user)
@@ -146,6 +156,13 @@ class TestProjectFiltersAndOrders(TestCase):
         )
         assert content["data"]["projects"]["totalCount"] == 3
 
+        content = self._query(
+            filters={
+                "status": {"exact": self.genum(ProjectStatusEnum.ARCHIVED)},
+            },
+        )
+        assert content["data"]["projects"]["totalCount"] == 1
+
     def test_ordering_by_name(self):
         self.force_login(self.user)
         content = self._query(
@@ -154,6 +171,7 @@ class TestProjectFiltersAndOrders(TestCase):
             },
         )
         assert [project["name"] for project in content["data"]["projects"]["results"]] == [
+            self.archived_project.name,
             self.compare_project.name,
             self.completeness_project.name,
             self.find_project.name,
@@ -168,6 +186,7 @@ class TestProjectFiltersAndOrders(TestCase):
             },
         )
         assert [project["id"] for project in content["data"]["projects"]["results"]] == [
+            self.gID(self.archived_project.pk),
             self.gID(self.find_project_2.pk),
             self.gID(self.completeness_project.pk),
             self.gID(self.compare_project.pk),
