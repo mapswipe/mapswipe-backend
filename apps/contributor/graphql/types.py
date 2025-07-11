@@ -4,9 +4,9 @@ from django.db import models
 from django.db.models.functions import Coalesce
 from strawberry_django.pagination import OffsetPaginated
 
-from apps.common.graphql.types import UserResourceTypeMixin
+from apps.common.graphql.types import ArchivableResourceTypeMixin, UserResourceTypeMixin
 from apps.community_dashboard.models import AggregatedUserGroupStatData, AggregatedUserStatData
-from apps.contributor.models import ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
+from apps.contributor.models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
 
 # TODO(thenav56): Test N+1
@@ -65,12 +65,10 @@ class ContributorUserType:
 
 
 @strawberry_django.type(ContributorUserGroup)
-class ContributorUserGroupType(UserResourceTypeMixin):
+class ContributorUserGroupType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
     id: strawberry.ID
     name: strawberry.auto
     description: strawberry.auto
-    archived_at: strawberry.auto
-    is_archived: strawberry.auto
 
     members_count: int = strawberry_django.field(
         annotate=Coalesce(
@@ -122,4 +120,25 @@ class ContributorUserGroupMembershipType:
 
     total_swipe_time: int = strawberry_django.field(
         annotate=generate_aggregated_user_group_stat_data_annotate(models.Sum("total_time")),
+    )
+
+
+@strawberry_django.type(ContributorTeam)
+class ContributorTeamType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
+    id: strawberry.ID
+    name: strawberry.auto
+    members_count: int = strawberry_django.field(
+        annotate=Coalesce(
+            models.Subquery(
+                ContributorUser.objects.filter(
+                    team_id=models.OuterRef("id"),
+                )
+                .order_by()
+                .values("team_id")
+                .annotate(c=models.Count("user_id"))
+                .values("c")[:1],
+                output_field=models.IntegerField(),
+            ),
+            0,
+        ),
     )

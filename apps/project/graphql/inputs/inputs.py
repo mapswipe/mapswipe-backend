@@ -49,6 +49,7 @@ class ProjectCreateInput(UserResourceCreateInputMixin):
     look_for: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
+    team: strawberry.ID | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
@@ -66,6 +67,7 @@ class ProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
     requesting_organization: strawberry.ID | None = strawberry.UNSET
     image: strawberry.ID | None = strawberry.UNSET
     project_type_specifics: ProjectTypeSpecificInput | None = strawberry.UNSET
+    team: strawberry.ID | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
@@ -79,6 +81,7 @@ class ProcessedProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
     tutorial: strawberry.ID | None = strawberry.UNSET
     requesting_organization: strawberry.ID | None = strawberry.UNSET
     image: strawberry.ID | None = strawberry.UNSET
+    team: strawberry.ID | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py

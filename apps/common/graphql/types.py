@@ -14,3 +14,10 @@ class UserResourceTypeMixin:
 
     created_by: UserType
     modified_by: UserType
+
+
+@strawberry.type
+class ArchivableResourceTypeMixin:
+    is_archived: bool
+    archived_at: datetime.datetime | None
+    archived_by: UserType | None
