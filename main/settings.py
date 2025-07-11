@@ -25,6 +25,7 @@ env = environ.Env(
     APP_TYPE=str,  # WEB, WORKER, WORKER-BEAT
     APP_RELEASE=(str, None),  # As fallback we will try to use .git/HEAD
     APP_LOG_LEVEL=(str, "INFO"),
+    ENABLE_STRAWBERRY_GRAPHIQL=(bool, False),
     # Domain configs
     APP_DOMAIN=str,  # Eg: https://api.example.org
     FRONTEND_DOMAIN=str,  # Eg: https://web.example.org
@@ -427,6 +428,7 @@ if SENTRY_ENABLED:
     SENTRY_CONFIG.init_sentry()
 
 # Strawberry
+ENABLE_STRAWBERRY_GRAPHIQL = env("ENABLE_STRAWBERRY_GRAPHIQL")
 STRAWBERRY_DJANGO = {
     "FIELD_DESCRIPTION_FROM_HELP_TEXT": True,
     "TYPE_DESCRIPTION_FROM_MODEL_DOCSTRING": True,

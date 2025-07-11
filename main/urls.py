@@ -41,7 +41,7 @@ urlpatterns = [
     path("rest/docs-swagger/", SpectacularSwaggerView.as_view(url_name="rest-docs"), name="rest-swagger"),
 ]
 
-if settings.DEBUG:
+if settings.ENABLE_STRAWBERRY_GRAPHIQL:
     urlpatterns.extend(
         [
             path(
@@ -57,6 +57,7 @@ if settings.DEBUG:
         ],
     )
 
+if settings.DEBUG:
     # Static and media file URLs
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
