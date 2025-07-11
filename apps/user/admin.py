@@ -1,8 +1,15 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.translation import gettext_lazy as _
 
 from .models import User
+
+
+class UserCreationForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["email"]
 
 
 @admin.register(User)
@@ -11,6 +18,8 @@ class UserAdmin(DjangoUserAdmin):
     list_filter = ("is_staff", "is_superuser", "is_active", "groups")
     search_fields = ("first_name", "last_name", "email")
     ordering = ("email",)
+    add_form = UserCreationForm
+    readonly_fields = ("display_name", "fb_uid")
 
     fieldsets = (
         (
@@ -28,6 +37,8 @@ class UserAdmin(DjangoUserAdmin):
                 "fields": (
                     "first_name",
                     "last_name",
+                    "display_name",
+                    "fb_uid",
                 ),
             },
         ),
@@ -50,7 +61,7 @@ class UserAdmin(DjangoUserAdmin):
             None,
             {
                 "classes": ("wide",),
-                "fields": ("email", "password1", "password2"),
+                "fields": ("email",),
             },
         ),
     )
