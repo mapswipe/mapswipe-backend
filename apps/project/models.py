@@ -140,6 +140,9 @@ class UploadHelper:
 
 class Organization(UserResource, ArchivableResource):
     name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    # TODO: Add icon?
+
     unique_name = models.GeneratedField(  # type: ignore[reportAttributeAccessIssue]
         expression=Lower("name"),
         output_field=models.CharField(),
