@@ -18,6 +18,7 @@ x-server: &base_server_setup
     ENABLE_DEBUG_TOOLBAR: ${ENABLE_DEBUG_TOOLBAR:-true}
     APP_ENVIRONMENT: ${APP_ENVIRONMENT:-DEV}
     SECRET_KEY: ${SECRET_KEY:?error}
+    ENABLE_STRAWBERRY_GRAPHIQL: ${ENABLE_STRAWBERRY_GRAPHIQL:-true}
     # Domain configs
     APP_DOMAIN: ${APP_DOMAIN:-http://localhost:8000}
     FRONTEND_DOMAIN: ${FRONTEND_DOMAIN:-http://localhost:3000}  # NOTE: Not used right now
