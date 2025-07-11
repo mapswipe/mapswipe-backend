@@ -138,7 +138,7 @@ class UploadHelper:
         return f"project/{instance.pk}/image/{filename}"
 
 
-class Organization(UserResource, ArchivableResource):
+class Organization(UserResource, ArchivableResource):  # type: ignore[reportIncompatibleVariableOverride]
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     # TODO: Add icon?
