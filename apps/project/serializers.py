@@ -6,6 +6,7 @@ from django.utils.translation import gettext
 from rest_framework import serializers
 
 from apps.common.serializers import UserResourceSerializer
+from apps.tutorial.models import Tutorial
 from project_types.store import get_project_property
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
@@ -73,20 +74,38 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             "tutorial",
         )
 
-    def validate_status(self, new_status: Project.Status | int | None):
+    def validate_status(self, new_status: Project.Status | int) -> Project.Status:
         assert self.instance is not None
 
-        if new_status is None:
-            return None
         if isinstance(new_status, int):
             new_status = Project.Status(new_status)
 
-        if (self.instance.status_enum, new_status) not in VALID_PROJECT_STATUS_TRANSITIONS:
+        if (
+            self.instance.status_enum != new_status
+            and (self.instance.status_enum, new_status) not in VALID_PROJECT_STATUS_TRANSITIONS
+        ):
             raise serializers.ValidationError(
                 gettext("Project status cannot be changed from %s to %s")
-                % (self.instance.status_enum.label, new_status.label),
+                % (
+                    self.instance.status_enum.label,
+                    new_status.label,
+                ),
             )
         return new_status
+
+    def validate_tutorial(self, tutorial: Tutorial | None) -> Tutorial | None:
+        assert self.instance is not None
+        current_tutorial = self.instance.tutorial
+
+        if tutorial and tutorial != current_tutorial and tutorial.status == Tutorial.Status.ARCHIVED:
+            raise serializers.ValidationError(gettext("Cannot assign archived tutorial to the project."))
+
+        # NOTE: If tutorial is provided, project attached to the tutorial should match the current project type
+        if tutorial and tutorial.project and tutorial.project.project_type != self.instance.project_type:
+            raise serializers.ValidationError(
+                {"tutorial": gettext("Tutorial project type does not match the project type.")},
+            )
+        return tutorial
 
     def validate_image(self, new_image: ProjectAsset | None):
         assert self.instance is not None
@@ -245,12 +264,22 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
     def _validate_tutorial(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
-        tutorial = attrs.get("tutorial") or self.instance.tutorial
-        # FIXME: Add validation that tutorial and project types must match
+        new_tutorial = attrs.get("tutorial")
+        current_tutorial = self.instance.tutorial
+        tutorial = new_tutorial or current_tutorial
 
         if tutorial is None and attrs.get("status") == Project.Status.PUBLISHED:
             raise serializers.ValidationError(
                 {"tutorial": gettext("Tutorial is required before publishing a project.")},
+            )
+
+        if new_tutorial and new_tutorial != current_tutorial and new_tutorial.status == Tutorial.Status.ARCHIVED:
+            raise serializers.ValidationError(gettext("Cannot assign archived tutorial to the project."))
+
+        # NOTE: If tutorial is provided, project attached to the tutorial should match the current project type
+        if tutorial and tutorial.project and tutorial.project.project_type != self.instance.project_type:
+            raise serializers.ValidationError(
+                {"tutorial": gettext("Tutorial project type does not match the project type.")},
             )
 
     @typing.override

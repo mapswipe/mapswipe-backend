@@ -7,10 +7,12 @@ from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
     ProjectTypeEnum,
 )
+from apps.tutorial.factories import TutorialFactory
 from apps.tutorial.models import (
     Tutorial,
     TutorialStatusEnum,
 )
+from apps.tutorial.serializers import VALID_TUTORIAL_STATUS_TRANSITIONS
 from apps.user.factories import UserFactory
 from main.tests import TestCase
 from utils.common import format_object_keys, to_camel_case
@@ -578,3 +580,68 @@ class TestTutorialMutation(TestCase):
                 ],
             ),
         ), content
+
+        # Test the tutorial with different project_type
+        compare_project = ProjectFactory.create(
+            **self.user_resource_kwargs,
+            project_type=ProjectTypeEnum.COMPARE,
+            requesting_organization=self.organization,
+            name="Compare Project 101",
+            look_for="",
+            additional_info_url="https://hi-there/about.html",
+            description="The new **project** from hi-there.",
+            project_type_specifics=None,
+        )
+        tutorial_data["project"] = self.gID(compare_project.pk)
+        content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
+        assert content["data"]["updateTutorial"]["errors"] is not None, content
+
+    def test_tutorial_state_transitions(self):
+        # Create a draft tutorial
+        tutorial = TutorialFactory.create(
+            client_id=str(ULID()),
+            name="Status Tutorial",
+            project=self.project,
+            created_by=self.user,
+            modified_by=self.user,
+            status=TutorialStatusEnum.DRAFT,
+        )
+
+        # Checking with authenticated user
+        self.force_login(self.user)
+        for status, new_status in VALID_TUTORIAL_STATUS_TRANSITIONS:
+            tutorial.status = status
+            tutorial.save(update_fields=["status"])
+            data = {
+                "clientId": tutorial.client_id,
+                "project": self.gID(tutorial.project_id),
+                "status": self.genum(new_status),
+            }
+            response = self._update_tutorial_mutation(str(tutorial.pk), data)
+
+            resp_data = response["data"]["updateTutorial"]
+            assert resp_data["errors"] is None, response
+            tutorial.refresh_from_db()
+            assert tutorial.status == new_status
+
+        invalid_transitions = [
+            (TutorialStatusEnum.PUBLISHED, TutorialStatusEnum.DRAFT),
+            (TutorialStatusEnum.ARCHIVED, TutorialStatusEnum.PUBLISHED),
+            (TutorialStatusEnum.DRAFT, TutorialStatusEnum.ARCHIVED),
+        ]
+
+        for old_status, new_status in invalid_transitions:
+            tutorial.status = old_status
+            tutorial.save(update_fields=["status"])
+            data = {
+                "clientId": tutorial.client_id,
+                "project": self.gID(tutorial.project_id),
+                "status": self.genum(new_status),
+            }
+            response = self._update_tutorial_mutation(str(tutorial.pk), data)
+
+            resp_data = response["data"]["updateTutorial"]
+            assert resp_data["errors"] is not None, response
+            assert "Tutorial status cannot be changed" in resp_data["errors"][0]["messages"], response
+            tutorial.refresh_from_db()
+            assert tutorial.status == old_status
