@@ -10,6 +10,7 @@ from geojson_pydantic import Feature, FeatureCollection
 from geojson_pydantic.geometries import MultiPolygon, Polygon
 from osgeo import ogr
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
+from pyfirebase_mapswipe import models as firebase_models
 from typing_extensions import TypedDict
 from ulid import ULID
 
@@ -23,8 +24,10 @@ from apps.project.models import (
 )
 from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
+from project_types.firebase import raster_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base.project import create_json_dump
 from project_types.validate.api_calls import ohsome
+from utils.custom_options.models import CustomOption
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
 
 logger = logging.getLogger(__name__)
@@ -122,6 +125,7 @@ class ValidateObjectSourceConfig(BaseModel):
 class ValidateProjectProperty(base_project.BaseProjectProperty):
     tile_server_property: RasterTileServerConfig
     object_source: ValidateObjectSourceConfig
+    custom_options: list[CustomOption] | None = None
 
 
 class ValidateProjectTaskGroupProperty(base_project.BaseProjectTaskGroupProperty): ...
@@ -134,6 +138,19 @@ class ValidateProjectTaskProperty(base_project.BaseProjectTaskProperty):
     properties: dict[str, Any]
     # NOTE: We need to send geometry to firebase
     # geometry: str
+
+
+# FIXME(tnagorra): Move this to project_types/firebase but getting circular dependencies error
+def validate_source_type_enum_to_firebase(
+    input_enum: ValidateObjectSourceTypeEnum,
+) -> firebase_models.FbEnumValidateInputType:
+    match input_enum:
+        case ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
+            return firebase_models.FbEnumValidateInputType.AOI_FILE
+        case ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL:
+            return firebase_models.FbEnumValidateInputType.LINK
+        case ValidateObjectSourceTypeEnum.TASKING_MANAGER:
+            return firebase_models.FbEnumValidateInputType.TMID
 
 
 class ValidateProject(
@@ -311,3 +328,64 @@ class ValidateProject(
         )
         self.project.project_type_specific_output = asset
         self.project.save(update_fields=("project_type_specific_output",))
+
+    @typing.override
+    def get_task_project_specifics_for_firebase(self, task):
+        return firebase_models.FbMappingTaskValidateCreateOnlyInput(
+            # FIXME(tnagorra): We should use task_old_fashioned_id
+            taskId=str(task.pk),
+            # FIXME(tnagorra): Check if we need to convert this?
+            geojson=task.geometry,
+        )
+
+    @typing.override
+    def get_group_project_specifics_for_firebase(self, group):
+        return firebase_models.FbMappingGroupValidateCreateOnlyInput(
+            # FIXME(tnagorra): We should use group_old_fashioned_id
+            groupId=str(group.pk),
+        )
+
+    @typing.override
+    def get_project_specifics_for_firebase(self):
+        tsp = self.project_type_specifics.tile_server_property
+        custom_opts = self.project_type_specifics.custom_options
+        obj_source = self.project_type_specifics.object_source
+        return firebase_models.FbProjectValidateCreateOnlyInput(
+            customOptions=[
+                firebase_models.FbObjCustomOption(
+                    title=opt.title,
+                    description=opt.description,
+                    value=opt.value,
+                    icon=opt.icon.value,
+                    iconColor=opt.icon_color,
+                    subOptions=[
+                        firebase_models.FbBaseObjCustomSubOption(
+                            value=sub_opt.value,
+                            description=sub_opt.description,
+                        )
+                        for sub_opt in opt.sub_options
+                    ]
+                    if opt.sub_options is not None
+                    else firebase_models.UNDEFINED,
+                )
+                for opt in custom_opts
+            ]
+            if custom_opts is not None
+            else firebase_models.UNDEFINED,
+            filter=obj_source.ohsome_filter or firebase_models.UNDEFINED,
+            inputType=validate_source_type_enum_to_firebase(
+                obj_source.source_type,
+            ),
+            TMID=str(obj_source.tasking_manager_project_id)
+            if obj_source.tasking_manager_project_id
+            else firebase_models.UNDEFINED,
+            tileServer=firebase_models.FbObjRasterTileServer(
+                name=raster_tile_server_name_enum_to_firebase(tsp.name),
+                credits=tsp.get_credits(),
+                url=tsp.get_url(),
+                # NOTE: We already replace apiKey in the url so apiKey is empty
+                apiKey=firebase_models.UNDEFINED,
+                # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
+                wmtsLayerName=firebase_models.UNDEFINED,
+            ),
+        )

@@ -8,10 +8,12 @@ from apps.project import models as project_models
 from apps.tutorial import models as tutorial_models
 from project_types.tile_map_service.completeness.project import OverlayLayerTypeEnum
 from project_types.validate.project import ValidateObjectSourceTypeEnum
+from utils.custom_options.models import CustomOptionIconEnum
 from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
 from utils.geo.vector_tile_server.config import VectorTileServerNameEnum
 
 ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
+    CustomOptionIconEnum,
     RasterTileServerNameEnum,
     VectorTileServerNameEnum,
     ValidateObjectSourceTypeEnum,

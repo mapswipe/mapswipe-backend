@@ -55,4 +55,6 @@ class FirebaseHelper:
             credential=_get_firebase_creds(credential_b64_gz),
             using_emulator=using_emulator,
         )
-        self.ref = firebase_db_reference("", app=self.app)
+
+    def ref(self, key: str):
+        return firebase_db_reference(key, app=self.app)

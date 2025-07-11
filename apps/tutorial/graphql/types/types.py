@@ -17,11 +17,13 @@ from project_types.tile_map_service.compare import tutorial as compare_tutorial
 from project_types.tile_map_service.completeness import tutorial as completeness_tutorial
 from project_types.tile_map_service.find import tutorial as find_tutorial
 from project_types.validate import tutorial as validate_tutorial
+from project_types.validate_image import tutorial as validate_image_tutorial
 
 from .project_types.compare import CompareTutorialTaskPropertyType
 from .project_types.completeness import CompletenessTutorialTaskPropertyType
 from .project_types.find import FindTutorialTaskPropertyType
 from .project_types.validate import ValidateTutorialTaskPropertyType
+from .project_types.validate_image import ValidateImageTutorialTaskPropertyType
 
 
 @strawberry_django.type(TutorialTask)
@@ -43,6 +45,7 @@ class TutorialTaskType(UserResourceTypeMixin):
         CompareTutorialTaskPropertyType
         | FindTutorialTaskPropertyType
         | ValidateTutorialTaskPropertyType
+        | ValidateImageTutorialTaskPropertyType
         | CompletenessTutorialTaskPropertyType
         | None
     ):
@@ -57,6 +60,11 @@ class TutorialTaskType(UserResourceTypeMixin):
             return typing.cast(
                 "ValidateTutorialTaskPropertyType",
                 validate_tutorial.ValidateTutorialTaskProperty.model_validate(data),
+            )
+        if project_type_enum == Project.Type.VALIDATE_IMAGE:
+            return typing.cast(
+                "ValidateImageTutorialTaskPropertyType",
+                validate_image_tutorial.ValidateImageTutorialTaskProperty.model_validate(data),
             )
         if project_type_enum == Project.Type.COMPARE:
             return typing.cast(

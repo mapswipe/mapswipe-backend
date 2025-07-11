@@ -1,6 +1,9 @@
 import typing
 
+from pyfirebase_mapswipe import models as firebase_models
+
 from apps.project.models import Project, ProjectTypeEnum
+from project_types.firebase import raster_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base import project as tile_map_service_project
 
 
@@ -28,3 +31,19 @@ class FindProject(
         super().__init__(project)
         if typing.TYPE_CHECKING:
             assert project.project_type == ProjectTypeEnum.FIND, f"{type(self)} is defined for FIND"
+
+    @typing.override
+    def get_project_specifics_for_firebase(self):
+        tsp = self.project_type_specifics.tile_server_property
+        return firebase_models.FbProjectFindCreateOnlyInput(
+            zoomLevel=self.project_type_specifics.zoom_level,
+            tileServer=firebase_models.FbObjRasterTileServer(
+                name=raster_tile_server_name_enum_to_firebase(tsp.name),
+                credits=tsp.get_credits(),
+                url=tsp.get_url(),
+                # NOTE: We already replace apiKey in the url so apiKey is empty
+                apiKey=firebase_models.UNDEFINED,
+                # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
+                wmtsLayerName=firebase_models.UNDEFINED,
+            ),
+        )

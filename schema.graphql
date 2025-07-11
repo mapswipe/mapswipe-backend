@@ -13,6 +13,7 @@ directive @isAuthenticated repeatable on FIELD_DEFINITION
 directive @oneOf on INPUT_OBJECT
 
 type AppEnumCollection {
+  CustomOptionIconEnum: [AppEnumCollectionCustomOptionIconEnum!]!
   RasterTileServerNameEnum: [AppEnumCollectionRasterTileServerNameEnum!]!
   VectorTileServerNameEnum: [AppEnumCollectionVectorTileServerNameEnum!]!
   ValidateObjectSourceTypeEnum: [AppEnumCollectionValidateObjectSourceTypeEnum!]!
@@ -31,6 +32,11 @@ type AppEnumCollection {
 
 type AppEnumCollectionContributorUserGroupMembershipLogActionEnum {
   key: ContributorUserGroupMembershipLogActionEnum!
+  label: String!
+}
+
+type AppEnumCollectionCustomOptionIconEnum {
+  key: CustomOptionIconEnum!
   label: String!
 }
 
@@ -143,7 +149,7 @@ type CompareProjectPropertyType {
   tileServerBProperty: ProjectRasterTileServerConfig!
 }
 
-union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeCompletenessProjectPropertyType = CompareProjectPropertyType | FindProjectPropertyType | ValidateProjectPropertyType | CompletenessProjectPropertyType
+union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyType = CompareProjectPropertyType | FindProjectPropertyType | ValidateProjectPropertyType | ValidateImageProjectPropertyType | CompletenessProjectPropertyType
 
 input CompareTutorialTaskPropertyInput {
   tileX: Int!
@@ -157,7 +163,7 @@ type CompareTutorialTaskPropertyType {
   tileZ: Int!
 }
 
-union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType = CompareTutorialTaskPropertyType | FindTutorialTaskPropertyType | ValidateTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType
+union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType = CompareTutorialTaskPropertyType | FindTutorialTaskPropertyType | ValidateTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType
 
 input CompletenessProjectPropertyInput {
   zoomLevel: Int!
@@ -444,6 +450,60 @@ union CreateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
 """A generic type to return error messages"""
 scalar CustomErrorType
 
+enum CustomOptionIconEnum {
+  ADD_OUTLINE
+  ALERT_OUTLINE
+  BAN_OUTLINE
+  CHECK
+  CLOSE_OUTLINE
+  CHECKMARK_OUTLINE
+  EGG_OUTLINE
+  ELLIPSE_OUTLINE
+  FLAG_OUTLINE
+  HAND_LEFT_OUTLINE
+  HAND_RIGHT_OUTLINE
+  HAPPY_OUTLINE
+  HEART_OUTLINE
+  HELP_OUTLINE
+  INFORMATION_OUTLINE
+  PRISM_OUTLINE
+  REFRESH_OUTLINE
+  REMOVE_OUTLINE
+  SAD_OUTLINE
+  SEARCH_OUTLINE
+  SHAPES_OUTLINE
+  SQUARE_OUTLINE
+  STAR_OUTLINE
+  THUMBS_DOWN_OUTLINE
+  THUMBS_UP_OUTLINE
+  TRIANGLE_OUTLINE
+  WARNING_OUTLINE
+  GENERAL_TAP
+  TAP
+  TAP_1
+  TAP_2
+  TAP_3
+  SWIPE_LEFT
+}
+
+input CustomOptionInput {
+  """A positive int value"""
+  value: Int!
+  title: String!
+  description: String!
+  icon: CustomOptionIconEnum!
+
+  """A valid hex color string like '#fff' or '#ffffff'"""
+  iconColor: String!
+  subOptions: [CustomSubOptionInput!]
+}
+
+input CustomSubOptionInput {
+  """A positive int value"""
+  value: Int!
+  description: String!
+}
+
 """Date (isoformat)"""
 scalar Date
 
@@ -667,7 +727,7 @@ enum OverlayLayerTypeEnum {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 input ProcessedProjectUpdateInput {
   clientId: String!
@@ -870,7 +930,7 @@ type ProjectAssetTypeOffsetPaginated {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 input ProjectCreateInput {
   clientId: String!
@@ -890,8 +950,26 @@ input ProjectCreateInput {
   description: String
 }
 
+type ProjectCustomOption {
+  """A positive int value"""
+  value: Int!
+  title: String!
+  description: String!
+  icon: CustomOptionIconEnum!
+
+  """A valid hex color string like '#fff' or '#ffffff'"""
+  iconColor: String!
+  subOptions: [ProjectCustomSubOption!]
+}
+
+type ProjectCustomSubOption {
+  """A positive int value"""
+  value: Int!
+  description: String!
+}
+
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 input ProjectFilter {
   id: IDBaseFilterLookup
@@ -1097,7 +1175,7 @@ input ProjectStatusEnumFilterLookup {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 type ProjectType implements UserResourceTypeMixin {
   clientId: String!
@@ -1147,7 +1225,7 @@ type ProjectType implements UserResourceTypeMixin {
   status: ProjectStatusEnum!
   processingStatus: ProjectProcessingStatusEnum
   progress: Int!
-  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeCompletenessProjectPropertyType
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyType
 }
 
 type ProjectTypeAreaStatsType {
@@ -1159,6 +1237,7 @@ type ProjectTypeAreaStatsType {
 enum ProjectTypeEnum {
   FIND
   VALIDATE
+  VALIDATE_IMAGE
   COMPARE
   COMPLETENESS
 }
@@ -1232,6 +1311,7 @@ input ProjectTypeSpecificInput @oneOf {
   find: FindProjectPropertyInput
   completeness: CompletenessProjectPropertyInput
   validate: ValidateProjectPropertyInput
+  validateImage: ValidateImageProjectPropertyInput
 }
 
 type ProjectTypeSwipeStatsType {
@@ -1241,7 +1321,7 @@ type ProjectTypeSwipeStatsType {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, name, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
 """
 input ProjectUpdateInput {
   clientId: String!
@@ -1416,7 +1496,7 @@ input StrFilterLookup {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, name, status)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project, name, status)
 """
 input TutorialCreateInput {
   clientId: String!
@@ -1429,7 +1509,7 @@ input TutorialCreateInput {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, name, status)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project, name, status)
 """
 input TutorialFilter {
   id: IDBaseFilterLookup
@@ -1720,6 +1800,7 @@ input TutorialTaskProjectTypeSpecificInput @oneOf {
   compare: CompareTutorialTaskPropertyInput
   find: FindTutorialTaskPropertyInput
   validate: ValidateTutorialTaskPropertyInput
+  validateImage: ValidateImageTutorialTaskPropertyInput
   completeness: CompletenessTutorialTaskPropertyInput
 }
 
@@ -1735,7 +1816,7 @@ type TutorialTaskType implements UserResourceTypeMixin {
   id: ID!
   scenarioId: ID!
   reference: Int!
-  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType
+  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType
 }
 
 """
@@ -1749,7 +1830,7 @@ input TutorialTaskUpdateInput {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, name, status)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project, name, status)
 """
 type TutorialType implements UserResourceTypeMixin {
   clientId: String!
@@ -1784,7 +1865,7 @@ type TutorialTypeOffsetPaginated {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, project, name, status)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project, name, status)
 """
 input TutorialUpdateInput {
   clientId: String!
@@ -1810,7 +1891,7 @@ union UpdateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
 scalar Upload
 
 """
-User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name)
+User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, old_id)
 """
 input UserFilter {
   id: IDBaseFilterLookup
@@ -1822,7 +1903,7 @@ input UserFilter {
 }
 
 """
-User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name)
+User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, old_id)
 """
 type UserMeType {
   id: ID!
@@ -1846,7 +1927,7 @@ interface UserResourceTypeMixin {
 }
 
 """
-User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name)
+User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, old_id)
 """
 type UserType {
   id: ID!
@@ -1863,6 +1944,24 @@ type UserTypeOffsetPaginated {
 
   """List of paginated results."""
   results: [UserType!]!
+}
+
+input ValidateImageProjectPropertyInput {
+  annotationsFile: String = null
+  customOptions: [CustomOptionInput!] = null
+}
+
+type ValidateImageProjectPropertyType {
+  annotationsFile: String
+  customOptions: [ProjectCustomOption!]
+}
+
+input ValidateImageTutorialTaskPropertyInput {
+  question: String!
+}
+
+type ValidateImageTutorialTaskPropertyType {
+  question: String!
 }
 
 type ValidateObjectSourceConfig {
@@ -1890,11 +1989,13 @@ enum ValidateObjectSourceTypeEnum {
 input ValidateProjectPropertyInput {
   tileServerProperty: ProjectRasterTileServerConfigInput!
   objectSource: ValidateObjectSourceConfigInput!
+  customOptions: [CustomOptionInput!] = null
 }
 
 type ValidateProjectPropertyType {
   tileServerProperty: ProjectRasterTileServerConfig!
   objectSource: ValidateObjectSourceConfig!
+  customOptions: [ProjectCustomOption!]
 }
 
 input ValidateTutorialTaskPropertyInput {

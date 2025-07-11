@@ -161,3 +161,4 @@ rest-media-temp/
 
 # firebase
 /firebase
+!/firebase/functions/generated/pyfirebase/

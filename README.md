@@ -73,9 +73,9 @@ docker compose exec web ./manage.py graphql_schema --out schema.graphql
 ### Run tests
 
 ```bash
-docker compose run --rm web pytest
+docker compose run --rm test pytest
 # OR
-docker compose exec web pytest
+docker compose exec test pytest
 ```
 
 ## Changelog

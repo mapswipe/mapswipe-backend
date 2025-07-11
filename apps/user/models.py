@@ -14,6 +14,9 @@ class User(AbstractUser):
     username = None
     email = models.EmailField(unique=True)
     display_name = models.CharField(max_length=255)
+    # FIXME(tnagorra): We might need to skip the indexing
+    # TODO(tnagorra): Rename this to firebase_userid
+    old_id = models.CharField(max_length=30, db_index=True, null=True)
 
     objects: CustomUserManager = CustomUserManager()  # type: ignore[reportAssignmentType]
 

@@ -34,6 +34,13 @@ class RasterTileServerConfig(BaseModel):
             return self.custom.url
         return RasterConfig.get_config(self.name)["url"]
 
+    def get_credits(self) -> str:
+        if self.name == RasterTileServerNameEnum.CUSTOM:
+            assert self.custom is not None
+            return self.custom.credits
+        return RasterConfig.get_config(self.name)["credits"]
+
+    # FIXME(tnagorra): We can deprecate this if we don't send url to firebase
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
         url = self.get_url()
         if "{quadkey}" in url:

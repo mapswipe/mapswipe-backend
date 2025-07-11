@@ -43,6 +43,9 @@ class TutorialStatusEnum(models.IntegerChoices):
 
 
 class Tutorial(UserResource):
+    # FIXME(tnagorra): We might need to skip the indexing
+    old_id = models.CharField(max_length=30, db_index=True, null=True)
+
     # FIXME(tnagorra): We might need to rename this field
     project = models.ForeignKey(
         Project,

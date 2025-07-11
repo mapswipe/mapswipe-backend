@@ -90,6 +90,7 @@ env = environ.Env(
     #    to allow custom logics to enable/disable emulator use by firebase-admin
     FIREBASE_EMULATOR_PROJECT_ID=str,  # FIREBASE_DB_URL also uses this value
     FIREBASE_EMULATOR_DATABASE_HOST=str,
+    FIREBASE_EMULATOR_TEST_HOST=(str, None),
     # -- Real (If FIREBASE_EMULATOR_USE is False)
     FIREBASE_DB_URL=str,  # https://mapswipe-dev.firebaseio.com
     FIREBASE_CREDENTIALS_B64_GZ=(str, None),  # gzip -cn credential.json | base64 -w 0
@@ -445,6 +446,7 @@ OSMCHA_API_KEY = env("OSMCHA_API_KEY")
 
 # Firebase
 FIREBASE_EMULATOR_USE = env("FIREBASE_EMULATOR_USE")
+FIREBASE_EMULATOR_TEST_HOST = env("FIREBASE_EMULATOR_TEST_HOST")
 FIREBASE_CREDENTIALS_B64_GZ = env("FIREBASE_CREDENTIALS_B64_GZ")
 if FIREBASE_EMULATOR_USE:
     # NOTE: Adding environment variable programmatically
