@@ -306,7 +306,7 @@ class TutorialSerializer(UserResourceSerializer[Tutorial]):
                 gettext("Cannot set status for a new tutorial. Status can only be set for existing tutorials."),
             )
 
-        if isinstance(new_status, int):
+        if not isinstance(new_status, Tutorial.Status):
             new_status = Tutorial.Status(new_status)
 
         if (

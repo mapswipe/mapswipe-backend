@@ -77,9 +77,9 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         )
 
     def validate_status(self, new_status: Project.Status | int) -> Project.Status:
-        assert self.instance is not None
+        assert self.instance is not None, "Project does not exist."
 
-        if isinstance(new_status, int):
+        if not isinstance(new_status, Project.Status):
             new_status = Project.Status(new_status)
 
         if (
@@ -99,9 +99,10 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         assert self.instance is not None
         current_tutorial = self.instance.tutorial
 
-        if tutorial and tutorial != current_tutorial and tutorial.status == Tutorial.Status.ARCHIVED:
+        if tutorial and tutorial != current_tutorial and tutorial.status_enum == Tutorial.Status.ARCHIVED:
             raise serializers.ValidationError(gettext("Cannot assign archived tutorial to the project."))
 
+        # FIXME(susilnem): Check if we should use project_type or project_type_enum
         # NOTE: If tutorial is provided, project attached to the tutorial should match the current project type
         if tutorial and tutorial.project and tutorial.project.project_type != self.instance.project_type:
             raise serializers.ValidationError(
@@ -224,16 +225,16 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             "team",
         )
 
-    def validate_status(self, new_status: Project.Status | int | None):
-        if not self.instance:
-            raise Exception("Project does not exist")
+    def validate_status(self, new_status: Project.Status | int):
+        assert self.instance is not None, "Project does not exist."
 
-        if new_status is None:
-            return None
-        if isinstance(new_status, int):
+        if not isinstance(new_status, Project.Status):
             new_status = Project.Status(new_status)
 
-        if (self.instance.status_enum, new_status) not in VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS:
+        if (
+            self.instance.status_enum != new_status
+            and (self.instance.status_enum, new_status) not in VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS
+        ):
             raise serializers.ValidationError(
                 gettext("Project status cannot be changed from %s to %s")
                 % (self.instance.status_enum.label, new_status.label),
@@ -265,6 +266,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
         return new_image
 
+    # FIXME(susilnem): Can we instead use field level validation?
     def _validate_tutorial(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
         new_tutorial = attrs.get("tutorial")
@@ -276,9 +278,11 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
                 {"tutorial": gettext("Tutorial is required before publishing a project.")},
             )
 
-        if new_tutorial and new_tutorial != current_tutorial and new_tutorial.status == Tutorial.Status.ARCHIVED:
+        # FIXME(susilnem): Check if we should use new_tutorial.status or new_status.status_enum
+        if new_tutorial and new_tutorial != current_tutorial and new_tutorial.status_enum == Tutorial.Status.ARCHIVED:
             raise serializers.ValidationError(gettext("Cannot assign archived tutorial to the project."))
 
+        # FIXME(susilnem): Check if we should use project_type or project_type_enum
         # NOTE: If tutorial is provided, project attached to the tutorial should match the current project type
         if tutorial and tutorial.project and tutorial.project.project_type != self.instance.project_type:
             raise serializers.ValidationError(

@@ -127,8 +127,6 @@ class ContributorUserGroupMembershipType:
 class ContributorTeamType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
     id: strawberry.ID
     name: strawberry.auto
-    archived_at: strawberry.auto
-    is_archived: strawberry.auto
     members_count: int = strawberry_django.field(
         annotate=Coalesce(
             models.Subquery(
