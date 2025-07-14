@@ -439,6 +439,10 @@ class ProjectAsset(UserResource):
         help_text=gettext_lazy("The file associated with the asset"),
     )
 
+    file_size = models.PositiveIntegerField(
+        help_text=gettext_lazy("The size of the file in bytes"),
+    )
+
     project: Project = models.ForeignKey(  # type: ignore[reportAssignmentType]
         Project,
         on_delete=models.CASCADE,

@@ -8,6 +8,7 @@ from apps.common.graphql.types import UserResourceTypeMixin
 from apps.project.models import Project, ProjectTypeEnum
 from apps.tutorial.models import (
     Tutorial,
+    TutorialAsset,
     TutorialInformationPage,
     TutorialInformationPageBlock,
     TutorialScenarioPage,
@@ -126,3 +127,12 @@ class TutorialType(UserResourceTypeMixin):
     # The tests are failing randomly.
     scenarios: list[TutorialScenarioPageType]
     information_pages: list[TutorialInformationPageType]
+
+
+@strawberry_django.type(TutorialAsset)
+class TutorialAssetType(UserResourceTypeMixin):
+    id: strawberry.ID
+    type: strawberry.auto
+    file: strawberry.auto
+    tutorial_id: strawberry.ID
+    marked_as_deleted: strawberry.auto

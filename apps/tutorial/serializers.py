@@ -1,7 +1,9 @@
+import mimetypes
 import typing
 
 import pydantic
 from django.shortcuts import get_object_or_404
+from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext
 from rest_framework import serializers
 
@@ -11,7 +13,17 @@ from project_types.store import get_tutorial_task_property
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
-from .models import Tutorial, TutorialInformationPage, TutorialInformationPageBlock, TutorialScenarioPage, TutorialTask
+from .models import (
+    Tutorial,
+    TutorialAsset,
+    TutorialInformationPage,
+    TutorialInformationPageBlock,
+    TutorialScenarioPage,
+    TutorialTask,
+)
+
+if typing.TYPE_CHECKING:
+    from django.core.files.base import ContentFile
 
 
 class TutorialTaskSerializerContextType(DrfContextType):
@@ -408,3 +420,59 @@ class TutorialSerializer(UserResourceSerializer[Tutorial]):
             information_page_serializer.save()
 
         return tutorial
+
+
+# NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
+class TutorialAssetSerializer(UserResourceSerializer[TutorialAsset]):
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        model = TutorialAsset
+        fields = (
+            "mimetype",
+            "file",
+            "tutorial",
+        )
+
+    def _validate_file(self, attrs: dict[str, typing.Any]):
+        file_content: ContentFile[bytes] = attrs["file"]
+        file_size: int = file_content.size
+
+        if file_size > TutorialAsset.MAX_FILE_SIZE:
+            raise serializers.ValidationError(
+                gettext("Filesize should be less than: %s. Current is: %s")
+                % (
+                    filesizeformat(TutorialAsset.MAX_FILE_SIZE),
+                    filesizeformat(file_size),
+                ),
+            )
+
+        # https://docs.python.org/3/library/mimetypes.html#mimetypes.guess_type
+        mimetype, _ = mimetypes.guess_type(file_content.name)  # type: ignore[reportUnknownArgumentType]
+        # TODO(susilnem): Use library like filemagic to determine mimetype instead?
+        if mimetype is None:
+            raise serializers.ValidationError(
+                gettext("Could not determine mimetype of the file: %s") % file_content.name,
+            )
+
+        if not mimetype != attrs["mimetype"]:
+            raise serializers.ValidationError(
+                gettext("File mimetype does not match the provided mimetype: %s") % mimetype,
+            )
+
+        if not TutorialAsset.Mimetype.is_valid_mimetype(mimetype):
+            raise serializers.ValidationError(
+                gettext("File mimetype is not supported: %s") % mimetype,
+            )
+
+        attrs["mimetype"] = TutorialAsset.Mimetype.get_mimetype_by_label(mimetype)
+        attrs["file_size"] = file_size
+
+    @typing.override
+    def validate(self, attrs: dict[str, typing.Any]):
+        self._validate_file(attrs)
+        return super().validate(attrs)
+
+    @typing.override
+    def create(self, validated_data: dict[str, typing.Any]) -> TutorialAsset:
+        # NOTE: User should only be able to create INPUT type project assets
+        validated_data["type"] = TutorialAsset.Type.INPUT
+        return super().create(validated_data)

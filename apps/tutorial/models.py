@@ -9,13 +9,17 @@ from django_choices_field import IntegerChoicesField
 from django_stubs_ext.db.models.manager import RelatedManager
 
 from apps.common.models import IconEnum, UserResource
-from apps.project.models import Project
+from apps.project.models import Project, ProjectAssetMimetypeEnum, ProjectAssetTypeEnum
 
 
 class UploadHelper:
     @staticmethod
     def information_page_block_image(instance: "TutorialInformationPageBlock", filename: str):
         return f"tutorial/{instance.page.tutorial_id}/block-image/{ulid.ULID()!s}/{filename}"
+
+    @staticmethod
+    def tutorial_asset(instance: "TutorialAsset", filename: str):
+        return f"tutorial/{instance.tutorial_id}/asset/{instance.type}/{ulid.ULID()!s}/{filename}"
 
 
 class TutorialStatusEnum(models.IntegerChoices):
@@ -70,6 +74,48 @@ class Tutorial(UserResource):
     @property
     def status_enum(self) -> TutorialStatusEnum:
         return TutorialStatusEnum(self.status)
+
+
+class TutorialAsset(UserResource):
+    Type = ProjectAssetTypeEnum
+    Mimetype = ProjectAssetMimetypeEnum
+    MAX_FILE_SIZE: int = 100 * 1024 * 1024  # MB
+
+    type = IntegerChoicesField(
+        choices_enum=ProjectAssetTypeEnum,
+    )
+
+    mimetype = IntegerChoicesField(
+        choices_enum=ProjectAssetMimetypeEnum,
+    )
+
+    file = models.FileField(
+        upload_to=UploadHelper.tutorial_asset,
+        help_text=gettext_lazy("The file associated with the asset"),
+    )
+
+    file_size = models.PositiveIntegerField(
+        help_text=gettext_lazy("The size of the file in bytes"),
+    )
+
+    tutorial: Tutorial = models.ForeignKey(  # type: ignore[reportAssignmentType]
+        Tutorial,
+        on_delete=models.CASCADE,
+        related_name="+",
+    )
+
+    marked_as_deleted = models.BooleanField(
+        default=False,
+        help_text=gettext_lazy("If this flag is enabled, this tutorial asset will be deleted in the future"),
+    )
+
+    @classmethod
+    def usable_objects(cls):
+        """Returns objects that are mot marked for deletion"""
+        return cls.objects.filter(marked_as_deleted=False)
+
+    # Type hints
+    tutorial_id: int
 
 
 class TutorialScenarioPage(UserResource):

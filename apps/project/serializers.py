@@ -362,7 +362,6 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
-# FIXME(tnagorra): Should we validate the mimetype during upload?
 class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = ProjectAsset
@@ -387,7 +386,11 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
 
         # https://docs.python.org/3/library/mimetypes.html#mimetypes.guess_type
         mimetype, _ = mimetypes.guess_type(file_content.name)  # type: ignore[reportUnknownArgumentType]
-        assert mimetype is not None, "Mimetype should not be None"
+        # TODO(susilnem): Use library like filemagic to determine mimetype instead?
+        if mimetype is None:
+            raise serializers.ValidationError(
+                gettext("Could not determine mimetype of the file: %s") % file_content.name,
+            )
 
         if not ProjectAsset.Mimetype.is_valid_mimetype(mimetype):
             raise serializers.ValidationError(
@@ -395,6 +398,7 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
             )
 
         attrs["mimetype"] = ProjectAsset.Mimetype.get_mimetype_by_label(mimetype)
+        attrs["file_size"] = file_size
 
     @typing.override
     def validate(self, attrs: dict[str, typing.Any]):
@@ -403,7 +407,7 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
 
     @typing.override
     def create(self, validated_data: dict[str, typing.Any]) -> ProjectAsset:
-        # NOTE: User should only bye able to create INPUT type project assets
+        # NOTE: User should only be able to create INPUT type project assets
         validated_data["type"] = ProjectAsset.Type.INPUT
         return super().create(validated_data)
 

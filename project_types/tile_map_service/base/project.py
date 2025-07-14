@@ -132,6 +132,7 @@ class TileMapServiceBaseProject[
             client_id=str(ULID()),
             project=self.project,
             file=file,
+            file_size=file.size,
             type=ProjectAssetTypeEnum.OUTPUT,
             mimetype=ProjectAssetMimetypeEnum.GEOJSON,
             # FIXME(tnagorra): Maybe create a internal user like mapswipe-bot

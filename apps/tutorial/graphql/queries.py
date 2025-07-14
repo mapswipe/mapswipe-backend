@@ -6,9 +6,9 @@ from strawberry_django.permissions import IsAuthenticated
 
 from apps.tutorial.models import Tutorial
 
-from .filters import TutorialFilter
-from .orders import TutorialOrder
-from .types.types import TutorialType
+from .filters import TutorialAssetFilter, TutorialFilter
+from .orders import TutorialAssetOrder, TutorialOrder
+from .types.types import TutorialAssetType, TutorialType
 
 
 @strawberry.type
@@ -31,3 +31,12 @@ class Query:
         if include_all:
             return Tutorial.objects.all()
         return Tutorial.objects.filter(status=Tutorial.Status.PUBLISHED).all()
+
+    tutorial_asset: TutorialAssetType = strawberry_django.field(extensions=[IsAuthenticated()])
+
+    # --- Paginated
+    tutorial_assets: OffsetPaginated[TutorialAssetType] = strawberry_django.offset_paginated(
+        order=TutorialAssetOrder,
+        filters=TutorialAssetFilter,
+        extensions=[IsAuthenticated()],
+    )
