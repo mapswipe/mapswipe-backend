@@ -32,7 +32,7 @@ class DeleteInput:
     id: strawberry.ID
 
 
-@strawberry.interface
+@strawberry.input
 class CudInput[X, Y]:
     create: X | None = strawberry.UNSET
     update: Y | None = strawberry.UNSET
