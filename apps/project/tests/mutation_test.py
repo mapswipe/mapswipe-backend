@@ -363,10 +363,10 @@ class TestOrganizationMutation(TestCase):
             self.Mutation.UPDATE_ORGANIZATION,
             variables={
                 "data": {
-                    "name": "Test Org Updated",
+                    "name": "Org Updated",
                     "clientId": resp_data["result"]["clientId"],
                     "description": "Update description",
-                    "abbreviation": "TOU",
+                    "abbreviation": "OU",
                 },
                 "pk": resp_data["result"]["id"],
             },
