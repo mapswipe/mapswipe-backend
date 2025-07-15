@@ -9,7 +9,7 @@ from apps.tutorial.models import (
     TutorialScenarioPage,
     TutorialTask,
 )
-from apps.tutorial.serializers import TutorialSerializer
+from apps.tutorial.serializers import TutorialCreateSerializer, TutorialUpdateSerializer
 from main.graphql.context import Info
 from utils.graphql.common import DataclassInstance
 from utils.graphql.mutations import ModelMutation
@@ -25,7 +25,7 @@ class Mutation:
 
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
     async def create_tutorial(self, info: Info, data: TutorialCreateInput) -> MutationResponseType[TutorialType]:
-        return await ModelMutation(TutorialSerializer).handle_create_mutation(data, info, None)
+        return await ModelMutation(TutorialCreateSerializer).handle_create_mutation(data, info, None)
 
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
     async def update_tutorial(
@@ -69,7 +69,7 @@ class Mutation:
                     if block.delete is not None and block.delete != strawberry.UNSET:
                         await TutorialInformationPageBlock.objects.filter(id=block.delete.id).adelete()
 
-        return await ModelMutation(TutorialSerializer).handle_update_mutation(
+        return await ModelMutation(TutorialUpdateSerializer).handle_update_mutation(
             data,
             info,
             tutorial,

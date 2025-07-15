@@ -294,11 +294,32 @@ VALID_TUTORIAL_STATUS_TRANSITIONS: set[tuple[Tutorial.Status, Tutorial.Status]] 
         (Tutorial.Status.DRAFT, Tutorial.Status.PUBLISHED),
         (Tutorial.Status.DRAFT, Tutorial.Status.DISCARDED),
         (Tutorial.Status.PUBLISHED, Tutorial.Status.ARCHIVED),
+        (Tutorial.Status.PUBLISHED, Tutorial.Status.DISCARDED),
+        (Tutorial.Status.ARCHIVED, Tutorial.Status.PUBLISHED),
     ],
 )
 
 
-class TutorialSerializer(UserResourceSerializer[Tutorial]):
+# NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
+class TutorialCreateSerializer(UserResourceSerializer[Tutorial]):
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        model = Tutorial
+        fields = (
+            "name",
+            "project",
+        )
+
+    def validate_project(self, project: Project) -> Project:
+        if self.instance and self.instance.project and self.instance.project.project_type != project.project_type:
+            raise serializers.ValidationError(
+                gettext("Existing tutorial project type '%s' does not match new project type '%s'")
+                % (Project.Type(self.instance.project.project_type).label, Project.Type(project.project_type).label),
+            )
+        return project
+
+
+# NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
+class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
     scenarios = TutorialScenarioPageSerializer(many=True)
     information_pages = TutorialInformationPageSerializer(many=True)
 
@@ -312,11 +333,16 @@ class TutorialSerializer(UserResourceSerializer[Tutorial]):
             "scenarios",
         )
 
-    def validate_status(self, new_status: Tutorial.Status | int) -> Tutorial.Status:
-        if not self.instance and new_status:
+    def validate_project(self, project: Project) -> Project:
+        if self.instance and self.instance.project and self.instance.project.project_type != project.project_type:
             raise serializers.ValidationError(
-                gettext("Cannot set status for a new tutorial. Status can only be set for existing tutorials."),
+                gettext("Existing tutorial project type '%s' does not match new project type '%s'")
+                % (Project.Type(self.instance.project.project_type).label, Project.Type(project.project_type).label),
             )
+        return project
+
+    def validate_status(self, new_status: Tutorial.Status | int) -> Tutorial.Status:
+        assert self.instance is not None, "Tutorial does not exist."
 
         if not isinstance(new_status, Tutorial.Status):
             new_status = Tutorial.Status(new_status)
@@ -328,17 +354,12 @@ class TutorialSerializer(UserResourceSerializer[Tutorial]):
         ):
             raise serializers.ValidationError(
                 gettext("Tutorial status cannot be changed from %s to %s")
-                % (Tutorial.Status(self.instance.status).label, new_status.label),
+                % (
+                    self.instance.status_enum.label,
+                    new_status.label,
+                ),
             )
         return new_status
-
-    def validate_project(self, project: Project) -> Project:
-        if self.instance and self.instance.project and self.instance.project.project_type != project.project_type:
-            raise serializers.ValidationError(
-                gettext("Existing tutorial project type '%s' does not match new project type '%s'")
-                % (Project.Type(self.instance.project.project_type).label, Project.Type(project.project_type).label),
-            )
-        return project
 
     @typing.override
     def create(self, validated_data: dict[typing.Any, typing.Any]):

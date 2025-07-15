@@ -684,6 +684,13 @@ class TestProjectMutation(TestCase):
         assert resp_data["errors"] is None, content
         image_asset = resp_data["result"]
 
+        # Change the mimetype
+        # Fails as mimetype mismatching
+        project_asset_data["mimetype"] = self.genum(ProjectAssetMimetypeEnum.IMAGE_PNG)
+        content = self._create_project_image_asset(project_asset_data, assert_errors=True)
+        resp_data = content["data"]["createProjectAsset"]
+        assert resp_data["errors"] is not None, content
+
         # Updating Project: with empty object as project type specifics
         project_data = {
             "clientId": proj.client_id,

@@ -144,9 +144,6 @@ class TutorialCreateInput(UserResourceCreateInputMixin):
     project: strawberry.ID
     name: strawberry.auto
 
-    scenarios: list[TutorialScenarioPageCreateInput]
-    information_pages: list[TutorialInformationPageCreateInput]
-
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.partial(Tutorial)
