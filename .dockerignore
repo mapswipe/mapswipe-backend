@@ -8,7 +8,8 @@ wheels/
 media
 postgres-data
 redis-data
-/.data
+.data/*
+data/*
 
 production.env
 
