@@ -106,7 +106,6 @@ class CompletenessProject(
         )
 
         # NOTE: Setting background layer as fallback for overlay layer
-        fb_overlay_tile_server = fb_tile_server
         # FIXME(tnagorra): Handle vector tiles in the future
         if tsp_overlay.type == OverlayLayerTypeEnum.RASTER_TILE and tsp_overlay.raster:
             fb_overlay_tile_server = firebase_models.FbObjRasterTileServer(
@@ -114,6 +113,15 @@ class CompletenessProject(
                 credits=tsp_overlay.raster.tile_server.get_config()["credits"],
                 url=tsp_overlay.raster.tile_server.get_config()["raw_url"],
                 apiKey=tsp_overlay.raster.tile_server.get_config()["api_key"],
+                # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
+                wmtsLayerName=firebase_models.UNDEFINED,
+            )
+        else:
+            fb_overlay_tile_server = firebase_models.FbObjRasterTileServer(
+                name=firebase_models.FbEnumRasterTileServerName.CUSTOM,
+                credits="",
+                url="https://raw.githubusercontent.com/mapswipe/mapswipe-assets/refs/heads/main/images/raster-layer-404-message.png",
+                apiKey="",
                 # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
                 wmtsLayerName=firebase_models.UNDEFINED,
             )
