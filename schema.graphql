@@ -229,6 +229,7 @@ type ContributorTeamType implements UserResourceTypeMixin {
   id: ID!
   name: String!
   membersCount: Int!
+  members(pagination: OffsetPaginationInput): ContributorUserTypeOffsetPaginated!
 }
 
 type ContributorTeamTypeOffsetPaginated {
