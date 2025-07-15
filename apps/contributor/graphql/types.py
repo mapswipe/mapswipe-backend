@@ -142,3 +142,10 @@ class ContributorTeamType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
             0,
         ),
     )
+
+    @strawberry_django.offset_paginated(OffsetPaginated["ContributorUserType"])
+    def members(
+        self,
+        contributor_team: strawberry.Parent[ContributorTeam],
+    ) -> models.QuerySet[ContributorUser]:
+        return ContributorUser.objects.filter(team_id=contributor_team.pk).order_by("user_id")
