@@ -33,8 +33,6 @@ VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS = set(
         (Project.Status.READY, Project.Status.DISCARDED),
         (Project.Status.PUBLISHED, Project.Status.ARCHIVED),
         (Project.Status.PUBLISHED, Project.Status.PAUSED),
-        (Project.Status.PUBLISHED, Project.Status.DISCARDED),
-        (Project.Status.PAUSED, Project.Status.DISCARDED),
         (Project.Status.PAUSED, Project.Status.PUBLISHED),
     ],
 )
@@ -57,7 +55,7 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
-class ProjectUpdateSerializer(UserResourceSerializer[Project], ArchivableResourceSerializer[Organization]):  # type: ignore[reportIncompatibleVariableOverride]
+class ProjectUpdateSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (

@@ -18,6 +18,6 @@ class UserResourceTypeMixin:
 
 @strawberry.type
 class ArchivableResourceTypeMixin:
-    is_archived: bool | None
+    is_archived: bool
     archived_at: datetime.datetime | None
     archived_by: UserType | None

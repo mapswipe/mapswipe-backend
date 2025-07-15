@@ -10,6 +10,7 @@ from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
     Project,
     ProjectAssetMimetypeEnum,
+    ProjectStatusEnum,
     ProjectTask,
     ProjectTaskGroup,
     ProjectTypeEnum,
@@ -203,7 +204,6 @@ class Mutation:
                 status
                 processingStatus
                 progress
-                isArchived
                 tutorialId
                 tutorial {
                   id
@@ -366,7 +366,7 @@ class TestOrganizationMutation(TestCase):
                     "name": "Test Org Updated",
                     "clientId": resp_data["result"]["clientId"],
                     "description": "Update description",
-                    "abbreviation": "YOU",
+                    "abbreviation": "TOU",
                 },
                 "pk": resp_data["result"]["id"],
             },
@@ -572,7 +572,6 @@ class TestProjectMutation(TestCase):
                 progress=0,
                 tutorialId=None,
                 tutorial=None,
-                isArchived=False,
             ),
         ), content
 
@@ -593,15 +592,6 @@ class TestProjectMutation(TestCase):
                 "pydantic_errors": None,
             },
         ]
-
-        # Archive project
-        project_data = {
-            "clientId": proj.client_id,
-            "isArchived": True,
-        }
-        content = self._update_project_mutation(str(latest_project.pk), project_data)
-        assert content["data"]["updateProject"]["errors"] is None
-        assert content["data"]["updateProject"]["result"]["isArchived"]
 
         # Creating AOI Project Asset
         project_asset_data = {
@@ -761,6 +751,15 @@ class TestProjectMutation(TestCase):
         }
         content = self._update_processed_project_mutation(str(latest_project.pk), project_data)
         assert content["data"]["updateProcessedProject"]["errors"] is None, content
+
+        # Archive processed project
+        project_data = {
+            "clientId": proj.client_id,
+            "status": self.genum(ProjectStatusEnum.ARCHIVED),
+        }
+        content = self._update_processed_project_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProcessedProject"]["errors"] is None, content
+        assert content["data"]["updateProcessedProject"]["result"]["status"] == self.genum(ProjectStatusEnum.ARCHIVED)
 
 
 class TestProjectTypeMutation(TestCase):

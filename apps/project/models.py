@@ -166,7 +166,7 @@ class Organization(UserResource, ArchivableResource):  # type: ignore[reportInco
         return self.name
 
 
-class Project(UserResource, ArchivableResource):  # type: ignore[reportIncompatibleVariableOverride]
+class Project(UserResource):
     Type = ProjectTypeEnum
     Status = ProjectStatusEnum
     ProcessingStatus = ProjectProcessingStatusEnum

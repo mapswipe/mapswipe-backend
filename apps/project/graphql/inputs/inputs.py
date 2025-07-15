@@ -59,7 +59,7 @@ class ProjectCreateInput(UserResourceCreateInputMixin):
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.partial(Project)
-class ProjectUpdateInput(UserResourceTopLevelUpdateInputMixin, ArchivableResourceInputMixin):
+class ProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
     name: strawberry.auto
     look_for: strawberry.auto
     additional_info_url: strawberry.auto
