@@ -16,7 +16,7 @@ class ContributorUser(models.Model):
         unique=True,
         help_text="Firebase User ID",
     )
-    team = models.OneToOneField(
+    team = models.ForeignKey(
         "ContributorTeam",
         on_delete=models.SET_NULL,
         null=True,
