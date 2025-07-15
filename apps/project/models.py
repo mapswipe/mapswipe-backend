@@ -420,6 +420,7 @@ class ProjectAsset(UserResource):
 class ProjectTaskGroup(models.Model):
     # FIXME(tnagorra): We might need to skip the indexing
     old_id = models.CharField(max_length=30, db_index=True, null=True)
+    legacy_group_id = models.CharField(max_length=30, db_index=True)
 
     project: Project = models.ForeignKey(  # type: ignore[reportAssignmentType]
         Project,
@@ -453,6 +454,7 @@ class ProjectTaskGroup(models.Model):
 class ProjectTask(models.Model):
     # FIXME(tnagorra): We might need to skip the indexing
     old_id = models.CharField(max_length=30, db_index=True, null=True)
+    legacy_task_id = models.CharField(max_length=30, db_index=True)
 
     task_group: ProjectTaskGroup = models.ForeignKey(  # type: ignore[reportAssignmentType]
         ProjectTaskGroup,
