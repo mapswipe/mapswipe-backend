@@ -2,7 +2,7 @@ import typing
 
 from pyfirebase_mapswipe import models as firebase_models
 
-from apps.project.models import Project, ProjectTypeEnum
+from apps.project.models import Project, ProjectTask, ProjectTypeEnum
 from project_types.firebase import raster_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base import project as base_project
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
@@ -39,7 +39,7 @@ class CompareProject(
         return False
 
     @typing.override
-    def get_task_project_specifics_for_firebase(self, task):
+    def get_task_project_specifics_for_firebase(self, task: ProjectTask):
         task_specifics = self.project_task_property_class(
             **task.project_type_specifics,
         )
@@ -47,10 +47,8 @@ class CompareProject(
         tsp_b = self.project_type_specifics.tile_server_b_property
 
         return firebase_models.FbMappingTaskCompareCreateOnlyInput(
-            # FIXME(tnagorra): We should use group_old_fashioned_id
-            groupId=str(task.task_group_id),
-            # FIXME(tnagorra): We should use task_old_fashioned_id
-            taskId=str(task.pk),
+            groupId=str(task.task_group.legacy_group_id),
+            taskId=str(task.task_group_id),
             taskX=task_specifics.tile_x,
             taskY=task_specifics.tile_y,
             url=tsp.generate_url(
