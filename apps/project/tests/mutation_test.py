@@ -1085,40 +1085,30 @@ class TestProjectTypeMutation(TestCase):
                 "project_type_specifics": {
                     "tile_x": 24147,
                     "tile_y": 13753,
-                    "url": "https://hi-there/24147/13753/15",
-                    "url_b": "https://hi-here/24147/13753/15",
                 },
             },
             {
                 "project_type_specifics": {
                     "tile_x": 24147,
                     "tile_y": 13754,
-                    "url": "https://hi-there/24147/13754/15",
-                    "url_b": "https://hi-here/24147/13754/15",
                 },
             },
             {
                 "project_type_specifics": {
                     "tile_x": 24147,
                     "tile_y": 13755,
-                    "url": "https://hi-there/24147/13755/15",
-                    "url_b": "https://hi-here/24147/13755/15",
                 },
             },
             {
                 "project_type_specifics": {
                     "tile_x": 24148,
                     "tile_y": 13753,
-                    "url": "https://hi-there/24148/13753/15",
-                    "url_b": "https://hi-here/24148/13753/15",
                 },
             },
             {
                 "project_type_specifics": {
                     "tile_x": 24148,
                     "tile_y": 13754,
-                    "url": "https://hi-there/24148/13754/15",
-                    "url_b": "https://hi-here/24148/13754/15",
                 },
             },
         ]

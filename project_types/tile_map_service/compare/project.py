@@ -2,12 +2,9 @@ import typing
 
 from pyfirebase_mapswipe import models as firebase_models
 
-from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
-from main.bulk_managers import BulkCreateManager
+from apps.project.models import Project, ProjectTypeEnum
 from project_types.firebase import raster_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base import project as base_project
-from utils import fields as custom_fields
-from utils.geo import tile_functions, tile_grouping
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
 
 
@@ -18,8 +15,7 @@ class CompareProjectProperty(base_project.TileMapServiceProjectProperty):
 class CompareProjectTaskGroupProperty(base_project.TileMapServiceProjectTaskGroupProperty): ...
 
 
-class CompareProjectTaskProperty(base_project.TileMapServiceProjectTaskProperty):
-    url_b: custom_fields.PydanticUrl
+class CompareProjectTaskProperty(base_project.TileMapServiceProjectTaskProperty): ...
 
 
 class CompareProject(
@@ -39,46 +35,6 @@ class CompareProject(
             assert project.project_type == ProjectTypeEnum.COMPARE, f"{type(self)} is defined for COMPARE"
 
     @typing.override
-    def create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:
-        bulk_mgr = BulkCreateManager(chunk_size=1000)
-
-        tasks_count = 0
-        for tile_x in range(raw_group["xMin"], raw_group["xMax"] + 1):
-            for tile_y in range(raw_group["yMin"], raw_group["yMax"] + 1):
-                geometry = tile_functions.geometry_from_tile_coords(
-                    tile_x,
-                    tile_y,
-                    self.project_type_specifics.zoom_level,
-                )
-                url = self.project_type_specifics.tile_server_property.generate_url(
-                    tile_x,
-                    tile_y,
-                    self.project_type_specifics.zoom_level,
-                )
-                # Additional
-                url_b = self.project_type_specifics.tile_server_b_property.generate_url(
-                    tile_x,
-                    tile_y,
-                    self.project_type_specifics.zoom_level,
-                )
-                bulk_mgr.add(
-                    ProjectTask(
-                        task_group_id=group.pk,
-                        geometry=geometry,
-                        project_type_specifics=self.project_task_property_class(
-                            tile_x=tile_x,
-                            tile_y=tile_y,
-                            url=url,
-                            # Additional
-                            url_b=url_b,
-                        ).model_dump(),
-                    ),
-                )
-                tasks_count += 1
-        bulk_mgr.done()
-        return tasks_count
-
-    @typing.override
     def skip_tasks_for_firebase(self) -> bool:
         return False
 
@@ -87,6 +43,9 @@ class CompareProject(
         task_specifics = self.project_task_property_class(
             **task.project_type_specifics,
         )
+        tsp = self.project_type_specifics.tile_server_property
+        tsp_b = self.project_type_specifics.tile_server_b_property
+
         return firebase_models.FbMappingTaskCompareCreateOnlyInput(
             # FIXME(tnagorra): We should use group_old_fashioned_id
             groupId=str(task.task_group_id),
@@ -94,14 +53,23 @@ class CompareProject(
             taskId=str(task.pk),
             taskX=task_specifics.tile_x,
             taskY=task_specifics.tile_y,
-            url=task_specifics.url,
-            urlB=task_specifics.url_b,
+            url=tsp.generate_url(
+                task_specifics.tile_x,
+                task_specifics.tile_y,
+                self.project_type_specifics.zoom_level,
+            ),
+            urlB=tsp_b.generate_url(
+                task_specifics.tile_x,
+                task_specifics.tile_y,
+                self.project_type_specifics.zoom_level,
+            ),
         )
 
     @typing.override
     def get_project_specifics_for_firebase(self):
         tsp = self.project_type_specifics.tile_server_property
         tsp_b = self.project_type_specifics.tile_server_b_property
+
         return firebase_models.FbProjectCompareCreateOnlyInput(
             zoomLevel=self.project_type_specifics.zoom_level,
             tileServer=firebase_models.FbObjRasterTileServer(

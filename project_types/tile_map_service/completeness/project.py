@@ -72,9 +72,7 @@ class CompletenessProjectProperty(base_project.TileMapServiceProjectProperty):
 class CompletenessProjectTaskGroupProperty(base_project.TileMapServiceProjectTaskGroupProperty): ...
 
 
-class CompletenessProjectTaskProperty(base_project.TileMapServiceProjectTaskProperty):
-    # NOTE: this is only required for raster layer
-    url_overlay_layer: custom_fields.PydanticUrl | None = None
+class CompletenessProjectTaskProperty(base_project.TileMapServiceProjectTaskProperty): ...
 
 
 class CompletenessProject(

@@ -68,7 +68,6 @@ class TileMapServiceProjectTaskGroupProperty(base_project.BaseProjectTaskGroupPr
 
 
 class TileMapServiceProjectTaskProperty(base_project.BaseProjectTaskProperty):
-    url: custom_fields.PydanticUrl
     tile_x: int
     tile_y: int
 
@@ -158,11 +157,6 @@ class TileMapServiceBaseProject[
                     tile_y,
                     self.project_type_specifics.zoom_level,
                 )
-                url = self.project_type_specifics.tile_server_property.generate_url(
-                    tile_x,
-                    tile_y,
-                    self.project_type_specifics.zoom_level,
-                )
                 bulk_mgr.add(
                     ProjectTask(
                         task_group_id=group.pk,
@@ -170,7 +164,6 @@ class TileMapServiceBaseProject[
                         project_type_specifics=self.project_task_property_class(
                             tile_x=tile_x,
                             tile_y=tile_y,
-                            url=url,
                         ).model_dump(),
                     ),
                 )
