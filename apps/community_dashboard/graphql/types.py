@@ -177,7 +177,7 @@ class ProjectTypeAreaStatsType:
 
     @strawberry.field
     def project_type_display(self) -> str:
-        return ProjectTypeEnum(self.project_type).label
+        return str(ProjectTypeEnum(self.project_type).label)
 
 
 @strawberry.type
