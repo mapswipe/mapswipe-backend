@@ -376,7 +376,7 @@ class ValidateProject(
             inputType=validate_source_type_enum_to_firebase(
                 obj_source.source_type,
             ),
-            TMID=str(obj_source.tasking_manager_project_id)
+            TMId=str(obj_source.tasking_manager_project_id)
             if obj_source.tasking_manager_project_id
             else firebase_models.UNDEFINED,
             tileServer=firebase_models.FbObjRasterTileServer(
