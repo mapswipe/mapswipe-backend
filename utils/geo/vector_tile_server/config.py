@@ -10,15 +10,15 @@ class VectorTileServerNameEnum(models.TextChoices):
     VERSATILES = "VERSATILES", "Versatiles"
 
 
-_VectorTileServerNameEnumWithoutCustom = typing.Literal[
+VectorTileServerNameEnumWithoutCustom = typing.Literal[
     VectorTileServerNameEnum.OPEN_STREET_MAP,
     VectorTileServerNameEnum.OPEN_FREE_MAP,
     VectorTileServerNameEnum.VERSATILES,
 ]
 
 assert {key for key, _ in VectorTileServerNameEnum.choices if key != VectorTileServerNameEnum.CUSTOM} == {
-    enum.value for enum in typing.get_args(_VectorTileServerNameEnumWithoutCustom)
-}, "Make sure _VectorTileServerNameEnumWithoutCustom includes all fields except CUSTOM from VectorTileServerNameEnum"
+    enum.value for enum in typing.get_args(VectorTileServerNameEnumWithoutCustom)
+}, "Make sure VectorTileServerNameEnumWithoutCustom includes all fields except CUSTOM from VectorTileServerNameEnum"
 
 
 class VectorTileServerConfig(typing.TypedDict):
@@ -31,7 +31,7 @@ class VectorTileServerConfig(typing.TypedDict):
 
 class VectorConfig:
     @staticmethod
-    def get_config(name: _VectorTileServerNameEnumWithoutCustom) -> VectorTileServerConfig:
+    def get_config(name: VectorTileServerNameEnumWithoutCustom) -> VectorTileServerConfig:
         match name:
             case VectorTileServerNameEnum.OPEN_STREET_MAP:
                 # Style JSON: "https://vector.osm.org/demo/shortbread/colorful.json",

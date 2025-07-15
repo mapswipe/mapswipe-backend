@@ -5,7 +5,7 @@ from pydantic import BaseModel, field_validator, model_validator
 from utils import fields as custom_fields
 from utils.geo.tile_functions import tile_coords_and_zoom_to_quadKey
 
-from .config import RasterConfig, RasterTileServerNameEnum
+from .config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNormConfig
 
 
 class RasterTileServerCustomConfig(BaseModel):
@@ -28,21 +28,19 @@ class RasterTileServerConfig(BaseModel):
     esri: RasterTileServerCommonConfig | None = None
     esri_beta: RasterTileServerCommonConfig | None = None
 
-    def get_url(self) -> str:
+    def get_config(self) -> RasterTileServerNormConfig:
         if self.name == RasterTileServerNameEnum.CUSTOM:
             assert self.custom is not None
-            return self.custom.url
-        return RasterConfig.get_config(self.name)["url"]
+            return {
+                "url": self.custom.url,
+                "raw_url": self.custom.url,
+                "api_key": "",
+                "credits": self.custom.credits,
+            }
+        return RasterConfig.get_config(self.name)
 
-    def get_credits(self) -> str:
-        if self.name == RasterTileServerNameEnum.CUSTOM:
-            assert self.custom is not None
-            return self.custom.credits
-        return RasterConfig.get_config(self.name)["credits"]
-
-    # FIXME(tnagorra): We can deprecate this if we don't send url to firebase
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
-        url = self.get_url()
+        url = self.get_config()["url"]
         if "{quadkey}" in url:
             quadkey = tile_coords_and_zoom_to_quadKey(tile_x, tile_y, tile_z)
             return url.format(

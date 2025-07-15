@@ -3,8 +3,8 @@ import strawberry_django
 from strawberry_django.pagination import OffsetPaginated
 from strawberry_django.permissions import IsAuthenticated
 
-from utils.geo.raster_tile_server.config import RasterConfig, RasterTileServerNameEnum
-from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum
+from utils.geo.raster_tile_server.config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNameEnumWithoutCustom
+from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum, VectorTileServerNameEnumWithoutCustom
 
 from .filters import OrganizationFilter, ProjectAssetFilter, ProjectFilter
 from .orders import OrganizationOrder, ProjectAssetOrder, ProjectOrder
@@ -17,58 +17,36 @@ from .types.types import (
 
 
 def get_tile_servers() -> RasterTileServersType:
-    vector_tiles = [
-        VectorTileServerType(
-            type=VectorTileServerNameEnum.OPEN_STREET_MAP,
-            label=VectorTileServerNameEnum.OPEN_STREET_MAP.label,
-            **VectorConfig.get_config(VectorTileServerNameEnum.OPEN_STREET_MAP),
-        ),
-        VectorTileServerType(
-            type=VectorTileServerNameEnum.VERSATILES,
-            label=VectorTileServerNameEnum.VERSATILES.label,
-            **VectorConfig.get_config(VectorTileServerNameEnum.VERSATILES),
-        ),
-        VectorTileServerType(
-            type=VectorTileServerNameEnum.OPEN_FREE_MAP,
-            label=VectorTileServerNameEnum.OPEN_FREE_MAP.label,
-            **VectorConfig.get_config(VectorTileServerNameEnum.OPEN_FREE_MAP),
-        ),
-    ]
-    raster_tiles = [
-        RasterTileServerType(
-            type=RasterTileServerNameEnum.BING,
-            label=RasterTileServerNameEnum.BING.label,
-            **RasterConfig.get_config(RasterTileServerNameEnum.BING),
-        ),
-        RasterTileServerType(
-            type=RasterTileServerNameEnum.MAPBOX,
-            label=RasterTileServerNameEnum.MAPBOX.label,
-            **RasterConfig.get_config(RasterTileServerNameEnum.MAPBOX),
-        ),
-        RasterTileServerType(
-            type=RasterTileServerNameEnum.MAXAR_STANDARD,
-            label=RasterTileServerNameEnum.MAXAR_STANDARD.label,
-            **RasterConfig.get_config(RasterTileServerNameEnum.MAXAR_STANDARD),
-        ),
-        RasterTileServerType(
-            type=RasterTileServerNameEnum.MAXAR_PREMIUM,
-            label=RasterTileServerNameEnum.MAXAR_PREMIUM.label,
-            **RasterConfig.get_config(RasterTileServerNameEnum.MAXAR_PREMIUM),
-        ),
-        RasterTileServerType(
-            type=RasterTileServerNameEnum.ESRI,
-            label=RasterTileServerNameEnum.ESRI.label,
-            **RasterConfig.get_config(RasterTileServerNameEnum.ESRI),
-        ),
-        RasterTileServerType(
-            type=RasterTileServerNameEnum.ESRI_BETA,
-            label=RasterTileServerNameEnum.ESRI_BETA.label,
-            **RasterConfig.get_config(RasterTileServerNameEnum.ESRI_BETA),
-        ),
-    ]
+    def _get_raster_tile_server_type(enum: RasterTileServerNameEnumWithoutCustom):
+        config = RasterConfig.get_config(enum)
+        return RasterTileServerType(
+            type=enum,
+            label=enum.label,
+            url=config["url"],
+            credits=config["credits"],
+        )
+
+    def _get_vector_tile_server_type(enum: VectorTileServerNameEnumWithoutCustom):
+        return VectorTileServerType(
+            type=enum,
+            label=enum.label,
+            **VectorConfig.get_config(enum),
+        )
+
     return RasterTileServersType(
-        vector=vector_tiles,
-        raster=raster_tiles,
+        vector=[
+            _get_vector_tile_server_type(VectorTileServerNameEnum.OPEN_STREET_MAP),
+            _get_vector_tile_server_type(VectorTileServerNameEnum.VERSATILES),
+            _get_vector_tile_server_type(VectorTileServerNameEnum.OPEN_FREE_MAP),
+        ],
+        raster=[
+            _get_raster_tile_server_type(RasterTileServerNameEnum.BING),
+            _get_raster_tile_server_type(RasterTileServerNameEnum.MAPBOX),
+            _get_raster_tile_server_type(RasterTileServerNameEnum.MAXAR_STANDARD),
+            _get_raster_tile_server_type(RasterTileServerNameEnum.MAXAR_PREMIUM),
+            _get_raster_tile_server_type(RasterTileServerNameEnum.ESRI),
+            _get_raster_tile_server_type(RasterTileServerNameEnum.ESRI_BETA),
+        ],
     )
 
 

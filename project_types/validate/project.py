@@ -381,10 +381,9 @@ class ValidateProject(
             else firebase_models.UNDEFINED,
             tileServer=firebase_models.FbObjRasterTileServer(
                 name=raster_tile_server_name_enum_to_firebase(tsp.name),
-                credits=tsp.get_credits(),
-                url=tsp.get_url(),
-                # NOTE: We already replace apiKey in the url so apiKey is empty
-                apiKey=firebase_models.UNDEFINED,
+                credits=tsp.get_config()["credits"],
+                url=tsp.get_config()["raw_url"],
+                apiKey=tsp.get_config()["api_key"],
                 # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
                 wmtsLayerName=firebase_models.UNDEFINED,
             ),
