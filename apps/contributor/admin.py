@@ -1,6 +1,8 @@
 from django.contrib import admin
 from djangoql.admin import DjangoQLSearchMixin
 
+from apps.common.admin import ArchivableResourceAdmin
+
 from .models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
 
@@ -28,7 +30,7 @@ class ContributorUserInline(admin.TabularInline):
 
 
 @admin.register(ContributorTeam)
-class ContributorTeamAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+class ContributorTeamAdmin(ArchivableResourceAdmin, DjangoQLSearchMixin, admin.ModelAdmin):
     inlines = [ContributorUserInline]
     list_display = (
         "name",

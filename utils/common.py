@@ -36,6 +36,7 @@ def validate_imagery_url(url: str, *, support_quadkey: bool | None = True):
 
 
 def validate_ulid(val: str):
+    # TODO: add suggestion for ULID value for local development (use settings.debug)
     if val == "":
         raise ValidationError(
             gettext("Empty string is not a valid ULID value"),
