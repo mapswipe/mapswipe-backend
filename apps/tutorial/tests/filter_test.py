@@ -52,7 +52,7 @@ class TestTutorialFilterQuery(TestCase):
             **cls.user_resource_kwargs,
             project_type=ProjectTypeEnum.FIND,
             requesting_organization=cls.organization,
-            name="New Project",
+            topic="New Project",
             look_for="buildings",
             additional_info_url="https://hi-there/about.html",
             description="The new **project** from hi-there.",

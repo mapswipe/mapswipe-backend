@@ -41,8 +41,8 @@ class OrganizationAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
 
 @admin.register(Project)
 class ProjectAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
-    list_display = ("requesting_organization", "project_type", "is_private")
-    list_filter = (IncludedInTeamFilter, "project_type", "is_private")
+    list_display = ("topic", "requesting_organization", "project_type", "is_private", "region")
+    list_filter = (IncludedInTeamFilter, "topic", "project_type", "is_private", "region")
     list_select_related = True
     autocomplete_fields = ("requesting_organization", "tutorial", "image", "created_by", "team")
 

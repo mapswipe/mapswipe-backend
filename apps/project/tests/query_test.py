@@ -66,6 +66,7 @@ class TestProjectQuery(TestCase):
                 }
                 results {
                   id
+                  name
                   topic
                   region
                   projectNumber
@@ -139,6 +140,9 @@ class TestProjectQuery(TestCase):
         cls.projects = [
             ProjectFactory.create(
                 **cls.user_resource_kwargs,
+                topic="Test Topic 1",
+                region="Test Region 1",
+                project_number=1,
                 requesting_organization=cls.organization,
                 project_type=ProjectTypeEnum.FIND,
                 project_type_specifics={
@@ -160,6 +164,9 @@ class TestProjectQuery(TestCase):
             ),
             ProjectFactory.create(
                 **cls.user_resource_kwargs,
+                topic="Test Topic 2",
+                region="Test Region 2",
+                project_number=1,
                 requesting_organization=cls.organization,
                 project_type=ProjectTypeEnum.COMPARE,
                 project_type_specifics={
@@ -193,6 +200,9 @@ class TestProjectQuery(TestCase):
             ),
             ProjectFactory.create(
                 **cls.user_resource_kwargs,
+                topic="Test Topic 3",
+                region="Test Region 3",
+                project_number=1,
                 requesting_organization=cls.organization,
                 project_type=ProjectTypeEnum.COMPLETENESS,
                 project_type_specifics={
@@ -234,6 +244,9 @@ class TestProjectQuery(TestCase):
             ),
             ProjectFactory.create(
                 **cls.user_resource_kwargs,
+                topic="Test Topic 4",
+                region="Test Region 4",
+                project_number=1,
                 requesting_organization=cls.organization,
                 project_type=ProjectTypeEnum.COMPLETENESS,
                 project_type_specifics={
@@ -311,6 +324,7 @@ class TestProjectQuery(TestCase):
                 total_count=4,
                 results=[
                     dict(
+                        name=f"{project.topic} {project.region} {project.project_number} {project.requesting_organization.name}",  # noqa: E501
                         topic=project.topic,
                         region=project.region,
                         projectNumber=project.project_number,

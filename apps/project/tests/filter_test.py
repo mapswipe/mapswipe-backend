@@ -18,7 +18,7 @@ class TestProjectFiltersAndOrders(TestCase):
                 }
                 results {
                   id
-                  name
+                  topic
                   projectType
                   requestingOrganization {
                     id
@@ -47,7 +47,7 @@ class TestProjectFiltersAndOrders(TestCase):
 
         cls.find_project = ProjectFactory.create(
             **cls.user_resource_kwargs,
-            name="Find Project Alpha",
+            topic="Find Project Alpha",
             requesting_organization=cls.organization1,
             project_type=ProjectTypeEnum.FIND,
             is_featured=True,
@@ -57,7 +57,7 @@ class TestProjectFiltersAndOrders(TestCase):
 
         cls.compare_project = ProjectFactory.create(
             **cls.user_resource_kwargs,
-            name="Compare Project Beta",
+            topic="Compare Project Beta",
             requesting_organization=cls.organization1,
             project_type=ProjectTypeEnum.COMPARE,
             is_featured=False,
@@ -67,7 +67,7 @@ class TestProjectFiltersAndOrders(TestCase):
 
         cls.completeness_project = ProjectFactory.create(
             **cls.user_resource_kwargs,
-            name="Completeness Project Gamma",
+            topic="Completeness Project Gamma",
             requesting_organization=cls.organization2,
             project_type=ProjectTypeEnum.COMPLETENESS,
             is_featured=True,
@@ -77,7 +77,7 @@ class TestProjectFiltersAndOrders(TestCase):
 
         cls.find_project_2 = ProjectFactory.create(
             **cls.user_resource_kwargs,
-            name="Find Project Delta",
+            topic="Find Project Delta",
             requesting_organization=cls.organization2,
             project_type=ProjectTypeEnum.FIND,
             is_featured=False,
@@ -87,7 +87,7 @@ class TestProjectFiltersAndOrders(TestCase):
 
         cls.archived_project = ProjectFactory.create(
             **cls.user_resource_kwargs,
-            name="Archived Project",
+            topic="Archived Project",
             requesting_organization=cls.organization2,
             project_type=ProjectTypeEnum.VALIDATE,
             is_featured=False,
@@ -126,14 +126,14 @@ class TestProjectFiltersAndOrders(TestCase):
         self.force_login(self.user)
         content = self._query(
             filters={
-                "name": {"iContains": "Find Project Alpha"},
+                "name": "Find Project Alpha",
             },
         )
         assert content["data"]["projects"]["totalCount"] == 1
-        assert content["data"]["projects"]["results"][0]["name"] == self.find_project.name
+        assert content["data"]["projects"]["results"][0]["id"] == self.gID(self.find_project.id)
         content = self._query(
             filters={
-                "name": {"iContains": "project"},
+                "name": "project",
             },
         )
         assert content["data"]["projects"]["totalCount"] == 5
@@ -163,19 +163,19 @@ class TestProjectFiltersAndOrders(TestCase):
         )
         assert content["data"]["projects"]["totalCount"] == 1
 
-    def test_ordering_by_name(self):
+    def test_ordering_by_topic(self):
         self.force_login(self.user)
         content = self._query(
             order={
-                "name": "ASC",
+                "topic": "ASC",
             },
         )
-        assert [project["name"] for project in content["data"]["projects"]["results"]] == [
-            self.archived_project.name,
-            self.compare_project.name,
-            self.completeness_project.name,
-            self.find_project.name,
-            self.find_project_2.name,
+        assert [project["topic"] for project in content["data"]["projects"]["results"]] == [
+            self.archived_project.topic,
+            self.compare_project.topic,
+            self.completeness_project.topic,
+            self.find_project.topic,
+            self.find_project_2.topic,
         ]
 
     def test_orderring_by_id(self):

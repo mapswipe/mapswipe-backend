@@ -7,7 +7,7 @@ from apps.project.models import Organization, Project, ProjectAsset
 @strawberry_django.ordering.order(Project)
 class ProjectOrder:
     id: strawberry.auto
-    name: strawberry.auto
+    topic: strawberry.auto
 
 
 @strawberry_django.ordering.order(ProjectAsset)

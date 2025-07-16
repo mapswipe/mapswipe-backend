@@ -588,7 +588,7 @@ class TestTutorialMutation(TestCase):
             **self.user_resource_kwargs,
             project_type=ProjectTypeEnum.COMPARE,
             requesting_organization=self.organization,
-            name="Compare Project 101",
+            topic="Compare Project 101",
             look_for="",
             additional_info_url="https://hi-there/about.html",
             description="The new **project** from hi-there.",
