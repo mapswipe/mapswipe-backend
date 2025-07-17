@@ -5,7 +5,7 @@ from django.db import transaction
 from django.utils.translation import gettext
 from rest_framework import serializers
 
-from apps.common.serializers import UserResourceSerializer
+from apps.common.serializers import ArchivableResourceSerializer, UserResourceSerializer
 from apps.tutorial.models import Tutorial
 from project_types.store import get_project_property
 from utils.common import clean_up_none_keys
@@ -23,6 +23,7 @@ VALID_PROJECT_STATUS_TRANSITIONS = set(
     ],
 )
 
+
 VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS = set(
     [
         # NOTE: Transition from MARKED_AS_READY are updated by the system
@@ -32,8 +33,6 @@ VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS = set(
         (Project.Status.READY, Project.Status.DISCARDED),
         (Project.Status.PUBLISHED, Project.Status.ARCHIVED),
         (Project.Status.PUBLISHED, Project.Status.PAUSED),
-        (Project.Status.PUBLISHED, Project.Status.DISCARDED),
-        (Project.Status.PAUSED, Project.Status.DISCARDED),
         (Project.Status.PAUSED, Project.Status.PUBLISHED),
     ],
 )
@@ -199,7 +198,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         return super().validate(attrs)
 
     @typing.override
-    def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:
+    def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:  # type: ignore[reportIncompatibleMethodOverride]
         old_status_enum = instance.status_enum
         new_project = super().update(instance, validated_data)
 
@@ -330,7 +329,7 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
         return super().create(validated_data)
 
 
-class OrganizationSerializer(UserResourceSerializer[Organization]):
+class OrganizationSerializer(UserResourceSerializer[Organization], ArchivableResourceSerializer[Organization]):  # type: ignore[reportIncompatibleVariableOverride]
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Organization
-        fields = ("name",)
+        fields = ("name", "description", "abbreviation")

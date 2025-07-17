@@ -15,3 +15,8 @@ class UserResourceUpdateInputMixin:
 @strawberry.input
 class UserResourceTopLevelUpdateInputMixin:
     client_id: str
+
+
+@strawberry.input
+class ArchivableResourceInputMixin:
+    is_archived: bool | None = strawberry.UNSET

@@ -10,6 +10,7 @@ from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
     Project,
     ProjectAssetMimetypeEnum,
+    ProjectStatusEnum,
     ProjectTask,
     ProjectTaskGroup,
     ProjectTypeEnum,
@@ -279,6 +280,7 @@ class TestOrganizationMutation(TestCase):
                         id
                         name
                         clientId
+                        description
                     }
                 }
             }
@@ -303,6 +305,9 @@ class TestOrganizationMutation(TestCase):
                         id
                         name
                         clientId
+                        description
+                        abbreviation
+                        isArchived
                     }
                 }
             }
@@ -323,6 +328,8 @@ class TestOrganizationMutation(TestCase):
         organization_data = {
             "clientId": str(ULID()),
             "name": "Test Organization",
+            "description": "Test description",
+            "abbreviation": "TO",
         }
 
         # Creating Organization: Without authentication
@@ -357,14 +364,36 @@ class TestOrganizationMutation(TestCase):
             self.Mutation.UPDATE_ORGANIZATION,
             variables={
                 "data": {
-                    "name": "Test Org",
+                    "name": "Org Updated",
                     "clientId": resp_data["result"]["clientId"],
+                    "description": "Update description",
+                    "abbreviation": "OU",
                 },
                 "pk": resp_data["result"]["id"],
             },
         )
         resp_data = content["data"]["updateOrganization"]
         assert resp_data["errors"] is None, content
+
+        # Archive Organization
+        content = self.query_check(
+            self.Mutation.UPDATE_ORGANIZATION,
+            variables={
+                "data": {
+                    "name": "Archive Org",
+                    "clientId": resp_data["result"]["clientId"],
+                    "description": "Update description",
+                    "abbreviation": "AO",
+                    "isArchived": True,
+                },
+                "pk": resp_data["result"]["id"],
+            },
+        )
+        resp_data = content["data"]["updateOrganization"]
+        assert resp_data["errors"] is None, content
+        assert resp_data["result"]["isArchived"]
+        assert resp_data["result"]["description"] == "Update description"
+        assert resp_data["result"]["abbreviation"] == "AO"
 
 
 class TestProjectMutation(TestCase):
@@ -726,6 +755,15 @@ class TestProjectMutation(TestCase):
         }
         content = self._update_processed_project_mutation(str(latest_project.pk), project_data)
         assert content["data"]["updateProcessedProject"]["errors"] is None, content
+
+        # Archive processed project
+        project_data = {
+            "clientId": proj.client_id,
+            "status": self.genum(ProjectStatusEnum.ARCHIVED),
+        }
+        content = self._update_processed_project_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProcessedProject"]["errors"] is None, content
+        assert content["data"]["updateProcessedProject"]["result"]["status"] == self.genum(ProjectStatusEnum.ARCHIVED)
 
 
 class TestProjectTypeMutation(TestCase):

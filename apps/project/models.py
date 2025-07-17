@@ -9,7 +9,7 @@ from django.db.models.functions import Lower
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
 
-from apps.common.models import UserResource
+from apps.common.models import ArchivableResource, UserResource
 from apps.contributor.models import ContributorTeam
 from utils.fields import validate_percentage
 
@@ -148,8 +148,12 @@ class UploadHelper:
         return f"project/{instance.pk}/image/{filename}"
 
 
-class Organization(UserResource):
+class Organization(UserResource, ArchivableResource):  # type: ignore[reportIncompatibleVariableOverride]
     name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    abbreviation = models.CharField(max_length=50, null=True, blank=True)
+    # TODO(Rup-Narayan-Rajbanshi): Add icon?
+
     unique_name = models.GeneratedField(  # type: ignore[reportAttributeAccessIssue]
         expression=Lower("name"),
         output_field=models.CharField(),
