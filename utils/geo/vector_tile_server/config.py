@@ -21,7 +21,7 @@ assert {key for key, _ in VectorTileServerNameEnum.choices if key != VectorTileS
 }, "Make sure VectorTileServerNameEnumWithoutCustom includes all fields except CUSTOM from VectorTileServerNameEnum"
 
 
-class VectorTileServerConfig(typing.TypedDict):
+class VectorTileServerNormConfig(typing.TypedDict):
     url: str
     credits: str
     min_zoom: int
@@ -31,7 +31,7 @@ class VectorTileServerConfig(typing.TypedDict):
 
 class VectorConfig:
     @staticmethod
-    def get_config(name: VectorTileServerNameEnumWithoutCustom) -> VectorTileServerConfig:
+    def get_config(name: VectorTileServerNameEnumWithoutCustom) -> VectorTileServerNormConfig:
         match name:
             case VectorTileServerNameEnum.OPEN_STREET_MAP:
                 # Style JSON: "https://vector.osm.org/demo/shortbread/colorful.json",

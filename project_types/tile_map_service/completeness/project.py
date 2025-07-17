@@ -5,7 +5,7 @@ from pydantic import BaseModel, field_validator, model_validator
 from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import Project, ProjectTypeEnum
-from project_types.firebase import raster_tile_server_name_enum_to_firebase
+from project_types.firebase import raster_tile_server_name_enum_to_firebase, vector_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base import project as base_project
 from utils import fields as custom_fields
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
@@ -63,6 +63,17 @@ class OverlayTileServerConfig(BaseModel):
                 if self.raster is None:
                     raise ValueError("raster tile config is required")
                 return self
+
+
+# FIXME(tnagorra): Move this to project_types/firebase but getting circular dependencies error
+def overlay_type_enum_to_firebase(
+    input_enum: OverlayLayerTypeEnum,
+) -> firebase_models.FbEnumOverlayTileServerType:
+    match input_enum:
+        case OverlayLayerTypeEnum.RASTER_TILE:
+            return firebase_models.FbEnumOverlayTileServerType.RASTER
+        case OverlayLayerTypeEnum.VECTOR_TILE:
+            return firebase_models.FbEnumOverlayTileServerType.VECTOR
 
 
 class CompletenessProjectProperty(base_project.TileMapServiceProjectProperty):
@@ -126,8 +137,44 @@ class CompletenessProject(
                 wmtsLayerName=firebase_models.UNDEFINED,
             )
 
-        return firebase_models.FbProjectCompareCreateOnlyInput(
+        return firebase_models.FbProjectCompletenessCreateOnlyInput(
             zoomLevel=self.project_type_specifics.zoom_level,
             tileServer=fb_tile_server,
             tileServerB=fb_overlay_tile_server,
+            overlayTileServer=firebase_models.FbObjUnifiedOverlayTileServer(
+                type=overlay_type_enum_to_firebase(tsp_overlay.type),
+                vector=firebase_models.FbObjVectorTileServerOverlay(
+                    tileServer=firebase_models.FbObjVectorTileServer(
+                        name=vector_tile_server_name_enum_to_firebase(tsp_overlay.vector.tile_server.name),
+                        credits=tsp_overlay.vector.tile_server.get_config()["credits"],
+                        url=tsp_overlay.vector.tile_server.get_config()["url"],
+                        minZoom=tsp_overlay.vector.tile_server.get_config()["min_zoom"],
+                        maxZoom=tsp_overlay.vector.tile_server.get_config()["max_zoom"],
+                    ),
+                    fillColor=tsp_overlay.vector.fill_color,
+                    fillOpacity=tsp_overlay.vector.fill_opacity,
+                    lineColor=tsp_overlay.vector.line_color,
+                    lineOpacity=tsp_overlay.vector.line_opacity,
+                    lineWidth=tsp_overlay.vector.line_width,
+                    lineDasharray=tsp_overlay.vector.line_dasharray,
+                    circleColor=tsp_overlay.vector.circle_color,
+                    circleOpacity=tsp_overlay.vector.circle_opacity,
+                    circleRadius=tsp_overlay.vector.circle_radius,
+                )
+                if tsp_overlay.vector
+                else firebase_models.UNDEFINED,
+                raster=firebase_models.FbObjRasterTileServerOverlay(
+                    opacity=tsp_overlay.raster.opacity,
+                    tileServer=firebase_models.FbObjRasterTileServer(
+                        name=raster_tile_server_name_enum_to_firebase(tsp_overlay.raster.tile_server.name),
+                        credits=tsp_overlay.raster.tile_server.get_config()["credits"],
+                        url=tsp_overlay.raster.tile_server.get_config()["raw_url"],
+                        apiKey=tsp_overlay.raster.tile_server.get_config()["api_key"],
+                        # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
+                        wmtsLayerName=firebase_models.UNDEFINED,
+                    ),
+                )
+                if tsp_overlay.raster
+                else firebase_models.UNDEFINED,
+            ),
         )
