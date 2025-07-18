@@ -9,8 +9,8 @@ from main.tests import TestCase
 class TestProjectFiltersAndOrders(TestCase):
     class Query:
         PROJECTS_WITH_FILTERS = """
-            query Projects($pagination: OffsetPaginationInput, $filters: ProjectFilter, $order: ProjectOrder) {
-              projects(pagination: $pagination, filters: $filters, order: $order) {
+            query Projects($pagination: OffsetPaginationInput, $filters: ProjectFilter, $order: ProjectOrder, $includeArchived: Boolean) {
+              projects(pagination: $pagination, filters: $filters, order: $order, includeArchived: $includeArchived) {
                 totalCount
                 pageInfo {
                   offset
@@ -104,6 +104,7 @@ class TestProjectFiltersAndOrders(TestCase):
         return self.query_check(
             self.Query.PROJECTS_WITH_FILTERS,
             variables={
+                "includeArchived": True,
                 "pagination": {
                     "limit": 10,
                     "offset": 0,

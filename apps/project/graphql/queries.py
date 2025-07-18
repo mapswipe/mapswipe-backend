@@ -1,8 +1,10 @@
 import strawberry
 import strawberry_django
+from django.db.models import QuerySet
 from strawberry_django.pagination import OffsetPaginated
 from strawberry_django.permissions import IsAuthenticated
 
+from apps.project.models import Project
 from utils.geo.raster_tile_server.config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNameEnumWithoutCustom
 from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum, VectorTileServerNameEnumWithoutCustom
 
@@ -57,13 +59,6 @@ class Query:
     # Private --------------------
     project: ProjectType = strawberry_django.field(extensions=[IsAuthenticated()])
 
-    # --- Paginated
-    projects: OffsetPaginated[ProjectType] = strawberry_django.offset_paginated(
-        order=ProjectOrder,
-        filters=ProjectFilter,
-        extensions=[IsAuthenticated()],
-    )
-
     project_asset: ProjectAssetType = strawberry_django.field(extensions=[IsAuthenticated()])
 
     # --- Paginated
@@ -81,3 +76,18 @@ class Query:
         filters=OrganizationFilter,
         extensions=[IsAuthenticated()],
     )
+
+    # --- Paginated
+    @strawberry_django.offset_paginated(
+        OffsetPaginated[ProjectType],
+        order=ProjectOrder,
+        filters=ProjectFilter,
+        extensions=[IsAuthenticated()],
+    )
+    def projects(
+        self,
+        include_archived: bool = False,
+    ) -> QuerySet[Project]:
+        if include_archived:
+            return Project.objects.all()
+        return Project.objects.exclude(status__in=[Project.Status.ARCHIVED, Project.Status.DISCARDED]).all()
