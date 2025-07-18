@@ -384,7 +384,7 @@ class BaseProject[
             else:
                 if fb_project is None:
                     logger.error(
-                        "push_to_firebase found did not find project in firebase when updating a project",
+                        "push_to_firebase did not find project in firebase when updating a project",
                         extra=log_extra({"project": self.project.pk}),
                     )
                     raise InvalidProjectPushException
