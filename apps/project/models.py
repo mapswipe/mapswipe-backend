@@ -361,6 +361,13 @@ class Project(UserResource):
     def __str__(self) -> str:
         return f"{self.topic} {self.region} {self.project_number} {self.requesting_organization.name}"
 
+    @property
+    def generated_name(self) -> str:
+        """
+        Returns a generated name for the project based on topic, region and project number.
+        """
+        return f"{self.topic} {self.region} {self.project_number} {self.requesting_organization.name}"
+
     def update_status(self, status: ProjectStatusEnum, commit: bool = True):
         self.status = status
         if commit:

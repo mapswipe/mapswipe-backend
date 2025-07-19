@@ -1100,7 +1100,7 @@ input ProjectFilter {
 
 input ProjectOrder {
   id: Ordering
-  name: Ordering
+  topic: Ordering
 }
 
 type ProjectOverlayRasterTileServerConfig {
@@ -1345,6 +1345,11 @@ type ProjectType implements UserResourceTypeMixin {
   If the project is private, then it is only visible to the team members.
   """
   isPrivate: Boolean!
+
+  """
+  Project name generated from topic, region, project number, and requesting organization name.
+  """
+  name: String!
   projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyType
 }
 

@@ -95,12 +95,6 @@ class ContributorUserGroupType(UserResourceTypeMixin, ArchivableResourceTypeMixi
     ) -> models.QuerySet[ContributorUserGroupMembership]:
         return ContributorUserGroupMembership.objects.filter(user_group_id=contributor_user_group.pk).order_by("user_id")
 
-    @classmethod
-    def get_queryset(cls, queryset, info, **kwargs):
-        # XXX: Filter out user group without name. They aren't sync yet.
-        # TODO: This is from old system, make sure name aren't empty and remove this filter
-        return queryset.exclude(name="")
-
 
 @strawberry_django.type(ContributorUserGroupMembership)
 class ContributorUserGroupMembershipType:
