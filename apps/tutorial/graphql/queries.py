@@ -25,8 +25,8 @@ class Query:
     )
     def tutorials(
         self,
-        include_archived: bool = False,
+        include_all: bool = False,
     ) -> QuerySet[Tutorial]:
-        if include_archived:
+        if include_all:
             return Tutorial.objects.all()
         return Tutorial.objects.exclude(status__in=[Tutorial.Status.ARCHIVED, Tutorial.Status.DISCARDED]).all()

@@ -17,8 +17,8 @@ from main.tests import TestCase
 class TestTutorialFilterQuery(TestCase):
     class Query:
         TUTORIALS_WITH_FILTERS = """
-            query Tutorials($pagination: OffsetPaginationInput, $filters: TutorialFilter, $includeArchived: Boolean) {
-              tutorials(pagination: $pagination, filters: $filters, includeArchived: $includeArchived) {
+            query Tutorials($pagination: OffsetPaginationInput, $filters: TutorialFilter, $includeAll: Boolean) {
+              tutorials(pagination: $pagination, filters: $filters, includeAll: $includeAll) {
                 totalCount
                 pageInfo {
                   offset
@@ -85,7 +85,7 @@ class TestTutorialFilterQuery(TestCase):
         return self.query_check(
             self.Query.TUTORIALS_WITH_FILTERS,
             variables={
-                "includeArchived": True,
+                "includeAll": True,
                 "pagination": {
                     "limit": 10,
                     "offset": 0,

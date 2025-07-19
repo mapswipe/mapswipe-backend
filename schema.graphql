@@ -1528,15 +1528,15 @@ type Query {
   projectAssets(pagination: OffsetPaginationInput, filters: ProjectAssetFilter, order: ProjectAssetOrder): ProjectAssetTypeOffsetPaginated! @isAuthenticated
   organization(id: ID!): OrganizationType! @isAuthenticated
   organizations(pagination: OffsetPaginationInput, filters: OrganizationFilter, order: OrganizationOrder): OrganizationTypeOffsetPaginated! @isAuthenticated
-  projects(includeArchived: Boolean! = false, filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated! @isAuthenticated
+  projects(includeAll: Boolean! = false, filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated! @isAuthenticated
   tutorial(id: ID!): TutorialType! @isAuthenticated
-  tutorials(includeArchived: Boolean! = false, filters: TutorialFilter, order: TutorialOrder, pagination: OffsetPaginationInput): TutorialTypeOffsetPaginated! @isAuthenticated
+  tutorials(includeAll: Boolean! = false, filters: TutorialFilter, order: TutorialOrder, pagination: OffsetPaginationInput): TutorialTypeOffsetPaginated! @isAuthenticated
   contributorUsers(pagination: OffsetPaginationInput, filters: ContributorUserFilter, order: ContributorUserOrder): ContributorUserTypeOffsetPaginated!
   contributorUser(id: ID!): ContributorUserType!
   contributorUserGroup(id: ID!): ContributorUserGroupType!
   contributorTeam(id: ID!): ContributorTeamType!
   contributorUserByUserId(userId: ID!): ContributorUserType!
-  contributorUserGroups(includeArchived: Boolean! = false, filters: ContributorUserGroupFilter, order: ContributorUserGroupOrder, pagination: OffsetPaginationInput): ContributorUserGroupTypeOffsetPaginated! @isAuthenticated
+  contributorUserGroups(includeArchived: Boolean! = false, filters: ContributorUserGroupFilter, order: ContributorUserGroupOrder, pagination: OffsetPaginationInput): ContributorUserGroupTypeOffsetPaginated!
   contributorUserGroupMembers(includeAll: Boolean! = false, filters: ContributorUserGroupMembershipFilter, order: ContributorUserGroupMembershipOrder, pagination: OffsetPaginationInput): ContributorUserGroupMembershipTypeOffsetPaginated!
   contributorTeams(includeArchived: Boolean! = false, filters: ContributorTeamFilter, order: ContributorTeamOrder, pagination: OffsetPaginationInput): ContributorTeamTypeOffsetPaginated! @isAuthenticated
   communityStats: CommunityStatsType!

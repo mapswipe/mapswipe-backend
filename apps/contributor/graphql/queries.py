@@ -49,15 +49,17 @@ class Query:
         OffsetPaginated[ContributorUserGroupType],
         order=ContributorUserGroupOrder,
         filters=ContributorUserGroupFilter,
-        extensions=[IsAuthenticated()],
     )
     def contributor_user_groups(
         self,
         include_archived: bool = False,
     ) -> QuerySet[ContributorUserGroup]:
+        # XXX: Filter out user group without name. They aren't sync yet.
+        # TODO: This is from old system, make sure name aren't empty and remove this filter
+        queryset = ContributorUserGroup.objects.exclude(name="").all()
         if include_archived:
-            return ContributorUserGroup.objects.all()
-        return ContributorUserGroup.objects.exclude(is_archived=True).all()
+            return queryset
+        return queryset.exclude(is_archived=True).all()
 
     # --- Paginated
     # --- ContributorUserGroupMembership

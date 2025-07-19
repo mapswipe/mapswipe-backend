@@ -86,8 +86,8 @@ class Query:
     )
     def projects(
         self,
-        include_archived: bool = False,
+        include_all: bool = False,
     ) -> QuerySet[Project]:
-        if include_archived:
+        if include_all:
             return Project.objects.all()
         return Project.objects.exclude(status__in=[Project.Status.ARCHIVED, Project.Status.DISCARDED]).all()
