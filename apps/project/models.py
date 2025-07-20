@@ -359,7 +359,7 @@ class Project(UserResource):
 
     @typing.override
     def __str__(self) -> str:
-        return f"{self.topic} {self.region} {self.project_number} {self.requesting_organization.name}"
+        return self.generated_name
 
     @property
     def generated_name(self) -> str:

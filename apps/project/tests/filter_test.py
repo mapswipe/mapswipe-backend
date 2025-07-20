@@ -18,6 +18,7 @@ class TestProjectFiltersAndOrders(TestCase):
                 }
                 results {
                   id
+                  name
                   topic
                   projectType
                   requestingOrganization {
@@ -178,7 +179,7 @@ class TestProjectFiltersAndOrders(TestCase):
             self.find_project_2.topic,
         ]
 
-    def test_orderring_by_id(self):
+    def test_ordering_by_id(self):
         self.force_login(self.user)
         content = self._query(
             order={
@@ -191,4 +192,35 @@ class TestProjectFiltersAndOrders(TestCase):
             self.gID(self.completeness_project.pk),
             self.gID(self.compare_project.pk),
             self.gID(self.find_project.pk),
+        ]
+
+    def test_ordering_by_name(self):
+        self.force_login(self.user)
+
+        # Ascending order by name
+        content = self._query(
+            order={
+                "name": "ASC",
+            },
+        )
+        assert [project["name"] for project in content["data"]["projects"]["results"]] == [
+            self.archived_project.generated_name,
+            self.compare_project.generated_name,
+            self.completeness_project.generated_name,
+            self.find_project.generated_name,
+            self.find_project_2.generated_name,
+        ]
+
+        # Descending order by name
+        content = self._query(
+            order={
+                "name": "DESC",
+            },
+        )
+        assert [project["name"] for project in content["data"]["projects"]["results"]] == [
+            self.find_project_2.generated_name,
+            self.find_project.generated_name,
+            self.completeness_project.generated_name,
+            self.compare_project.generated_name,
+            self.archived_project.generated_name,
         ]

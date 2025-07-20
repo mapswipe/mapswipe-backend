@@ -1101,6 +1101,7 @@ input ProjectFilter {
 input ProjectOrder {
   id: Ordering
   topic: Ordering
+  name: Ordering
 }
 
 type ProjectOverlayRasterTileServerConfig {

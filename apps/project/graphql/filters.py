@@ -28,15 +28,15 @@ class ProjectFilter:
         value: str,
         prefix: str,
     ) -> tuple[models.QuerySet[Project], models.Q]:
-        queryset = queryset.annotate(
+        queryset = queryset.alias(
             _name=Concat(
                 models.F(f"{prefix}topic"),
                 Value(" "),
-                models.F("region"),
+                models.F(f"{prefix}region"),
                 Value(" "),
-                models.F("project_number"),
+                models.F(f"{prefix}project_number"),
                 Value(" "),
-                models.F("requesting_organization__name"),
+                models.F(f"{prefix}requesting_organization__name"),
                 output_field=models.CharField(),
             ),
         )

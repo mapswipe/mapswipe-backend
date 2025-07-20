@@ -289,12 +289,14 @@ class BaseProject[
             projectNumber=self.project.project_number,
             projectRegion=self.project.region,
             projectTopic=self.project.topic,
+            # NOTE: projectTopicKey is not obsolete
             projectTopicKey="",
             projectType=project_type_enum_to_firebase(self.project.project_type_enum),
             # project_type=project_type_enum_to_firebase(self.project.project_type_enum), # not needed here
             requestingOrganisation=self.project.requesting_organization.name,  # str
             requiredResults=self.project.required_results,
             status=status,
+            # FIXME(susilnem): We might need to use old_id
             teamId=str(self.project.team_id) if self.project.team_id else firebase_models.UNDEFINED,
             # FIXME(tnagorra): Need to check how we get this?
             language="en-us",
@@ -344,11 +346,13 @@ class BaseProject[
                     projectNumber=self.project.project_number,
                     projectRegion=self.project.region,
                     projectTopic=self.project.topic,
+                    # NOTE: projectTopicKey is not obsolete
                     projectTopicKey="",
                     projectDetails=self.project.description or "n/a",
                     requestingOrganisation=self.project.requesting_organization.name,
                     tutorialId=str(self.project.tutorial_id),
                     status=status,
+                    # FIXME(susilnem): We might need to use old_id
                     teamId=str(self.project.team_id) if self.project.team_id else firebase_models.UNDEFINED,
                     # FIXME(tnagorra): Need to check how we get this?
                     language="en-us",
