@@ -50,17 +50,22 @@ class ValidateImageProject(
             **task.project_type_specifics,
         )
         return firebase_models.FbMappingTaskValidateImageCreateOnlyInput(
-            # FIXME(tnagorra): We should use task_old_fashioned_id
-            taskId=str(task.pk),
+            taskId=str(task.legacy_task_id),
             question=task_specifics.question or firebase_models.UNDEFINED,
         )
 
     @typing.override
     def get_group_project_specifics_for_firebase(self, group):
         return firebase_models.FbMappingGroupValidateImageCreateOnlyInput(
-            # FIXME(tnagorra): We should use group_old_fashioned_id
-            groupId=str(group.pk),
+            groupId=str(group.legacy_group_id),
         )
+
+    # TODO(tnagorra): Define validate
+    # TODO(tnagorra): Define create_tasks
+    # TODO(tnagorra): Define create_groups
+    # TODO(tnagorra): Define post_create_groups
+    # TODO(tnagorra): Define get_task_project_specifics_for_firebase
+    # TODO(tnagorra): Define get_group_project_specifics_for_firebase
 
     @typing.override
     def get_project_specifics_for_firebase(self):
