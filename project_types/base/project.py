@@ -284,12 +284,12 @@ class BaseProject[
             resultCount=0,
             groupSize=self.project.group_size,
             projectId=self.project.old_id or str(self.project.id),
-            name=self.project.generated_name,
+            name=self.project.generate_name(),
             projectDetails=self.project.description or "n/a",
             projectNumber=self.project.project_number,
             projectRegion=self.project.region,
             projectTopic=self.project.topic,
-            # NOTE: projectTopicKey is not obsolete
+            # NOTE: projectTopicKey is obsolete
             projectTopicKey="",
             projectType=project_type_enum_to_firebase(self.project.project_type_enum),
             # project_type=project_type_enum_to_firebase(self.project.project_type_enum), # not needed here
@@ -342,11 +342,11 @@ class BaseProject[
                     image=self.project.image.file.url if self.project.image else firebase_models.UNDEFINED,
                     isFeatured=self.project.is_featured,
                     lookFor=self.project.look_for,
-                    name=self.project.generated_name,
+                    name=self.project.generate_name(),
                     projectNumber=self.project.project_number,
                     projectRegion=self.project.region,
                     projectTopic=self.project.topic,
-                    # NOTE: projectTopicKey is not obsolete
+                    # NOTE: projectTopicKey is obsolete
                     projectTopicKey="",
                     projectDetails=self.project.description or "n/a",
                     requestingOrganisation=self.project.requesting_organization.name,

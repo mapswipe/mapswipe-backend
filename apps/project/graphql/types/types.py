@@ -71,10 +71,14 @@ class ProjectType(UserResourceTypeMixin):
 
     @strawberry_django.field(
         only=["topic", "region", "project_number", "requesting_organization__name"],
+        annotate={"generated_name": Project.generate_name_query()},
         description="Project name generated from topic, region, project number, and requesting organization name.",
     )
     def name(self, project: strawberry.Parent[Project]) -> str:
-        return f"{project.topic} {project.region} {project.project_number} {project.requesting_organization.name}"
+        if getattr(project, "generated_name", None):
+            return project.generated_name  # type: ignore[reportAttributeAccessIssue]
+        # This is used for mutation response
+        return project.generate_name()
 
     @strawberry_django.field(only=["project_type_specifics", "project_type"])
     async def project_type_specifics(

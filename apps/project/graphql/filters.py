@@ -1,8 +1,6 @@
 import strawberry
 import strawberry_django
 from django.db import models
-from django.db.models.expressions import Value
-from django.db.models.functions import Concat
 
 from apps.project.models import Organization, Project, ProjectAsset
 
@@ -29,16 +27,7 @@ class ProjectFilter:
         prefix: str,
     ) -> tuple[models.QuerySet[Project], models.Q]:
         queryset = queryset.alias(
-            _name=Concat(
-                models.F(f"{prefix}topic"),
-                Value(" "),
-                models.F(f"{prefix}region"),
-                Value(" "),
-                models.F(f"{prefix}project_number"),
-                Value(" "),
-                models.F(f"{prefix}requesting_organization__name"),
-                output_field=models.CharField(),
-            ),
+            _name=Project.generate_name_query(prefix),
         )
         return queryset, models.Q(_name__icontains=value)
 

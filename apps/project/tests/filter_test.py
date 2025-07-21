@@ -204,11 +204,11 @@ class TestProjectFiltersAndOrders(TestCase):
             },
         )
         assert [project["name"] for project in content["data"]["projects"]["results"]] == [
-            self.archived_project.generated_name,
-            self.compare_project.generated_name,
-            self.completeness_project.generated_name,
-            self.find_project.generated_name,
-            self.find_project_2.generated_name,
+            self.archived_project.generate_name(),
+            self.compare_project.generate_name(),
+            self.completeness_project.generate_name(),
+            self.find_project.generate_name(),
+            self.find_project_2.generate_name(),
         ]
 
         # Descending order by name
@@ -218,9 +218,9 @@ class TestProjectFiltersAndOrders(TestCase):
             },
         )
         assert [project["name"] for project in content["data"]["projects"]["results"]] == [
-            self.find_project_2.generated_name,
-            self.find_project.generated_name,
-            self.completeness_project.generated_name,
-            self.compare_project.generated_name,
-            self.archived_project.generated_name,
+            self.find_project_2.generate_name(),
+            self.find_project.generate_name(),
+            self.completeness_project.generate_name(),
+            self.compare_project.generate_name(),
+            self.archived_project.generate_name(),
         ]

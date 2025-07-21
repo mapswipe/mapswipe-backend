@@ -490,6 +490,12 @@ class TestProjectMutation(TestCase):
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] is None, content
 
+        # Creating project
+        # Fails as project with name already exist
+        content = self._create_project_mutation(project_data)
+        response = content["data"]["createProject"]
+        assert response["errors"] is not None, content
+
         latest_project = Project.objects.get(pk=resp_data["result"]["id"])
         assert latest_project.created_by_id == self.user.pk
         assert latest_project.modified_by_id == self.user.pk
@@ -504,7 +510,7 @@ class TestProjectMutation(TestCase):
                     id=self.gID(latest_project.requesting_organization.pk),
                     name=latest_project.requesting_organization.name,
                 ),
-                name=f"{latest_project.topic} {latest_project.region} {latest_project.project_number} {latest_project.requesting_organization.name}",  # noqa: E501
+                name=f"{latest_project.topic} - {latest_project.region} ({latest_project.project_number}) {latest_project.requesting_organization.name}",  # noqa: E501
                 topic=latest_project.topic,
                 region=latest_project.region,
                 projectNumber=latest_project.project_number,
@@ -588,7 +594,7 @@ class TestProjectMutation(TestCase):
                     id=self.gID(latest_project.requesting_organization.pk),
                     name=latest_project.requesting_organization.name,
                 ),
-                name=f"{latest_project.topic} {latest_project.region} {latest_project.project_number} {latest_project.requesting_organization.name}",  # noqa: E501
+                name=f"{latest_project.topic} - {latest_project.region} ({latest_project.project_number}) {latest_project.requesting_organization.name}",  # noqa: E501
                 topic=latest_project.topic,
                 region=latest_project.region,
                 projectNumber=latest_project.project_number,
