@@ -1034,12 +1034,14 @@ class TestProjectTypeMutation(TestCase):
             y_min: int
 
         class TaskGroupType(typing.TypedDict):
+            legacy_group_id: str
             number_of_tasks: int
             required_count: int
             project_type_specifics: TaskGroupSpecificsType
 
         expected_task_groups: list[TaskGroupType] = [
             {
+                "legacy_group_id": "g101",
                 "number_of_tasks": 18,
                 "required_count": 18 * 10,
                 "project_type_specifics": {
@@ -1050,6 +1052,7 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
             {
+                "legacy_group_id": "g102",
                 "number_of_tasks": 24,
                 "required_count": 24 * 10,
                 "project_type_specifics": {
@@ -1060,6 +1063,7 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
             {
+                "legacy_group_id": "g103",
                 "number_of_tasks": 24,
                 "required_count": 24 * 10,
                 "project_type_specifics": {
@@ -1070,6 +1074,7 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
             {
+                "legacy_group_id": "g104",
                 "number_of_tasks": 6,
                 "required_count": 6 * 10,
                 "project_type_specifics": {
@@ -1082,43 +1087,38 @@ class TestProjectTypeMutation(TestCase):
         ]
         expected_last_5_tasks = [
             {
+                "legacy_task_id": "15-24147-13753",
                 "project_type_specifics": {
                     "tile_x": 24147,
                     "tile_y": 13753,
-                    "url": "https://hi-there/24147/13753/15",
-                    "url_b": "https://hi-here/24147/13753/15",
                 },
             },
             {
+                "legacy_task_id": "15-24147-13754",
                 "project_type_specifics": {
                     "tile_x": 24147,
                     "tile_y": 13754,
-                    "url": "https://hi-there/24147/13754/15",
-                    "url_b": "https://hi-here/24147/13754/15",
                 },
             },
             {
+                "legacy_task_id": "15-24147-13755",
                 "project_type_specifics": {
                     "tile_x": 24147,
                     "tile_y": 13755,
-                    "url": "https://hi-there/24147/13755/15",
-                    "url_b": "https://hi-here/24147/13755/15",
                 },
             },
             {
+                "legacy_task_id": "15-24148-13753",
                 "project_type_specifics": {
                     "tile_x": 24148,
                     "tile_y": 13753,
-                    "url": "https://hi-there/24148/13753/15",
-                    "url_b": "https://hi-here/24148/13753/15",
                 },
             },
             {
+                "legacy_task_id": "15-24148-13754",
                 "project_type_specifics": {
                     "tile_x": 24148,
                     "tile_y": 13754,
-                    "url": "https://hi-there/24148/13754/15",
-                    "url_b": "https://hi-here/24148/13754/15",
                 },
             },
         ]
@@ -1132,6 +1132,7 @@ class TestProjectTypeMutation(TestCase):
             "tasks_groups_count": project_task_group_qs.count(),
             "tasks_groups": list(
                 project_task_group_qs.order_by("id").values(
+                    "legacy_group_id",
                     "number_of_tasks",
                     "required_count",
                     "project_type_specifics",
@@ -1140,6 +1141,7 @@ class TestProjectTypeMutation(TestCase):
             "tasks_count": project_task_qs.count(),
             "tasks": list(
                 project_task_qs.order_by("id").values(
+                    "legacy_task_id",
                     "project_type_specifics",
                 )[:5],
             ),

@@ -68,7 +68,6 @@ class TileMapServiceProjectTaskGroupProperty(base_project.BaseProjectTaskGroupPr
 
 
 class TileMapServiceProjectTaskProperty(base_project.BaseProjectTaskProperty):
-    url: custom_fields.PydanticUrl
     tile_x: int
     tile_y: int
 
@@ -158,19 +157,14 @@ class TileMapServiceBaseProject[
                     tile_y,
                     self.project_type_specifics.zoom_level,
                 )
-                url = self.project_type_specifics.tile_server_property.generate_url(
-                    tile_x,
-                    tile_y,
-                    self.project_type_specifics.zoom_level,
-                )
                 bulk_mgr.add(
                     ProjectTask(
+                        legacy_task_id=f"{self.project_type_specifics.zoom_level}-{tile_x}-{tile_y}",
                         task_group_id=group.pk,
                         geometry=geometry,
                         project_type_specifics=self.project_task_property_class(
                             tile_x=tile_x,
                             tile_y=tile_y,
-                            url=url,
                         ).model_dump(),
                     ),
                 )
@@ -189,10 +183,11 @@ class TileMapServiceBaseProject[
             self.project.group_size,
         )
 
-        for _, raw_group in raw_groups.items():
+        for group_key, raw_group in raw_groups.items():
             # Create new group
             # FIXME(thenav56): Bulk create here as well?
             new_group = ProjectTaskGroup.objects.create(
+                legacy_group_id=group_key,
                 project_id=self.project.pk,
                 number_of_tasks=0,
                 progress=0,
@@ -248,17 +243,16 @@ class TileMapServiceBaseProject[
         return True
 
     @typing.override
-    def get_task_project_specifics_for_firebase(self, task) -> BaseModel:
+    def get_task_project_specifics_for_firebase(self, task: ProjectTask) -> BaseModel:
         return firebase_ext_models.FbEmptyModel()
 
     @typing.override
-    def get_group_project_specifics_for_firebase(self, group) -> BaseModel:
+    def get_group_project_specifics_for_firebase(self, group: ProjectTaskGroup) -> BaseModel:
         task_group_specifics = self.project_task_group_property_class(
             **group.project_type_specifics,
         )
         return firebase_models.FbMappingGroupTileMapServiceCreateOnlyInput(
-            # FIXME(tnagorra): We should use group_old_fashioned_id
-            groupId=str(group.pk),
+            groupId=group.legacy_group_id,
             xMax=task_group_specifics.x_max,
             xMin=task_group_specifics.x_min,
             yMax=task_group_specifics.y_max,

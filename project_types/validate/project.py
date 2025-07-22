@@ -252,6 +252,7 @@ class ValidateProject(
 
                 bulk_mgr.add(
                     ProjectTask(
+                        legacy_task_id=f"t{tasks_count + 1}",
                         task_group_id=group.pk,
                         geometry=geometry_str,
                         project_type_specifics=self.project_task_property_class(
@@ -270,8 +271,9 @@ class ValidateProject(
         self.project.update_processing_status(Project.ProcessingStatus.GENERATING_GROUPS_AND_TASKS, True)
         raw_groups = group_input_geometries(resp, self.project.group_size)
 
-        for _, raw_group in raw_groups.items():
+        for group_key, raw_group in raw_groups.items():
             new_group = ProjectTaskGroup.objects.create(
+                legacy_group_id=group_key,
                 project_id=self.project.pk,
                 number_of_tasks=0,
                 progress=0,
@@ -330,19 +332,17 @@ class ValidateProject(
         self.project.save(update_fields=("project_type_specific_output",))
 
     @typing.override
-    def get_task_project_specifics_for_firebase(self, task):
+    def get_task_project_specifics_for_firebase(self, task: ProjectTask):
         return firebase_models.FbMappingTaskValidateCreateOnlyInput(
-            # FIXME(tnagorra): We should use task_old_fashioned_id
-            taskId=str(task.pk),
+            taskId=str(task.legacy_task_id),
             # FIXME(tnagorra): Check if we need to convert this?
             geojson=task.geometry,
         )
 
     @typing.override
-    def get_group_project_specifics_for_firebase(self, group):
+    def get_group_project_specifics_for_firebase(self, group: ProjectTaskGroup):
         return firebase_models.FbMappingGroupValidateCreateOnlyInput(
-            # FIXME(tnagorra): We should use group_old_fashioned_id
-            groupId=str(group.pk),
+            groupId=str(group.legacy_group_id),
         )
 
     @typing.override
@@ -376,15 +376,14 @@ class ValidateProject(
             inputType=validate_source_type_enum_to_firebase(
                 obj_source.source_type,
             ),
-            TMID=str(obj_source.tasking_manager_project_id)
+            TMId=str(obj_source.tasking_manager_project_id)
             if obj_source.tasking_manager_project_id
             else firebase_models.UNDEFINED,
             tileServer=firebase_models.FbObjRasterTileServer(
                 name=raster_tile_server_name_enum_to_firebase(tsp.name),
-                credits=tsp.get_credits(),
-                url=tsp.get_url(),
-                # NOTE: We already replace apiKey in the url so apiKey is empty
-                apiKey=firebase_models.UNDEFINED,
+                credits=tsp.get_config()["credits"],
+                url=tsp.get_config()["raw_url"],
+                apiKey=tsp.get_config()["api_key"],
                 # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
                 wmtsLayerName=firebase_models.UNDEFINED,
             ),
