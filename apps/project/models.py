@@ -27,7 +27,7 @@ class ProjectAssetMimetypeEnum(models.IntegerChoices):
     @classmethod
     def get_display(cls, value: typing.Self | int) -> str:
         if value in cls:
-            return cls(value).label
+            return str(cls(value).label)
         return "Unknown"
 
 
@@ -40,7 +40,7 @@ class ProjectAssetTypeEnum(models.IntegerChoices):
     @classmethod
     def get_display(cls, value: typing.Self | int) -> str:
         if value in cls:
-            return cls(value).label
+            return str(cls(value).label)
         return "Unknown"
 
 
@@ -75,7 +75,7 @@ class ProjectTypeEnum(models.IntegerChoices):
     @classmethod
     def get_display(cls, value: typing.Self | int) -> str:
         if value in cls:
-            return cls(value).label
+            return str(cls(value).label)
         return "Unknown"
 
 

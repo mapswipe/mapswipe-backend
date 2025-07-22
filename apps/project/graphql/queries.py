@@ -21,7 +21,7 @@ def get_tile_servers() -> RasterTileServersType:
         config = RasterConfig.get_config(enum)
         return RasterTileServerType(
             type=enum,
-            label=enum.label,
+            label=str(enum.label),
             url=config["url"],
             credits=config["credits"],
         )
@@ -29,7 +29,7 @@ def get_tile_servers() -> RasterTileServersType:
     def _get_vector_tile_server_type(enum: VectorTileServerNameEnumWithoutCustom):
         return VectorTileServerType(
             type=enum,
-            label=enum.label,
+            label=str(enum.label),
             **VectorConfig.get_config(enum),
         )
 
