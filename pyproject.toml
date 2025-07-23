@@ -46,7 +46,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "django-debug-toolbar",
+    "django-debug-toolbar>=4.4.6",
     "django-stubs",
     "djangorestframework-stubs>=3.15.3",
     "celery-types",
