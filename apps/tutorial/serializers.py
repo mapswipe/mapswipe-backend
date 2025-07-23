@@ -310,10 +310,13 @@ class TutorialCreateSerializer(UserResourceSerializer[Tutorial]):
         )
 
     def validate_project(self, project: Project) -> Project:
-        if self.instance and self.instance.project and self.instance.project.project_type != project.project_type:
+        if self.instance and self.instance.project.project_type_enum != project.project_type_enum:
             raise serializers.ValidationError(
                 gettext("Existing tutorial project type '%s' does not match new project type '%s'")
-                % (Project.Type(self.instance.project.project_type).label, Project.Type(project.project_type).label),
+                % (
+                    Project.Type(self.instance.project.project_type_enum).label,
+                    Project.Type(project.project_type_enum).label,
+                ),
             )
         return project
 
@@ -327,19 +330,10 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
         model = Tutorial
         fields = (
             "name",
-            "project",
             "status",
             "information_pages",
             "scenarios",
         )
-
-    def validate_project(self, project: Project) -> Project:
-        if self.instance and self.instance.project and self.instance.project.project_type != project.project_type:
-            raise serializers.ValidationError(
-                gettext("Existing tutorial project type '%s' does not match new project type '%s'")
-                % (Project.Type(self.instance.project.project_type).label, Project.Type(project.project_type).label),
-            )
-        return project
 
     def validate_status(self, new_status: Tutorial.Status | int) -> Tutorial.Status:
         assert self.instance is not None, "Tutorial does not exist."
@@ -348,8 +342,7 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
             new_status = Tutorial.Status(new_status)
 
         if (
-            self.instance
-            and self.instance.status_enum != new_status
+            self.instance.status_enum != new_status
             and (self.instance.status_enum, new_status) not in VALID_TUTORIAL_STATUS_TRANSITIONS
         ):
             raise serializers.ValidationError(

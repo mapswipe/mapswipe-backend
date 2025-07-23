@@ -53,7 +53,7 @@ class Tutorial(UserResource):
     Status = TutorialStatusEnum
 
     # FIXME(tnagorra): We might need to rename this field
-    project = models.ForeignKey(
+    project: Project = models.ForeignKey(  # type: ignore[reportAssignmentType]
         Project,
         on_delete=models.PROTECT,
         related_name="+",
@@ -79,7 +79,7 @@ class Tutorial(UserResource):
 class TutorialAsset(UserResource):
     Type = ProjectAssetTypeEnum
     Mimetype = ProjectAssetMimetypeEnum
-    MAX_FILE_SIZE: int = 100 * 1024 * 1024  # MB
+    MAX_FILE_SIZE: int = 10 * 1024 * 1024  # MB
 
     type = IntegerChoicesField(
         choices_enum=ProjectAssetTypeEnum,

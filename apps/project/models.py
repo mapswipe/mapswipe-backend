@@ -424,7 +424,7 @@ class Project(UserResource, FirebaseResource):  # type: ignore[reportIncompatibl
 class ProjectAsset(UserResource):
     Type = ProjectAssetTypeEnum
     Mimetype = ProjectAssetMimetypeEnum
-    MAX_FILE_SIZE: int = 100 * 1024 * 1024  # MB
+    MAX_FILE_SIZE: int = 10 * 1024 * 1024  # MB
 
     type = IntegerChoicesField(
         choices_enum=ProjectAssetTypeEnum,

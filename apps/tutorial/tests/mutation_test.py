@@ -629,6 +629,17 @@ class TestTutorialMutation(TestCase):
             description="The new **project** from hi-there.",
             project_type_specifics=None,
         )
+
+        # Update project on tutorial
+        # Fails as PUBLISHED tutorials cannot update project
+        tutorial_data["project"] = self.gID(compare_project.pk)
+        content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
+        assert content["data"]["updateTutorial"]["errors"] is not None, content
+
+        # Fails as project type is different
+        latest_tutorial.status = TutorialStatusEnum.DRAFT
+        latest_tutorial.save(update_fields=["status"])
+
         tutorial_data["project"] = self.gID(compare_project.pk)
         content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
         assert content["data"]["updateTutorial"]["errors"] is not None, content

@@ -32,12 +32,12 @@ class UserResource(Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(
+    created_by: User = models.ForeignKey(  # type: ignore[reportIncompatibleVariableOverride]
         User,
         related_name="%(class)s_created",
         on_delete=models.PROTECT,
     )
-    modified_by = models.ForeignKey(
+    modified_by: User = models.ForeignKey(  # type: ignore[reportIncompatibleVariableOverride]
         User,
         related_name="%(class)s_modified",
         on_delete=models.PROTECT,
