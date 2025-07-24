@@ -20,8 +20,16 @@ class ContributorUserGroupAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     pass
 
 
+class ContributorUserInline(admin.TabularInline):
+    model = ContributorUser
+    extra = 1
+    fields = ("user_id", "username", "created_at", "modified_at")
+    can_delete = False
+
+
 @admin.register(ContributorTeam)
 class ContributorTeamAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    inlines = [ContributorUserInline]
     list_display = (
         "name",
         "is_archived",
