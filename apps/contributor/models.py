@@ -6,7 +6,7 @@ from django.db import models
 from django.utils.translation import gettext
 from django_choices_field import IntegerChoicesField
 
-from apps.common.models import ArchivableResource, UserResource
+from apps.common.models import ArchivableResource, FirebaseResource, UserResource
 
 
 # NOTE: Users are created from Apps (Web/Mobile)
@@ -80,7 +80,7 @@ class ContributorUserGroupMembershipLog(models.Model):
 
 
 # TEAM
-class ContributorTeam(ArchivableResource, UserResource):  # type: ignore[reportIncompatibleVariableOverride]
+class ContributorTeam(ArchivableResource, UserResource, FirebaseResource):  # type: ignore[reportIncompatibleVariableOverride]
     name = models.CharField(max_length=255)
 
     @typing.override

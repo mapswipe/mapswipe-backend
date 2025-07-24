@@ -46,6 +46,10 @@ class Config:
         def organization(organization_id: str | int):
             return f"/v2/organisation/{organization_id}/"
 
+        @staticmethod
+        def contributor_team(contributor_team_id: str | int):
+            return f"/v2/contributor_team/{contributor_team_id}/"
+
 
 # FIXME: Import utils/geo/raster_tile_server/config.py here
 # FIXME: Import utils/geo/vector_tile_server/config.py here

@@ -191,7 +191,7 @@ type ContributorSwipeStatType {
 }
 
 """
-ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name)
+ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, firebase_push_status, firebase_last_pushed, name)
 """
 input ContributorTeamFilter {
   id: IDBaseFilterLookup
@@ -209,7 +209,7 @@ input ContributorTeamOrder {
 }
 
 """
-ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name)
+ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, firebase_push_status, firebase_last_pushed, name)
 """
 type ContributorTeamType implements UserResourceTypeMixin {
   clientId: String!
