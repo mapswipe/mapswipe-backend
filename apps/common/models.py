@@ -2,11 +2,20 @@
 import typing
 
 from django.db import models
+from django.utils.translation import gettext_lazy
+from django_choices_field import IntegerChoicesField
 from django_stubs_ext.db.models import TypedModelMeta
 
 from apps.user.models import User
 from main.db import Model
 from utils.common import validate_ulid
+
+
+class FirebasePushStatusEnum(models.IntegerChoices):
+    PENDING = 1, "Pending"
+    PROCESSING = 2, "Processing"
+    SUCCESS = 3, "Success"
+    FAILED = 4, "Failed"
 
 
 # -- Abstracts
@@ -63,3 +72,30 @@ class ArchivableResource(Model):
     class Meta(TypedModelMeta):  # type: ignore[reportIncompatibleVariableOverride]
         abstract = True
         ordering = ["-id"]
+
+
+class FirebaseResource(Model):
+    firebase_push_status: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=FirebasePushStatusEnum,
+        null=True,
+        blank=True,
+    )
+    firebase_last_pushed = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=gettext_lazy("The latest time when project was pushed to firebase"),
+    )
+
+    @property
+    def firebase_push_status_enum(self):
+        if self.firebase_push_status:
+            return FirebasePushStatusEnum(self.firebase_push_status)
+        return None
+
+    def update_firebase_push_status(self, firebase_push_status: FirebasePushStatusEnum, *, commit: bool = True):
+        self.firebase_push_status = firebase_push_status
+        if commit:
+            self.save(update_fields=("firebase_push_status",))
+
+    class Meta(TypedModelMeta):  # type: ignore[reportIncompatibleVariableOverride]
+        abstract = True
