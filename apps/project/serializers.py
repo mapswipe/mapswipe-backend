@@ -40,6 +40,11 @@ VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS = set(
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class ProjectCreateSerializer(UserResourceSerializer[Project]):
+    requesting_organization = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.objects.filter(is_archived=False),
+        required=True,
+    )
+
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
@@ -56,6 +61,11 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class ProjectUpdateSerializer(UserResourceSerializer[Project]):
+    requesting_organization = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.objects.filter(is_archived=False),
+        required=True,
+    )
+
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
@@ -210,6 +220,11 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class ProcessedProjectSerializer(UserResourceSerializer[Project]):
+    requesting_organization = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.objects.filter(is_archived=False),
+        required=True,
+    )
+
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (

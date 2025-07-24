@@ -509,6 +509,16 @@ class TestProjectMutation(TestCase):
             ),
         ), content
 
+        # Creating project with archived Organization
+        # Fails as organization is archived
+        archived_organization = OrganizationFactory.create(
+            **self.user_resource_kwargs,
+            is_archived=True,
+        )
+        project_data["requestingOrganization"] = archived_organization.pk
+        content = self._create_project_mutation(project_data)
+        assert content["data"]["createProject"]["errors"] is not None, content
+
     @patch("apps.project.serializers.process_project_task.delay")
     def test_project_update(self, mock_requests):
         proj = ProjectFactory.create(
@@ -578,6 +588,16 @@ class TestProjectMutation(TestCase):
                 tutorial=None,
             ),
         ), content
+
+        # Updating project with archived Organization
+        # Fails as organization is archived
+        archived_organization = OrganizationFactory.create(
+            **self.user_resource_kwargs,
+            is_archived=True,
+        )
+        project_data["requestingOrganization"] = archived_organization.pk
+        content = self._update_project_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProject"]["errors"] is not None, content
 
         # Updating Project: Status change
         # fails as project specifics is required when changing status to "marked as ready"
@@ -721,6 +741,16 @@ class TestProjectMutation(TestCase):
         latest_project.refresh_from_db()
 
         assert latest_project.status == Project.Status.READY
+
+        # Updating processed project with archived Organization
+        # Fails as organization is archived
+        archived_organization = OrganizationFactory.create(
+            **self.user_resource_kwargs,
+            is_archived=True,
+        )
+        project_data["requestingOrganization"] = archived_organization.pk
+        content = self._update_processed_project_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProcessedProject"]["errors"] is not None, content
 
         # Attaching Tutorial to Project
         # fails as tutorial is archived
