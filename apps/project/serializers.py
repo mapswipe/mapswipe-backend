@@ -6,6 +6,7 @@ from django.utils.translation import gettext
 from rest_framework import serializers
 
 from apps.common.serializers import ArchivableResourceSerializer, UserResourceSerializer
+from apps.project.firebase import push_organization_to_firebase
 from apps.tutorial.models import Tutorial
 from project_types.store import get_project_property
 from utils.common import clean_up_none_keys
@@ -348,3 +349,15 @@ class OrganizationSerializer(UserResourceSerializer[Organization], ArchivableRes
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Organization
         fields = ("name", "description", "abbreviation")
+
+    @typing.override
+    def create(self, validated_data: dict[str, typing.Any]) -> Organization:
+        organization = super().create(validated_data)
+        transaction.on_commit(lambda: push_organization_to_firebase.delay(organization.pk))
+        return organization
+
+    @typing.override
+    def update(self, instance: Organization, validated_data: dict[typing.Any, typing.Any]):
+        organization = super().update(instance, validated_data)
+        transaction.on_commit(lambda: push_organization_to_firebase.delay(organization.pk))
+        return organization

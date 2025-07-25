@@ -708,7 +708,7 @@ enum Ordering {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name, firebase_push_status, firebase_last_pushed)
 """
 input OrganizationCreateInput {
   clientId: String!
@@ -718,7 +718,7 @@ input OrganizationCreateInput {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name, firebase_push_status, firebase_last_pushed)
 """
 input OrganizationFilter {
   id: IDBaseFilterLookup
@@ -741,7 +741,7 @@ type OrganizationSwipeStatsType {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name, firebase_push_status, firebase_last_pushed)
 """
 type OrganizationType implements UserResourceTypeMixin {
   clientId: String!
@@ -775,7 +775,7 @@ type OrganizationTypeOffsetPaginated {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name, firebase_push_status, firebase_last_pushed)
 """
 input OrganizationUpdateInput {
   clientId: String!

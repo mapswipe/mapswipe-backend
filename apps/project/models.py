@@ -161,9 +161,27 @@ class Organization(UserResource, ArchivableResource):  # type: ignore[reportInco
         unique=True,
     )
 
+    # FIREBASE FIELDS
+
+    firebase_push_status: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=FirebasePushStatusEnum,
+        null=True,
+        blank=True,
+    )
+    firebase_last_pushed = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=gettext_lazy("The latest time when organization was pushed to firebase"),
+    )
+
     @typing.override
     def __str__(self) -> str:
         return self.name
+
+    def update_firebase_push_status(self, firebase_push_status: FirebasePushStatusEnum, *, commit: bool = True):
+        self.firebase_push_status = firebase_push_status
+        if commit:
+            self.save(update_fields=("firebase_push_status",))
 
 
 class Project(UserResource):
