@@ -1,5 +1,6 @@
 # pyright: reportUninitializedInstanceVariable=false
 import typing
+import uuid
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -82,6 +83,7 @@ class ContributorUserGroupMembershipLog(models.Model):
 # TEAM
 class ContributorTeam(ArchivableResource, UserResource, FirebaseResource):  # type: ignore[reportIncompatibleVariableOverride]
     name = models.CharField(max_length=255)
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
 
     @typing.override
     def __str__(self):

@@ -2,6 +2,7 @@
 import typing
 
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
 from django_stubs_ext.db.models import TypedModelMeta
@@ -113,6 +114,8 @@ class IconEnum(models.IntegerChoices):
 
 
 class FirebaseResource(Model):
+    old_id = models.CharField(max_length=30, db_index=True, null=True, blank=True)
+
     firebase_push_status: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=FirebasePushStatusEnum,
         null=True,
@@ -130,10 +133,20 @@ class FirebaseResource(Model):
             return FirebasePushStatusEnum(self.firebase_push_status)
         return None
 
-    def update_firebase_push_status(self, firebase_push_status: FirebasePushStatusEnum, *, commit: bool = True):
+    def update_firebase_push_status(
+        self,
+        firebase_push_status: FirebasePushStatusEnum,
+        commit: bool = True,
+    ):
         self.firebase_push_status = firebase_push_status
+        update_fields = ["firebase_push_status"]
+
+        if firebase_push_status == FirebasePushStatusEnum.SUCCESS:
+            self.firebase_last_pushed = timezone.now()
+            update_fields.append("firebase_last_pushed")
+
         if commit:
-            self.save(update_fields=("firebase_push_status",))
+            self.save(update_fields=update_fields)
 
     class Meta(TypedModelMeta):  # type: ignore[reportIncompatibleVariableOverride]
         abstract = True

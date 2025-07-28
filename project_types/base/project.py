@@ -4,15 +4,14 @@ from abc import ABC, abstractmethod
 
 from django.contrib.gis.db.models.functions import Area
 from django.db import models
-from django.utils import timezone
 from firebase_admin.db import Reference as FbReference
 from pydantic import BaseModel
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
 
+from apps.common.models import FirebasePushStatusEnum
 from apps.project.models import (
-    FirebasePushStatusEnum,
     Project,
     ProjectAsset,
     ProjectStatusEnum,
@@ -360,6 +359,7 @@ class BaseProject[
             ),
         )
 
+    # FIXME(rup): use common method push_django_to_firebase()
     def push_to_firebase(self):
         if self.project.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
             logger.warning("%s - push_to_firebase called when push is not required", self.project.pk)
@@ -400,11 +400,4 @@ class BaseProject[
             )
             self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
         else:
-            self.project.firebase_last_pushed = timezone.now()
-            self.project.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS, commit=False)
-            self.project.save(
-                update_fields=[
-                    "firebase_last_pushed",
-                    "firebase_push_status",
-                ],
-            )
+            self.project.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)

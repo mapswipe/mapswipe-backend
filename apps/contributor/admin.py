@@ -6,10 +6,9 @@ from django.db import transaction
 from djangoql.admin import DjangoQLSearchMixin
 
 from apps.common.admin import ArchivableResourceAdmin
-
-from .models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 from apps.contributor.firebase import push_contributor_team_to_firebase
 
+from .models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
 
 @admin.register(ContributorUser)
