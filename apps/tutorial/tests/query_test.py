@@ -1,6 +1,7 @@
 import random
 import typing
 
+from apps.common.models import IconEnum
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
     ProjectTypeEnum,
@@ -14,7 +15,6 @@ from apps.tutorial.factories import (
 )
 from apps.tutorial.models import (
     TutorialInformationPageBlockTypeEnum,
-    TutorialScenarioIconEnum,
     TutorialStatusEnum,
 )
 from apps.user.factories import UserFactory
@@ -103,9 +103,9 @@ class TestTutorialQuery(TestCase):
         cls.scenario = TutorialScenarioPageFactory.create(
             **cls.user_resource_kwargs,
             tutorial=cls.tutorial,
-            instructions_icon=TutorialScenarioIconEnum.ADD_OUTLINE,
-            hint_icon=TutorialScenarioIconEnum.HELP_OUTLINE,
-            success_icon=TutorialScenarioIconEnum.FLAG_OUTLINE,
+            instructions_icon=IconEnum.ADD_OUTLINE,
+            hint_icon=IconEnum.HELP_OUTLINE,
+            success_icon=IconEnum.FLAG_OUTLINE,
         )
 
         cls.task = TutorialTaskFactory.create(

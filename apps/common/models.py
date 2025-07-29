@@ -63,3 +63,41 @@ class ArchivableResource(Model):
     class Meta(TypedModelMeta):  # type: ignore[reportIncompatibleVariableOverride]
         abstract = True
         ordering = ["-id"]
+
+
+# NOTE: The labels should not be edited.
+# If the change is absolutely required, it requires migrating data in firebase as well.
+class IconEnum(models.IntegerChoices):
+    ADD_OUTLINE = 1, "add-outline"
+    ALERT_OUTLINE = 2, "alert-outline"
+    BAN_OUTLINE = 3, "ban-outline"
+    CHECK = 4, "check"
+    CLOSE_OUTLINE = 5, "close-outline"
+    CHECKMARK_OUTLINE = 33, "checkmark-outline"
+    EGG_OUTLINE = 6, "egg-outline"
+    ELLIPSE_OUTLINE = 7, "ellipse-outline"
+    FLAG_OUTLINE = 8, "flag-outline"
+    HAND_LEFT_OUTLINE = 9, "hand-left-outline"
+    HAND_RIGHT_OUTLINE = 10, "hand-right-outline"
+    HAPPY_OUTLINE = 11, "happy-outline"
+    HEART_OUTLINE = 12, "heart-outline"
+    HELP_OUTLINE = 13, "help-outline"
+    INFORMATION_OUTLINE = 14, "information-outline"
+    PRISM_OUTLINE = 15, "prism-outline"
+    REFRESH_OUTLINE = 16, "refresh-outline"
+    REMOVE_OUTLINE = 17, "remove-outline"
+    SAD_OUTLINE = 18, "sad-outline"
+    SEARCH_OUTLINE = 19, "search-outline"
+    SHAPES_OUTLINE = 20, "shapes-outline"
+    SQUARE_OUTLINE = 21, "square-outline"
+    STAR_OUTLINE = 22, "star-outline"
+    THUMBS_DOWN_OUTLINE = 23, "thumbs-down-outline"
+    THUMBS_UP_OUTLINE = 24, "thumbs-up-outline"
+    TRIANGLE_OUTLINE = 25, "triangle-outline"
+    WARNING_OUTLINE = 26, "warning-outline"
+    GENERAL_TAP = 27, "general-tap"
+    TAP = 28, "tap"
+    TAP_1 = 29, "tap-1"
+    TAP_2 = 30, "tap-2"
+    TAP_3 = 31, "tap-3"
+    SWIPE_LEFT = 32, "swipe-left"

@@ -13,11 +13,11 @@ directive @isAuthenticated repeatable on FIELD_DEFINITION
 directive @oneOf on INPUT_OBJECT
 
 type AppEnumCollection {
-  CustomOptionIconEnum: [AppEnumCollectionCustomOptionIconEnum!]!
   RasterTileServerNameEnum: [AppEnumCollectionRasterTileServerNameEnum!]!
   VectorTileServerNameEnum: [AppEnumCollectionVectorTileServerNameEnum!]!
   ValidateObjectSourceTypeEnum: [AppEnumCollectionValidateObjectSourceTypeEnum!]!
   OverlayLayerTypeEnum: [AppEnumCollectionOverlayLayerTypeEnum!]!
+  IconEnum: [AppEnumCollectionIconEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
   ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
   ProjectProcessingStatusEnum: [AppEnumCollectionProjectProcessingStatusEnum!]!
@@ -25,7 +25,6 @@ type AppEnumCollection {
   ProjectAssetTypeEnum: [AppEnumCollectionProjectAssetTypeEnum!]!
   TutorialStatusEnum: [AppEnumCollectionTutorialStatusEnum!]!
   TutorialInformationPageBlockTypeEnum: [AppEnumCollectionTutorialInformationPageBlockTypeEnum!]!
-  TutorialScenarioIconEnum: [AppEnumCollectionTutorialScenarioIconEnum!]!
   MappingSessionClientTypeEnum: [AppEnumCollectionMappingSessionClientTypeEnum!]!
   ContributorUserGroupMembershipLogActionEnum: [AppEnumCollectionContributorUserGroupMembershipLogActionEnum!]!
 }
@@ -35,8 +34,8 @@ type AppEnumCollectionContributorUserGroupMembershipLogActionEnum {
   label: String!
 }
 
-type AppEnumCollectionCustomOptionIconEnum {
-  key: CustomOptionIconEnum!
+type AppEnumCollectionIconEnum {
+  key: IconEnum!
   label: String!
 }
 
@@ -82,11 +81,6 @@ type AppEnumCollectionRasterTileServerNameEnum {
 
 type AppEnumCollectionTutorialInformationPageBlockTypeEnum {
   key: TutorialInformationPageBlockTypeEnum!
-  label: String!
-}
-
-type AppEnumCollectionTutorialScenarioIconEnum {
-  key: TutorialScenarioIconEnum!
   label: String!
 }
 
@@ -499,48 +493,14 @@ union CreateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
 """A generic type to return error messages"""
 scalar CustomErrorType
 
-enum CustomOptionIconEnum {
-  ADD_OUTLINE
-  ALERT_OUTLINE
-  BAN_OUTLINE
-  CHECK
-  CLOSE_OUTLINE
-  CHECKMARK_OUTLINE
-  EGG_OUTLINE
-  ELLIPSE_OUTLINE
-  FLAG_OUTLINE
-  HAND_LEFT_OUTLINE
-  HAND_RIGHT_OUTLINE
-  HAPPY_OUTLINE
-  HEART_OUTLINE
-  HELP_OUTLINE
-  INFORMATION_OUTLINE
-  PRISM_OUTLINE
-  REFRESH_OUTLINE
-  REMOVE_OUTLINE
-  SAD_OUTLINE
-  SEARCH_OUTLINE
-  SHAPES_OUTLINE
-  SQUARE_OUTLINE
-  STAR_OUTLINE
-  THUMBS_DOWN_OUTLINE
-  THUMBS_UP_OUTLINE
-  TRIANGLE_OUTLINE
-  WARNING_OUTLINE
-  GENERAL_TAP
-  TAP
-  TAP_1
-  TAP_2
-  TAP_3
-  SWIPE_LEFT
-}
-
 input CustomOptionInput {
+  clientId: String!
+
   """A positive int value"""
   value: Int!
   title: String!
   description: String!
-  icon: CustomOptionIconEnum!
+  icon: IconEnum!
 
   """A valid hex color string like '#fff' or '#ffffff'"""
   iconColor: String!
@@ -548,6 +508,8 @@ input CustomOptionInput {
 }
 
 input CustomSubOptionInput {
+  clientId: String!
+
   """A positive int value"""
   value: Int!
   description: String!
@@ -622,6 +584,42 @@ input IDBaseFilterLookup {
   Exact match of items in a given list. Filter will be skipped on `null` value
   """
   inList: [ID!]
+}
+
+enum IconEnum {
+  ADD_OUTLINE
+  ALERT_OUTLINE
+  BAN_OUTLINE
+  CHECK
+  CLOSE_OUTLINE
+  CHECKMARK_OUTLINE
+  EGG_OUTLINE
+  ELLIPSE_OUTLINE
+  FLAG_OUTLINE
+  HAND_LEFT_OUTLINE
+  HAND_RIGHT_OUTLINE
+  HAPPY_OUTLINE
+  HEART_OUTLINE
+  HELP_OUTLINE
+  INFORMATION_OUTLINE
+  PRISM_OUTLINE
+  REFRESH_OUTLINE
+  REMOVE_OUTLINE
+  SAD_OUTLINE
+  SEARCH_OUTLINE
+  SHAPES_OUTLINE
+  SQUARE_OUTLINE
+  STAR_OUTLINE
+  THUMBS_DOWN_OUTLINE
+  THUMBS_UP_OUTLINE
+  TRIANGLE_OUTLINE
+  WARNING_OUTLINE
+  GENERAL_TAP
+  TAP
+  TAP_1
+  TAP_2
+  TAP_3
+  SWIPE_LEFT
 }
 
 input IntComparisonFilterLookup {
@@ -1054,11 +1052,13 @@ input ProjectCreateInput {
 }
 
 type ProjectCustomOption {
+  clientId: String!
+
   """A positive int value"""
   value: Int!
   title: String!
   description: String!
-  icon: CustomOptionIconEnum!
+  icon: IconEnum!
 
   """A valid hex color string like '#fff' or '#ffffff'"""
   iconColor: String!
@@ -1066,6 +1066,8 @@ type ProjectCustomOption {
 }
 
 type ProjectCustomSubOption {
+  clientId: String!
+
   """A positive int value"""
   value: Int!
   description: String!
@@ -1754,42 +1756,6 @@ input TutorialOrder {
   name: Ordering
 }
 
-enum TutorialScenarioIconEnum {
-  ADD_OUTLINE
-  ALERT_OUTLINE
-  BAN_OUTLINE
-  CHECK
-  CLOSE_OUTLINE
-  CHECKMARK_OUTLINE
-  EGG_OUTLINE
-  ELLIPSE_OUTLINE
-  FLAG_OUTLINE
-  HAND_LEFT_OUTLINE
-  HAND_RIGHT_OUTLINE
-  HAPPY_OUTLINE
-  HEART_OUTLINE
-  HELP_OUTLINE
-  INFORMATION_OUTLINE
-  PRISM_OUTLINE
-  REFRESH_OUTLINE
-  REMOVE_OUTLINE
-  SAD_OUTLINE
-  SEARCH_OUTLINE
-  SHAPES_OUTLINE
-  SQUARE_OUTLINE
-  STAR_OUTLINE
-  THUMBS_DOWN_OUTLINE
-  THUMBS_UP_OUTLINE
-  TRIANGLE_OUTLINE
-  WARNING_OUTLINE
-  GENERAL_TAP
-  TAP
-  TAP_1
-  TAP_2
-  TAP_3
-  SWIPE_LEFT
-}
-
 """
 TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_page_number, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
 """
@@ -1797,13 +1763,13 @@ input TutorialScenarioPageCreateInput {
   clientId: String!
   scenarioPageNumber: Int!
   instructionsDescription: String!
-  instructionsIcon: TutorialScenarioIconEnum!
+  instructionsIcon: IconEnum!
   instructionsTitle: String!
   hintDescription: String
-  hintIcon: TutorialScenarioIconEnum
+  hintIcon: IconEnum
   hintTitle: String
   successDescription: String
-  successIcon: TutorialScenarioIconEnum
+  successIcon: IconEnum
   successTitle: String
   tasks: [TutorialTaskCreateInput!]!
 }
@@ -1830,13 +1796,13 @@ type TutorialScenarioPageType implements UserResourceTypeMixin {
   tutorialId: ID!
   scenarioPageNumber: Int!
   instructionsDescription: String!
-  instructionsIcon: TutorialScenarioIconEnum!
+  instructionsIcon: IconEnum!
   instructionsTitle: String!
   hintDescription: String
-  hintIcon: TutorialScenarioIconEnum
+  hintIcon: IconEnum
   hintTitle: String
   successDescription: String
-  successIcon: TutorialScenarioIconEnum
+  successIcon: IconEnum
   successTitle: String
   tasks: [TutorialTaskType!]!
 }
@@ -1849,13 +1815,13 @@ input TutorialScenarioPageUpdateInput {
   clientId: String!
   scenarioPageNumber: Int
   instructionsDescription: String
-  instructionsIcon: TutorialScenarioIconEnum
+  instructionsIcon: IconEnum
   instructionsTitle: String
   hintDescription: String
-  hintIcon: TutorialScenarioIconEnum
+  hintIcon: IconEnum
   hintTitle: String
   successDescription: String
-  successIcon: TutorialScenarioIconEnum
+  successIcon: IconEnum
   successTitle: String
   tasks: [TutorialTaskInput!]
 }
