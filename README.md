@@ -105,3 +105,12 @@ docker compose exec web ./manage.py graphql_schema --out schema.graphql
 # with this (Which will create a temporary container, run the command, and clean of the container)
 docker compose run --rm web ./manage.py graphql_schema --out schema.graphql
 ```
+
+### Upgrading Python Version
+
+Update the Python version in the following files:
+
+- [Dockerfile](Dockerfile)
+- [.pre-commit-config.yaml](.pre-commit-config.yaml) (`default_language_version.python`)
+- [.python-version](.python-version)
+- [pyproject.toml](pyproject.toml) (`requires-python`)
