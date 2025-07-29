@@ -1,7 +1,9 @@
 # pyright: reportUninitializedInstanceVariable=false
 import typing
 
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.translation import gettext
 from django_choices_field import IntegerChoicesField
 
 from apps.common.models import ArchivableResource, UserResource
@@ -84,3 +86,11 @@ class ContributorTeam(ArchivableResource, UserResource):  # type: ignore[reportI
     @typing.override
     def __str__(self):
         return self.name
+
+    @typing.override
+    def clean(self):
+        super().clean()
+        if self.pk and self.is_archived and ContributorUser.objects.filter(team_id=self.pk).exists():
+            raise ValidationError(
+                {"is_archived": gettext("Cannot archive a team that still has team members.")},
+            )

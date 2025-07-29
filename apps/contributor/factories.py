@@ -8,6 +8,7 @@ from factory.django import DjangoModelFactory
 from ulid import ULID
 
 from .models import (
+    ContributorTeam,
     ContributorUser,
     ContributorUserGroup,
     ContributorUserGroupMembership,
@@ -46,10 +47,19 @@ class ContributorUserGroupMembershipLogFactory(DjangoModelFactory):
         model = ContributorUserGroupMembershipLog
 
 
+class ContributorTeamFactory(DjangoModelFactory):
+    class Meta:
+        model = ContributorTeam
+
+    client_id = factory.LazyFunction(lambda: str(ULID()))
+    name = factory.Sequence(lambda n: f"Contributor User Team {n}")
+
+
 # NOTE: Make sure to add type hints for each factory class defined below
 # NOTE: This needs to be at the end of this file
 if typing.TYPE_CHECKING:
     ContributorUserFactory: type[DjangoModelFactory[ContributorUser]]
+    ContributorTeamFactory: type[DjangoModelFactory[ContributorTeam]]
     ContributorUserGroupFactory: type[DjangoModelFactory[ContributorUserGroup]]
     ContributorUserGroupMembershipFactory: type[DjangoModelFactory[ContributorUserGroupMembership]]
     ContributorUserGroupMembershipLogFactory: type[DjangoModelFactory[ContributorUserGroupMembershipLog]]
