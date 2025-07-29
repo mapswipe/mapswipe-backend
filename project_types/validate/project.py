@@ -356,7 +356,7 @@ class ValidateProject(
                     title=opt.title,
                     description=opt.description,
                     value=opt.value,
-                    icon=opt.icon.value,
+                    icon=str(opt.icon.label),
                     iconColor=opt.icon_color,
                     subOptions=[
                         firebase_models.FbBaseObjCustomSubOption(
