@@ -48,9 +48,11 @@ class ProjectTypeSpecificInput:
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.input(Project)
 class ProjectCreateInput(UserResourceCreateInputMixin):
+    topic: strawberry.auto
+    region: strawberry.auto
+    project_number: strawberry.auto
     project_type: strawberry.auto
     requesting_organization: strawberry.ID
-    name: strawberry.auto
     look_for: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
@@ -60,7 +62,9 @@ class ProjectCreateInput(UserResourceCreateInputMixin):
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.partial(Project)
 class ProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
-    name: strawberry.auto
+    topic: strawberry.auto
+    region: strawberry.auto
+    project_number: strawberry.auto
     look_for: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
@@ -78,7 +82,9 @@ class ProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.partial(Project)
 class ProcessedProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
-    name: strawberry.auto
+    topic: strawberry.auto
+    region: strawberry.auto
+    project_number: strawberry.auto
     look_for: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto

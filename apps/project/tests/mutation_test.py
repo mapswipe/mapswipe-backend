@@ -150,6 +150,9 @@ class Mutation:
                   name
                 }
                 name
+                topic
+                region
+                projectNumber
                 lookFor
                 additionalInfoUrl
                 description
@@ -194,6 +197,9 @@ class Mutation:
                   name
                 }
                 name
+                topic
+                region
+                projectNumber
                 lookFor
                 additionalInfoUrl
                 description
@@ -238,6 +244,9 @@ class Mutation:
                   name
                 }
                 name
+                topic
+                region
+                projectNumber
                 lookFor
                 additionalInfoUrl
                 description
@@ -455,8 +464,10 @@ class TestProjectMutation(TestCase):
         project_data = {
             "clientId": str(ULID()),
             "projectType": self.genum(ProjectTypeEnum.FIND),
+            "topic": "New Project 101",
+            "region": "Test Region",
+            "projectNumber": 1,
             "requestingOrganization": self.organization.pk,
-            "name": "New Project 101",
             "lookFor": "Buildings",
             "additionalInfoUrl": "https://hi-there/about.html",
             "description": "The new **project** from hi-there.",
@@ -479,6 +490,12 @@ class TestProjectMutation(TestCase):
         resp_data = content["data"]["createProject"]
         assert resp_data["errors"] is None, content
 
+        # Creating project
+        # Fails as project with name already exist
+        content = self._create_project_mutation(project_data)
+        response = content["data"]["createProject"]
+        assert response["errors"] is not None, content
+
         latest_project = Project.objects.get(pk=resp_data["result"]["id"])
         assert latest_project.created_by_id == self.user.pk
         assert latest_project.modified_by_id == self.user.pk
@@ -493,7 +510,10 @@ class TestProjectMutation(TestCase):
                     id=self.gID(latest_project.requesting_organization.pk),
                     name=latest_project.requesting_organization.name,
                 ),
-                name=latest_project.name,
+                name=f"{latest_project.topic} - {latest_project.region} ({latest_project.project_number}) {latest_project.requesting_organization.name}",  # noqa: E501
+                topic=latest_project.topic,
+                region=latest_project.region,
+                projectNumber=latest_project.project_number,
                 lookFor=latest_project.look_for,
                 additionalInfoUrl=latest_project.additional_info_url,
                 description=latest_project.description,
@@ -524,8 +544,10 @@ class TestProjectMutation(TestCase):
         proj = ProjectFactory.create(
             **self.user_resource_kwargs,
             project_type=ProjectTypeEnum.FIND,
+            topic="Test Project",
+            region="Test Region",
+            project_number=1,
             requesting_organization=self.organization,
-            name="New Project 101",
             look_for="Buildings",
             additional_info_url="https://hi-there/about.html",
             description="The new **project** from hi-there.",
@@ -534,7 +556,6 @@ class TestProjectMutation(TestCase):
 
         project_data = {
             "requestingOrganization": self.organization.pk,
-            "name": "New Project 101 - Updated",
             "lookFor": "Buildings and Houses",
             "additionalInfoUrl": "https://hi-there/about.html?code=1",
             "description": "The new updated **project** from hi-there.",
@@ -573,7 +594,10 @@ class TestProjectMutation(TestCase):
                     id=self.gID(latest_project.requesting_organization.pk),
                     name=latest_project.requesting_organization.name,
                 ),
-                name=latest_project.name,
+                name=f"{latest_project.topic} - {latest_project.region} ({latest_project.project_number}) {latest_project.requesting_organization.name}",  # noqa: E501
+                topic=latest_project.topic,
+                region=latest_project.region,
+                projectNumber=latest_project.project_number,
                 lookFor=latest_project.look_for,
                 additionalInfoUrl=latest_project.additional_info_url,
                 description=latest_project.description,
@@ -821,7 +845,9 @@ class TestProjectTypeMutation(TestCase):
         )
 
         cls.project_data = {
-            "name": "New Project 101",
+            "topic": "Test Project",
+            "region": "Test Region",
+            "projectNumber": 1,
             "requestingOrganization": cls.organization.pk,
             "lookFor": "Buildings",
         }

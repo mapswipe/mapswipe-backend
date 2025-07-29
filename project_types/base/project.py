@@ -284,20 +284,20 @@ class BaseProject[
             resultCount=0,
             groupSize=self.project.group_size,
             projectId=self.project.old_id or str(self.project.id),
+            name=self.project.generate_name(),
             projectDetails=self.project.description or "n/a",
-            name=self.project.name,
-            # FIXME(tnagorra): Fill these when implemented
-            projectNumber=1,
-            projectRegion="",
-            projectTopic="",
+            projectNumber=self.project.project_number,
+            projectRegion=self.project.region,
+            projectTopic=self.project.topic,
+            # NOTE: projectTopicKey is obsolete
             projectTopicKey="",
             projectType=project_type_enum_to_firebase(self.project.project_type_enum),
             # project_type=project_type_enum_to_firebase(self.project.project_type_enum), # not needed here
             requestingOrganisation=self.project.requesting_organization.name,  # str
             requiredResults=self.project.required_results,
             status=status,
-            # FIXME(tnagorra): Fill this when implemented
-            teamId=firebase_models.UNDEFINED,
+            # FIXME(susilnem): We might need to use old_id
+            teamId=str(self.project.team_id) if self.project.team_id else firebase_models.UNDEFINED,
             # FIXME(tnagorra): Need to check how we get this?
             language="en-us",
             tutorialId=self.project.tutorial.old_id or str(self.project.tutorial_id),
@@ -342,18 +342,18 @@ class BaseProject[
                     image=self.project.image.file.url if self.project.image else firebase_models.UNDEFINED,
                     isFeatured=self.project.is_featured,
                     lookFor=self.project.look_for,
-                    name=self.project.name,
-                    # FIXME(tnagorra): Fill these when implemented
-                    projectNumber=1,
-                    projectRegion="",
-                    projectTopic="",
+                    name=self.project.generate_name(),
+                    projectNumber=self.project.project_number,
+                    projectRegion=self.project.region,
+                    projectTopic=self.project.topic,
+                    # NOTE: projectTopicKey is obsolete
                     projectTopicKey="",
                     projectDetails=self.project.description or "n/a",
                     requestingOrganisation=self.project.requesting_organization.name,
                     tutorialId=str(self.project.tutorial_id),
                     status=status,
-                    # FIXME(tnagorra): Fill this when implemented
-                    teamId=firebase_models.UNDEFINED,
+                    # FIXME(susilnem): We might need to use old_id
+                    teamId=str(self.project.team_id) if self.project.team_id else firebase_models.UNDEFINED,
                     # FIXME(tnagorra): Need to check how we get this?
                     language="en-us",
                 ),

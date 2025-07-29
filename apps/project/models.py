@@ -5,7 +5,8 @@ import ulid
 from django.contrib.gis.db import models as gis_models
 from django.db import models
 from django.db.models import ExpressionWrapper, Q
-from django.db.models.functions import Lower
+from django.db.models.expressions import Value
+from django.db.models.functions import Concat, Lower
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
 
@@ -206,7 +207,9 @@ class Project(UserResource):
     # TODO(tnagorra): Do we add uniqueness on project topic?
 
     # Generate in manager dashboard based on topic, region, project number, requesting org
-    name = models.CharField(max_length=255)
+    topic = models.CharField(max_length=255)
+    region = models.CharField(max_length=255)
+    project_number = models.PositiveIntegerField()
 
     # TODO(tnagorra): Max length is 25 in manager dashboard.
     # TODO(frozenhelium): We should discuss if we need this field.
@@ -347,9 +350,48 @@ class Project(UserResource):
     team_id: int | None
     project_type_specific_output_id: int | None
 
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        constraints = [
+            models.UniqueConstraint(
+                Lower("topic"),
+                Lower("region"),
+                "project_number",
+                "requesting_organization",
+                name="unique_project_name",
+                violation_error_message=gettext_lazy(
+                    "A project with the same topic, region, project number and requesting organization already exists.",
+                ),
+            ),
+        ]
+
     @typing.override
-    def __str__(self):
-        return self.name
+    def __str__(self) -> str:
+        return self.generate_name()
+
+    def generate_name(self) -> str:
+        """
+        Returns a generated name for the project based on topic, region and project number.
+
+        Use select_related to avoid N+1 queries.
+        """
+        # Format: "{topic} - {region} ({project_number}) {requesting_organization.name}"
+        return f"{self.topic} - {self.region} ({self.project_number}) {self.requesting_organization.name}"
+
+    @staticmethod
+    def generate_name_query(prefix: str = ""):
+        """
+        Returns a Django QuerySet expression to generate the project name.
+        """
+        return Concat(
+            models.F(f"{prefix}topic"),
+            Value(" - "),
+            models.F(f"{prefix}region"),
+            Value(" ("),
+            models.F(f"{prefix}project_number"),
+            Value(") "),
+            models.F(f"{prefix}requesting_organization__name"),
+            output_field=models.CharField(),
+        )
 
     def update_status(self, status: ProjectStatusEnum, commit: bool = True):
         self.status = status
