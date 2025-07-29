@@ -76,7 +76,7 @@ class RasterConfig:
                 url = (
                     "https://services.digitalglobe.com"
                     "/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg"
-                    "/{{z}}/}{x}}/{{y}}.jpg"
+                    "/{{z}}/{{x}}/{{y}}.jpg"
                     "?connectId={apiKey}"
                 )
                 return {
