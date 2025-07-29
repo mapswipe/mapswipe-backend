@@ -1,12 +1,11 @@
-import mimetypes
 import typing
 
 import pydantic
 from django.db import transaction
-from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext
 from rest_framework import serializers
 
+from apps.common.mixins import CommonAssetMixin
 from apps.common.models import FirebasePushStatusEnum
 from apps.common.serializers import ArchivableResourceSerializer, UserResourceSerializer
 from apps.contributor.models import ContributorTeam
@@ -18,9 +17,6 @@ from utils.graphql.drf import handle_pydantic_validation_error
 
 from .models import Organization, Project, ProjectAsset, ProjectTypeEnum
 from .tasks import process_project_task, push_project_to_firebase
-
-if typing.TYPE_CHECKING:
-    from django.core.files.base import ContentFile
 
 VALID_PROJECT_STATUS_TRANSITIONS = set(
     [
@@ -362,7 +358,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
-class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
+class ProjectAssetSerializer(CommonAssetMixin, UserResourceSerializer[ProjectAsset]):  # type: ignore[reportIncompatibleVariableOverride]
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = ProjectAsset
         fields = (
@@ -370,40 +366,6 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
             "file",
             "project",
         )
-
-    def _validate_file(self, attrs: dict[str, typing.Any]):
-        file_content: ContentFile[bytes] = attrs["file"]
-        file_size = file_content.size
-
-        if file_size > ProjectAsset.MAX_FILE_SIZE:
-            raise serializers.ValidationError(
-                gettext("Filesize should be less than: %s. Current is: %s")
-                % (
-                    filesizeformat(ProjectAsset.MAX_FILE_SIZE),
-                    filesizeformat(file_size),
-                ),
-            )
-
-        # https://docs.python.org/3/library/mimetypes.html#mimetypes.guess_type
-        mimetype, _ = mimetypes.guess_type(file_content.name)  # type: ignore[reportUnknownArgumentType]
-        # TODO(susilnem): Use library like filemagic to determine mimetype instead?
-        if mimetype is None:
-            raise serializers.ValidationError(
-                gettext("Could not determine mimetype of the file: %s") % file_content.name,
-            )
-
-        if not ProjectAsset.Mimetype.is_valid_mimetype(mimetype):
-            raise serializers.ValidationError(
-                gettext("File mimetype is not supported: %s") % mimetype,
-            )
-
-        attrs["mimetype"] = ProjectAsset.Mimetype.get_mimetype_by_label(mimetype)
-        attrs["file_size"] = file_size
-
-    @typing.override
-    def validate(self, attrs: dict[str, typing.Any]):
-        self._validate_file(attrs)
-        return super().validate(attrs)
 
     @typing.override
     def create(self, validated_data: dict[str, typing.Any]) -> ProjectAsset:

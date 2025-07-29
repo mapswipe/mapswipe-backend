@@ -32,8 +32,8 @@ class AggregatedTracking(Model):
 
 class AggregatedUserStatData(Model):
     # Ref Fields
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="+")
-    user = models.ForeignKey(ContributorUser, on_delete=models.CASCADE, related_name="+")
+    project: Project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="+")  # type: ignore[reportIncompatibleVariableOverride]
+    user: ContributorUser = models.ForeignKey(ContributorUser, on_delete=models.CASCADE, related_name="+")  # type: ignore[reportIncompatibleVariableOverride]
     timestamp_date = models.DateField()
     # Aggregated Fields
     total_time = models.IntegerField()  # seconds
@@ -59,9 +59,9 @@ class AggregatedUserStatData(Model):
 
 class AggregatedUserGroupStatData(Model):
     # Ref Fields
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="+")
-    user = models.ForeignKey(ContributorUser, on_delete=models.CASCADE, related_name="+")
-    user_group = models.ForeignKey(ContributorUserGroup, on_delete=models.CASCADE, related_name="+")
+    project: Project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="+")  # type: ignore[reportIncompatibleVariableOverride]
+    user: ContributorUser = models.ForeignKey(ContributorUser, on_delete=models.CASCADE, related_name="+")  # type: ignore[reportIncompatibleVariableOverride]
+    user_group: ContributorUserGroup = models.ForeignKey(ContributorUserGroup, on_delete=models.CASCADE, related_name="+")  # type: ignore[reportIncompatibleVariableOverride]
     timestamp_date = models.DateField()
     # Aggregated Fields
     total_time = models.IntegerField()  # seconds

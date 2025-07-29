@@ -60,7 +60,7 @@ class UserResource(Model):
 class ArchivableResource(Model):
     is_archived = models.BooleanField(default=False)
     archived_at = models.DateTimeField(null=True, blank=True)
-    archived_by = models.ForeignKey(
+    archived_by: User = models.ForeignKey(  # type: ignore[reportIncompatibleVariableOverride]
         User,
         related_name="+",
         on_delete=models.SET_NULL,
