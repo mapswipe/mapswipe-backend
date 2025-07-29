@@ -1527,7 +1527,7 @@ type Query {
   projectAsset(id: ID!): ProjectAssetType! @isAuthenticated
   projectAssets(pagination: OffsetPaginationInput, filters: ProjectAssetFilter, order: ProjectAssetOrder): ProjectAssetTypeOffsetPaginated! @isAuthenticated
   organization(id: ID!): OrganizationType! @isAuthenticated
-  organizations(pagination: OffsetPaginationInput, filters: OrganizationFilter, order: OrganizationOrder): OrganizationTypeOffsetPaginated! @isAuthenticated
+  organizations(includeAll: Boolean! = false, filters: OrganizationFilter, order: OrganizationOrder, pagination: OffsetPaginationInput): OrganizationTypeOffsetPaginated! @isAuthenticated
   projects(includeAll: Boolean! = false, filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated! @isAuthenticated
   tutorial(id: ID!): TutorialType! @isAuthenticated
   tutorials(includeAll: Boolean! = false, filters: TutorialFilter, order: TutorialOrder, pagination: OffsetPaginationInput): TutorialTypeOffsetPaginated! @isAuthenticated
@@ -1536,9 +1536,9 @@ type Query {
   contributorUserGroup(id: ID!): ContributorUserGroupType!
   contributorTeam(id: ID!): ContributorTeamType!
   contributorUserByUserId(userId: ID!): ContributorUserType!
-  contributorUserGroups(includeArchived: Boolean! = false, filters: ContributorUserGroupFilter, order: ContributorUserGroupOrder, pagination: OffsetPaginationInput): ContributorUserGroupTypeOffsetPaginated!
+  contributorUserGroups(includeAll: Boolean! = false, filters: ContributorUserGroupFilter, order: ContributorUserGroupOrder, pagination: OffsetPaginationInput): ContributorUserGroupTypeOffsetPaginated!
   contributorUserGroupMembers(includeAll: Boolean! = false, filters: ContributorUserGroupMembershipFilter, order: ContributorUserGroupMembershipOrder, pagination: OffsetPaginationInput): ContributorUserGroupMembershipTypeOffsetPaginated!
-  contributorTeams(includeArchived: Boolean! = false, filters: ContributorTeamFilter, order: ContributorTeamOrder, pagination: OffsetPaginationInput): ContributorTeamTypeOffsetPaginated! @isAuthenticated
+  contributorTeams(includeAll: Boolean! = false, filters: ContributorTeamFilter, order: ContributorTeamOrder, pagination: OffsetPaginationInput): ContributorTeamTypeOffsetPaginated! @isAuthenticated
   communityStats: CommunityStatsType!
 
   "\nStats from last 30 days\n"

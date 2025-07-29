@@ -52,12 +52,12 @@ class Query:
     )
     def contributor_user_groups(
         self,
-        include_archived: bool = False,
+        include_all: bool = False,
     ) -> QuerySet[ContributorUserGroup]:
         # XXX: Filter out user group without name. They aren't sync yet.
         # TODO: This is from old system, make sure name aren't empty and remove this filter
         queryset = ContributorUserGroup.objects.exclude(name="").all()
-        if include_archived:
+        if include_all:
             return queryset
         return queryset.exclude(is_archived=True).all()
 
@@ -87,8 +87,8 @@ class Query:
     )
     def contributor_teams(
         self,
-        include_archived: bool = False,
+        include_all: bool = False,
     ) -> QuerySet[ContributorTeam]:
-        if include_archived:
+        if include_all:
             return ContributorTeam.objects.all()
         return ContributorTeam.objects.exclude(is_archived=True).all()
