@@ -50,6 +50,7 @@ class Query:
         order=ContributorUserGroupOrder,
         filters=ContributorUserGroupFilter,
     )
+    # TODO: We need attribute description `include_all` visible in graphiql
     def contributor_user_groups(
         self,
         include_all: bool = False,
@@ -68,6 +69,7 @@ class Query:
         order=ContributorUserGroupMembershipOrder,
         filters=ContributorUserGroupMembershipFilter,
     )
+    # TODO: We need attribute description `include_all` visible in graphiql
     def contributor_user_group_members(
         self,
         include_all: bool = False,
@@ -85,6 +87,7 @@ class Query:
         filters=ContributorTeamFilter,
         extensions=[IsAuthenticated()],
     )
+    # TODO: We need attribute description `include_all` visible in graphiql
     def contributor_teams(
         self,
         include_all: bool = False,

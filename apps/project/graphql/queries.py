@@ -77,6 +77,7 @@ class Query:
         filters=OrganizationFilter,
         extensions=[IsAuthenticated()],
     )
+    # TODO: We need attribute description `include_all` visible in graphiql
     def organizations(
         self,
         include_all: bool = False,
@@ -92,10 +93,17 @@ class Query:
         filters=ProjectFilter,
         extensions=[IsAuthenticated()],
     )
+    # TODO: We need attribute description `include_all` visible in graphiql
     def projects(
         self,
         include_all: bool = False,
     ) -> QuerySet[Project]:
         if include_all:
             return Project.objects.all()
-        return Project.objects.exclude(status__in=[Project.Status.ARCHIVED, Project.Status.DISCARDED]).all()
+        return Project.objects.filter(
+            status__in=[
+                Project.Status.READY,
+                Project.Status.PUBLISHED,
+                Project.Status.PAUSED,
+            ],
+        ).all()

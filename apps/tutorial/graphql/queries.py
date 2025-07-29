@@ -23,10 +23,11 @@ class Query:
         filters=TutorialFilter,
         extensions=[IsAuthenticated()],
     )
+    # TODO: We need attribute description `include_all` visible in graphiql
     def tutorials(
         self,
         include_all: bool = False,
     ) -> QuerySet[Tutorial]:
         if include_all:
             return Tutorial.objects.all()
-        return Tutorial.objects.exclude(status__in=[Tutorial.Status.ARCHIVED, Tutorial.Status.DISCARDED]).all()
+        return Tutorial.objects.filter(status=Tutorial.Status.PUBLISHED).all()
