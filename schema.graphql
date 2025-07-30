@@ -1491,7 +1491,7 @@ input ProjectUpdateInput {
 }
 
 type ProjectVectorTileServerCommonConfig {
-  sourceName: String!
+  sourceLayer: String!
   credits: String!
 }
 
@@ -1513,7 +1513,7 @@ input ProjectVectorTileServerConfigInput {
 
 type ProjectVectorTileServerCustomConfig {
   url: String!
-  sourceName: String!
+  sourceLayer: String!
   credits: String!
   minZoom: Int!
   maxZoom: Int!
@@ -2109,13 +2109,13 @@ type ValidateTutorialTaskPropertyType {
 }
 
 input VectorTileServerCommonConfigInput {
-  sourceName: String!
+  sourceLayer: String!
   credits: String!
 }
 
 input VectorTileServerCustomConfigInput {
   url: String!
-  sourceName: String!
+  sourceLayer: String!
   credits: String!
   minZoom: Int!
   maxZoom: Int!

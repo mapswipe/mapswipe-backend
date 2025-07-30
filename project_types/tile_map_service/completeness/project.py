@@ -146,6 +146,7 @@ class CompletenessProject(
                 vector=firebase_models.FbObjVectorTileServerOverlay(
                     tileServer=firebase_models.FbObjVectorTileServer(
                         name=vector_tile_server_name_enum_to_firebase(tsp_overlay.vector.tile_server.name),
+                        sourceLayer=tsp_overlay.vector.tile_server.get_config()["source_layer"],
                         credits=tsp_overlay.vector.tile_server.get_config()["credits"],
                         url=tsp_overlay.vector.tile_server.get_config()["url"],
                         minZoom=tsp_overlay.vector.tile_server.get_config()["min_zoom"],
