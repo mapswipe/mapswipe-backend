@@ -32,6 +32,7 @@ def push_django_to_firebase[T: FirebaseResource](
     model: type[T],
     handle_new_object_on_firebase: Callable[[T, Reference], None],
     handle_object_update_on_firebase: Callable[[T, Reference], None],
+    firebase_path: Callable,
 ):
     model_obj = model.objects.filter(id=obj_id).first()
     if not model_obj:
@@ -41,7 +42,7 @@ def push_django_to_firebase[T: FirebaseResource](
 
     try:
         model_ref = Config.FIREBASE_HELPER.ref(
-            Config.FirebaseKeys.contributor_team(
+            firebase_path(
                 model_obj.old_id if getattr(model_obj, "old_id", None) is not None else model_obj.pk,
             ),
         )

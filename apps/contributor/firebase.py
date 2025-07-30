@@ -7,6 +7,7 @@ from pyfirebase_mapswipe import utils as firebase_utils
 
 from apps.common.tasks import push_django_to_firebase
 from apps.contributor.models import ContributorTeam
+from main.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -42,4 +43,5 @@ def push_contributor_team_to_firebase(contributor_team_id: int):
         ContributorTeam,
         handle_new_contributor_team_on_firebase,
         handle_contributor_team_update_on_firebase,
+        Config.FirebaseKeys.contributor_team,
     )
