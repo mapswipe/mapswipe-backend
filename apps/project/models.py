@@ -10,7 +10,7 @@ from django.db.models.functions import Concat, Lower
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
 
-from apps.common.models import ArchivableResource, UserResource
+from apps.common.models import ArchivableResource, FirebasePushStatusEnum, FirebaseResource, UserResource
 from apps.contributor.models import ContributorTeam
 from utils.fields import validate_percentage
 
@@ -43,13 +43,6 @@ class ProjectAssetTypeEnum(models.IntegerChoices):
         if value in cls:
             return str(cls(value).label)
         return "Unknown"
-
-
-class FirebasePushStatusEnum(models.IntegerChoices):
-    PENDING = 1, "Pending"
-    PROCESSING = 2, "Processing"
-    SUCCESS = 3, "Success"
-    FAILED = 4, "Failed"
 
 
 class ProjectTypeEnum(models.IntegerChoices):
@@ -185,12 +178,10 @@ class Organization(UserResource, ArchivableResource):  # type: ignore[reportInco
             self.save(update_fields=("firebase_push_status",))
 
 
-class Project(UserResource):
+class Project(UserResource, FirebaseResource):  # type: ignore[reportIncompatibleVariableOverride]
     Type = ProjectTypeEnum
     Status = ProjectStatusEnum
     ProcessingStatus = ProjectProcessingStatusEnum
-
-    old_id = models.CharField(max_length=30, db_index=True, null=True, blank=True)
 
     project_type: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=ProjectTypeEnum,
@@ -330,19 +321,6 @@ class Project(UserResource):
     required_results = models.IntegerField(default=0)
     result_count = models.IntegerField(default=0)  # NOTE: All project have 0 in production database
 
-    # FIREBASE FIELDS
-
-    firebase_push_status: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
-        choices_enum=FirebasePushStatusEnum,
-        null=True,
-        blank=True,
-    )
-    firebase_last_pushed = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text=gettext_lazy("The latest time when project was pushed to firebase"),
-    )
-
     # Type hints
     requesting_organization_id: int
     tutorial_id: int | None
@@ -403,11 +381,6 @@ class Project(UserResource):
         if commit:
             self.save(update_fields=("processing_status",))
 
-    def update_firebase_push_status(self, firebase_push_status: FirebasePushStatusEnum, *, commit: bool = True):
-        self.firebase_push_status = firebase_push_status
-        if commit:
-            self.save(update_fields=("firebase_push_status",))
-
     @property
     def project_type_enum(self):
         return ProjectTypeEnum(self.project_type)
@@ -415,12 +388,6 @@ class Project(UserResource):
     @property
     def status_enum(self):
         return ProjectStatusEnum(self.status)
-
-    @property
-    def firebase_push_status_enum(self):
-        if self.firebase_push_status:
-            return FirebasePushStatusEnum(self.firebase_push_status)
-        return None
 
     @typing.override
     def clean(self):

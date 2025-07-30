@@ -5,6 +5,7 @@ from django.db import transaction
 from django.utils.translation import gettext
 from rest_framework import serializers
 
+from apps.common.models import FirebasePushStatusEnum
 from apps.common.serializers import ArchivableResourceSerializer, UserResourceSerializer
 from apps.contributor.models import ContributorTeam
 from apps.project.firebase import push_organization_to_firebase
@@ -13,7 +14,7 @@ from project_types.store import get_project_property
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
-from .models import FirebasePushStatusEnum, Organization, Project, ProjectAsset, ProjectTypeEnum
+from .models import Organization, Project, ProjectAsset, ProjectTypeEnum
 from .tasks import process_project_task, push_project_to_firebase
 
 VALID_PROJECT_STATUS_TRANSITIONS = set(

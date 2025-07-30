@@ -47,6 +47,7 @@ def handle_organization_update_on_firebase(organization: Organization, organizat
     )
 
 
+# FIXME(rup): use common push_django_to_firebase() method
 @shared_task
 def push_organization_to_firebase(organization_id: int):
     organization = Organization.objects.filter(id=organization_id).first()

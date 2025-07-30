@@ -191,7 +191,7 @@ type ContributorSwipeStatType {
 }
 
 """
-ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name)
+ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_push_status, firebase_last_pushed, name, token)
 """
 input ContributorTeamFilter {
   id: IDBaseFilterLookup
@@ -209,7 +209,7 @@ input ContributorTeamOrder {
 }
 
 """
-ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name)
+ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_push_status, firebase_last_pushed, name, token)
 """
 type ContributorTeamType implements UserResourceTypeMixin {
   clientId: String!
@@ -822,7 +822,7 @@ enum OverlayLayerTypeEnum {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProcessedProjectUpdateInput {
   clientId: String!
@@ -1028,7 +1028,7 @@ type ProjectAssetTypeOffsetPaginated {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProjectCreateInput {
   clientId: String!
@@ -1074,7 +1074,7 @@ type ProjectCustomSubOption {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProjectFilter {
   id: IDBaseFilterLookup
@@ -1290,7 +1290,7 @@ input ProjectStatusEnumFilterLookup {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 type ProjectType implements UserResourceTypeMixin {
   clientId: String!
@@ -1449,7 +1449,7 @@ type ProjectTypeSwipeStatsType {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count, firebase_push_status, firebase_last_pushed)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProjectUpdateInput {
   clientId: String!
