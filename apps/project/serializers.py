@@ -5,9 +5,8 @@ from django.db import transaction
 from django.utils.translation import gettext
 from rest_framework import serializers
 
-from apps.common.mixins import CommonAssetMixin
 from apps.common.models import FirebasePushStatusEnum
-from apps.common.serializers import ArchivableResourceSerializer, UserResourceSerializer
+from apps.common.serializers import ArchivableResourceSerializer, CommonAssetSerializer, UserResourceSerializer
 from apps.contributor.models import ContributorTeam
 from apps.project.firebase import push_organization_to_firebase
 from apps.tutorial.models import Tutorial
@@ -358,7 +357,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
-class ProjectAssetSerializer(CommonAssetMixin, UserResourceSerializer[ProjectAsset]):  # type: ignore[reportIncompatibleVariableOverride]
+class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[ProjectAsset]):  # type: ignore[reportIncompatibleVariableOverride]
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = ProjectAsset
         fields = (

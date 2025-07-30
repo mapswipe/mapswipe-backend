@@ -6,11 +6,11 @@ from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 from ulid import ULID
 
+from apps.common.models import AssetMimetypeEnum
 from apps.contributor.factories import ContributorTeamFactory
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
     Project,
-    ProjectAssetMimetypeEnum,
     ProjectStatusEnum,
     ProjectTask,
     ProjectTaskGroup,
@@ -666,7 +666,7 @@ class TestProjectMutation(TestCase):
         project_asset_data = {
             "clientId": str(ULID()),
             "project": str(latest_project.pk),
-            "mimetype": self.genum(ProjectAssetMimetypeEnum.GEOJSON),
+            "mimetype": self.genum(AssetMimetypeEnum.GEOJSON),
         }
         content = self._create_project_aoi_asset(project_asset_data, assert_errors=True)
         resp_data = content["data"]["createProjectAsset"]
@@ -677,7 +677,7 @@ class TestProjectMutation(TestCase):
         project_asset_data = {
             "clientId": str(ULID()),
             "project": str(latest_project.pk),
-            "mimetype": self.genum(ProjectAssetMimetypeEnum.IMAGE_JPEG),
+            "mimetype": self.genum(AssetMimetypeEnum.IMAGE_JPEG),
         }
         content = self._create_project_image_asset(project_asset_data, assert_errors=True)
         resp_data = content["data"]["createProjectAsset"]
@@ -686,7 +686,7 @@ class TestProjectMutation(TestCase):
 
         # Change the mimetype
         # Fails as mimetype mismatching
-        project_asset_data["mimetype"] = self.genum(ProjectAssetMimetypeEnum.IMAGE_PNG)
+        project_asset_data["mimetype"] = self.genum(AssetMimetypeEnum.IMAGE_PNG)
         content = self._create_project_image_asset(project_asset_data, assert_errors=True)
         resp_data = content["data"]["createProjectAsset"]
         assert resp_data["errors"] is not None, content
@@ -985,7 +985,7 @@ class TestProjectTypeMutation(TestCase):
         # Creating AOI Project Asset
         project_asset_data = {
             "project": project_id,
-            "mimetype": self.genum(ProjectAssetMimetypeEnum.GEOJSON),
+            "mimetype": self.genum(AssetMimetypeEnum.GEOJSON),
             "clientId": str(ULID()),
         }
         content = self._create_project_aoi_asset(project_asset_data, assert_errors=True)
@@ -996,7 +996,7 @@ class TestProjectTypeMutation(TestCase):
         # Creating Project Image Asset
         project_asset_data = {
             "project": project_id,
-            "mimetype": self.genum(ProjectAssetMimetypeEnum.IMAGE_JPEG),
+            "mimetype": self.genum(AssetMimetypeEnum.IMAGE_JPEG),
             "clientId": str(ULID()),
         }
         content = self._create_project_image_asset(project_asset_data, assert_errors=True)

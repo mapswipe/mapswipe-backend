@@ -9,7 +9,7 @@ from django_choices_field import IntegerChoicesField
 from django_stubs_ext.db.models.manager import RelatedManager
 
 from apps.common.models import IconEnum, UserResource
-from apps.project.models import Project, ProjectAssetMimetypeEnum, ProjectAssetTypeEnum
+from apps.project.models import CommonAsset, Project
 
 
 class UploadHelper:
@@ -76,43 +76,17 @@ class Tutorial(UserResource):
         return TutorialStatusEnum(self.status)
 
 
-class TutorialAsset(UserResource):
-    Type = ProjectAssetTypeEnum
-    Mimetype = ProjectAssetMimetypeEnum
-    MAX_FILE_SIZE: int = 10 * 1024 * 1024  # MB
-
-    type = IntegerChoicesField(
-        choices_enum=ProjectAssetTypeEnum,
-    )
-
-    mimetype = IntegerChoicesField(
-        choices_enum=ProjectAssetMimetypeEnum,
-    )
-
-    file = models.FileField(
-        upload_to=UploadHelper.tutorial_asset,
-        help_text=gettext_lazy("The file associated with the asset"),
-    )
-
-    file_size = models.PositiveIntegerField(
-        help_text=gettext_lazy("The size of the file in bytes"),
-    )
-
+class TutorialAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibleVariableOverride]
     tutorial: Tutorial = models.ForeignKey(  # type: ignore[reportAssignmentType]
         Tutorial,
         on_delete=models.CASCADE,
         related_name="+",
     )
 
-    marked_as_deleted = models.BooleanField(
-        default=False,
-        help_text=gettext_lazy("If this flag is enabled, this tutorial asset will be deleted in the future"),
+    file = models.FileField(
+        upload_to=UploadHelper.tutorial_asset,
+        help_text=gettext_lazy("The file associated with the asset"),
     )
-
-    @classmethod
-    def usable_objects(cls):
-        """Returns objects that are mot marked for deletion"""
-        return cls.objects.filter(marked_as_deleted=False)
 
     # Type hints
     tutorial_id: int

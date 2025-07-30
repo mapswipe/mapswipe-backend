@@ -161,3 +161,75 @@ class FirebaseResource(Model):
 
     class Meta(TypedModelMeta):  # type: ignore[reportIncompatibleVariableOverride]
         abstract = True
+
+
+class AssetMimetypeEnum(models.IntegerChoices):
+    GEOJSON = 100, "application/geo+json"
+
+    IMAGE_JPEG = 201, "image/jpeg"
+    IMAGE_PNG = 202, "image/png"
+    IMAGE_GIF = 203, "image/gif"
+
+    @classmethod
+    def get_display(cls, value: typing.Self | int) -> str:
+        if value in cls:
+            return str(cls(value).label)
+        return "Unknown"
+
+    @classmethod
+    def is_valid_mimetype(cls, mimetype: str) -> bool:
+        """
+        Check if the given mimetype is valid for project assets.
+        """
+        return mimetype in [choice.label for choice in cls]
+
+    @classmethod
+    def get_mimetype_by_label(cls, label: str) -> typing.Self | None:
+        for choice in cls:
+            if choice.label == label:
+                return choice
+        return None
+
+
+# FIXME(tnagorra): Finalize the enum labels
+class AssetTypeEnum(models.IntegerChoices):
+    INPUT = 100, "Input"
+    OUTPUT = 200, "Output"
+    STATS = 300, "Stats"
+
+    @classmethod
+    def get_display(cls, value: typing.Self | int) -> str:
+        if value in cls:
+            return str(cls(value).label)
+        return "Unknown"
+
+
+class CommonAsset(Model):
+    Mimetype = AssetMimetypeEnum
+    MAX_FILE_SIZE: int = 10 * 1024 * 1024  # MB
+    Type = AssetTypeEnum
+
+    type = IntegerChoicesField(
+        choices_enum=AssetTypeEnum,
+    )
+
+    mimetype = IntegerChoicesField(
+        choices_enum=AssetMimetypeEnum,
+    )
+
+    file_size = models.PositiveIntegerField(
+        help_text=gettext_lazy("The size of the file in bytes"),
+    )
+
+    marked_as_deleted = models.BooleanField(
+        default=False,
+        help_text=gettext_lazy("If this flag is enabled, this project asset will be deleted in the future"),
+    )
+
+    class Meta(TypedModelMeta):  # type: ignore[reportIncompatibleVariableOverride]
+        abstract = True
+
+    @classmethod
+    def usable_objects(cls):
+        """Returns objects that are mot marked for deletion"""
+        return cls.objects.filter(marked_as_deleted=False)

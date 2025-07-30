@@ -5,8 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext
 from rest_framework import serializers
 
-from apps.common.mixins import CommonAssetMixin
-from apps.common.serializers import DrfContextType, UserResourceSerializer
+from apps.common.serializers import CommonAssetSerializer, DrfContextType, UserResourceSerializer
 from apps.project.models import Project, ProjectTypeEnum
 from project_types.store import get_tutorial_task_property
 from utils.common import clean_up_none_keys
@@ -432,7 +431,7 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
-class TutorialAssetSerializer(CommonAssetMixin, UserResourceSerializer[TutorialAsset]):  # type: ignore[reportIncompatibleVariableOverride]
+class TutorialAssetSerializer(CommonAssetSerializer, UserResourceSerializer[TutorialAsset]):  # type: ignore[reportIncompatibleVariableOverride]
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = TutorialAsset
         fields = (
