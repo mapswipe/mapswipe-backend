@@ -6,8 +6,8 @@ from django.db import transaction
 from djangoql.admin import DjangoQLSearchMixin
 
 from apps.common.admin import ArchivableResourceAdmin
-from apps.contributor.firebase import push_contributor_team_to_firebase
 
+from .firebase import FirebaseContributorTeam, firebase_contributor_user
 from .models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
 
@@ -57,7 +57,14 @@ class ContributorTeamAdmin(ArchivableResourceAdmin, DjangoQLSearchMixin, admin.M
             obj.archived_by = None
             obj.archived_at = None
         super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
-        transaction.on_commit(lambda: push_contributor_team_to_firebase.delay(obj.pk))
+        transaction.on_commit(lambda: FirebaseContributorTeam.task.delay(obj.id))
+
+    @typing.override
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        contributor_users = form.instance.user.all()
+        for user in contributor_users:
+            transaction.on_commit(lambda user_id=user.pk: firebase_contributor_user.delay(user_id))
 
 
 @admin.register(ContributorUserGroupMembership)

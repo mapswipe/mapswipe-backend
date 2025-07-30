@@ -352,7 +352,9 @@ type ContributorTimeStatType {
   totalSwipeTime: Int!
 }
 
-"""ContributorUser(id, user_id, team, username, created_at, modified_at)"""
+"""
+ContributorUser(id, old_id, firebase_push_status, firebase_last_pushed, canonical_id, user_id, team, username, created_at, modified_at)
+"""
 input ContributorUserFilter {
   id: IDBaseFilterLookup
   username: StrFilterLookup
@@ -557,7 +559,9 @@ type ContributorUserStats {
   filteredStats(dateRange: DateRangeInput = null): ContributorUserFilteredStats!
 }
 
-"""ContributorUser(id, user_id, team, username, created_at, modified_at)"""
+"""
+ContributorUser(id, old_id, firebase_push_status, firebase_last_pushed, canonical_id, user_id, team, username, created_at, modified_at)
+"""
 type ContributorUserType {
   id: ID!
 
@@ -841,7 +845,7 @@ enum Ordering {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name, firebase_push_status, firebase_last_pushed)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_push_status, firebase_last_pushed, canonical_id, name, description, abbreviation, unique_name)
 """
 input OrganizationCreateInput {
   clientId: String!
@@ -851,7 +855,7 @@ input OrganizationCreateInput {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name, firebase_push_status, firebase_last_pushed)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_push_status, firebase_last_pushed, canonical_id, name, description, abbreviation, unique_name)
 """
 input OrganizationFilter {
   id: IDBaseFilterLookup
@@ -874,7 +878,7 @@ type OrganizationSwipeStatsType {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name, firebase_push_status, firebase_last_pushed)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_push_status, firebase_last_pushed, canonical_id, name, description, abbreviation, unique_name)
 """
 type OrganizationType implements UserResourceTypeMixin {
   clientId: String!
@@ -908,7 +912,7 @@ type OrganizationTypeOffsetPaginated {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name, firebase_push_status, firebase_last_pushed)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_push_status, firebase_last_pushed, canonical_id, name, description, abbreviation, unique_name)
 """
 input OrganizationUpdateInput {
   clientId: String!

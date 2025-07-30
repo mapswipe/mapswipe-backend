@@ -11,7 +11,7 @@ from apps.common.models import ArchivableResource, FirebaseResource, UserResourc
 
 
 # NOTE: Users are created from Apps (Web/Mobile)
-class ContributorUser(models.Model):
+class ContributorUser(FirebaseResource):
     # NOTE: Sync with firebase
     user_id = models.CharField(
         max_length=30,

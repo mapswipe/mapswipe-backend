@@ -20,6 +20,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='organization',
             name='firebase_push_status',
-            field=django_choices_field.fields.IntegerChoicesField(blank=True, choices=[(1, 'Pending'), (2, 'Processing'), (3, 'Success'), (4, 'Failed')], choices_enum=apps.project.models.FirebasePushStatusEnum, null=True),
+            field=django_choices_field.fields.IntegerChoicesField(blank=True, choices=[(1, 'Pending'), (2, 'Processing'), (3, 'Success'), (4, 'Failed')], choices_enum=apps.common.models.FirebasePushStatusEnum, null=True),
         ),
     ]

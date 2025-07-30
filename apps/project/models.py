@@ -11,7 +11,7 @@ from django.db.models.functions import Concat, Lower
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
 
-from apps.common.models import ArchivableResource, CommonAsset, FirebasePushStatusEnum, FirebaseResource, UserResource
+from apps.common.models import ArchivableResource, CommonAsset, FirebaseResource, UserResource
 from apps.contributor.models import ContributorTeam
 from utils.fields import validate_percentage
 
@@ -116,7 +116,7 @@ class UploadHelper:
         return f"project/{instance.pk}/image/{filename}"
 
 
-class Organization(UserResource, ArchivableResource):  # type: ignore[reportIncompatibleVariableOverride]
+class Organization(UserResource, ArchivableResource, FirebaseResource):  # type: ignore[reportIncompatibleVariableOverride]
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     abbreviation = models.CharField(max_length=50, null=True, blank=True)
@@ -129,27 +129,9 @@ class Organization(UserResource, ArchivableResource):  # type: ignore[reportInco
         unique=True,
     )
 
-    # FIREBASE FIELDS
-
-    firebase_push_status: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
-        choices_enum=FirebasePushStatusEnum,
-        null=True,
-        blank=True,
-    )
-    firebase_last_pushed = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text=gettext_lazy("The latest time when organization was pushed to firebase"),
-    )
-
     @typing.override
     def __str__(self) -> str:
         return self.name
-
-    def update_firebase_push_status(self, firebase_push_status: FirebasePushStatusEnum, *, commit: bool = True):
-        self.firebase_push_status = firebase_push_status
-        if commit:
-            self.save(update_fields=("firebase_push_status",))
 
 
 class Project(UserResource, FirebaseResource):  # type: ignore[reportIncompatibleVariableOverride]
