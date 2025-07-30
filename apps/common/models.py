@@ -2,6 +2,7 @@
 import typing
 
 from django.db import models
+from django.db.models.functions import Cast, Coalesce
 from django.utils import timezone
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
@@ -125,6 +126,16 @@ class FirebaseResource(Model):
         null=True,
         blank=True,
         help_text=gettext_lazy("The latest time when project was pushed to firebase"),
+    )
+
+    canonical_id = models.GeneratedField(  # type: ignore[reportAttributeAccessIssue]
+        expression=Coalesce(
+            models.F("old_id"),
+            Cast(models.F("id"), models.CharField()),
+        ),
+        output_field=models.CharField(),
+        db_persist=True,
+        unique=True,
     )
 
     @property

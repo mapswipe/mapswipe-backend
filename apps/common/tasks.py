@@ -26,12 +26,14 @@ def clear_expired_django_sessions():
     management.call_command("clearsessions", verbosity=0)
 
 
+# TODO(tnagorra): We might need to create a common class
 @shared_task
 def push_django_to_firebase[T: FirebaseResource](
     obj_id: int,
     model: type[T],
     handle_new_object_on_firebase: Callable[[T, Reference], None],
     handle_object_update_on_firebase: Callable[[T, Reference], None],
+    get_firebase_path: Callable[[str, T], str],
 ):
     model_obj = model.objects.filter(id=obj_id).first()
     if not model_obj:
@@ -41,9 +43,7 @@ def push_django_to_firebase[T: FirebaseResource](
 
     try:
         model_ref = Config.FIREBASE_HELPER.ref(
-            Config.FirebaseKeys.contributor_team(
-                model_obj.old_id if getattr(model_obj, "old_id", None) is not None else model_obj.pk,
-            ),
+            get_firebase_path(model_obj.canonical_id, model_obj),
         )
         fb_model: typing.Any = model_ref.get()
 

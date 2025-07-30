@@ -7,6 +7,7 @@ from pyfirebase_mapswipe import utils as firebase_utils
 
 from apps.common.tasks import push_django_to_firebase
 from apps.contributor.models import ContributorTeam
+from main.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +38,13 @@ def handle_contributor_team_update_on_firebase(contributor_team: ContributorTeam
 
 @shared_task
 def push_contributor_team_to_firebase(contributor_team_id: int):
+    def get_firebase_path(canonical_id: str, team: ContributorTeam):
+        return Config.FirebaseKeys.contributor_team(canonical_id)
+
     push_django_to_firebase(
         contributor_team_id,
         ContributorTeam,
         handle_new_contributor_team_on_firebase,
         handle_contributor_team_update_on_firebase,
+        get_firebase_path,
     )
