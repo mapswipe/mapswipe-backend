@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 from ulid import ULID
 
+from apps.contributor.factories import ContributorTeamFactory
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
     Project,
@@ -496,6 +497,16 @@ class TestProjectMutation(TestCase):
         response = content["data"]["createProject"]
         assert response["errors"] is not None, content
 
+        # Creating project with archived team
+        # Fails as team is archived
+        archived_team = ContributorTeamFactory.create(
+            **self.user_resource_kwargs,
+            is_archived=True,
+        )
+        project_data["team"] = archived_team.pk
+        response = content["data"]["createProject"]
+        assert response["errors"] is not None, content
+
         latest_project = Project.objects.get(pk=resp_data["result"]["id"])
         assert latest_project.created_by_id == self.user.pk
         assert latest_project.modified_by_id == self.user.pk
@@ -612,6 +623,16 @@ class TestProjectMutation(TestCase):
                 tutorial=None,
             ),
         ), content
+
+        # Updating project with archived team
+        # fails as team is archived
+        archived_team = ContributorTeamFactory.create(
+            **self.user_resource_kwargs,
+            is_archived=True,
+        )
+        project_data["team"] = archived_team.pk
+        content = self._update_project_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProject"]["errors"] is not None, content
 
         # Updating project with archived Organization
         # Fails as organization is archived
@@ -818,6 +839,16 @@ class TestProjectMutation(TestCase):
         content = self._update_processed_project_mutation(str(latest_project.pk), project_data)
         assert content["data"]["updateProcessedProject"]["errors"] is None, content
         assert content["data"]["updateProcessedProject"]["result"]["status"] == self.genum(ProjectStatusEnum.ARCHIVED)
+
+        # Updating project with archived team
+        # fails as team is archived
+        archived_team = ContributorTeamFactory.create(
+            **self.user_resource_kwargs,
+            is_archived=True,
+        )
+        project_data["team"] = archived_team.pk
+        content = self._update_processed_project_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProcessedProject"]["errors"] is not None, content
 
 
 class TestProjectTypeMutation(TestCase):

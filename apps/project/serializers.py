@@ -6,6 +6,7 @@ from django.utils.translation import gettext
 from rest_framework import serializers
 
 from apps.common.serializers import ArchivableResourceSerializer, UserResourceSerializer
+from apps.contributor.models import ContributorTeam
 from apps.project.firebase import push_organization_to_firebase
 from apps.tutorial.models import Tutorial
 from project_types.store import get_project_property
@@ -61,6 +62,13 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
             "team",
         )
 
+    def validate_team(self, team: ContributorTeam | None) -> ContributorTeam | None:
+        if team and team.is_archived:
+            raise serializers.ValidationError(
+                gettext("Cannot use archived team on a project."),
+            )
+        return team
+
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class ProjectUpdateSerializer(UserResourceSerializer[Project]):
@@ -89,6 +97,13 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             "tutorial",
             "team",
         )
+
+    def validate_team(self, team: ContributorTeam | None) -> ContributorTeam | None:
+        if team and team.is_archived:
+            raise serializers.ValidationError(
+                gettext("Cannot use archived team on a project."),
+            )
+        return team
 
     def validate_status(self, new_status: Project.Status | int) -> Project.Status:
         assert self.instance is not None, "Project does not exist."
@@ -245,6 +260,13 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             "tutorial",
             "team",
         )
+
+    def validate_team(self, team: ContributorTeam | None) -> ContributorTeam | None:
+        if team and team.is_archived:
+            raise serializers.ValidationError(
+                gettext("Cannot use archived team on a project."),
+            )
+        return team
 
     def validate_status(self, new_status: Project.Status | int):
         assert self.instance is not None, "Project does not exist."
