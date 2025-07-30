@@ -14,22 +14,22 @@ class TestProjectQuery(TestCase):
                 name
                 custom {
                   credits
-                  sourceName
+                  sourceLayer
                   url
                   minZoom
                   maxZoom
                 }
                 openFreeMap {
                   credits
-                  sourceName
+                  sourceLayer
                 }
                 openStreetMap {
                   credits
-                  sourceName
+                  sourceLayer
                 }
                 versatiles {
                   credits
-                  sourceName
+                  sourceLayer
                 }
             }
             fragment RasterTileServerPropertyFields on ProjectRasterTileServerConfig {
@@ -273,7 +273,7 @@ class TestProjectQuery(TestCase):
                                 "custom": {
                                     "url": "https://custom-osm-data/{x}/{y}/{z}.pbf",
                                     "credits": "custom osm",
-                                    "source_name": "custom-source-name",
+                                    "source_layer": "custom-source-name",
                                     "min_zoom": 0,
                                     "max_zoom": 14,
                                 },
