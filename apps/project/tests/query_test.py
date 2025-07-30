@@ -57,8 +57,8 @@ class TestProjectQuery(TestCase):
                 credits
               }
             }
-            query Projects($pagination: OffsetPaginationInput) {
-              projects(order: {id: ASC}, pagination: $pagination) {
+            query Projects($pagination: OffsetPaginationInput, $includeAll: Boolean = false) {
+              projects(order: {id: ASC}, pagination: $pagination, includeAll: $includeAll) {
                 totalCount
                 pageInfo {
                   offset
@@ -305,6 +305,7 @@ class TestProjectQuery(TestCase):
                         "limit": 10,
                         "offset": 0,
                     },
+                    "includeAll": True,
                 },
             )
 

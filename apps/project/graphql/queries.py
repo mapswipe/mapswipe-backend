@@ -1,8 +1,10 @@
 import strawberry
 import strawberry_django
+from django.db.models import QuerySet
 from strawberry_django.pagination import OffsetPaginated
 from strawberry_django.permissions import IsAuthenticated
 
+from apps.project.models import Organization, Project
 from utils.geo.raster_tile_server.config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNameEnumWithoutCustom
 from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum, VectorTileServerNameEnumWithoutCustom
 
@@ -57,13 +59,6 @@ class Query:
     # Private --------------------
     project: ProjectType = strawberry_django.field(extensions=[IsAuthenticated()])
 
-    # --- Paginated
-    projects: OffsetPaginated[ProjectType] = strawberry_django.offset_paginated(
-        order=ProjectOrder,
-        filters=ProjectFilter,
-        extensions=[IsAuthenticated()],
-    )
-
     project_asset: ProjectAssetType = strawberry_django.field(extensions=[IsAuthenticated()])
 
     # --- Paginated
@@ -76,8 +71,39 @@ class Query:
     organization: OrganizationType = strawberry_django.field(extensions=[IsAuthenticated()])
 
     # --- Paginated
-    organizations: OffsetPaginated[OrganizationType] = strawberry_django.offset_paginated(
+    @strawberry_django.offset_paginated(
+        OffsetPaginated[OrganizationType],
         order=OrganizationOrder,
         filters=OrganizationFilter,
         extensions=[IsAuthenticated()],
     )
+    # TODO: We need attribute description `include_all` visible in graphiql
+    def organizations(
+        self,
+        include_all: bool = False,
+    ) -> QuerySet[Organization]:
+        if include_all:
+            return Organization.objects.all()
+        return Organization.objects.exclude(is_archived=True).all()
+
+    # --- Paginated
+    @strawberry_django.offset_paginated(
+        OffsetPaginated[ProjectType],
+        order=ProjectOrder,
+        filters=ProjectFilter,
+        extensions=[IsAuthenticated()],
+    )
+    # TODO: We need attribute description `include_all` visible in graphiql
+    def projects(
+        self,
+        include_all: bool = False,
+    ) -> QuerySet[Project]:
+        if include_all:
+            return Project.objects.all()
+        return Project.objects.filter(
+            status__in=[
+                Project.Status.READY,
+                Project.Status.PUBLISHED,
+                Project.Status.PAUSED,
+            ],
+        ).all()
