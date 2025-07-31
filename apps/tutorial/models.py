@@ -1,5 +1,6 @@
 # pyright: reportUninitializedInstanceVariable=false
 import typing
+from warnings import deprecated
 
 import ulid
 from django.core.exceptions import ValidationError
@@ -13,6 +14,7 @@ from apps.project.models import CommonAsset, Project
 
 
 class UploadHelper:
+    @deprecated("This is kept because it's referenced in migrations")
     @staticmethod
     def information_page_block_image(instance: "TutorialInformationPageBlock", filename: str):
         return f"tutorial/{instance.page.tutorial_id}/block-image/{ulid.ULID()!s}/{filename}"
@@ -190,8 +192,13 @@ class TutorialInformationPageBlock(UserResource):
     block_type = IntegerChoicesField(choices_enum=TutorialInformationPageBlockTypeEnum)
     # NOTE: Previously was text_description
     text = models.TextField(null=True, blank=True)
-    # NOTE: Previously was image_file
-    image = models.ImageField(upload_to=UploadHelper.information_page_block_image, null=True, blank=True)
+    image: "TutorialAsset | None" = models.ForeignKey(  # type: ignore[reportAssignmentType]
+        "tutorial.TutorialAsset",
+        related_name="+",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
 
     # Type hints
     page_id: int
@@ -213,5 +220,5 @@ class TutorialInformationPageBlock(UserResource):
     def clean(self):
         if self.block_type_enum == TutorialInformationPageBlockTypeEnum.TEXT and (self.text is None or self.text == ""):
             raise ValidationError(gettext("Text should be provided for text block"))
-        if self.block_type_enum == TutorialInformationPageBlockTypeEnum.IMAGE and self.image.name is None:
+        if self.block_type_enum == TutorialInformationPageBlockTypeEnum.IMAGE and self.image is None:
             raise ValidationError(gettext("Image should be provided for image block"))

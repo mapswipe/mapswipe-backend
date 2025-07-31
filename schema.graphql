@@ -645,17 +645,12 @@ union DeleteProjectPayload = ProjectType | OperationInfo
 
 union DeleteTutorialPayload = TutorialType | OperationInfo
 
-type DjangoImageType {
-  name: String!
-  path: String!
-  size: Int!
-  url: String!
-  width: Int!
-  height: Int!
-}
-
 input DjangoModelFilterInput {
   id: ID!
+}
+
+type DjangoModelType {
+  pk: ID!
 }
 
 input FindProjectPropertyInput {
@@ -1742,7 +1737,7 @@ input TutorialInformationPageBlockCreateInput {
   blockNumber: Int!
   blockType: TutorialInformationPageBlockTypeEnum!
   text: String
-  image: Upload
+  image: ID
 }
 
 input TutorialInformationPageBlockInput {
@@ -1765,7 +1760,7 @@ type TutorialInformationPageBlockType implements UserResourceTypeMixin {
   blockNumber: Int!
   blockType: TutorialInformationPageBlockTypeEnum!
   text: String
-  image: DjangoImageType
+  image: DjangoModelType
 }
 
 enum TutorialInformationPageBlockTypeEnum {
@@ -1782,7 +1777,7 @@ input TutorialInformationPageBlockUpdateInput {
   blockNumber: Int
   blockType: TutorialInformationPageBlockTypeEnum
   text: String
-  image: Upload
+  image: ID
 }
 
 """
