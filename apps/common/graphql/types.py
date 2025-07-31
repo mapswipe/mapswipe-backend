@@ -21,3 +21,11 @@ class ArchivableResourceTypeMixin:
     is_archived: bool
     archived_at: datetime.datetime | None
     archived_by: UserType | None
+
+
+@strawberry.type
+class CommonAssetTypeMixin:
+    type: strawberry.auto
+    file_size: strawberry.auto
+    mimetype: strawberry.auto
+    marked_as_deleted: strawberry.auto

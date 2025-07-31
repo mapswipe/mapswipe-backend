@@ -4,7 +4,7 @@ import strawberry
 import strawberry_django
 from django.db import models
 
-from apps.common.graphql.types import UserResourceTypeMixin
+from apps.common.graphql.types import CommonAssetTypeMixin, UserResourceTypeMixin
 from apps.project.models import Project, ProjectTypeEnum
 from apps.tutorial.models import (
     Tutorial,
@@ -130,9 +130,7 @@ class TutorialType(UserResourceTypeMixin):
 
 
 @strawberry_django.type(TutorialAsset)
-class TutorialAssetType(UserResourceTypeMixin):
+class TutorialAssetType(UserResourceTypeMixin, CommonAssetTypeMixin):
     id: strawberry.ID
-    type: strawberry.auto
     file: strawberry.auto
     tutorial_id: strawberry.ID
-    marked_as_deleted: strawberry.auto

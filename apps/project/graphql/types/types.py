@@ -3,7 +3,7 @@ import typing
 import strawberry
 import strawberry_django
 
-from apps.common.graphql.types import ArchivableResourceTypeMixin, UserResourceTypeMixin
+from apps.common.graphql.types import ArchivableResourceTypeMixin, CommonAssetTypeMixin, UserResourceTypeMixin
 from apps.contributor.graphql.types import ContributorTeamType
 from apps.project.models import Organization, Project, ProjectAsset
 from apps.tutorial.graphql.types.types import TutorialType
@@ -35,13 +35,10 @@ class OrganizationType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
 
 # Project
 @strawberry_django.type(ProjectAsset)
-class ProjectAssetType(UserResourceTypeMixin):
+class ProjectAssetType(UserResourceTypeMixin, CommonAssetTypeMixin):
     id: strawberry.ID
-    type: strawberry.auto
     file: strawberry.auto
-    mimetype: strawberry.auto
     project_id: strawberry.ID
-    marked_as_deleted: strawberry.auto
 
 
 @strawberry_django.type(Project)

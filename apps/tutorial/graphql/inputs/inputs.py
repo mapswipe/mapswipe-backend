@@ -9,6 +9,7 @@ from apps.common.graphql.inputs import (
 )
 from apps.tutorial.models import (
     Tutorial,
+    TutorialAsset,
     TutorialInformationPage,
     TutorialInformationPageBlock,
     TutorialScenarioPage,
@@ -136,6 +137,14 @@ class TutorialInformationPageInput(CudInput[TutorialInformationPageCreateInput, 
 class TutorialCreateInput(UserResourceCreateInputMixin):
     project: strawberry.ID
     name: strawberry.auto
+
+
+# NOTE: Make sure this matches with the serializers ../serializers.py
+@strawberry_django.input(TutorialAsset)
+class TutorialAssetCreateInput(UserResourceCreateInputMixin):
+    mimetype: strawberry.auto
+    file: Upload
+    tutorial: strawberry.ID
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
