@@ -56,7 +56,6 @@ GenericJSON = strawberry.scalar(
 @strawberry.type
 class MapswipeDjangoFileType:
     name: str
-    size: int
 
     @strawberry_django.field
     def url(

@@ -597,6 +597,8 @@ union CreateProjectAssetPayload = ProjectAssetTypeMutationResponseType | Operati
 
 union CreateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
 
+union CreateTutorialAssetPayload = TutorialAssetTypeMutationResponseType | OperationInfo
+
 union CreateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
 
 """A generic type to return error messages"""
@@ -778,7 +780,6 @@ enum MappingSessionClientTypeEnum {
 
 type MapswipeDjangoFileType {
   name: String!
-  size: Int!
   url: String!
 }
 
@@ -795,6 +796,7 @@ type Mutation {
   deleteTutorial: DeleteTutorialPayload! @isAuthenticated
   createTutorial(data: TutorialCreateInput!): CreateTutorialPayload! @isAuthenticated
   updateTutorial(data: TutorialUpdateInput!, pk: ID!): UpdateTutorialPayload! @isAuthenticated
+  createTutorialAsset(data: TutorialAssetCreateInput!): CreateTutorialAssetPayload! @isAuthenticated
   createContributorUserGroup(data: ContributorUserGroupCreateInput!): CreateContributorUserGroupPayload! @isAuthenticated
   updateContributorUserGroup(data: ContributorUserGroupUpdateInput!, pk: ID!): UpdateContributorUserGroupPayload! @isAuthenticated
 }
@@ -997,18 +999,21 @@ type ProjectAssetType implements UserResourceTypeMixin {
   modifiedAt: DateTime!
   createdBy: UserType!
   modifiedBy: UserType!
-  id: ID!
   type: AssetTypeEnum!
 
-  """The file associated with the asset"""
-  file: MapswipeDjangoFileType!
+  """The size of the file in bytes"""
+  fileSize: Int!
   mimetype: AssetMimetypeEnum!
-  projectId: ID!
 
   """
   If this flag is enabled, this project asset will be deleted in the future
   """
   markedAsDeleted: Boolean!
+  id: ID!
+
+  """The file associated with the asset"""
+  file: MapswipeDjangoFileType!
+  projectId: ID!
 }
 
 type ProjectAssetTypeMutationResponseType {
@@ -1633,6 +1638,18 @@ input StrFilterLookup {
 """
 TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, tutorial, file)
 """
+input TutorialAssetCreateInput {
+  clientId: String!
+  mimetype: AssetMimetypeEnum!
+
+  """The file associated with the asset"""
+  file: Upload!
+  tutorial: ID!
+}
+
+"""
+TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, tutorial, file)
+"""
 input TutorialAssetFilter {
   id: IDBaseFilterLookup
   type: AssetTypeEnumFilterLookup
@@ -1657,17 +1674,27 @@ type TutorialAssetType implements UserResourceTypeMixin {
   modifiedAt: DateTime!
   createdBy: UserType!
   modifiedBy: UserType!
-  id: ID!
   type: AssetTypeEnum!
 
-  """The file associated with the asset"""
-  file: MapswipeDjangoFileType!
-  tutorialId: ID!
+  """The size of the file in bytes"""
+  fileSize: Int!
+  mimetype: AssetMimetypeEnum!
 
   """
   If this flag is enabled, this project asset will be deleted in the future
   """
   markedAsDeleted: Boolean!
+  id: ID!
+
+  """The file associated with the asset"""
+  file: MapswipeDjangoFileType!
+  tutorialId: ID!
+}
+
+type TutorialAssetTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: TutorialAssetType
 }
 
 type TutorialAssetTypeOffsetPaginated {

@@ -9,14 +9,14 @@ from apps.tutorial.models import (
     TutorialScenarioPage,
     TutorialTask,
 )
-from apps.tutorial.serializers import TutorialCreateSerializer, TutorialUpdateSerializer
+from apps.tutorial.serializers import TutorialAssetSerializer, TutorialCreateSerializer, TutorialUpdateSerializer
 from main.graphql.context import Info
 from utils.graphql.common import DataclassInstance
 from utils.graphql.mutations import ModelMutation
 from utils.graphql.types import CudInput, MutationResponseType
 
-from .inputs.inputs import TutorialCreateInput, TutorialUpdateInput
-from .types.types import TutorialType
+from .inputs.inputs import TutorialAssetCreateInput, TutorialCreateInput, TutorialUpdateInput
+from .types.types import TutorialAssetType, TutorialType
 
 
 @strawberry.type
@@ -76,3 +76,11 @@ class Mutation:
             None,
             transformer,
         )
+
+    @strawberry_django.mutation(extensions=[IsAuthenticated()])
+    async def create_tutorial_asset(
+        self,
+        info: Info,
+        data: TutorialAssetCreateInput,
+    ) -> MutationResponseType[TutorialAssetType]:
+        return await ModelMutation(TutorialAssetSerializer).handle_create_mutation(data, info, None)
