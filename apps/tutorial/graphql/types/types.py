@@ -27,6 +27,13 @@ from .project_types.validate import ValidateTutorialTaskPropertyType
 from .project_types.validate_image import ValidateImageTutorialTaskPropertyType
 
 
+@strawberry_django.type(TutorialAsset)
+class TutorialAssetType(UserResourceTypeMixin, CommonAssetTypeMixin):
+    id: strawberry.ID
+    file: strawberry.auto
+    tutorial_id: strawberry.ID
+
+
 @strawberry_django.type(TutorialTask)
 class TutorialTaskType(UserResourceTypeMixin):
     id: strawberry.ID
@@ -104,7 +111,9 @@ class TutorialInformationPageBlockType(UserResourceTypeMixin):
     block_number: strawberry.auto
     block_type: strawberry.auto
     text: strawberry.auto
-    image: strawberry.auto
+    # TODO(tnagorra): Check if this creates N+1 issue
+    image_id: strawberry.ID | None
+    image: TutorialAssetType | None
 
 
 @strawberry_django.type(TutorialInformationPage)
@@ -127,10 +136,3 @@ class TutorialType(UserResourceTypeMixin):
     # The tests are failing randomly.
     scenarios: list[TutorialScenarioPageType]
     information_pages: list[TutorialInformationPageType]
-
-
-@strawberry_django.type(TutorialAsset)
-class TutorialAssetType(UserResourceTypeMixin, CommonAssetTypeMixin):
-    id: strawberry.ID
-    file: strawberry.auto
-    tutorial_id: strawberry.ID

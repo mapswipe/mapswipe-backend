@@ -649,10 +649,6 @@ input DjangoModelFilterInput {
   id: ID!
 }
 
-type DjangoModelType {
-  pk: ID!
-}
-
 input FindProjectPropertyInput {
   zoomLevel: Int!
   tileServerProperty: ProjectRasterTileServerConfigInput!
@@ -1760,7 +1756,8 @@ type TutorialInformationPageBlockType implements UserResourceTypeMixin {
   blockNumber: Int!
   blockType: TutorialInformationPageBlockTypeEnum!
   text: String
-  image: DjangoModelType
+  imageId: ID
+  image: TutorialAssetType
 }
 
 enum TutorialInformationPageBlockTypeEnum {
