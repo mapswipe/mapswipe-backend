@@ -21,6 +21,10 @@ class Config:
     FIREBASE_EMULATOR_TEST_HOST = typing.cast("str | None", settings.FIREBASE_EMULATOR_TEST_HOST)
     FIREBASE_EMULATOR_HOST = os.environ.get("FIREBASE_DATABASE_EMULATOR_HOST")
 
+    # Existing database
+    EXISTING_POSTGRES_ENABLED = typing.cast("bool", settings.EXISTING_POSTGRES_ENABLED)
+    EXISTING_DATABASE_KEY = typing.cast("str", settings.EXISTING_DATABASE_KEY)
+
     class FirebaseKeys:
         @staticmethod
         def backend_wait():
