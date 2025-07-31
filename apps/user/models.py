@@ -28,6 +28,9 @@ class User(AbstractUser):
     )
     objects: CustomUserManager = CustomUserManager()  # type: ignore[reportAssignmentType]
 
+    # type hints
+    pk: int
+
     @property
     def anonymize_email(self):
         email_name, email_domain = self.email.split("@")
@@ -38,7 +41,7 @@ class User(AbstractUser):
     def save(self, *args, **kwargs):
         # Make sure email are same and lowercase
         self.email = self.email.lower()
-        if self.pk is None:
+        if self.pk is None:  # pyright: ignore [reportUnnecessaryComparison]
             super().save(*args, **kwargs)
             # Remove force_insert since we have already inserted
             kwargs.pop("force_insert", None)
