@@ -19,7 +19,7 @@ class ContributorUser(models.Model):
         unique=True,
         help_text="Firebase User ID",
     )
-    team = models.ForeignKey(
+    team: "ContributorTeam | None" = models.ForeignKey(  # type: ignore[reportIncompatibleVariableOverride]
         "ContributorTeam",
         on_delete=models.SET_NULL,
         null=True,
@@ -46,8 +46,8 @@ class ContributorUserGroup(ArchivableResource, UserResource):  # type: ignore[re
 
 
 class ContributorUserGroupMembership(models.Model):
-    user_group = models.ForeignKey(ContributorUserGroup, on_delete=models.CASCADE)
-    user = models.ForeignKey(ContributorUser, on_delete=models.CASCADE)
+    user_group: ContributorUserGroup = models.ForeignKey(ContributorUserGroup, on_delete=models.CASCADE)  # type: ignore[reportIncompatibleVariableOverride]
+    user: ContributorUser = models.ForeignKey(ContributorUser, on_delete=models.CASCADE)  # type: ignore[reportIncompatibleVariableOverride]
     is_active = models.BooleanField()
 
     # Type hints
@@ -67,7 +67,7 @@ class ContributorUserGroupMembershipLogActionEnum(models.IntegerChoices):
 class ContributorUserGroupMembershipLog(models.Model):
     ACTION = ContributorUserGroupMembershipLogActionEnum
 
-    membership = models.ForeignKey(ContributorUserGroupMembership, on_delete=models.CASCADE)
+    membership: ContributorUserGroupMembership = models.ForeignKey(ContributorUserGroupMembership, on_delete=models.CASCADE)  # type: ignore[reportIncompatibleVariableOverride]
     # Sync with firebase
     action = IntegerChoicesField(choices_enum=ContributorUserGroupMembershipLogActionEnum)
     date = models.DateTimeField()

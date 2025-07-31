@@ -14,11 +14,13 @@ from pyfirebase_mapswipe import models as firebase_models
 from typing_extensions import TypedDict
 from ulid import ULID
 
+from apps.common.models import (
+    AssetMimetypeEnum,
+    AssetTypeEnum,
+)
 from apps.project.models import (
     Project,
     ProjectAsset,
-    ProjectAssetMimetypeEnum,
-    ProjectAssetTypeEnum,
     ProjectTask,
     ProjectTaskGroup,
 )
@@ -195,8 +197,8 @@ class ValidateProject(
 
         aoi_asset = ProjectAsset.usable_objects().get(
             id=self.project_type_specifics.object_source.aoi_geometry,
-            type=ProjectAssetTypeEnum.INPUT,
-            mimetype=ProjectAssetMimetypeEnum.GEOJSON,
+            type=AssetTypeEnum.INPUT,
+            mimetype=AssetMimetypeEnum.GEOJSON,
             project_id=self.project.pk,
         )
 
@@ -322,8 +324,9 @@ class ValidateProject(
             client_id=str(ULID()),
             project=self.project,
             file=file,
-            type=ProjectAssetTypeEnum.OUTPUT,
-            mimetype=ProjectAssetMimetypeEnum.GEOJSON,
+            file_size=file.size,
+            type=AssetTypeEnum.OUTPUT,
+            mimetype=AssetMimetypeEnum.GEOJSON,
             # FIXME(tnagorra): Maybe create a internal user like mapswipe-bot
             created_by=self.project.modified_by,
             modified_by=self.project.modified_by,

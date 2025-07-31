@@ -28,8 +28,8 @@ class MappingSession(models.Model):
     # FIXME(tnagorra): We might need to skip the indexing
     old_id = models.CharField(max_length=30, db_index=True, null=True)
 
-    project_task_group = models.ForeignKey(ProjectTaskGroup, on_delete=models.PROTECT)
-    contributor_user = models.ForeignKey(ContributorUser, on_delete=models.PROTECT)
+    project_task_group: ProjectTaskGroup = models.ForeignKey(ProjectTaskGroup, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
+    contributor_user: ContributorUser = models.ForeignKey(ContributorUser, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
 
     app_version = models.CharField(max_length=10)
     client_type = IntegerChoicesField(choices_enum=MappingSessionClientTypeEnum)
@@ -54,8 +54,8 @@ class MappingSessionUserGroup(models.Model):
     # FIXME(tnagorra): We might need to skip the indexing
     old_id = models.CharField(max_length=30, db_index=True, null=True)
 
-    mapping_session = models.ForeignKey(MappingSession, on_delete=models.PROTECT)
-    user_group = models.ForeignKey(
+    mapping_session: MappingSession = models.ForeignKey(MappingSession, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
+    user_group: ContributorUserGroup = models.ForeignKey(  # type: ignore[reportIncompatibleVariableOverride]
         ContributorUserGroup,
         on_delete=models.PROTECT,
         related_name="+",
@@ -73,8 +73,8 @@ class MappingSessionResult(models.Model):
     # FIXME(tnagorra): We might need to skip the indexing
     old_id = models.CharField(max_length=30, db_index=True, null=True)
 
-    session = models.ForeignKey(MappingSession, on_delete=models.PROTECT)
-    project_task = models.ForeignKey(ProjectTask, on_delete=models.PROTECT)
+    session: MappingSession = models.ForeignKey(MappingSession, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
+    project_task: ProjectTaskGroup = models.ForeignKey(ProjectTask, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
     result = models.PositiveSmallIntegerField()
 
     # TODO(thenav56): Add constraint to make sure we have non-duplicate row with task_id, .session.user_id

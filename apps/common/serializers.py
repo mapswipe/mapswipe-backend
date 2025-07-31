@@ -1,20 +1,27 @@
 import logging
+import mimetypes
 import typing
 
 from django.core.exceptions import ValidationError
 from django.http.request import HttpRequest
+from django.template.defaultfilters import filesizeformat
 from django.utils import timezone
 from django.utils.translation import gettext
 from firebase_admin import auth
 from rest_framework import serializers
 
 from apps.common.models import ArchivableResource, UserResource
+from apps.project.models import CommonAsset
 from apps.user.models import User
 from utils.common import validate_ulid
 
 from .types import FirebaseDecodedIdToken
 
 logger = logging.getLogger(__name__)
+
+
+if typing.TYPE_CHECKING:
+    from django.core.files.base import ContentFile
 
 
 class DrfContextType(typing.TypedDict):
@@ -160,3 +167,46 @@ class FirebaseAuthRequestSerializer(serializers.Serializer[typing.Any]):
 class FirebaseAuthResponseSerializer(serializers.Serializer[typing.Any]):
     ok = serializers.BooleanField(required=True)
     error = serializers.CharField()
+
+
+class CommonAssetSerializer(serializers.ModelSerializer[CommonAsset]):
+    def _validate_file(self, attrs: dict[str, typing.Any]) -> None:
+        file_content: ContentFile[bytes] = attrs["file"]
+        file_size = file_content.size
+        max_file_size = CommonAsset.MAX_FILE_SIZE
+
+        if file_size > max_file_size:
+            raise serializers.ValidationError(
+                gettext("Filesize should be less than: %s. Current is: %s")
+                % (
+                    filesizeformat(max_file_size),
+                    filesizeformat(file_size),
+                ),
+            )
+
+        # https://docs.python.org/3/library/mimetypes.html#mimetypes.guess_type
+        mimetype, *_ = mimetypes.guess_type(file_content.name)  # type: ignore[reportUnknownArgumentType]
+
+        # TODO(susilnem): Use library like filemagic to determine mimetype instead?
+        if mimetype is None:
+            raise serializers.ValidationError(
+                gettext("Could not determine mimetype of the file: %s") % file_content.name,
+            )
+
+        if not CommonAsset.Mimetype.is_valid_mimetype(mimetype):
+            raise serializers.ValidationError(
+                gettext("File mimetype is not supported: %s") % mimetype,
+            )
+
+        if "mimetype" in attrs and CommonAsset.Mimetype.get_mimetype_by_label(mimetype) != attrs["mimetype"]:
+            raise serializers.ValidationError(
+                gettext("File mimetype does not match the provided mimetype: %s") % mimetype,
+            )
+
+        attrs["mimetype"] = CommonAsset.Mimetype.get_mimetype_by_label(mimetype)
+        attrs["file_size"] = file_size
+
+    @typing.override
+    def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
+        self._validate_file(attrs)
+        return super().validate(attrs)

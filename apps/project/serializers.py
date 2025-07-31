@@ -6,7 +6,7 @@ from django.utils.translation import gettext
 from rest_framework import serializers
 
 from apps.common.models import FirebasePushStatusEnum
-from apps.common.serializers import ArchivableResourceSerializer, UserResourceSerializer
+from apps.common.serializers import ArchivableResourceSerializer, CommonAssetSerializer, UserResourceSerializer
 from apps.contributor.models import ContributorTeam
 from apps.project.firebase import push_organization_to_firebase
 from apps.tutorial.models import Tutorial
@@ -357,8 +357,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
-# FIXME(tnagorra): Should we validate the mimetype during upload?
-class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
+class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[ProjectAsset]):  # type: ignore[reportIncompatibleVariableOverride]
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = ProjectAsset
         fields = (
@@ -369,7 +368,7 @@ class ProjectAssetSerializer(UserResourceSerializer[ProjectAsset]):
 
     @typing.override
     def create(self, validated_data: dict[str, typing.Any]) -> ProjectAsset:
-        # NOTE: User should only bye able to create INPUT type project assets
+        # NOTE: User should only be able to create INPUT type project assets
         validated_data["type"] = ProjectAsset.Type.INPUT
         return super().create(validated_data)
 

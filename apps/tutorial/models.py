@@ -9,13 +9,17 @@ from django_choices_field import IntegerChoicesField
 from django_stubs_ext.db.models.manager import RelatedManager
 
 from apps.common.models import IconEnum, UserResource
-from apps.project.models import Project
+from apps.project.models import CommonAsset, Project
 
 
 class UploadHelper:
     @staticmethod
     def information_page_block_image(instance: "TutorialInformationPageBlock", filename: str):
         return f"tutorial/{instance.page.tutorial_id}/block-image/{ulid.ULID()!s}/{filename}"
+
+    @staticmethod
+    def tutorial_asset(instance: "TutorialAsset", filename: str):
+        return f"tutorial/{instance.tutorial_id}/asset/{instance.type}/{ulid.ULID()!s}/{filename}"
 
 
 class TutorialStatusEnum(models.IntegerChoices):
@@ -49,7 +53,7 @@ class Tutorial(UserResource):
     Status = TutorialStatusEnum
 
     # FIXME(tnagorra): We might need to rename this field
-    project = models.ForeignKey(
+    project: Project = models.ForeignKey(  # type: ignore[reportAssignmentType]
         Project,
         on_delete=models.PROTECT,
         related_name="+",
@@ -70,6 +74,22 @@ class Tutorial(UserResource):
     @property
     def status_enum(self) -> TutorialStatusEnum:
         return TutorialStatusEnum(self.status)
+
+
+class TutorialAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibleVariableOverride]
+    tutorial: Tutorial = models.ForeignKey(  # type: ignore[reportAssignmentType]
+        Tutorial,
+        on_delete=models.CASCADE,
+        related_name="+",
+    )
+
+    file = models.FileField(
+        upload_to=UploadHelper.tutorial_asset,
+        help_text=gettext_lazy("The file associated with the asset"),
+    )
+
+    # Type hints
+    tutorial_id: int
 
 
 class TutorialScenarioPage(UserResource):

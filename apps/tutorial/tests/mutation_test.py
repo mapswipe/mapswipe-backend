@@ -219,135 +219,6 @@ class TestTutorialMutation(TestCase):
             "clientId": str(ULID()),
             "name": "My Tutorial",
             "project": self.project.pk,
-            "scenarios": [
-                {
-                    "clientId": str(ULID()),
-                    "scenarioPageNumber": 1,
-                    "instructionsDescription": "Anything that is not naturally occurring",
-                    "instructionsIcon": "STAR_OUTLINE",
-                    "instructionsTitle": "Identify man-made structures",
-                    "hintDescription": "They have sharp boundaries",
-                    "hintIcon": "INFORMATION_OUTLINE",
-                    "hintTitle": "Look closer!",
-                    "successDescription": "You identified all man-made structures",
-                    "successIcon": "CHECK",
-                    "successTitle": "Well done!",
-                    "tasks": [
-                        {
-                            "clientId": str(ULID()),
-                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110087}},
-                            "reference": 0,
-                        },
-                        {
-                            "clientId": str(ULID()),
-                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110088}},
-                            "reference": 1,
-                        },
-                        {
-                            "clientId": str(ULID()),
-                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110089}},
-                            "reference": 0,
-                        },
-                        {
-                            "clientId": str(ULID()),
-                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110087}},
-                            "reference": 0,
-                        },
-                        {
-                            "clientId": str(ULID()),
-                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110088}},
-                            "reference": 1,
-                        },
-                        {
-                            "clientId": str(ULID()),
-                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110089}},
-                            "reference": 0,
-                        },
-                    ],
-                },
-                {
-                    "clientId": str(ULID()),
-                    "scenarioPageNumber": 2,
-                    "instructionsDescription": "Anything that is not naturally occurring",
-                    "instructionsIcon": "STAR_OUTLINE",
-                    "instructionsTitle": "Identify natural structures",
-                    "hintDescription": "They have sharp boundaries",
-                    "hintIcon": "INFORMATION_OUTLINE",
-                    "hintTitle": "Look closer!",
-                    "successDescription": "You identified all natural structures",
-                    "successIcon": "CHECK",
-                    "successTitle": "Well done!",
-                    "tasks": [
-                        {
-                            "clientId": str(ULID()),
-                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110087}},
-                            "reference": 1,
-                        },
-                        {
-                            "clientId": str(ULID()),
-                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110088}},
-                            "reference": 1,
-                        },
-                        {
-                            "clientId": str(ULID()),
-                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110089}},
-                            "reference": 1,
-                        },
-                        {
-                            "clientId": str(ULID()),
-                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110087}},
-                            "reference": 1,
-                        },
-                        {
-                            "clientId": str(ULID()),
-                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110088}},
-                            "reference": 1,
-                        },
-                        {
-                            "clientId": str(ULID()),
-                            "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110089}},
-                            "reference": 1,
-                        },
-                    ],
-                },
-            ],
-            "informationPages": [
-                {
-                    "clientId": str(ULID()),
-                    "title": "Man-made structures",
-                    "pageNumber": 1,
-                    "blocks": [
-                        {
-                            "clientId": str(ULID()),
-                            "blockNumber": 1,
-                            "blockType": "TEXT",
-                            "text": "Man-made structures are physical constructions created by humans, typically "
-                            "using tools, materials, and engineering principles.",
-                        },
-                        {
-                            "clientId": str(ULID()),
-                            "blockNumber": 2,
-                            "blockType": "TEXT",
-                            "text": "These structures are built to serve specific purposes, such as housing, "
-                            "transportation, defense, communication, or recreation.",
-                        },
-                    ],
-                },
-                {
-                    "clientId": str(ULID()),
-                    "title": "Natural structures",
-                    "pageNumber": 2,
-                    "blocks": [
-                        {
-                            "clientId": str(ULID()),
-                            "blockNumber": 1,
-                            "blockType": "TEXT",
-                            "text": "Natural structures are physical formations that are created by nature "
-                            "without human intervention",
-                        },
-                    ],
-                },
-            ],
         }
 
         # Creating Tutorial: Without authentication
@@ -368,8 +239,172 @@ class TestTutorialMutation(TestCase):
         assert resp_data["errors"] is None, content
 
         latest_tutorial = Tutorial.objects.get(pk=resp_data["result"]["id"])
+        assert latest_tutorial.status == TutorialStatusEnum.DRAFT
         assert latest_tutorial.created_by_id == self.user.pk
         assert latest_tutorial.modified_by_id == self.user.pk
+
+        # Update Tutorial
+
+        tutorial_data = {
+            **tutorial_data,
+            "scenarios": [
+                {
+                    "create": {
+                        "clientId": str(ULID()),
+                        "scenarioPageNumber": 1,
+                        "instructionsDescription": "Anything that is not naturally occurring",
+                        "instructionsIcon": "STAR_OUTLINE",
+                        "instructionsTitle": "Identify man-made structures",
+                        "hintDescription": "They have sharp boundaries",
+                        "hintIcon": "INFORMATION_OUTLINE",
+                        "hintTitle": "Look closer!",
+                        "successDescription": "You identified all man-made structures",
+                        "successIcon": "CHECK",
+                        "successTitle": "Well done!",
+                        "tasks": [
+                            {
+                                "clientId": str(ULID()),
+                                "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110087}},
+                                "reference": 0,
+                            },
+                            {
+                                "clientId": str(ULID()),
+                                "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110088}},
+                                "reference": 1,
+                            },
+                            {
+                                "clientId": str(ULID()),
+                                "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110089}},
+                                "reference": 0,
+                            },
+                            {
+                                "clientId": str(ULID()),
+                                "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110087}},
+                                "reference": 0,
+                            },
+                            {
+                                "clientId": str(ULID()),
+                                "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110088}},
+                                "reference": 1,
+                            },
+                            {
+                                "clientId": str(ULID()),
+                                "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110089}},
+                                "reference": 0,
+                            },
+                        ],
+                    },
+                },
+                {
+                    "create": {
+                        "clientId": str(ULID()),
+                        "scenarioPageNumber": 2,
+                        "instructionsDescription": "Anything that is not naturally occurring",
+                        "instructionsIcon": "STAR_OUTLINE",
+                        "instructionsTitle": "Identify natural structures",
+                        "hintDescription": "They have sharp boundaries",
+                        "hintIcon": "INFORMATION_OUTLINE",
+                        "hintTitle": "Look closer!",
+                        "successDescription": "You identified all natural structures",
+                        "successIcon": "CHECK",
+                        "successTitle": "Well done!",
+                        "tasks": [
+                            {
+                                "clientId": str(ULID()),
+                                "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110087}},
+                                "reference": 1,
+                            },
+                            {
+                                "clientId": str(ULID()),
+                                "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110088}},
+                                "reference": 1,
+                            },
+                            {
+                                "clientId": str(ULID()),
+                                "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110089}},
+                                "reference": 1,
+                            },
+                            {
+                                "clientId": str(ULID()),
+                                "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110087}},
+                                "reference": 1,
+                            },
+                            {
+                                "clientId": str(ULID()),
+                                "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110088}},
+                                "reference": 1,
+                            },
+                            {
+                                "clientId": str(ULID()),
+                                "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110089}},
+                                "reference": 1,
+                            },
+                        ],
+                    },
+                },
+            ],
+            "informationPages": [
+                {
+                    "create": {
+                        "clientId": str(ULID()),
+                        "title": "Man-made structures",
+                        "pageNumber": 1,
+                        "blocks": [
+                            {
+                                "clientId": str(ULID()),
+                                "blockNumber": 1,
+                                "blockType": "TEXT",
+                                "text": "Man-made structures are physical constructions created by humans, typically "
+                                "using tools, materials, and engineering principles.",
+                            },
+                            {
+                                "clientId": str(ULID()),
+                                "blockNumber": 2,
+                                "blockType": "TEXT",
+                                "text": "These structures are built to serve specific purposes, such as housing, "
+                                "transportation, defense, communication, or recreation.",
+                            },
+                        ],
+                    },
+                },
+                {
+                    "create": {
+                        "clientId": str(ULID()),
+                        "title": "Natural structures",
+                        "pageNumber": 2,
+                        "blocks": [
+                            {
+                                "clientId": str(ULID()),
+                                "blockNumber": 1,
+                                "blockType": "TEXT",
+                                "text": "Natural structures are physical formations that are created by nature "
+                                "without human intervention",
+                            },
+                        ],
+                    },
+                },
+            ],
+        }
+        tutorial_data.pop("project")
+
+        self.logout()
+        content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
+        assert content["data"]["updateTutorial"]["messages"] == [
+            {
+                "code": None,
+                "field": "updateTutorial",
+                "kind": "PERMISSION",
+                "message": "User is not authenticated.",
+            },
+        ], content
+
+        # Creating Tutorial: With Authentication
+        self.force_login(self.user)
+        content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
+        resp_data = content["data"]["updateTutorial"]
+        assert resp_data["errors"] is None, content
+
+        latest_tutorial.refresh_from_db()
 
         assert resp_data == self.g_mutation_response(
             ok=True,
@@ -433,11 +468,11 @@ class TestTutorialMutation(TestCase):
 
         # Updating Tutorial: Without authentication
         tutorial_from_res = resp_data["result"]
-        project = tutorial_from_res.pop("projectId")
+        tutorial_from_res.pop("projectId")
         tutorial_from_res.pop("id")
         tutorial_data = {
             **tutorial_from_res,
-            "project": project,
+            "status": self.genum(TutorialStatusEnum.PUBLISHED),
             "scenarios": [
                 {
                     "update": {
@@ -519,7 +554,7 @@ class TestTutorialMutation(TestCase):
             },
         ], content
 
-        # Creating Tutorial: With Authentication
+        # Updating Tutorial: With Authentication
         self.force_login(self.user)
         content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
         resp_data = content["data"]["updateTutorial"]
@@ -532,7 +567,7 @@ class TestTutorialMutation(TestCase):
             result=dict(
                 clientId=latest_tutorial.client_id,
                 id=self.gID(latest_tutorial.pk),
-                status=self.genum(TutorialStatusEnum.DRAFT),
+                status=self.genum(TutorialStatusEnum.PUBLISHED),
                 projectId=self.gID(latest_tutorial.project_id),
                 scenarios=[
                     {
@@ -583,21 +618,6 @@ class TestTutorialMutation(TestCase):
             ),
         ), content
 
-        # Test the tutorial with different project_type
-        compare_project = ProjectFactory.create(
-            **self.user_resource_kwargs,
-            project_type=ProjectTypeEnum.COMPARE,
-            requesting_organization=self.organization,
-            topic="Compare Project 101",
-            look_for="",
-            additional_info_url="https://hi-there/about.html",
-            description="The new **project** from hi-there.",
-            project_type_specifics=None,
-        )
-        tutorial_data["project"] = self.gID(compare_project.pk)
-        content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
-        assert content["data"]["updateTutorial"]["errors"] is not None, content
-
     def test_tutorial_state_transitions(self):
         # Create a draft tutorial
         tutorial = TutorialFactory.create(
@@ -616,7 +636,6 @@ class TestTutorialMutation(TestCase):
             tutorial.save(update_fields=["status"])
             data = {
                 "clientId": tutorial.client_id,
-                "project": self.gID(tutorial.project_id),
                 "status": self.genum(new_status),
             }
             response = self._update_tutorial_mutation(str(tutorial.pk), data)
@@ -628,7 +647,8 @@ class TestTutorialMutation(TestCase):
 
         invalid_transitions = [
             (TutorialStatusEnum.PUBLISHED, TutorialStatusEnum.DRAFT),
-            (TutorialStatusEnum.ARCHIVED, TutorialStatusEnum.PUBLISHED),
+            (TutorialStatusEnum.DISCARDED, TutorialStatusEnum.DRAFT),
+            (TutorialStatusEnum.ARCHIVED, TutorialStatusEnum.DRAFT),
             (TutorialStatusEnum.DRAFT, TutorialStatusEnum.ARCHIVED),
         ]
 
@@ -637,7 +657,6 @@ class TestTutorialMutation(TestCase):
             tutorial.save(update_fields=["status"])
             data = {
                 "clientId": tutorial.client_id,
-                "project": self.gID(tutorial.project_id),
                 "status": self.genum(new_status),
             }
             response = self._update_tutorial_mutation(str(tutorial.pk), data)

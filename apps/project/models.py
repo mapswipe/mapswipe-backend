@@ -10,39 +10,12 @@ from django.db.models.functions import Concat, Lower
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
 
-from apps.common.models import ArchivableResource, FirebasePushStatusEnum, FirebaseResource, UserResource
+from apps.common.models import ArchivableResource, CommonAsset, FirebasePushStatusEnum, FirebaseResource, UserResource
 from apps.contributor.models import ContributorTeam
 from utils.fields import validate_percentage
 
 if typing.TYPE_CHECKING:
     from apps.tutorial.models import Tutorial
-
-
-class ProjectAssetMimetypeEnum(models.IntegerChoices):
-    GEOJSON = 100, "application/geo+json"
-
-    IMAGE_JPEG = 201, "image/jpeg"
-    IMAGE_PNG = 202, "image/png"
-    IMAGE_GIF = 203, "image/gif"
-
-    @classmethod
-    def get_display(cls, value: typing.Self | int) -> str:
-        if value in cls:
-            return str(cls(value).label)
-        return "Unknown"
-
-
-# FIXME(tnagorra): Finalize the enum labels
-class ProjectAssetTypeEnum(models.IntegerChoices):
-    INPUT = 100, "Input"
-    OUTPUT = 200, "Output"
-    STATS = 300, "Stats"
-
-    @classmethod
-    def get_display(cls, value: typing.Self | int) -> str:
-        if value in cls:
-            return str(cls(value).label)
-        return "Unknown"
 
 
 class ProjectTypeEnum(models.IntegerChoices):
@@ -407,38 +380,17 @@ class Project(UserResource, FirebaseResource):  # type: ignore[reportIncompatibl
         #     self.requiredResults += group.requiredCount * group.numberOfTasks
 
 
-class ProjectAsset(UserResource):
-    Type = ProjectAssetTypeEnum
-    Mimetype = ProjectAssetMimetypeEnum
-
-    type = IntegerChoicesField(
-        choices_enum=ProjectAssetTypeEnum,
-    )
-
-    mimetype = IntegerChoicesField(
-        choices_enum=ProjectAssetMimetypeEnum,
-    )
-
-    file = models.FileField(
-        upload_to=UploadHelper.project_asset,
-        help_text=gettext_lazy("The file associated with the asset"),
-    )
-
+class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibleVariableOverride]
     project: Project = models.ForeignKey(  # type: ignore[reportAssignmentType]
         Project,
         on_delete=models.CASCADE,
         related_name="+",
     )
 
-    marked_as_deleted = models.BooleanField(
-        default=False,
-        help_text=gettext_lazy("If this flag is enabled, this project asset will be deleted in the future"),
+    file = models.FileField(
+        upload_to=UploadHelper.project_asset,
+        help_text=gettext_lazy("The file associated with the asset"),
     )
-
-    @classmethod
-    def usable_objects(cls):
-        """Returns objects that are mot marked for deletion"""
-        return cls.objects.filter(marked_as_deleted=False)
 
     # Type hints
     project_id: int
