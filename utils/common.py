@@ -140,3 +140,22 @@ def validate_geojson_file(file: ContentFile) -> None:
 
     if not feature_collection.features:
         raise ValidationError("GeoJSON 'features' list cannot be empty.")
+
+
+def gzip_str(string_: str) -> bytes:
+    """
+    Produce a complete gzip-compatible binary string.
+    """
+    out = io.BytesIO()
+    with gzip.GzipFile(fileobj=out, mode="w") as f:
+        f.write(string_.encode())
+    return out.getvalue()
+
+
+def compress_tasks(tasks_list: list[dict[str, typing.Any]]) -> str:
+    """
+    Compress tasks for validate project type using gzip.
+    """
+    json_string_tasks = json.dumps(tasks_list).replace(" ", "").replace("\n", "")
+    compressed_tasks = gzip_str(json_string_tasks)
+    return base64.b64encode(compressed_tasks).decode("ascii")

@@ -1,8 +1,11 @@
+import json
 import logging
 import typing
 from abc import ABC, abstractmethod
+from collections import defaultdict
 
 from django.contrib.gis.db.models.functions import Area
+from django.core.files.base import ContentFile
 from django.db import models
 from firebase_admin.db import Reference as FbReference
 from pydantic import BaseModel, ConfigDict
@@ -22,6 +25,7 @@ from apps.project.models import (
 from main.config import Config
 from main.logging import log_extra
 from project_types.firebase import project_type_enum_to_firebase
+from utils.common import compress_tasks
 
 logger = logging.getLogger(__name__)
 
@@ -195,22 +199,56 @@ class BaseProject[
             self.project.update_status(Project.Status.FAILED, True)
             return False
 
+    def _generate_and_save_task_file(self, grouped_tasks: dict[int, list[dict[str, typing.Any]]]) -> None:
+        """
+        Generates a JSON file with all tasks and save it as a project asset.
+        Using this for debugging purpose of zipped tasks file.
+        """
+        task_json = json.dumps(grouped_tasks, separators=(",", ":"))
+        filename = f"project_grouped_tasks_{self.project.id}.json"
+        content_file = ContentFile(
+            task_json.encode("utf-8"),
+            filename,
+        )
+        ProjectAsset.objects.create(
+            project=self.project,
+            file=content_file,
+            mimetype=ProjectAsset.Mimetype.JSON,
+            type=ProjectAsset.Type.DEBUG,
+            # FIXME: Maybe create a internal user like mapswipe-bot
+            created_by=self.project.modified_by,
+            modified_by=self.project.modified_by,
+        )
+
     def handle_new_tasks_on_firebase(self, task_ref: FbReference):
         tasks = ProjectTask.objects.filter(task_group__project_id=self.project.pk)
-        fb_tasks: dict[str, dict[str, dict[str, dict]]] = {}
+        grouped_tasks: dict[int, list[dict[str, typing.Any]]] = defaultdict(list)
+
         for task in tasks.iterator():
             task_data = firebase_models.FbMappingTaskCreateOnlyInput(
                 projectId=self.project.firebase_id,
             )
             task_project_specific_data = self.get_task_project_specifics_for_firebase(task)
-            # TODO(tnagorra): Need to group by groups
-            fb_tasks[task.pk] = {
+            serialized_task = {
                 **firebase_utils.serialize(task_data),
                 **firebase_utils.serialize(task_project_specific_data),
             }
 
-        # FIXME(tnagorra): Use bulk uploader
-        task_ref.set(value=fb_tasks)
+            grouped_tasks[task.task_group_id].append(serialized_task)
+
+        grouped_tasks_dict: dict[int, typing.Any] = dict(grouped_tasks)
+
+        # NOTE: We are using compression to reduce the size of the data sent to Firebase
+        if self.enable_compression_for_tasks():
+            # NOTE: Saving the raw file for debugging purpose
+            self._generate_and_save_task_file(grouped_tasks)
+
+            grouped_tasks_dict = {
+                group_id: compress_tasks(tasks_list) for group_id, tasks_list in grouped_tasks_dict.items()
+            }
+
+        # Use Bulk Manager
+        task_ref.set(value=grouped_tasks_dict)
 
     def handle_new_groups_on_firebase(self, group_ref: FbReference):
         groups = ProjectTaskGroup.objects.filter(project_id=self.project.pk)
@@ -242,6 +280,9 @@ class BaseProject[
     def get_project_specifics_for_firebase(self) -> BaseModel: ...
 
     def skip_tasks_for_firebase(self) -> bool:
+        return False
+
+    def enable_compression_for_tasks(self) -> bool:
         return False
 
     def handle_new_project_on_firebase(self, project_ref: FbReference):

@@ -171,6 +171,10 @@ class ValidateProject(
     def __init__(self, project: Project):
         super().__init__(project)
 
+    @typing.override
+    def enable_compression_for_tasks(self) -> bool:
+        return True
+
     def _process_polygons(self, geojson_data: dict[str, Any]) -> list[ValidFeature]:
         """We only want polygon and multipolygon features"""
         try:
