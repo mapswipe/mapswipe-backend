@@ -30,6 +30,7 @@ dependencies = [
     "strawberry-graphql-django~=0.57.0",
     "django-choices-field", # Required by strawberry-graphql-django
     "django-health-check",
+    "cachetools",
     "pillow", # Required by django ImageField
     "pydantic==2.10.6",
     # Geo (Used by utils/geo)

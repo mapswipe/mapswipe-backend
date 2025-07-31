@@ -4,10 +4,15 @@ import typing
 from django.conf import settings
 
 if typing.TYPE_CHECKING:
+    from pathlib import Path
+    from urllib.parse import ParseResult as URLParseResult
+
     from utils.firebase import FirebaseHelper
 
 
 class Config:
+    BASE_DIR = typing.cast("Path", settings.BASE_DIR)
+
     # NOTE: We get build footprints for validate from OHSOME
     OHSOME_API_LINK = "https://api.ohsome.org/v1/"
     # NOTE: We get changeset information from OSMCha
@@ -22,8 +27,10 @@ class Config:
     FIREBASE_EMULATOR_HOST = os.environ.get("FIREBASE_DATABASE_EMULATOR_HOST")
 
     # Existing database
-    EXISTING_POSTGRES_ENABLED = typing.cast("bool", settings.EXISTING_POSTGRES_ENABLED)
-    EXISTING_DATABASE_KEY = typing.cast("str", settings.EXISTING_DATABASE_KEY)
+    EXISTING_SYSTEM_CONNECT_ENABLED = typing.cast("bool", settings.EXISTING_SYSTEM_CONNECT_ENABLED)
+    EXISTING_SYSTEM_POSTGRES_KEY = typing.cast("str", settings.EXISTING_SYSTEM_POSTGRES_KEY)
+    EXISTING_SYSTEM_API = typing.cast("URLParseResult", getattr(settings, "EXISTING_SYSTEM_API", None))
+    EXISTING_SYSTEM_API_INSECURE = typing.cast("bool", getattr(settings, "EXISTING_SYSTEM_API_INSECURE", False))
 
     class FirebaseKeys:
         @staticmethod

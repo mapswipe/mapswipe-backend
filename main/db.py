@@ -1,6 +1,7 @@
-from django.conf import settings
 from django.db import models
 from django_cte import CTEManager
+
+from main.config import Config
 
 
 class Model(models.Model):
@@ -16,12 +17,12 @@ class ExistingDatabaseRouter:
 
     def db_for_read(self, model, **hints):
         if model._meta.app_label in self.route_app_labels:
-            return settings.EXISTING_DATABASE_KEY
+            return Config.EXISTING_SYSTEM_POSTGRES_KEY
         return None
 
     def db_for_write(self, model, **hints):
         if model._meta.app_label in self.route_app_labels:
-            return settings.EXISTING_DATABASE_KEY
+            return Config.EXISTING_SYSTEM_POSTGRES_KEY
         return None
 
     def allow_relation(self, obj1, obj2, **hints):

@@ -37,8 +37,8 @@ class UserGroup(Model):
     is_archived = models.BooleanField(blank=True, null=True)
 
     # type hints
-    created_by_id: int
-    archived_by_id: int | None
+    created_by_id: str
+    archived_by_id: str | None
 
     class Meta:
         managed = False
@@ -312,8 +312,8 @@ class AggregatedUserStatData(Model):
     area_swiped = models.FloatField()  # sqkm
 
     # Type hints
-    user_id: int
-    project_id: int
+    user_id: str
+    project_id: str
 
     class Meta:
         managed = False
@@ -342,9 +342,9 @@ class AggregatedUserGroupStatData(Model):
     area_swiped = models.FloatField()
 
     # Type hints
-    user_id: int
-    project_id: int
-    user_group_id: int
+    user_id: str
+    project_id: str
+    user_group_id: str
 
     class Meta:
         managed = False

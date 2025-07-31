@@ -17,8 +17,8 @@ class BaseBulkManager:
     """
 
     def __init__(self, chunk_size: int = 100):
-        self._queues = defaultdict(list)
         self.chunk_size = chunk_size
+        self._queues = defaultdict(list)
         self._summary = defaultdict(int)
 
     @abc.abstractmethod
@@ -55,11 +55,23 @@ class BaseBulkManager:
 
 
 class BulkCreateManager(BaseBulkManager):
+    def __init__(self, chunk_size: int = 100, ignore_conflicts: bool = False):
+        super().__init__(chunk_size=chunk_size)
+        self.ignore_conflicts = ignore_conflicts
+
     @typing.override
     def _commit(self, model_class: type[models.Model]):
         model_key = model_class._meta.label
-        model_class.objects.bulk_create(self._queues[model_key])
+        model_class.objects.bulk_create(
+            self._queues[model_key],
+            ignore_conflicts=self.ignore_conflicts,
+        )
+        self._summary[model_key] += len(self._queues[model_key])
         self._queues[model_key] = []
+
+    @typing.override
+    def summary(self):
+        return {"created": dict(self._summary)}
 
 
 class BulkUpdateManager(BaseBulkManager):
@@ -76,11 +88,13 @@ class BulkUpdateManager(BaseBulkManager):
     @typing.override
     def _commit(self, model_class: type[models.Model]):
         model_key = model_class._meta.label
-        model_class.objects.bulk_update(self._queues[model_key], self.update_fields)
+        model_class.objects.bulk_update(
+            self._queues[model_key],
+            self.update_fields,
+        )
         self._summary[model_key] += len(self._queues[model_key])
         self._queues[model_key] = []
 
     @typing.override
-    @abc.abstractmethod
     def summary(self):
         return {"updated": dict(self._summary)}
