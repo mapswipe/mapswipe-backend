@@ -13,7 +13,7 @@ from rest_framework import serializers
 from apps.common.models import ArchivableResource, UserResource
 from apps.project.models import CommonAsset
 from apps.user.models import User
-from utils.common import validate_ulid
+from utils.common import validate_geojson_file, validate_ulid
 
 from .types import FirebaseDecodedIdToken
 
@@ -202,6 +202,9 @@ class CommonAssetSerializer(serializers.ModelSerializer[CommonAsset]):
             raise serializers.ValidationError(
                 gettext("File mimetype does not match the provided mimetype: %s") % mimetype,
             )
+
+        if attrs["mimetype"] == CommonAsset.Mimetype.GEOJSON:
+            validate_geojson_file(file_content)
 
         attrs["mimetype"] = CommonAsset.Mimetype.get_mimetype_by_label(mimetype)
         attrs["file_size"] = file_size

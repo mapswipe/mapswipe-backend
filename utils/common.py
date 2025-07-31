@@ -7,8 +7,10 @@ import re
 import typing
 
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.translation import gettext
+from geojson_pydantic import FeatureCollection
 from ulid import ULID
 
 
@@ -115,3 +117,26 @@ def parse_b64gzjson_to_dict(text: str) -> dict[str, typing.Any]:
     with gzip.GzipFile(fileobj=io.BytesIO(gzipped_bytes)) as f:
         json_bytes = f.read()
         return json.loads(json_bytes.decode("utf-8"))
+
+
+def validate_geojson_file(file: ContentFile) -> None:
+    """
+    Validates if the given file contains a valid GeoJSON FeatureCollection.
+
+    Args:
+        file: File object
+
+    Raises:
+        ValidationError: If the file is not a valid JSON or does not conform to GeoJSON standards.
+        ValueError: If the GeoJSON doesn't meet expected structure.
+    """
+
+    try:
+        geojson_data = json.load(file)
+    except json.JSONDecodeError as e:
+        raise ValidationError("Invalid JSON format in the file.") from e
+
+    feature_collection = FeatureCollection(**geojson_data)
+
+    if not feature_collection.features:
+        raise ValidationError("GeoJSON 'features' list cannot be empty.")
