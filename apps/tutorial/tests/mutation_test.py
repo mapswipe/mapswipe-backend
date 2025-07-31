@@ -385,6 +385,7 @@ class TestTutorialMutation(TestCase):
                 },
             ],
         }
+        tutorial_data.pop("project")
 
         self.logout()
         content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
@@ -467,12 +468,11 @@ class TestTutorialMutation(TestCase):
 
         # Updating Tutorial: Without authentication
         tutorial_from_res = resp_data["result"]
-        project = tutorial_from_res.pop("projectId")
+        tutorial_from_res.pop("projectId")
         tutorial_from_res.pop("id")
         tutorial_data = {
             **tutorial_from_res,
             "status": self.genum(TutorialStatusEnum.PUBLISHED),
-            "project": project,
             "scenarios": [
                 {
                     "update": {
@@ -618,32 +618,6 @@ class TestTutorialMutation(TestCase):
             ),
         ), content
 
-        # Test the tutorial with different project_type
-        compare_project = ProjectFactory.create(
-            **self.user_resource_kwargs,
-            project_type=ProjectTypeEnum.COMPARE,
-            requesting_organization=self.organization,
-            topic="Compare Project 101",
-            look_for="",
-            additional_info_url="https://hi-there/about.html",
-            description="The new **project** from hi-there.",
-            project_type_specifics=None,
-        )
-
-        # Update project on tutorial
-        # Fails as PUBLISHED tutorials cannot update project
-        tutorial_data["project"] = self.gID(compare_project.pk)
-        content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
-        assert content["data"]["updateTutorial"]["errors"] is not None, content
-
-        # Fails as project type is different
-        latest_tutorial.status = TutorialStatusEnum.DRAFT
-        latest_tutorial.save(update_fields=["status"])
-
-        tutorial_data["project"] = self.gID(compare_project.pk)
-        content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
-        assert content["data"]["updateTutorial"]["errors"] is not None, content
-
     def test_tutorial_state_transitions(self):
         # Create a draft tutorial
         tutorial = TutorialFactory.create(
@@ -662,7 +636,6 @@ class TestTutorialMutation(TestCase):
             tutorial.save(update_fields=["status"])
             data = {
                 "clientId": tutorial.client_id,
-                "project": self.gID(tutorial.project_id),
                 "status": self.genum(new_status),
             }
             response = self._update_tutorial_mutation(str(tutorial.pk), data)
@@ -684,7 +657,6 @@ class TestTutorialMutation(TestCase):
             tutorial.save(update_fields=["status"])
             data = {
                 "clientId": tutorial.client_id,
-                "project": self.gID(tutorial.project_id),
                 "status": self.genum(new_status),
             }
             response = self._update_tutorial_mutation(str(tutorial.pk), data)

@@ -2019,9 +2019,6 @@ Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id
 """
 input TutorialUpdateInput {
   clientId: String!
-
-  """Project this tutorial is referring to."""
-  project: ID!
   name: String
   status: TutorialStatusEnum
   scenarios: [TutorialScenarioPageInput!]

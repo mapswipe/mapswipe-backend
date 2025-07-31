@@ -35,7 +35,6 @@ class TutorialTaskProjectTypeSpecificInput:
 @strawberry_django.input(TutorialTask)
 class TutorialTaskCreateInput(UserResourceCreateInputMixin):
     # NOTE: scenario_id will be referenced from parent
-
     reference: strawberry.auto
     project_type_specifics: TutorialTaskProjectTypeSpecificInput
 
@@ -43,7 +42,6 @@ class TutorialTaskCreateInput(UserResourceCreateInputMixin):
 @strawberry_django.partial(TutorialTask)
 class TutorialTaskUpdateInput(UserResourceUpdateInputMixin):
     # NOTE: scenario_id will be referenced from parent
-
     reference: strawberry.auto
     project_type_specifics: TutorialTaskProjectTypeSpecificInput
 
@@ -55,7 +53,6 @@ class TutorialTaskInput(CudInput[TutorialTaskCreateInput, TutorialTaskUpdateInpu
 @strawberry_django.input(TutorialScenarioPage)
 class TutorialScenarioPageCreateInput(UserResourceCreateInputMixin):
     # NOTE: tutorial_id will be referenced from parent
-
     scenario_page_number: strawberry.auto
     instructions_description: strawberry.auto
     instructions_icon: strawberry.auto
@@ -72,7 +69,6 @@ class TutorialScenarioPageCreateInput(UserResourceCreateInputMixin):
 @strawberry_django.partial(TutorialScenarioPage)
 class TutorialScenarioPageUpdateInput(UserResourceUpdateInputMixin):
     # NOTE: tutorial_id will be referenced from parent
-
     scenario_page_number: strawberry.auto
     instructions_description: strawberry.auto
     instructions_icon: strawberry.auto
@@ -93,7 +89,6 @@ class TutorialScenarioPageInput(CudInput[TutorialScenarioPageCreateInput, Tutori
 @strawberry_django.input(TutorialInformationPageBlock)
 class TutorialInformationPageBlockCreateInput(UserResourceCreateInputMixin):
     # NOTE: page_id will be referenced from parent
-
     block_number: strawberry.auto
     block_type: strawberry.auto
     text: strawberry.auto
@@ -119,7 +114,6 @@ class TutorialInformationPageBlockInput(
 @strawberry_django.input(TutorialInformationPage)
 class TutorialInformationPageCreateInput(UserResourceCreateInputMixin):
     # NOTE: tutorial_id will be referenced from parent
-
     title: strawberry.auto
     page_number: strawberry.auto
     blocks: list[TutorialInformationPageBlockCreateInput]
@@ -128,7 +122,6 @@ class TutorialInformationPageCreateInput(UserResourceCreateInputMixin):
 @strawberry_django.partial(TutorialInformationPage)
 class TutorialInformationPageUpdateInput(UserResourceUpdateInputMixin):
     # NOTE: tutorial_id will be referenced from parent
-
     title: strawberry.auto
     page_number: strawberry.auto
     blocks: list[TutorialInformationPageBlockInput] | None = strawberry.UNSET
@@ -148,9 +141,7 @@ class TutorialCreateInput(UserResourceCreateInputMixin):
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.partial(Tutorial)
 class TutorialUpdateInput(UserResourceTopLevelUpdateInputMixin):
-    project: strawberry.ID
     name: strawberry.auto
     status: strawberry.auto
-
     scenarios: list[TutorialScenarioPageInput] | None = strawberry.UNSET
     information_pages: list[TutorialInformationPageInput] | None = strawberry.UNSET
