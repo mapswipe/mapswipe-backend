@@ -67,7 +67,7 @@ class FirebaseContributorUser(FirebasePush[ContributorUser]):
         fb_reference.update(
             value=firebase_utils.serialize(
                 firebase_models.FbUserUpdateInput(
-                    teamId=model_obj.team.firebase_id if model_obj.team else firebase_models.UNDEFINED,
+                    teamId=model_obj.team.firebase_id if model_obj.team else None,
                 ),
             ),
         )

@@ -38,9 +38,9 @@ def push_team_member_to_firebase(member: ContributorUser):
     team_member_data = firebase_extended_models.FbUser(
         userName=member.username,
         username=member.username,
-        userNameKey=member.username.lower(),
-        usernameKey=member.username.lower(),
-        teamId=member.team.firebase_id if member.team else firebase_models.UNDEFINED,
+        userNameKey=member.username.lower().strip(),
+        usernameKey=member.username.lower().strip(),
+        teamId=member.team.firebase_id if member.team else None,
         created=timezone.now(),
     )
     fb_reference.set(

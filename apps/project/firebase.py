@@ -21,13 +21,11 @@ class FirebaseOrganizationPush(FirebasePush[Organization]):
     def handle_new_object_on_firebase(self, model_obj: Organization, fb_reference: FbReference):
         organization_data = firebase_models.FbOrganisation(
             name=model_obj.name,
-            # NOTE: nameKey is is deprecated
-            nameKey="",
-            description=model_obj.description or firebase_models.UNDEFINED,
-            abbreviation=model_obj.abbreviation or firebase_models.UNDEFINED,
+            nameKey=model_obj.name.lower().strip(),
+            description=model_obj.description,
+            abbreviation=model_obj.abbreviation,
             isArchived=model_obj.is_archived,
         )
-
         fb_reference.set(
             value=firebase_utils.serialize(organization_data),
         )
@@ -38,10 +36,9 @@ class FirebaseOrganizationPush(FirebasePush[Organization]):
             value=firebase_utils.serialize(
                 firebase_models.FbOrganisation(
                     name=model_obj.name,
-                    # NOTE: nameKey is is deprecated
-                    nameKey="",
-                    description=model_obj.description or firebase_models.UNDEFINED,
-                    abbreviation=model_obj.abbreviation or firebase_models.UNDEFINED,
+                    nameKey=model_obj.name.lower().strip(),
+                    description=model_obj.description,
+                    abbreviation=model_obj.abbreviation,
                     isArchived=model_obj.is_archived,
                 ),
             ),

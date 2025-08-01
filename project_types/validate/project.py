@@ -337,7 +337,7 @@ class ValidateProject(
     @typing.override
     def get_task_project_specifics_for_firebase(self, task: ProjectTask):
         return firebase_models.FbMappingTaskValidateCreateOnlyInput(
-            taskId=str(task.firebase_id),
+            taskId=task.firebase_id,
             # FIXME(tnagorra): Check if we need to convert this?
             geojson=task.geometry,
         )
@@ -345,7 +345,7 @@ class ValidateProject(
     @typing.override
     def get_group_project_specifics_for_firebase(self, group: ProjectTaskGroup):
         return firebase_models.FbMappingGroupValidateCreateOnlyInput(
-            groupId=str(group.firebase_id),
+            groupId=group.firebase_id,
         )
 
     @typing.override
@@ -369,25 +369,22 @@ class ValidateProject(
                         for sub_opt in opt.sub_options
                     ]
                     if opt.sub_options is not None
-                    else firebase_models.UNDEFINED,
+                    else None,
                 )
                 for opt in custom_opts
             ]
             if custom_opts is not None
-            else firebase_models.UNDEFINED,
-            filter=obj_source.ohsome_filter or firebase_models.UNDEFINED,
+            else None,
+            filter=obj_source.ohsome_filter,
             inputType=validate_source_type_enum_to_firebase(
                 obj_source.source_type,
             ),
-            TMId=str(obj_source.tasking_manager_project_id)
-            if obj_source.tasking_manager_project_id
-            else firebase_models.UNDEFINED,
+            TMId=str(obj_source.tasking_manager_project_id) if obj_source.tasking_manager_project_id else None,
             tileServer=firebase_models.FbObjRasterTileServer(
                 name=raster_tile_server_name_enum_to_firebase(tsp.name),
                 credits=tsp.get_config()["credits"],
                 url=tsp.get_config()["raw_url"],
                 apiKey=tsp.get_config()["api_key"],
-                # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
-                wmtsLayerName=firebase_models.UNDEFINED,
+                wmtsLayerName=None,
             ),
         )
