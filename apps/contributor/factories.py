@@ -20,7 +20,8 @@ class ContributorUserFactory(DjangoModelFactory):
     class Meta:
         model = ContributorUser
 
-    user_id = factory.Sequence(lambda n: f"unique-contributor-user-id-{n}")
+    firebase_id = factory.LazyFunction(lambda: str(ULID()))
+    user_id = factory.LazyFunction(lambda: str(ULID()))
     username = factory.Sequence(lambda n: f"Contributor User {n}")
 
 
@@ -28,6 +29,7 @@ class ContributorUserGroupFactory(DjangoModelFactory):
     class Meta:
         model = ContributorUserGroup
 
+    firebase_id = factory.LazyFunction(lambda: str(ULID()))
     client_id = factory.LazyFunction(lambda: str(ULID()))
     name = factory.Sequence(lambda n: f"Contributor User Group {n}")
     description = "Some description"
@@ -51,6 +53,7 @@ class ContributorTeamFactory(DjangoModelFactory):
     class Meta:
         model = ContributorTeam
 
+    firebase_id = factory.LazyFunction(lambda: str(ULID()))
     client_id = factory.LazyFunction(lambda: str(ULID()))
     name = factory.Sequence(lambda n: f"Contributor User Team {n}")
 

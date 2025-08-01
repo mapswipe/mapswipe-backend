@@ -7,18 +7,19 @@ from django.db import models
 from django.utils.translation import gettext
 from django_choices_field import IntegerChoicesField
 
-from apps.common.models import ArchivableResource, FirebaseResource, UserResource
+from apps.common.models import ArchivableResource, FirebasePushResource, UserResource
 
 
 # NOTE: Users are created from Apps (Web/Mobile)
-class ContributorUser(models.Model):
-    # NOTE: Sync with firebase
+class ContributorUser(FirebasePushResource):
+    # TODO(tnagorra): Remove this later and use firebase_id instead
     user_id = models.CharField(
         max_length=30,
         db_index=True,
         unique=True,
         help_text="Firebase User ID",
     )
+
     team: "ContributorTeam | None" = models.ForeignKey(  # type: ignore[reportIncompatibleVariableOverride]
         "ContributorTeam",
         on_delete=models.SET_NULL,
@@ -35,8 +36,7 @@ class ContributorUser(models.Model):
         return self.username
 
 
-class ContributorUserGroup(ArchivableResource, UserResource):  # type: ignore[reportIncompatibleVariableOverride]
-    old_id = models.CharField(max_length=30, db_index=True, null=True)
+class ContributorUserGroup(ArchivableResource, UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
     name = models.CharField(max_length=255)
     description = models.TextField()
 
@@ -45,6 +45,7 @@ class ContributorUserGroup(ArchivableResource, UserResource):  # type: ignore[re
         return self.name
 
 
+# NOTE: Extend FirebasePullResource later if necessary
 class ContributorUserGroupMembership(models.Model):
     user_group: ContributorUserGroup = models.ForeignKey(ContributorUserGroup, on_delete=models.CASCADE)  # type: ignore[reportIncompatibleVariableOverride]
     user: ContributorUser = models.ForeignKey(ContributorUser, on_delete=models.CASCADE)  # type: ignore[reportIncompatibleVariableOverride]
@@ -81,7 +82,7 @@ class ContributorUserGroupMembershipLog(models.Model):
 
 
 # TEAM
-class ContributorTeam(ArchivableResource, UserResource, FirebaseResource):  # type: ignore[reportIncompatibleVariableOverride]
+class ContributorTeam(ArchivableResource, UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
     name = models.CharField(max_length=255)
     token = models.UUIDField(default=uuid.uuid4, unique=True)
 

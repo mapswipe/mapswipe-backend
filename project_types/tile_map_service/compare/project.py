@@ -47,7 +47,7 @@ class CompareProject(
         tsp_b = self.project_type_specifics.tile_server_b_property
 
         return firebase_models.FbMappingTaskCompareCreateOnlyInput(
-            groupId=str(task.task_group.legacy_group_id),
+            groupId=str(task.task_group.firebase_id),
             taskId=str(task.task_group_id),
             taskX=task_specifics.tile_x,
             taskY=task_specifics.tile_y,

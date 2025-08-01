@@ -40,7 +40,7 @@ class Config:
 
         @staticmethod
         def project_tasks(project_id: str | int):
-            return f"/v2/groups/{project_id}/"
+            return f"/v2/tasks/{project_id}/"
 
         @staticmethod
         def organization(organization_id: str | int):
@@ -49,6 +49,10 @@ class Config:
         @staticmethod
         def contributor_team(contributor_team_id: str | int):
             return f"/v2/teams/{contributor_team_id}/"
+
+        @staticmethod
+        def contributor_user(user_id: str | int):
+            return f"/v2/users/{user_id}"
 
 
 # FIXME: Import utils/geo/raster_tile_server/config.py here

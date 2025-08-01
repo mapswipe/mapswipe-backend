@@ -98,7 +98,11 @@ env = environ.Env(
     GOOGLE_APPLICATION_CREDENTIALS=str,
     # Pytest
     PYTEST_XDIST_WORKER=(str, None),
+    # Test
+    ENABLE_DANGER_MODE=(bool, False),
 )
+
+ENABLE_DANGER_MODE = env("ENABLE_DANGER_MODE")
 
 GIT_HELPER = GitHelper(BASE_DIR)
 

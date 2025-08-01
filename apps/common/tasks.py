@@ -6,7 +6,7 @@ from celery import shared_task
 from django.core import management
 from firebase_admin.db import Reference
 
-from apps.common.models import FirebasePushStatusEnum, FirebaseResource
+from apps.common.models import FirebasePushResource, FirebasePushStatusEnum
 from main.cache import CeleryLock
 from main.config import Config
 from main.logging import log_extra
@@ -28,7 +28,7 @@ def clear_expired_django_sessions():
 
 # TODO(tnagorra): We might need to create a common class
 @shared_task
-def push_django_to_firebase[T: FirebaseResource](
+def push_django_to_firebase[T: FirebasePushResource](
     obj_id: int,
     model: type[T],
     handle_new_object_on_firebase: Callable[[T, Reference], None],
@@ -43,7 +43,7 @@ def push_django_to_firebase[T: FirebaseResource](
 
     try:
         model_ref = Config.FIREBASE_HELPER.ref(
-            get_firebase_path(model_obj.canonical_id, model_obj),
+            get_firebase_path(model_obj.firebase_id, model_obj),
         )
         fb_model: typing.Any = model_ref.get()
 

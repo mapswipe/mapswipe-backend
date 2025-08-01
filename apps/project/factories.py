@@ -20,6 +20,7 @@ class OrganizationFactory(DjangoModelFactory):
     class Meta:
         model = Organization
 
+    firebase_id = factory.LazyFunction(lambda: str(ULID()))
     client_id = factory.LazyFunction(lambda: str(ULID()))
     name = factory.Sequence(lambda n: f"Organization {n}")
     description = "Test description"
@@ -30,6 +31,7 @@ class ProjectFactory(DjangoModelFactory):
     class Meta:
         model = Project
 
+    firebase_id = factory.LazyFunction(lambda: str(ULID()))
     client_id = factory.LazyFunction(lambda: str(ULID()))
     topic = factory.Sequence(lambda n: f"Project Topic {n}")
     region = factory.Sequence(lambda n: f"Region {n}")
@@ -48,6 +50,8 @@ class ProjectTaskGroupFactory(DjangoModelFactory):
     class Meta:
         model = ProjectTaskGroup
 
+    # NOTE: Adding firebase_id just to pass validation when creating using factory
+    firebase_id = factory.LazyFunction(lambda: str(ULID()))
     project_type_specifics = factory.LazyAttribute(lambda _: {})
     number_of_tasks = 100
     required_count = 50
@@ -63,6 +67,8 @@ class ProjectTaskFactory(DjangoModelFactory):
     class Meta:
         model = ProjectTask
 
+    # NOTE: Adding firebase_id just to pass validation when creating using factory
+    firebase_id = factory.LazyFunction(lambda: str(ULID()))
     project_type_specifics = factory.LazyAttribute(lambda _: {})
 
 

@@ -493,6 +493,7 @@ class TestProjectMutation(TestCase):
 
         # Creating project
         # Fails as project with name already exist
+        project_data["clientId"] = str(ULID())
         content = self._create_project_mutation(project_data)
         response = content["data"]["createProject"]
         assert response["errors"] is not None, content
@@ -503,6 +504,7 @@ class TestProjectMutation(TestCase):
             **self.user_resource_kwargs,
             is_archived=True,
         )
+        project_data["clientId"] = str(ULID())
         project_data["team"] = archived_team.pk
         response = content["data"]["createProject"]
         assert response["errors"] is not None, content
@@ -546,6 +548,7 @@ class TestProjectMutation(TestCase):
             **self.user_resource_kwargs,
             is_archived=True,
         )
+        project_data["clientId"] = str(ULID())
         project_data["requestingOrganization"] = archived_organization.pk
         content = self._create_project_mutation(project_data)
         assert content["data"]["createProject"]["errors"] is not None, content
@@ -1128,14 +1131,14 @@ class TestProjectTypeMutation(TestCase):
             y_min: int
 
         class TaskGroupType(typing.TypedDict):
-            legacy_group_id: str
+            firebase_id: str
             number_of_tasks: int
             required_count: int
             project_type_specifics: TaskGroupSpecificsType
 
         expected_task_groups: list[TaskGroupType] = [
             {
-                "legacy_group_id": "g101",
+                "firebase_id": "g101",
                 "number_of_tasks": 18,
                 "required_count": 18 * 10,
                 "project_type_specifics": {
@@ -1146,7 +1149,7 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
             {
-                "legacy_group_id": "g102",
+                "firebase_id": "g102",
                 "number_of_tasks": 24,
                 "required_count": 24 * 10,
                 "project_type_specifics": {
@@ -1157,7 +1160,7 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
             {
-                "legacy_group_id": "g103",
+                "firebase_id": "g103",
                 "number_of_tasks": 24,
                 "required_count": 24 * 10,
                 "project_type_specifics": {
@@ -1168,7 +1171,7 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
             {
-                "legacy_group_id": "g104",
+                "firebase_id": "g104",
                 "number_of_tasks": 6,
                 "required_count": 6 * 10,
                 "project_type_specifics": {
@@ -1181,35 +1184,35 @@ class TestProjectTypeMutation(TestCase):
         ]
         expected_last_5_tasks = [
             {
-                "legacy_task_id": "15-24147-13753",
+                "firebase_id": "15-24147-13753",
                 "project_type_specifics": {
                     "tile_x": 24147,
                     "tile_y": 13753,
                 },
             },
             {
-                "legacy_task_id": "15-24147-13754",
+                "firebase_id": "15-24147-13754",
                 "project_type_specifics": {
                     "tile_x": 24147,
                     "tile_y": 13754,
                 },
             },
             {
-                "legacy_task_id": "15-24147-13755",
+                "firebase_id": "15-24147-13755",
                 "project_type_specifics": {
                     "tile_x": 24147,
                     "tile_y": 13755,
                 },
             },
             {
-                "legacy_task_id": "15-24148-13753",
+                "firebase_id": "15-24148-13753",
                 "project_type_specifics": {
                     "tile_x": 24148,
                     "tile_y": 13753,
                 },
             },
             {
-                "legacy_task_id": "15-24148-13754",
+                "firebase_id": "15-24148-13754",
                 "project_type_specifics": {
                     "tile_x": 24148,
                     "tile_y": 13754,
@@ -1226,7 +1229,7 @@ class TestProjectTypeMutation(TestCase):
             "tasks_groups_count": project_task_group_qs.count(),
             "tasks_groups": list(
                 project_task_group_qs.order_by("id").values(
-                    "legacy_group_id",
+                    "firebase_id",
                     "number_of_tasks",
                     "required_count",
                     "project_type_specifics",
@@ -1235,7 +1238,7 @@ class TestProjectTypeMutation(TestCase):
             "tasks_count": project_task_qs.count(),
             "tasks": list(
                 project_task_qs.order_by("id").values(
-                    "legacy_task_id",
+                    "firebase_id",
                     "project_type_specifics",
                 )[:5],
             ),

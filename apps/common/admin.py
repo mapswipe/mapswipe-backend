@@ -10,6 +10,19 @@ from apps.common.models import UserResource
 DjangoModel = typing.TypeVar("DjangoModel", bound=models.Model)
 
 
+# FIXME(tnagorra): Do we use Mixin or extend admin.ModelAdmin
+# TODO(tnagorra): Use readonly mixin
+class ReadOnlyMixin:
+    def has_add_permission(self, *args, **kwargs):
+        return False
+
+    def has_change_permission(self, *args, **kwargs):
+        return False
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
+
 class UserResourceAdmin(admin.ModelAdmin):
     @typing.override
     def get_readonly_fields(self, *args, **kwargs):

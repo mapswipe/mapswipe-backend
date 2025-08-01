@@ -300,7 +300,7 @@ type ContributorSwipeStatType {
 }
 
 """
-ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_push_status, firebase_last_pushed, canonical_id, name, token)
+ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, token)
 """
 input ContributorTeamFilter {
   id: IDBaseFilterLookup
@@ -318,7 +318,7 @@ input ContributorTeamOrder {
 }
 
 """
-ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_push_status, firebase_last_pushed, canonical_id, name, token)
+ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, token)
 """
 type ContributorTeamType implements UserResourceTypeMixin {
   clientId: String!
@@ -352,7 +352,9 @@ type ContributorTimeStatType {
   totalSwipeTime: Int!
 }
 
-"""ContributorUser(id, user_id, team, username, created_at, modified_at)"""
+"""
+ContributorUser(id, old_id, firebase_id, firebase_push_status, firebase_last_pushed, user_id, team, username, created_at, modified_at)
+"""
 input ContributorUserFilter {
   id: IDBaseFilterLookup
   username: StrFilterLookup
@@ -374,7 +376,7 @@ type ContributorUserFilteredStats implements ContributorUserUserGroupBaseFilterS
 }
 
 """
-ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, name, description)
+ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description)
 """
 input ContributorUserGroupCreateInput {
   clientId: String!
@@ -383,7 +385,7 @@ input ContributorUserGroupCreateInput {
 }
 
 """
-ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, name, description)
+ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description)
 """
 input ContributorUserGroupFilter {
   id: IDBaseFilterLookup
@@ -481,7 +483,7 @@ type ContributorUserGroupStatsType {
 }
 
 """
-ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, name, description)
+ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description)
 """
 type ContributorUserGroupType implements UserResourceTypeMixin {
   clientId: String!
@@ -516,7 +518,7 @@ type ContributorUserGroupTypeOffsetPaginated {
 }
 
 """
-ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, name, description)
+ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description)
 """
 input ContributorUserGroupUpdateInput {
   clientId: String!
@@ -557,7 +559,9 @@ type ContributorUserStats {
   filteredStats(dateRange: DateRangeInput = null): ContributorUserFilteredStats!
 }
 
-"""ContributorUser(id, user_id, team, username, created_at, modified_at)"""
+"""
+ContributorUser(id, old_id, firebase_id, firebase_push_status, firebase_last_pushed, user_id, team, username, created_at, modified_at)
+"""
 type ContributorUserType {
   id: ID!
 
@@ -841,7 +845,7 @@ enum Ordering {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name, firebase_push_status, firebase_last_pushed)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description, abbreviation, unique_name)
 """
 input OrganizationCreateInput {
   clientId: String!
@@ -851,7 +855,7 @@ input OrganizationCreateInput {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name, firebase_push_status, firebase_last_pushed)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description, abbreviation, unique_name)
 """
 input OrganizationFilter {
   id: IDBaseFilterLookup
@@ -874,7 +878,7 @@ type OrganizationSwipeStatsType {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name, firebase_push_status, firebase_last_pushed)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description, abbreviation, unique_name)
 """
 type OrganizationType implements UserResourceTypeMixin {
   clientId: String!
@@ -908,7 +912,7 @@ type OrganizationTypeOffsetPaginated {
 }
 
 """
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, name, description, abbreviation, unique_name, firebase_push_status, firebase_last_pushed)
+Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description, abbreviation, unique_name)
 """
 input OrganizationUpdateInput {
   clientId: String!
@@ -924,7 +928,7 @@ enum OverlayLayerTypeEnum {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, canonical_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProcessedProjectUpdateInput {
   clientId: String!
@@ -1024,7 +1028,7 @@ type ProjectAssetTypeOffsetPaginated {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, canonical_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProjectCreateInput {
   clientId: String!
@@ -1070,7 +1074,7 @@ type ProjectCustomSubOption {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, canonical_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProjectFilter {
   id: IDBaseFilterLookup
@@ -1286,7 +1290,7 @@ input ProjectStatusEnumFilterLookup {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, canonical_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 type ProjectType implements UserResourceTypeMixin {
   clientId: String!
@@ -1445,7 +1449,7 @@ type ProjectTypeSwipeStatsType {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, canonical_id, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProjectUpdateInput {
   clientId: String!
@@ -1699,7 +1703,7 @@ type TutorialAssetTypeOffsetPaginated {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project, name, status)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project, name, status)
 """
 input TutorialCreateInput {
   clientId: String!
@@ -1710,7 +1714,7 @@ input TutorialCreateInput {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project, name, status)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project, name, status)
 """
 input TutorialFilter {
   id: IDBaseFilterLookup
@@ -1999,7 +2003,7 @@ input TutorialTaskUpdateInput {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project, name, status)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project, name, status)
 """
 type TutorialType implements UserResourceTypeMixin {
   clientId: String!
@@ -2034,7 +2038,7 @@ type TutorialTypeOffsetPaginated {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, project, name, status)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project, name, status)
 """
 input TutorialUpdateInput {
   clientId: String!

@@ -9,7 +9,7 @@ from django.utils.translation import gettext, gettext_lazy
 from django_choices_field import IntegerChoicesField
 from django_stubs_ext.db.models.manager import RelatedManager
 
-from apps.common.models import IconEnum, UserResource
+from apps.common.models import FirebasePushResource, IconEnum, UserResource
 from apps.project.models import CommonAsset, Project
 
 
@@ -48,10 +48,7 @@ class TutorialStatusEnum(models.IntegerChoices):
     """
 
 
-class Tutorial(UserResource):
-    # FIXME(tnagorra): We might need to skip the indexing
-    old_id = models.CharField(max_length=30, db_index=True, null=True)
-
+class Tutorial(UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
     Status = TutorialStatusEnum
 
     # FIXME(tnagorra): We might need to rename this field

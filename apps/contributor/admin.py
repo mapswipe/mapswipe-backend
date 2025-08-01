@@ -1,13 +1,14 @@
 import typing
-from datetime import datetime
 
 from django.contrib import admin
 from django.db import transaction
+from django.urls import reverse
+from django.utils.html import format_html
 from djangoql.admin import DjangoQLSearchMixin
 
 from apps.common.admin import ArchivableResourceAdmin
-from apps.contributor.firebase import push_contributor_team_to_firebase
 
+from .firebase import FirebaseContributorTeam, firebase_contributor_user
 from .models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
 
@@ -19,7 +20,29 @@ class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
         "created_at",
         "modified_at",
     )
+    readonly_fields = (
+        "old_id",
+        "user_id",
+        "username",
+        "firebase_last_pushed",
+        "firebase_push_status",
+        "created_at",
+        "modified_at",
+    )
     list_filter = ("team",)
+
+    @typing.override
+    def has_add_permission(self, *args, **kwargs):
+        return False
+
+    @typing.override
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
+    @typing.override
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
+        transaction.on_commit(lambda: firebase_contributor_user.delay(obj.id))
 
 
 @admin.register(ContributorUserGroup)
@@ -27,37 +50,25 @@ class ContributorUserGroupAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     pass
 
 
-class ContributorUserInline(admin.TabularInline):
-    model = ContributorUser
-    extra = 1
-    fields = ("user_id", "username", "created_at", "modified_at")
-    can_delete = False
-
-
 @admin.register(ContributorTeam)
 class ContributorTeamAdmin(ArchivableResourceAdmin, DjangoQLSearchMixin, admin.ModelAdmin):
-    inlines = [ContributorUserInline]
     list_display = (
         "name",
         "is_archived",
         "created_at",
         "modified_at",
+        "view_team_members",
     )
     list_filter = ("is_archived",)
 
     @typing.override
     def save_model(self, request, obj, form, change):
-        if not change:
-            obj.created_by = request.user
-        obj.modified_by = request.user
-        if obj.is_archived:
-            obj.archived_by = request.user
-            obj.archived_at = datetime.now()
-        else:
-            obj.archived_by = None
-            obj.archived_at = None
         super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
-        transaction.on_commit(lambda: push_contributor_team_to_firebase.delay(obj.pk))
+        transaction.on_commit(lambda: FirebaseContributorTeam.task.delay(obj.id))
+
+    def view_team_members(self, obj):
+        url = reverse("admin:contributor_contributoruser_changelist") + f"?team__id__exact={obj.id}"
+        return format_html('<a href="{}">View Team Members</a>', url)
 
 
 @admin.register(ContributorUserGroupMembership)
