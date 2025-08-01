@@ -2,6 +2,7 @@
 # pyright: reportIncompatibleVariableOverride=false
 # pyright: reportMissingTypeArgument=false
 import typing
+import uuid
 
 import factory
 from factory.django import DjangoModelFactory
@@ -20,7 +21,7 @@ class ContributorUserFactory(DjangoModelFactory):
     class Meta:
         model = ContributorUser
 
-    user_id = factory.Sequence(lambda n: f"unique-contributor-user-id-{n}")
+    user_id = factory.LazyAttribute(lambda _: f"contributor-user-id-{uuid.uuid4().int % 1000000}")
     username = factory.Sequence(lambda n: f"Contributor User {n}")
 
 

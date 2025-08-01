@@ -3,6 +3,8 @@ from datetime import datetime
 
 from django.contrib import admin
 from django.db import transaction
+from django.urls import reverse
+from django.utils.html import format_html
 from djangoql.admin import DjangoQLSearchMixin
 
 from apps.common.admin import ArchivableResourceAdmin
@@ -16,6 +18,15 @@ class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     list_display = (
         "user_id",
         "username",
+        "created_at",
+        "modified_at",
+    )
+    readonly_fields = (
+        "old_id",
+        "user_id",
+        "username",
+        "firebase_last_pushed",
+        "firebase_push_status",
         "created_at",
         "modified_at",
     )
@@ -42,6 +53,7 @@ class ContributorTeamAdmin(ArchivableResourceAdmin, DjangoQLSearchMixin, admin.M
         "is_archived",
         "created_at",
         "modified_at",
+        "view_contributor_users",
     )
     list_filter = ("is_archived",)
 
@@ -58,6 +70,10 @@ class ContributorTeamAdmin(ArchivableResourceAdmin, DjangoQLSearchMixin, admin.M
             obj.archived_at = None
         super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
         transaction.on_commit(lambda: FirebaseContributorTeam.task.delay(obj.id))
+
+    def view_contributor_users(self, obj):
+        url = reverse("admin:contributor_contributoruser_changelist") + f"?team__id__exact={obj.id}"
+        return format_html('<a href="{}">View Contributors</a>', url)
 
 
 @admin.register(ContributorUserGroupMembership)
