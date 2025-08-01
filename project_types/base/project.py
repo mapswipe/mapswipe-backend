@@ -203,6 +203,7 @@ class BaseProject[
                 projectId=str(self.project.pk),
             )
             task_project_specific_data = self.get_task_project_specifics_for_firebase(task)
+            # TODO(tnagorra): Need to group by groups
             fb_tasks[task.pk] = {
                 **firebase_utils.serialize(task_data),
                 **firebase_utils.serialize(task_project_specific_data),

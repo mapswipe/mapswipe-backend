@@ -2,7 +2,6 @@ import logging
 import typing
 
 from celery import shared_task
-from django.utils import timezone
 from firebase_admin.db import Reference as FbReference
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
@@ -60,38 +59,23 @@ class FirebaseContributorUser(FirebasePush[ContributorUser]):
 
     @typing.override
     def handle_new_object_on_firebase(self, model_obj: ContributorUser, fb_reference: FbReference):
-        team_id = str(model_obj.team.id) if model_obj.team else ""
-        user_data = firebase_models.FbUser(
-            userName=model_obj.username,
-            username="",
-            userNameKey="",
-            usernameKey="",
-            teamId=team_id,
-            created=timezone.now(),
-        )
-        fb_reference.set(
-            value=firebase_utils.serialize(user_data),
-        )
+        # FIXME(tnagorra): Use a better exception
+        raise Exception("User cannot be created from mapswipe-backend")
 
     @typing.override
     def handle_object_update_on_firebase(self, model_obj: ContributorUser, fb_reference: FbReference):
         team_id = str(model_obj.team.id) if model_obj.team else ""
         fb_reference.update(
             value=firebase_utils.serialize(
-                firebase_models.FbUser(
-                    userName=model_obj.username,
-                    username="",
-                    userNameKey="",
-                    usernameKey="",
-                    teamId=team_id,
-                    created=timezone.now(),
+                firebase_models.FbUserUpdateInput(
+                    teamId=team_id or firebase_models.UNDEFINED,
                 ),
             ),
         )
 
     @typing.override
     def get_firebase_path(self, canonical_id: str, model=ContributorUser):
-        return Config.FirebaseKeys.users(canonical_id)
+        return Config.FirebaseKeys.contributor_user(canonical_id)
 
     @staticmethod
     @typing.override

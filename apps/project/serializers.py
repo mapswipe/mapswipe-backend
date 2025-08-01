@@ -8,7 +8,7 @@ from rest_framework import serializers
 from apps.common.models import FirebasePushStatusEnum
 from apps.common.serializers import ArchivableResourceSerializer, CommonAssetSerializer, UserResourceSerializer
 from apps.contributor.models import ContributorTeam
-from apps.project.firebase import FirebaseOrganization
+from apps.project.firebase import FirebaseOrganizationPush
 from apps.tutorial.models import Tutorial
 from project_types.store import get_project_property
 from utils.common import clean_up_none_keys
@@ -381,11 +381,11 @@ class OrganizationSerializer(UserResourceSerializer[Organization], ArchivableRes
     @typing.override
     def create(self, validated_data: dict[str, typing.Any]) -> Organization:
         organization = super().create(validated_data)
-        transaction.on_commit(lambda: FirebaseOrganization.task.delay(organization.pk))
+        transaction.on_commit(lambda: FirebaseOrganizationPush.task.delay(organization.pk))
         return organization
 
     @typing.override
     def update(self, instance: Organization, validated_data: dict[typing.Any, typing.Any]):
         organization = super().update(instance, validated_data)
-        transaction.on_commit(lambda: FirebaseOrganization.task.delay(organization.pk))
+        transaction.on_commit(lambda: FirebaseOrganizationPush.task.delay(organization.pk))
         return organization

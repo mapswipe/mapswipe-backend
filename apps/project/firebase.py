@@ -13,7 +13,7 @@ from main.config import Config
 logger = logging.getLogger(__name__)
 
 
-class FirebaseOrganization(FirebasePush[Organization]):
+class FirebaseOrganizationPush(FirebasePush[Organization]):
     model_obj: Organization
     model = Organization
 
@@ -21,6 +21,7 @@ class FirebaseOrganization(FirebasePush[Organization]):
     def handle_new_object_on_firebase(self, model_obj: Organization, fb_reference: FbReference):
         organization_data = firebase_models.FbOrganisation(
             name=model_obj.name,
+            # NOTE: nameKey is is deprecated
             nameKey="",
             description=model_obj.description or firebase_models.UNDEFINED,
             abbreviation=model_obj.abbreviation or firebase_models.UNDEFINED,
@@ -28,9 +29,7 @@ class FirebaseOrganization(FirebasePush[Organization]):
         )
 
         fb_reference.set(
-            value={
-                **firebase_utils.serialize(organization_data),
-            },
+            value=firebase_utils.serialize(organization_data),
         )
 
     @typing.override
@@ -39,6 +38,7 @@ class FirebaseOrganization(FirebasePush[Organization]):
             value=firebase_utils.serialize(
                 firebase_models.FbOrganisation(
                     name=model_obj.name,
+                    # NOTE: nameKey is is deprecated
                     nameKey="",
                     description=model_obj.description or firebase_models.UNDEFINED,
                     abbreviation=model_obj.abbreviation or firebase_models.UNDEFINED,
@@ -55,4 +55,4 @@ class FirebaseOrganization(FirebasePush[Organization]):
     @typing.override
     @app.task()
     def task(obj_id: int) -> None:
-        FirebaseOrganization(obj_id).push()
+        FirebaseOrganizationPush(obj_id).push()
