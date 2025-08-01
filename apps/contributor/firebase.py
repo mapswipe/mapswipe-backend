@@ -64,11 +64,10 @@ class FirebaseContributorUser(FirebasePush[ContributorUser]):
 
     @typing.override
     def handle_object_update_on_firebase(self, model_obj: ContributorUser, fb_reference: FbReference):
-        team_id = str(model_obj.team.id) if model_obj.team else ""
         fb_reference.update(
             value=firebase_utils.serialize(
                 firebase_models.FbUserUpdateInput(
-                    teamId=team_id or firebase_models.UNDEFINED,
+                    teamId=model_obj.team.firebase_id if model_obj.team else firebase_models.UNDEFINED,
                 ),
             ),
         )
