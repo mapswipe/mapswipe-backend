@@ -43,8 +43,8 @@ class FirebaseContributorTeam(FirebasePush[ContributorTeam]):
         )
 
     @typing.override
-    def get_firebase_path(self, canonical_id: str, model=ContributorTeam):
-        return Config.FirebaseKeys.contributor_team(canonical_id)
+    def get_firebase_path(self, firebase_id: str, model=ContributorTeam):
+        return Config.FirebaseKeys.contributor_team(firebase_id)
 
     @staticmethod
     @typing.override
@@ -74,8 +74,8 @@ class FirebaseContributorUser(FirebasePush[ContributorUser]):
         )
 
     @typing.override
-    def get_firebase_path(self, canonical_id: str, model=ContributorUser):
-        return Config.FirebaseKeys.contributor_user(canonical_id)
+    def get_firebase_path(self, firebase_id: str, model=ContributorUser):
+        return Config.FirebaseKeys.contributor_user(firebase_id)
 
     @staticmethod
     @typing.override

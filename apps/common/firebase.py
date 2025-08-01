@@ -4,7 +4,7 @@ import typing
 
 from firebase_admin.db import Reference as FbReference
 
-from apps.common.models import FirebasePushStatusEnum, FirebaseResource
+from apps.common.models import FirebasePushResource, FirebasePushStatusEnum
 from main.celery import app
 from main.config import Config
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class InvalidObjectPushException(Exception): ...
 
 
-class FirebasePush[T: FirebaseResource](abc.ABC):
+class FirebasePush[T: FirebasePushResource](abc.ABC):
     model: type[T]
 
     def __init__(
@@ -30,7 +30,7 @@ class FirebasePush[T: FirebaseResource](abc.ABC):
     def handle_object_update_on_firebase(self, model_obj: T, fb_reference: FbReference): ...
 
     @abc.abstractmethod
-    def get_firebase_path(self, canonical_id: str, model: type[T]) -> str: ...
+    def get_firebase_path(self, firebase_id: str, model: type[T]) -> str: ...
 
     def push(self) -> None:
         model_obj = self.model.objects.get(id=self.obj_id)
@@ -39,7 +39,7 @@ class FirebasePush[T: FirebaseResource](abc.ABC):
 
         try:
             model_ref = Config.FIREBASE_HELPER.ref(
-                self.get_firebase_path(model_obj.canonical_id, self.model),
+                self.get_firebase_path(model_obj.firebase_id, self.model),
             )
             fb_model: typing.Any = model_ref.get()
 

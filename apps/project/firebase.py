@@ -48,8 +48,8 @@ class FirebaseOrganizationPush(FirebasePush[Organization]):
         )
 
     @typing.override
-    def get_firebase_path(self, canonical_id: str, model=Organization):
-        return Config.FirebaseKeys.organization(canonical_id)
+    def get_firebase_path(self, firebase_id: str, model=Organization):
+        return Config.FirebaseKeys.organization(firebase_id)
 
     @staticmethod
     @typing.override

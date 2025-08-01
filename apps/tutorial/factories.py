@@ -15,6 +15,7 @@ class TutorialFactory(DjangoModelFactory):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Tutorial
 
+    firebase_id = factory.LazyFunction(lambda: str(ULID()))
     client_id = factory.LazyFunction(lambda: str(ULID()))
     # name = factory.Sequence(lambda n: f"Tutorial {n}")
 

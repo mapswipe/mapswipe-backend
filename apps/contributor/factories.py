@@ -2,7 +2,6 @@
 # pyright: reportIncompatibleVariableOverride=false
 # pyright: reportMissingTypeArgument=false
 import typing
-import uuid
 
 import factory
 from factory.django import DjangoModelFactory
@@ -21,7 +20,8 @@ class ContributorUserFactory(DjangoModelFactory):
     class Meta:
         model = ContributorUser
 
-    user_id = factory.LazyAttribute(lambda _: f"contributor-user-id-{uuid.uuid4().int % 1000000}")
+    firebase_id = factory.LazyFunction(lambda: str(ULID()))
+    user_id = factory.LazyFunction(lambda: str(ULID()))
     username = factory.Sequence(lambda n: f"Contributor User {n}")
 
 
@@ -29,6 +29,7 @@ class ContributorUserGroupFactory(DjangoModelFactory):
     class Meta:
         model = ContributorUserGroup
 
+    firebase_id = factory.LazyFunction(lambda: str(ULID()))
     client_id = factory.LazyFunction(lambda: str(ULID()))
     name = factory.Sequence(lambda n: f"Contributor User Group {n}")
     description = "Some description"
@@ -52,6 +53,7 @@ class ContributorTeamFactory(DjangoModelFactory):
     class Meta:
         model = ContributorTeam
 
+    firebase_id = factory.LazyFunction(lambda: str(ULID()))
     client_id = factory.LazyFunction(lambda: str(ULID()))
     name = factory.Sequence(lambda n: f"Contributor User Team {n}")
 

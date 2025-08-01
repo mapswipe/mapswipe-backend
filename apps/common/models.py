@@ -2,11 +2,11 @@
 import typing
 
 from django.db import models
-from django.db.models.functions import Cast, Coalesce
 from django.utils import timezone
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
 from django_stubs_ext.db.models import TypedModelMeta
+from ulid import ULID
 
 from apps.user.models import User
 from main.db import Model
@@ -114,8 +114,11 @@ class IconEnum(models.IntegerChoices):
     SWIPE_LEFT = 32, "swipe-left"
 
 
-class FirebaseResource(Model):
+class FirebasePushResource(Model):
+    # NOTE: We should not directly use old_id. This is ID reference to old system
     old_id = models.CharField(max_length=30, db_index=True, null=True, blank=True)
+
+    firebase_id = models.CharField(max_length=30, unique=True, default=ULID)
 
     firebase_push_status: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=FirebasePushStatusEnum,
@@ -125,17 +128,7 @@ class FirebaseResource(Model):
     firebase_last_pushed = models.DateTimeField(
         null=True,
         blank=True,
-        help_text=gettext_lazy("The latest time when project was pushed to firebase"),
-    )
-
-    canonical_id = models.GeneratedField(  # type: ignore[reportAttributeAccessIssue]
-        expression=Coalesce(
-            models.F("old_id"),
-            Cast(models.F("id"), models.CharField()),
-        ),
-        output_field=models.CharField(),
-        db_persist=True,
-        unique=True,
+        help_text=gettext_lazy("The latest time when resource was pushed to firebase"),
     )
 
     @property
@@ -158,6 +151,19 @@ class FirebaseResource(Model):
 
         if commit:
             self.save(update_fields=update_fields)
+
+    class Meta(TypedModelMeta):  # type: ignore[reportIncompatibleVariableOverride]
+        abstract = True
+
+
+class FirebasePullResource(Model):
+    firebase_id = models.CharField(max_length=30, unique=True)
+
+    firebase_last_pulled = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=gettext_lazy("The latest time when resource was pulled from firebase"),
+    )
 
     class Meta(TypedModelMeta):  # type: ignore[reportIncompatibleVariableOverride]
         abstract = True

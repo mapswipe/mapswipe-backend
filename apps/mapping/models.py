@@ -5,6 +5,7 @@ import typing
 from django.db import models
 from django_choices_field import IntegerChoicesField
 
+from apps.common.models import FirebasePullResource
 from apps.contributor.models import ContributorUser, ContributorUserGroup
 from apps.project.models import ProjectTask, ProjectTaskGroup
 
@@ -24,10 +25,7 @@ class MappingSessionClientTypeEnum(models.IntegerChoices):
         }.get(value, cls.UNKNOWN)
 
 
-class MappingSession(models.Model):
-    # FIXME(tnagorra): We might need to skip the indexing
-    old_id = models.CharField(max_length=30, db_index=True, null=True)
-
+class MappingSession(FirebasePullResource):
     project_task_group: ProjectTaskGroup = models.ForeignKey(ProjectTaskGroup, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
     contributor_user: ContributorUser = models.ForeignKey(ContributorUser, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
 
@@ -42,7 +40,7 @@ class MappingSession(models.Model):
     project_task_group_id: int
     contributor_user_id: int
 
-    class Meta:
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         unique_together = (("project_task_group", "contributor_user"),)
 
     @typing.override
@@ -50,10 +48,7 @@ class MappingSession(models.Model):
         return str(self.pk)
 
 
-class MappingSessionUserGroup(models.Model):
-    # FIXME(tnagorra): We might need to skip the indexing
-    old_id = models.CharField(max_length=30, db_index=True, null=True)
-
+class MappingSessionUserGroup(FirebasePullResource):
     mapping_session: MappingSession = models.ForeignKey(MappingSession, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
     user_group: ContributorUserGroup = models.ForeignKey(  # type: ignore[reportIncompatibleVariableOverride]
         ContributorUserGroup,
@@ -61,7 +56,7 @@ class MappingSessionUserGroup(models.Model):
         related_name="+",
     )
 
-    class Meta:
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         unique_together = (("mapping_session", "user_group"),)
 
     @typing.override
@@ -69,10 +64,7 @@ class MappingSessionUserGroup(models.Model):
         return str(self.pk)
 
 
-class MappingSessionResult(models.Model):
-    # FIXME(tnagorra): We might need to skip the indexing
-    old_id = models.CharField(max_length=30, db_index=True, null=True)
-
+class MappingSessionResult(FirebasePullResource):
     session: MappingSession = models.ForeignKey(MappingSession, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
     project_task: ProjectTaskGroup = models.ForeignKey(ProjectTask, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
     result = models.PositiveSmallIntegerField()

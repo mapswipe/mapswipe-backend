@@ -11,7 +11,7 @@ from django.db.models.functions import Concat, Lower
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
 
-from apps.common.models import ArchivableResource, CommonAsset, FirebaseResource, UserResource
+from apps.common.models import ArchivableResource, CommonAsset, FirebasePushResource, UserResource
 from apps.contributor.models import ContributorTeam
 from utils.fields import validate_percentage
 
@@ -116,7 +116,7 @@ class UploadHelper:
         return f"project/{instance.pk}/image/{filename}"
 
 
-class Organization(UserResource, ArchivableResource, FirebaseResource):  # type: ignore[reportIncompatibleVariableOverride]
+class Organization(UserResource, ArchivableResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     abbreviation = models.CharField(max_length=50, null=True, blank=True)
@@ -134,7 +134,7 @@ class Organization(UserResource, ArchivableResource, FirebaseResource):  # type:
         return self.name
 
 
-class Project(UserResource, FirebaseResource):  # type: ignore[reportIncompatibleVariableOverride]
+class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
     Type = ProjectTypeEnum
     Status = ProjectStatusEnum
     ProcessingStatus = ProjectProcessingStatusEnum
@@ -379,10 +379,8 @@ class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibl
     project_id: int
 
 
-class ProjectTaskGroup(models.Model):
-    # FIXME(tnagorra): We might need to skip the indexing
-    old_id = models.CharField(max_length=30, db_index=True, null=True)
-    legacy_group_id = models.CharField(max_length=30, db_index=True)
+class ProjectTaskGroup(FirebasePushResource):
+    firebase_id = models.CharField(max_length=30)
 
     project: Project = models.ForeignKey(  # type: ignore[reportAssignmentType]
         Project,
@@ -408,15 +406,20 @@ class ProjectTaskGroup(models.Model):
     # Type hints
     project_id: int
 
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        unique_together = (
+            "project",
+            "firebase_id",
+        )
+
     @typing.override
     def __str__(self):
         return f"(project={self.project_id}, id={self.pk})"
 
 
-class ProjectTask(models.Model):
-    # FIXME(tnagorra): We might need to skip the indexing
-    old_id = models.CharField(max_length=30, db_index=True, null=True)
-    legacy_task_id = models.CharField(max_length=30, db_index=True)
+class ProjectTask(FirebasePushResource):
+    # TODO(tnagorra): We need to change the uniqueness constraint
+    firebase_id = models.CharField(max_length=30, null=True, blank=True)
 
     task_group: ProjectTaskGroup = models.ForeignKey(  # type: ignore[reportAssignmentType]
         ProjectTaskGroup,
@@ -435,6 +438,13 @@ class ProjectTask(models.Model):
 
     # Type hints
     task_group_id: int
+
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        unique_together = (
+            # FIXME(tnagorra): Should we use project instead of task_group here?
+            "task_group",
+            "firebase_id",
+        )
 
     @typing.override
     def __str__(self):

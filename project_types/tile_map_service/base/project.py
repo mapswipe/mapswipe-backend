@@ -162,7 +162,7 @@ class TileMapServiceBaseProject[
                 )
                 bulk_mgr.add(
                     ProjectTask(
-                        legacy_task_id=f"{self.project_type_specifics.zoom_level}-{tile_x}-{tile_y}",
+                        firebase_id=f"{self.project_type_specifics.zoom_level}-{tile_x}-{tile_y}",
                         task_group_id=group.pk,
                         geometry=geometry,
                         project_type_specifics=self.project_task_property_class(
@@ -190,7 +190,7 @@ class TileMapServiceBaseProject[
             # Create new group
             # FIXME(thenav56): Bulk create here as well?
             new_group = ProjectTaskGroup.objects.create(
-                legacy_group_id=group_key,
+                firebase_id=group_key,
                 project_id=self.project.pk,
                 number_of_tasks=0,
                 progress=0,
@@ -255,7 +255,7 @@ class TileMapServiceBaseProject[
             **group.project_type_specifics,
         )
         return firebase_models.FbMappingGroupTileMapServiceCreateOnlyInput(
-            groupId=group.legacy_group_id,
+            groupId=group.firebase_id,
             xMax=task_group_specifics.x_max,
             xMin=task_group_specifics.x_min,
             yMax=task_group_specifics.y_max,

@@ -254,7 +254,7 @@ class ValidateProject(
 
                 bulk_mgr.add(
                     ProjectTask(
-                        legacy_task_id=f"t{tasks_count + 1}",
+                        firebase_id=f"t{tasks_count + 1}",
                         task_group_id=group.pk,
                         geometry=geometry_str,
                         project_type_specifics=self.project_task_property_class(
@@ -275,7 +275,7 @@ class ValidateProject(
 
         for group_key, raw_group in raw_groups.items():
             new_group = ProjectTaskGroup.objects.create(
-                legacy_group_id=group_key,
+                firebase_id=group_key,
                 project_id=self.project.pk,
                 number_of_tasks=0,
                 progress=0,
@@ -337,7 +337,7 @@ class ValidateProject(
     @typing.override
     def get_task_project_specifics_for_firebase(self, task: ProjectTask):
         return firebase_models.FbMappingTaskValidateCreateOnlyInput(
-            taskId=str(task.legacy_task_id),
+            taskId=str(task.firebase_id),
             # FIXME(tnagorra): Check if we need to convert this?
             geojson=task.geometry,
         )
@@ -345,7 +345,7 @@ class ValidateProject(
     @typing.override
     def get_group_project_specifics_for_firebase(self, group: ProjectTaskGroup):
         return firebase_models.FbMappingGroupValidateCreateOnlyInput(
-            groupId=str(group.legacy_group_id),
+            groupId=str(group.firebase_id),
         )
 
     @typing.override
