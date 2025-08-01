@@ -93,7 +93,7 @@ class TutorialInformationPageBlockCreateInput(UserResourceCreateInputMixin):
     block_number: strawberry.auto
     block_type: strawberry.auto
     text: strawberry.auto
-    image: Upload | None = strawberry.UNSET
+    image: strawberry.ID | None = strawberry.UNSET
 
 
 @strawberry_django.partial(TutorialInformationPageBlock)
@@ -103,7 +103,7 @@ class TutorialInformationPageBlockUpdateInput(UserResourceUpdateInputMixin):
     block_number: strawberry.auto
     block_type: strawberry.auto
     text: strawberry.auto
-    image: Upload | None = strawberry.UNSET
+    image: strawberry.ID | None = strawberry.UNSET
 
 
 @strawberry.input

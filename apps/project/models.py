@@ -1,5 +1,6 @@
 # pyright: reportUninitializedInstanceVariable=false
 import typing
+from warnings import deprecated
 
 import ulid
 from django.contrib.gis.db import models as gis_models
@@ -109,8 +110,8 @@ class UploadHelper:
     def project_asset(instance: "ProjectAsset", filename: str):
         return f"project/{instance.project_id}/asset/{instance.type}/{ulid.ULID()!s}/{filename}"
 
+    @deprecated("This is kept because it's referenced in migrations")
     @staticmethod
-    # FIXME: This is not be used anymore
     def project_image(instance: "Project", filename: str):
         return f"project/{instance.pk}/image/{filename}"
 
