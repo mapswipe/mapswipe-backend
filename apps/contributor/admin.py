@@ -7,7 +7,7 @@ from djangoql.admin import DjangoQLSearchMixin
 
 from apps.common.admin import ArchivableResourceAdmin
 
-from .firebase import FirebaseContributorTeam, firebase_contributor_user
+from .firebase import FirebaseContributorTeam
 from .models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
 
@@ -21,22 +21,22 @@ class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     )
     list_filter = ("team",)
 
+    @typing.override
+    def has_add_permission(self, *args, **kwargs):
+        return False
+
+    @typing.override
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
 
 @admin.register(ContributorUserGroup)
 class ContributorUserGroupAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     pass
 
 
-class ContributorUserInline(admin.TabularInline):
-    model = ContributorUser
-    extra = 1
-    fields = ("user_id", "username", "created_at", "modified_at")
-    can_delete = False
-
-
 @admin.register(ContributorTeam)
 class ContributorTeamAdmin(ArchivableResourceAdmin, DjangoQLSearchMixin, admin.ModelAdmin):
-    inlines = [ContributorUserInline]
     list_display = (
         "name",
         "is_archived",
@@ -58,13 +58,6 @@ class ContributorTeamAdmin(ArchivableResourceAdmin, DjangoQLSearchMixin, admin.M
             obj.archived_at = None
         super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
         transaction.on_commit(lambda: FirebaseContributorTeam.task.delay(obj.id))
-
-    @typing.override
-    def save_related(self, request, form, formsets, change):
-        super().save_related(request, form, formsets, change)
-        contributor_users = form.instance.user.all()
-        for user in contributor_users:
-            transaction.on_commit(lambda user_id=user.pk: firebase_contributor_user.delay(user_id))
 
 
 @admin.register(ContributorUserGroupMembership)
