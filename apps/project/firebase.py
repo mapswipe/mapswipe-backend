@@ -13,9 +13,9 @@ from main.config import Config
 logger = logging.getLogger(__name__)
 
 
-class FirebaseOrganizationPush(FirebasePush[Organization]):
-    model_obj: Organization
-    model = Organization
+class FirebaseOrganizationPush(FirebasePush[Organization, firebase_models.FbOrganisation]):
+    model_class = Organization
+    firebase_model_class = firebase_models.FbOrganisation
 
     @typing.override
     def handle_new_object_on_firebase(self, model_obj: Organization, fb_reference: FbReference):
@@ -31,7 +31,12 @@ class FirebaseOrganizationPush(FirebasePush[Organization]):
         )
 
     @typing.override
-    def handle_object_update_on_firebase(self, model_obj: Organization, fb_reference: FbReference):
+    def handle_object_update_on_firebase(
+        self,
+        model_obj: Organization,
+        fb_obj: firebase_models.FbOrganisation,
+        fb_reference: FbReference,
+    ):
         fb_reference.update(
             value=firebase_utils.serialize(
                 firebase_models.FbOrganisation(

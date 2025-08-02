@@ -3,6 +3,7 @@ import typing
 
 from celery import shared_task
 from firebase_admin.db import Reference as FbReference
+from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
 
@@ -14,9 +15,9 @@ from main.config import Config
 logger = logging.getLogger(__name__)
 
 
-class FirebaseContributorTeam(FirebasePush[ContributorTeam]):
-    model_obj: ContributorTeam
-    model = ContributorTeam
+class FirebaseContributorTeam(FirebasePush[ContributorTeam, firebase_models.FbTeam]):
+    model_class = ContributorTeam
+    firebase_model_class = firebase_models.FbTeam
 
     @typing.override
     def handle_new_object_on_firebase(self, model_obj: ContributorTeam, fb_reference: FbReference):
@@ -31,7 +32,12 @@ class FirebaseContributorTeam(FirebasePush[ContributorTeam]):
         )
 
     @typing.override
-    def handle_object_update_on_firebase(self, model_obj: ContributorTeam, fb_reference: FbReference):
+    def handle_object_update_on_firebase(
+        self,
+        model_obj: ContributorTeam,
+        fb_obj: firebase_models.FbTeam,
+        fb_reference: FbReference,
+    ):
         fb_reference.update(
             value=firebase_utils.serialize(
                 firebase_models.FbTeam(
@@ -53,9 +59,9 @@ class FirebaseContributorTeam(FirebasePush[ContributorTeam]):
         FirebaseContributorTeam(obj_id).push()
 
 
-class FirebaseContributorUser(FirebasePush[ContributorUser]):
-    model_obj: ContributorUser
-    model = ContributorUser
+class FirebaseContributorUser(FirebasePush[ContributorUser, firebase_ext_models.FbUser]):
+    model_class = ContributorUser
+    firebase_model_class = firebase_ext_models.FbUser
 
     @typing.override
     def handle_new_object_on_firebase(self, model_obj: ContributorUser, fb_reference: FbReference):
@@ -63,7 +69,12 @@ class FirebaseContributorUser(FirebasePush[ContributorUser]):
         raise Exception("User cannot be created from mapswipe-backend")
 
     @typing.override
-    def handle_object_update_on_firebase(self, model_obj: ContributorUser, fb_reference: FbReference):
+    def handle_object_update_on_firebase(
+        self,
+        model_obj: ContributorUser,
+        fb_obj: firebase_ext_models.FbUser,
+        fb_reference: FbReference,
+    ):
         fb_reference.update(
             value=firebase_utils.serialize(
                 firebase_models.FbUserUpdateInput(
