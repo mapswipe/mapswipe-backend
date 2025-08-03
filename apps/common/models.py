@@ -178,6 +178,10 @@ class AssetMimetypeEnum(models.IntegerChoices):
     IMAGE_PNG = 202, "image/png"
     IMAGE_GIF = 203, "image/gif"
 
+    GZIP = 300, "application/x-gzip"
+
+    CSV = 400, "text/csv"
+
     @classmethod
     def get_display(cls, value: typing.Self | int) -> str:
         if value in cls:

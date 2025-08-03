@@ -106,6 +106,8 @@ enum AssetMimetypeEnum {
   IMAGE_JPEG
   IMAGE_PNG
   IMAGE_GIF
+  GZIP
+  CSV
 }
 
 input AssetMimetypeEnumFilterLookup {
@@ -957,7 +959,7 @@ input ProcessedProjectUpdateInput {
 }
 
 """
-ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, project, file)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, stats_type, project, file)
 """
 input ProjectAssetCreateInput {
   clientId: String!
@@ -969,7 +971,7 @@ input ProjectAssetCreateInput {
 }
 
 """
-ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, project, file)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, stats_type, project, file)
 """
 input ProjectAssetFilter {
   id: IDBaseFilterLookup
@@ -986,8 +988,21 @@ input ProjectAssetOrder {
   id: Ordering
 }
 
+enum ProjectAssetStatsTypeEnum {
+  AGGREGATED_RESULTS
+  AGGREGATED_RESULTS_WITH_GEOMETRY
+  GROUPS
+  HISTORY
+  RESULTS
+  TASKS
+  USERS
+  AREA_OF_INTEREST
+  HOT_TASKING_MANAGER_GEOMETRIES
+  MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES
+}
+
 """
-ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, project, file)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, stats_type, project, file)
 """
 type ProjectAssetType implements UserResourceTypeMixin {
   clientId: String!
@@ -1009,6 +1024,7 @@ type ProjectAssetType implements UserResourceTypeMixin {
 
   """The file associated with the asset"""
   file: MapswipeDjangoFileType!
+  statsType: ProjectAssetStatsTypeEnum
   projectId: ID!
 }
 
@@ -1072,6 +1088,19 @@ type ProjectCustomSubOption {
   """A positive int value"""
   value: Int!
   description: String!
+}
+
+interface ProjectExportAssetTypeMixin {
+  exportAggregatedResults: ProjectAssetType
+  exportAggregatedResultsWithGeometry: ProjectAssetType
+  exportGroups: ProjectAssetType
+  exportHistory: ProjectAssetType
+  exportResults: ProjectAssetType
+  exportTasks: ProjectAssetType
+  exportUsers: ProjectAssetType
+  exportAreaOfInterest: ProjectAssetType
+  exportHotTaskingManagerGeometries: ProjectAssetType
+  exportModerateToHighAgreementYesMaybeGeometries: ProjectAssetType
 }
 
 """
@@ -1293,12 +1322,22 @@ input ProjectStatusEnumFilterLookup {
 """
 Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
-type ProjectType implements UserResourceTypeMixin {
+type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin {
   clientId: String!
   createdAt: DateTime!
   modifiedAt: DateTime!
   createdBy: UserType!
   modifiedBy: UserType!
+  exportAggregatedResults: ProjectAssetType
+  exportAggregatedResultsWithGeometry: ProjectAssetType
+  exportGroups: ProjectAssetType
+  exportHistory: ProjectAssetType
+  exportResults: ProjectAssetType
+  exportTasks: ProjectAssetType
+  exportUsers: ProjectAssetType
+  exportAreaOfInterest: ProjectAssetType
+  exportHotTaskingManagerGeometries: ProjectAssetType
+  exportModerateToHighAgreementYesMaybeGeometries: ProjectAssetType
   id: ID!
   projectType: ProjectTypeEnum!
 
