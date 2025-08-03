@@ -34,6 +34,14 @@ class ContributorUser(FirebasePushResource):
     def __str__(self):
         return self.username
 
+    @typing.override
+    def clean(self):
+        super().clean()
+        if self.team and self.team.is_archived:
+            raise ValidationError(
+                {"team": gettext("Cannot create or update member to archived team.")},
+            )
+
 
 class ContributorUserGroup(ArchivableResource, UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
     name = models.CharField(max_length=255)
@@ -93,7 +101,7 @@ class ContributorTeam(ArchivableResource, UserResource, FirebasePushResource):  
 
     @typing.override
     def __str__(self):
-        return self.name
+        return f"Archived - {self.name}" if self.is_archived else self.name
 
     @typing.override
     def clean(self):
