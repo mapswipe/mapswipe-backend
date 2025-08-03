@@ -44,27 +44,39 @@ class Config:
             return "/v2"
 
         @staticmethod
-        def project(project_id: str | int):
+        def project(project_id: str):
             return f"/v2/projects/{project_id}"
 
         @staticmethod
-        def project_groups(project_id: str | int):
+        def project_groups(project_id: str):
             return f"/v2/groups/{project_id}/"
 
         @staticmethod
-        def project_tasks(project_id: str | int):
+        def project_tasks(project_id: str):
             return f"/v2/tasks/{project_id}/"
 
         @staticmethod
-        def organization(organization_id: str | int):
+        def tutorial(tutorial_id: str):
+            return f"/v2/projects/{tutorial_id}"
+
+        @staticmethod
+        def tutorial_groups(tutorial_id: str):
+            return f"/v2/groups/{tutorial_id}/"
+
+        @staticmethod
+        def tutorial_tasks(tutorial_id: str):
+            return f"/v2/tasks/{tutorial_id}/"
+
+        @staticmethod
+        def organization(organization_id: str):
             return f"/v2/organisation/{organization_id}/"
 
         @staticmethod
-        def contributor_team(contributor_team_id: str | int):
+        def contributor_team(contributor_team_id: str):
             return f"/v2/teams/{contributor_team_id}/"
 
         @staticmethod
-        def contributor_user(user_id: str | int):
+        def contributor_user(user_id: str):
             return f"/v2/users/{user_id}"
 
 

@@ -121,6 +121,22 @@ class TutorialScenarioPage(UserResource):
             models.UniqueConstraint(fields=["tutorial", "scenario_page_number"], name="unique_scenario_on_tutorials"),
         ]
 
+    @property
+    def instructions_icon_enum(self) -> IconEnum:
+        return IconEnum(self.instructions_icon)
+
+    @property
+    def hint_icon_enum(self) -> IconEnum | None:
+        if self.hint_icon:
+            return IconEnum(self.hint_icon)
+        return None
+
+    @property
+    def success_icon_enum(self) -> IconEnum | None:
+        if self.success_icon:
+            return IconEnum(self.success_icon)
+        return None
+
     @typing.override
     def __str__(self):
         return self.scenario_page_number

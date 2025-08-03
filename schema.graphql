@@ -2211,11 +2211,13 @@ type ValidateProjectPropertyType {
 }
 
 input ValidateTutorialTaskPropertyInput {
-  objectGeometry: String = null
+  identifier: Int!
+  objectGeometry: String!
 }
 
 type ValidateTutorialTaskPropertyType {
-  objectGeometry: String
+  identifier: Int!
+  objectGeometry: String!
 }
 
 input VectorTileServerCommonConfigInput {

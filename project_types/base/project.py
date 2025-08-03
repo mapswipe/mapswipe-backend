@@ -362,7 +362,7 @@ class BaseProject[
 
         try:
             project_ref = self.firebase_helper.ref(
-                Config.FirebaseKeys.project(self.project.id),
+                Config.FirebaseKeys.project(self.project.firebase_id),
             )
             fb_project: typing.Any = project_ref.get()
 
