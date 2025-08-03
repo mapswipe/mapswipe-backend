@@ -112,8 +112,7 @@ class CompletenessProject(
             credits=tsp.get_config()["credits"],
             url=tsp.get_config()["raw_url"],
             apiKey=tsp.get_config()["api_key"],
-            # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
-            wmtsLayerName=firebase_models.UNDEFINED,
+            wmtsLayerName=None,
         )
 
         # NOTE: Setting background layer as fallback for overlay layer
@@ -124,17 +123,15 @@ class CompletenessProject(
                 credits=tsp_overlay.raster.tile_server.get_config()["credits"],
                 url=tsp_overlay.raster.tile_server.get_config()["raw_url"],
                 apiKey=tsp_overlay.raster.tile_server.get_config()["api_key"],
-                # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
-                wmtsLayerName=firebase_models.UNDEFINED,
+                wmtsLayerName=None,
             )
         else:
             fb_overlay_tile_server = firebase_models.FbObjRasterTileServer(
                 name=firebase_models.FbEnumRasterTileServerName.CUSTOM,
-                credits="",
+                credits="n/a",
                 url="https://raw.githubusercontent.com/mapswipe/mapswipe-assets/refs/heads/main/images/raster-layer-404-message.png",
                 apiKey="",
-                # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
-                wmtsLayerName=firebase_models.UNDEFINED,
+                wmtsLayerName=None,
             )
 
         return firebase_models.FbProjectCompletenessCreateOnlyInput(
@@ -163,7 +160,7 @@ class CompletenessProject(
                     circleRadius=tsp_overlay.vector.circle_radius,
                 )
                 if tsp_overlay.vector
-                else firebase_models.UNDEFINED,
+                else None,
                 raster=firebase_models.FbObjRasterTileServerOverlay(
                     opacity=tsp_overlay.raster.opacity,
                     tileServer=firebase_models.FbObjRasterTileServer(
@@ -171,11 +168,10 @@ class CompletenessProject(
                         credits=tsp_overlay.raster.tile_server.get_config()["credits"],
                         url=tsp_overlay.raster.tile_server.get_config()["raw_url"],
                         apiKey=tsp_overlay.raster.tile_server.get_config()["api_key"],
-                        # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
-                        wmtsLayerName=firebase_models.UNDEFINED,
+                        wmtsLayerName=None,
                     ),
                 )
                 if tsp_overlay.raster
-                else firebase_models.UNDEFINED,
+                else None,
             ),
         )

@@ -7,6 +7,5 @@ from project_types.validate import project as validate_project
 class ValidateObjectSourceConfigInput: ...
 
 
-# FIXME(tnagorra): Add one_of here?
 @strawberry.experimental.pydantic.input(model=validate_project.ValidateProjectProperty, all_fields=True)
 class ValidateProjectPropertyInput: ...

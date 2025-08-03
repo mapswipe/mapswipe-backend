@@ -1,7 +1,9 @@
 services:
   firebase-test:
-    image: ghcr.io/mapswipe/mapswipe-firebase:0.0.1-dev
+    image: ghcr.io/mapswipe/mapswipe-firebase:0.2.0-dev
     build: !reset null
+    environment:
+      CI: "true"
 
   test:
     image: $DOCKER_IMAGE

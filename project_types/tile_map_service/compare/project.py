@@ -48,7 +48,7 @@ class CompareProject(
 
         return firebase_models.FbMappingTaskCompareCreateOnlyInput(
             groupId=str(task.task_group.firebase_id),
-            taskId=str(task.task_group_id),
+            taskId=task.firebase_id,
             taskX=task_specifics.tile_x,
             taskY=task_specifics.tile_y,
             url=tsp.generate_url(
@@ -75,15 +75,13 @@ class CompareProject(
                 credits=tsp.get_config()["credits"],
                 url=tsp.get_config()["raw_url"],
                 apiKey=tsp.get_config()["api_key"],
-                # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
-                wmtsLayerName=firebase_models.UNDEFINED,
+                wmtsLayerName=None,
             ),
             tileServerB=firebase_models.FbObjRasterTileServer(
                 name=raster_tile_server_name_enum_to_firebase(tsp_b.name),
                 credits=tsp_b.get_config()["credits"],
                 url=tsp_b.get_config()["raw_url"],
                 apiKey=tsp_b.get_config()["api_key"],
-                # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
-                wmtsLayerName=firebase_models.UNDEFINED,
+                wmtsLayerName=None,
             ),
         )

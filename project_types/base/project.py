@@ -200,7 +200,7 @@ class BaseProject[
         fb_tasks: dict[str, dict[str, dict[str, dict]]] = {}
         for task in tasks.iterator():
             task_data = firebase_models.FbMappingTaskCreateOnlyInput(
-                projectId=str(self.project.pk),
+                projectId=self.project.firebase_id,
             )
             task_project_specific_data = self.get_task_project_specifics_for_firebase(task)
             # TODO(tnagorra): Need to group by groups
@@ -219,7 +219,7 @@ class BaseProject[
             group_data = firebase_ext_models.FbMappingGroup(
                 finishedCount=0,
                 progress=0,
-                projectId=str(self.project.pk),
+                projectId=self.project.firebase_id,
                 numberOfTasks=group.number_of_tasks,
                 requiredCount=group.required_count,
             )
@@ -270,37 +270,34 @@ class BaseProject[
 
         project_data = firebase_ext_models.FbProject(
             created=self.project.created_at,
+            # FIXME: use firebase_id later
             createdBy=self.project.created_by.old_id or str(self.project.created_by_id),
-            # FIXME(tnagorra): We need to provide full url
-            # FIXME(tnagorra): Looks like this is required in model currently
-            image=self.project.image.file.url if self.project.image else firebase_models.UNDEFINED,
+            image=self.project.image.file.url if self.project.image else None,
             isFeatured=self.project.is_featured,
             lookFor=self.project.look_for,
-            manualUrl=self.project.additional_info_url or firebase_models.UNDEFINED,
-            maxTasksPerUser=self.project.max_tasks_per_user or firebase_models.UNDEFINED,
+            manualUrl=self.project.additional_info_url,
+            maxTasksPerUser=self.project.max_tasks_per_user,
             groupMaxSize=self.project.group_size,  # this is zero
             contributorCount=0,
             progress=0,
             resultCount=0,
             groupSize=self.project.group_size,
-            projectId=self.project.old_id or str(self.project.id),
+            projectId=self.project.firebase_id,
             name=self.project.generate_name(),
             projectDetails=self.project.description or "n/a",
             projectNumber=self.project.project_number,
             projectRegion=self.project.region,
             projectTopic=self.project.topic,
-            # NOTE: projectTopicKey is obsolete
-            projectTopicKey="",
+            projectTopicKey=self.project.generate_name().lower().strip(),
             projectType=project_type_enum_to_firebase(self.project.project_type_enum),
             # project_type=project_type_enum_to_firebase(self.project.project_type_enum), # not needed here
             requestingOrganisation=self.project.requesting_organization.name,  # str
             requiredResults=self.project.required_results,
             status=status,
-            # FIXME(susilnem): We might need to use old_id
-            teamId=str(self.project.team_id) if self.project.team_id else firebase_models.UNDEFINED,
+            teamId=self.project.team.firebase_id if self.project.team else None,
             # FIXME(tnagorra): Need to check how we get this?
             language="en-us",
-            tutorialId=self.project.tutorial.old_id or str(self.project.tutorial_id),
+            tutorialId=self.project.tutorial.firebase_id,
             verificationNumber=self.project.verification_number,
         )
 
@@ -337,23 +334,19 @@ class BaseProject[
         project_ref.update(
             value=firebase_utils.serialize(
                 firebase_models.FbProjectUpdateInput(
-                    # FIXME(tnagorra): We need to provide full url
-                    # FIXME(tnagorra): Looks like this is required in model currently
-                    image=self.project.image.file.url if self.project.image else firebase_models.UNDEFINED,
+                    image=self.project.image.file.url if self.project.image else None,
                     isFeatured=self.project.is_featured,
                     lookFor=self.project.look_for,
                     name=self.project.generate_name(),
                     projectNumber=self.project.project_number,
                     projectRegion=self.project.region,
                     projectTopic=self.project.topic,
-                    # NOTE: projectTopicKey is obsolete
-                    projectTopicKey="",
+                    projectTopicKey=self.project.generate_name().lower().strip(),
                     projectDetails=self.project.description or "n/a",
                     requestingOrganisation=self.project.requesting_organization.name,
-                    tutorialId=str(self.project.tutorial_id),
+                    tutorialId=self.project.tutorial.firebase_id,
                     status=status,
-                    # FIXME(susilnem): We might need to use old_id
-                    teamId=str(self.project.team_id) if self.project.team_id else firebase_models.UNDEFINED,
+                    teamId=self.project.team.firebase_id if self.project.team else None,
                     # FIXME(tnagorra): Need to check how we get this?
                     language="en-us",
                 ),

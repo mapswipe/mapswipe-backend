@@ -108,6 +108,13 @@ jobs:
           echo "tagged_image=${IMAGE_NAME}:${TAG}" >> $GITHUB_OUTPUT
           echo "::notice::Tagged docker image: ${IMAGE_NAME}:${TAG}"
 
+      - name: Start firebase emulator (in background)
+        env:
+          DOCKER_IMAGE: ${{ steps.prep.outputs.tagged_image }}
+        run: |
+          # TODO: Also move docker pull process in the background
+          docker compose up -d firebase-test
+
       - name: 🐳 Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v3
@@ -128,9 +135,10 @@ jobs:
         env:
           DOCKER_IMAGE: ${{ steps.prep.outputs.tagged_image }}
         run: |
-          docker compose run --rm test ./manage.py wait_for_resources --all || {
-            echo 'Failed to wait for the resources';
-            exit 1;
+          timeout 60s docker compose run --rm test ./manage.py wait_for_resources --all || {
+            echo 'Failed to wait for resources'
+            docker compose logs
+            exit 1
           }
 
       - name: Validate if there are no pending django migrations.

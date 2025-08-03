@@ -131,6 +131,8 @@ class FirebasePushResource(Model):
         help_text=gettext_lazy("The latest time when resource was pushed to firebase"),
     )
 
+    # FIXME(tnagorra): Override create and update to set FirebasePushStatusEnum.PENDING
+
     @property
     def firebase_push_status_enum(self):
         if self.firebase_push_status:

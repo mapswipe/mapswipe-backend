@@ -50,14 +50,14 @@ class ValidateImageProject(
             **task.project_type_specifics,
         )
         return firebase_models.FbMappingTaskValidateImageCreateOnlyInput(
-            taskId=str(task.firebase_id),
-            question=task_specifics.question or firebase_models.UNDEFINED,
+            taskId=task.firebase_id,
+            question=task_specifics.question,
         )
 
     @typing.override
     def get_group_project_specifics_for_firebase(self, group):
         return firebase_models.FbMappingGroupValidateImageCreateOnlyInput(
-            groupId=str(group.firebase_id),
+            groupId=group.firebase_id,
         )
 
     # TODO(tnagorra): Define validate
@@ -86,10 +86,10 @@ class ValidateImageProject(
                         for sub_opt in opt.sub_options
                     ]
                     if opt.sub_options is not None
-                    else firebase_models.UNDEFINED,
+                    else None,
                 )
                 for opt in custom_opts
             ]
             if custom_opts is not None
-            else firebase_models.UNDEFINED,
+            else None,
         )

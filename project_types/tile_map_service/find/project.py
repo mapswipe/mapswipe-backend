@@ -42,7 +42,6 @@ class FindProject(
                 credits=tsp.get_config()["credits"],
                 url=tsp.get_config()["raw_url"],
                 apiKey=tsp.get_config()["api_key"],
-                # NOTE: wmtsLayerName is deprecated as singergise is not longer supported
-                wmtsLayerName=firebase_models.UNDEFINED,
+                wmtsLayerName=None,
             ),
         )
