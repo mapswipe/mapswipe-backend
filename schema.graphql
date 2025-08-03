@@ -1743,7 +1743,7 @@ type TutorialAssetTypeOffsetPaginated {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project, name, status)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
 """
 input TutorialCreateInput {
   clientId: String!
@@ -1754,7 +1754,7 @@ input TutorialCreateInput {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project, name, status)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
 """
 input TutorialFilter {
   id: IDBaseFilterLookup
@@ -2043,7 +2043,7 @@ input TutorialTaskUpdateInput {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project, name, status)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
 """
 type TutorialType implements UserResourceTypeMixin {
   clientId: String!
@@ -2078,7 +2078,7 @@ type TutorialTypeOffsetPaginated {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project, name, status)
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
 """
 input TutorialUpdateInput {
   clientId: String!

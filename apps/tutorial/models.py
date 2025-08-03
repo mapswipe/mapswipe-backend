@@ -48,6 +48,10 @@ class TutorialStatusEnum(models.IntegerChoices):
     """
 
 
+def generate_tutorial_firebase_id():
+    return f"tutorial_{ulid.ULID()}"
+
+
 class Tutorial(UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
     Status = TutorialStatusEnum
 
@@ -64,6 +68,8 @@ class Tutorial(UserResource, FirebasePushResource):  # type: ignore[reportIncomp
         choices_enum=TutorialStatusEnum,
         default=TutorialStatusEnum.DRAFT,
     )
+
+    firebase_id = models.CharField(max_length=40, unique=True, default=generate_tutorial_firebase_id)
 
     # Type hints
     project_id: int
