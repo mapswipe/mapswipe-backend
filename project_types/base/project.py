@@ -251,11 +251,11 @@ class BaseProject[
         # NOTE: We are not reading data from group_ref as it's an expensive operation
         # FIXME(tnagorra): We need to check if the key exists later
         group_ref = self.firebase_helper.ref(
-            Config.FirebaseKeys.project_groups(self.project.id),
+            Config.FirebaseKeys.project_groups(self.project.firebase_id),
         )
         # FIXME(tnagorra): We need to check if the key exists later
         task_ref = self.firebase_helper.ref(
-            Config.FirebaseKeys.project_tasks(self.project.id),
+            Config.FirebaseKeys.project_tasks(self.project.firebase_id),
         )
 
         # FIXME: If taskId is defined, should be private_inactive
