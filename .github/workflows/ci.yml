@@ -124,13 +124,14 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Start app resources
-        timeout-minutes: 1
+        timeout-minutes: 2
         env:
           DOCKER_IMAGE: ${{ steps.prep.outputs.tagged_image }}
         run: |
-          docker compose run --rm test ./manage.py wait_for_resources --all || {
-            echo 'Failed to wait for the resources';
-            exit 1;
+          timeout 60s docker compose run --rm test ./manage.py wait_for_resources --all || {
+            echo 'Failed to wait for resources'
+            docker compose logs
+            exit 1
           }
 
       - name: Validate if there are no pending django migrations.
