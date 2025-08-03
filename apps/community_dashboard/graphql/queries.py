@@ -122,9 +122,9 @@ class Query:
     @strawberry.field
     async def community_user_stats(
         self,
-        user_user_id: strawberry.ID,
+        firebase_id: strawberry.ID,
     ) -> ContributorUserStats:
-        user = await aget_object_or_404(ContributorUser, user_id=user_user_id)
+        user = await aget_object_or_404(ContributorUser, firebase_id=firebase_id)
         return ContributorUserStats(user=user)
 
     @strawberry.field

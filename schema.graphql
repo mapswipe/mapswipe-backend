@@ -353,10 +353,11 @@ type ContributorTimeStatType {
 }
 
 """
-ContributorUser(id, old_id, firebase_id, firebase_push_status, firebase_last_pushed, user_id, team, username, created_at, modified_at)
+ContributorUser(id, old_id, firebase_push_status, firebase_last_pushed, team, username, firebase_id, created_at, modified_at)
 """
 input ContributorUserFilter {
-  id: IDBaseFilterLookup
+  """Firebase User ID (External)"""
+  firebaseId: StrFilterLookup
   username: StrFilterLookup
   teamId: IDBaseFilterLookup
   AND: ContributorUserFilter
@@ -396,7 +397,7 @@ input ContributorUserGroupFilter {
   NOT: ContributorUserGroupFilter
   DISTINCT: Boolean
   userId: ID
-  userUserId: ID
+  firebaseId: ID
 }
 
 type ContributorUserGroupFilteredStats implements ContributorUserUserGroupBaseFilterStatsQuery {
@@ -560,13 +561,13 @@ type ContributorUserStats {
 }
 
 """
-ContributorUser(id, old_id, firebase_id, firebase_push_status, firebase_last_pushed, user_id, team, username, created_at, modified_at)
+ContributorUser(id, old_id, firebase_push_status, firebase_last_pushed, team, username, firebase_id, created_at, modified_at)
 """
 type ContributorUserType {
   id: ID!
 
-  """Firebase User ID"""
-  userId: ID!
+  """Firebase User ID (External)"""
+  firebaseId: ID!
   username: String!
   createdAt: DateTime
   totalMappingProjects: Int!
@@ -1537,7 +1538,7 @@ type Query {
   contributorUser(id: ID!): ContributorUserType!
   contributorUserGroup(id: ID!): ContributorUserGroupType!
   contributorTeam(id: ID!): ContributorTeamType!
-  contributorUserByUserId(userId: ID!): ContributorUserType!
+  contributorUserByFirebaseId(firebaseId: ID!): ContributorUserType!
   contributorUserGroups(includeAll: Boolean! = false, filters: ContributorUserGroupFilter, order: ContributorUserGroupOrder, pagination: OffsetPaginationInput): ContributorUserGroupTypeOffsetPaginated!
   contributorUserGroupMembers(includeAll: Boolean! = false, filters: ContributorUserGroupMembershipFilter, order: ContributorUserGroupMembershipOrder, pagination: OffsetPaginationInput): ContributorUserGroupMembershipTypeOffsetPaginated!
   contributorTeams(includeAll: Boolean! = false, filters: ContributorTeamFilter, order: ContributorTeamOrder, pagination: OffsetPaginationInput): ContributorTeamTypeOffsetPaginated! @isAuthenticated
@@ -1546,7 +1547,7 @@ type Query {
   "\nStats from last 30 days\n"
   communityStatsLatest: CommunityStatsType!
   communityFilteredStats(dateRange: DateRangeInput = null): CommunityFilteredStats!
-  communityUserStats(userUserId: ID!): ContributorUserStats!
+  communityUserStats(firebaseId: ID!): ContributorUserStats!
   communityUserGroupStats(userGroupId: ID!): ContributorUserGroupStats!
   enums: AppEnumCollection!
 }

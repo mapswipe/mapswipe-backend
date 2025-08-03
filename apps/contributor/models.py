@@ -12,14 +12,6 @@ from apps.common.models import ArchivableResource, FirebasePushResource, UserRes
 
 # NOTE: Users are created from Apps (Web/Mobile)
 class ContributorUser(FirebasePushResource):
-    # TODO(tnagorra): Remove this later and use firebase_id instead
-    user_id = models.CharField(
-        max_length=30,
-        db_index=True,
-        unique=True,
-        help_text="Firebase User ID",
-    )
-
     team: "ContributorTeam | None" = models.ForeignKey(  # type: ignore[reportIncompatibleVariableOverride]
         "ContributorTeam",
         on_delete=models.SET_NULL,
@@ -27,7 +19,14 @@ class ContributorUser(FirebasePushResource):
         blank=True,
         related_name="user",
     )
+
+    # NOTE: From firebase
     username = models.CharField(max_length=255)
+    firebase_id = models.CharField(
+        max_length=30,
+        unique=True,
+        help_text="Firebase User ID (External)",
+    )
     created_at = models.DateTimeField(null=True)
     modified_at = models.DateTimeField(null=True)
 

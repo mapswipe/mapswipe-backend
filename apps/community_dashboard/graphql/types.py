@@ -24,7 +24,7 @@ class AggregateHelper:
 
     @staticmethod
     async def get_swipe_by_project_type(qs: QuerySet) -> list["ProjectTypeSwipeStatsType"]:
-        _qs = (
+        qs_ = (
             qs.order_by()
             .values("project__project_type")
             .annotate(swipes_sum=models.Sum("swipes"))
@@ -38,12 +38,12 @@ class AggregateHelper:
                 project_type=project_type,
                 total_swipes=swipes_sum or 0,
             )
-            async for project_type, swipes_sum in _qs
+            async for project_type, swipes_sum in qs_
         ]
 
     @staticmethod
     async def get_swipe_by_organization_name(qs: QuerySet) -> list["OrganizationSwipeStatsType"]:
-        _qs = (
+        qs_ = (
             qs.order_by()
             .values("project__requesting_organization__name")
             .annotate(
@@ -59,12 +59,12 @@ class AggregateHelper:
                 organization_name=organization_name or "MapSwipe",
                 total_swipes=total_swipes,
             )
-            async for organization_name, total_swipes in _qs
+            async for organization_name, total_swipes in qs_
         ]
 
     @staticmethod
     async def get_area_swiped_by_project_type(qs: QuerySet) -> list["ProjectTypeAreaStatsType"]:
-        _qs = (
+        qs_ = (
             qs.filter(area_swiped__isnull=False)
             .order_by()
             .values("project__project_type")
@@ -81,12 +81,12 @@ class AggregateHelper:
                 project_type=project_type,
                 total_area=AreaSqKm(area_sum),
             )
-            async for project_type, area_sum in _qs
+            async for project_type, area_sum in qs_
         ]
 
     @staticmethod
     async def get_swipe_time_by_date(qs: QuerySet) -> list["ContributorTimeStatType"]:
-        _qs = (
+        qs_ = (
             qs.filter(total_time__isnull=False)
             .order_by("timestamp_date")
             .values("timestamp_date")
@@ -103,12 +103,12 @@ class AggregateHelper:
                 date=date,
                 total_swipe_time=total_time_sum,
             )
-            async for date, total_time_sum in _qs
+            async for date, total_time_sum in qs_
         ]
 
     @staticmethod
     async def get_swipe_by_date(qs: QuerySet) -> list["ContributorSwipeStatType"]:
-        _qs = (
+        qs_ = (
             qs.filter(task_count__isnull=False)
             .order_by("timestamp_date")
             .values("timestamp_date")
@@ -123,7 +123,7 @@ class AggregateHelper:
                 task_date=task_date,
                 total_swipes=swipe_count,
             )
-            async for task_date, swipe_count in _qs
+            async for task_date, swipe_count in qs_
         ]
 
     # XXX: qs_cte type is wrong
@@ -261,24 +261,24 @@ class ContributorUserLatestStatsType:
 class ContributorUserUserGroupBaseFilterStatsQuery:
     date_range: InitVar[DateRangeInput | None]
 
-    _qs: strawberry.Private[models.QuerySet[AggregatedUserStatData | AggregatedUserGroupStatData] | None] = dataclass_field(
+    qs_: strawberry.Private[models.QuerySet[AggregatedUserStatData | AggregatedUserGroupStatData] | None] = dataclass_field(
         init=False,
     )
-    _qs_cte: strawberry.Private[models.QuerySet[AggregatedUserStatData | AggregatedUserGroupStatData] | None] = (
+    qs_cte_: strawberry.Private[models.QuerySet[AggregatedUserStatData | AggregatedUserGroupStatData] | None] = (
         dataclass_field(init=False)
     )
 
     @property
     def qs(self):
-        if self._qs is None:
+        if self.qs_ is None:
             raise Exception("qs should be defined")
-        return self._qs
+        return self.qs_
 
     @property
     def qs_cte(self):
-        if self._qs_cte is None:
+        if self.qs_cte_ is None:
             raise Exception("qs should be defined")
-        return self._qs_cte
+        return self.qs_cte_
 
     @strawberry.field
     async def swipe_by_date(self) -> list[ContributorSwipeStatType]:
@@ -323,8 +323,8 @@ class ContributorUserFilteredStats(ContributorUserUserGroupBaseFilterStatsQuery)
                 timestamp_date__gte=date_range.from_date,
                 timestamp_date__lte=date_range.to_date,
             )
-        self._qs = AggregatedUserStatData.objects.filter(**filters)
-        self._qs_cte = AggregatedUserStatData.cte_objects.filter(**filters)
+        self.qs_ = AggregatedUserStatData.objects.filter(**filters)
+        self.qs_cte_ = AggregatedUserStatData.cte_objects.filter(**filters)
 
     @strawberry.field
     async def id(self) -> strawberry.ID:
@@ -417,8 +417,8 @@ class ContributorUserGroupFilteredStats(ContributorUserUserGroupBaseFilterStatsQ
                 timestamp_date__gte=date_range.from_date,
                 timestamp_date__lte=date_range.to_date,
             )
-        self._qs = AggregatedUserGroupStatData.objects.filter(**filters)
-        self._qs_cte = AggregatedUserStatData.cte_objects.filter(**filters)
+        self.qs_ = AggregatedUserGroupStatData.objects.filter(**filters)
+        self.qs_cte_ = AggregatedUserGroupStatData.cte_objects.filter(**filters)
 
 
 @strawberry.type

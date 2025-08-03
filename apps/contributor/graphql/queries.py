@@ -39,8 +39,8 @@ class Query:
     contributor_team: ContributorTeamType = strawberry_django.field()
 
     @strawberry.field
-    async def contributor_user_by_user_id(self, user_id: strawberry.ID) -> ContributorUserType:
-        obj = await aget_object_or_404(ContributorUser, user_id=user_id)
+    async def contributor_user_by_firebase_id(self, firebase_id: strawberry.ID) -> ContributorUserType:
+        obj = await aget_object_or_404(ContributorUser, firebase_id=firebase_id)
         return typing.cast("ContributorUserType", obj)
 
     # --- Paginated

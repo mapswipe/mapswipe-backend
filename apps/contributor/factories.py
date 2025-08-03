@@ -21,7 +21,6 @@ class ContributorUserFactory(DjangoModelFactory):
         model = ContributorUser
 
     firebase_id = factory.LazyFunction(lambda: str(ULID()))
-    user_id = factory.LazyFunction(lambda: str(ULID()))
     username = factory.Sequence(lambda n: f"Contributor User {n}")
 
 
