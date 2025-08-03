@@ -66,8 +66,15 @@ class BaseTutorial[
     def get_tutorial_group_key(self) -> int:
         return 101
 
+    def get_task_sort_keys(self, existing_values: list[str]) -> list[str]:
+        return existing_values
+
     def handle_new_tasks_on_firebase(self, task_ref: FbReference):
-        tasks = TutorialTask.objects.filter(scenario__tutorial_id=self.tutorial.pk)
+        tasks = TutorialTask.objects.filter(
+            scenario__tutorial_id=self.tutorial.pk,
+        ).order_by(
+            *self.get_task_sort_keys(["scenario__scenario_page_number"]),
+        )
 
         fb_tasks: dict[str, dict[str, dict[str, dict]]] = {}
         index = 1

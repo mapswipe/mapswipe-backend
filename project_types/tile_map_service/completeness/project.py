@@ -11,6 +11,10 @@ from utils import fields as custom_fields
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
 from utils.geo.vector_tile_server.models import VectorTileServerConfig
 
+FALLBACK_RASTER_LAYER = (
+    "https://raw.githubusercontent.com/mapswipe/mapswipe-assets/refs/heads/main/images/raster-layer-404-message.png"
+)
+
 
 class OverlayLayerTypeEnum(models.TextChoices):
     VECTOR_TILE = "VECTOR_TILE", "Vector Tile"
@@ -116,7 +120,6 @@ class CompletenessProject(
         )
 
         # NOTE: Setting background layer as fallback for overlay layer
-        # FIXME(tnagorra): Handle vector tiles in the future
         if tsp_overlay.type == OverlayLayerTypeEnum.RASTER_TILE and tsp_overlay.raster:
             fb_overlay_tile_server = firebase_models.FbObjRasterTileServer(
                 name=raster_tile_server_name_enum_to_firebase(tsp_overlay.raster.tile_server.name),
@@ -129,7 +132,7 @@ class CompletenessProject(
             fb_overlay_tile_server = firebase_models.FbObjRasterTileServer(
                 name=firebase_models.FbEnumRasterTileServerName.CUSTOM,
                 credits="n/a",
-                url="https://raw.githubusercontent.com/mapswipe/mapswipe-assets/refs/heads/main/images/raster-layer-404-message.png",
+                url=FALLBACK_RASTER_LAYER,
                 apiKey="",
                 wmtsLayerName=None,
             )
