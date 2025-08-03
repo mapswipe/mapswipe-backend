@@ -1,0 +1,22 @@
+[
+  {
+    "clientId": "01HZY0QX8HV2ATW6F0FJKZCM67",
+    "name": "Health Mapping Team - QA",
+    "description": "Group for mapping health facilities and volunteers during QA testing."
+  },
+  {
+    "clientId": "01HZY0QY8HV2ATW6F0FJKZCM68",
+    "name": "Archived QA Group",
+    "description": "This group is archived to test archived state handling."
+  },
+  {
+    "clientId": "01HZY0QZ8HV2ATW6F0FJKZCM69",
+    "name": "Minimal Group",
+    "description": "asdasd"
+  },
+  {
+    "clientId": "01HZY0RA8HV2ATW6F0FJKZCM70",
+    "name": "QA Group with Long Description",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent non felis sed metus faucibus posuere. Integer id magna urna. Donec aliquet purus non tellus vehicula, at accumsan justo rhoncus."
+  }
+]
