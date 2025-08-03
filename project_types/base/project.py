@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from django.contrib.gis.db.models.functions import Area
 from django.db import models
 from firebase_admin.db import Reference as FbReference
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
@@ -353,7 +353,6 @@ class BaseProject[
             ),
         )
 
-    # FIXME(rup): use common method push_django_to_firebase()
     def push_to_firebase(self):
         if self.project.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
             logger.warning("%s - push_to_firebase called when push is not required", self.project.pk)
@@ -382,7 +381,14 @@ class BaseProject[
                         extra=log_extra({"project": self.project.pk}),
                     )
                     raise InvalidProjectPushException
-                valid_project = firebase_ext_models.FbProject.model_validate(obj=fb_project)
+
+                class RelaxedModel(firebase_ext_models.FbProject):
+                    model_config = ConfigDict(extra="ignore")
+
+                # NOTE: we want to ignore extra fields from firebase
+                valid_project = RelaxedModel.model_validate(obj=fb_project)
+                valid_project = firebase_ext_models.FbProject.model_validate(obj=valid_project)
+
                 self.handle_project_update_on_firebase(project_ref, valid_project)
         except InvalidProjectPushException:
             self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
