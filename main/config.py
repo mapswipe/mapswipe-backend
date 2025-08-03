@@ -79,6 +79,10 @@ class Config:
         def contributor_user(user_id: str):
             return f"/v2/users/{user_id}"
 
+        @staticmethod
+        def contributor_user_group(group_id: str | int):
+            return f"/v2/userGroups/{group_id}"
+
 
 # FIXME: Import utils/geo/raster_tile_server/config.py here
 # FIXME: Import utils/geo/vector_tile_server/config.py here

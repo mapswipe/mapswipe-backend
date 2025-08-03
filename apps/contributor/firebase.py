@@ -1,14 +1,13 @@
 import logging
 import typing
 
-from celery import shared_task
 from firebase_admin.db import Reference as FbReference
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
 
 from apps.common.firebase import FirebasePush
-from apps.contributor.models import ContributorTeam, ContributorUser
+from apps.contributor.models import ContributorTeam, ContributorUser, ContributorUserGroup
 from main.celery import app
 from main.config import Config
 
@@ -93,6 +92,47 @@ class FirebaseContributorUser(FirebasePush[ContributorUser, firebase_ext_models.
     def task(obj_id: int) -> None: ...
 
 
-@shared_task
-def firebase_contributor_user(obj_id: int):
-    FirebaseContributorUser(obj_id).push()
+class FirebaseContributorUserGroup(FirebasePush[ContributorUserGroup, firebase_ext_models.FbUserGroup]):
+    model_class = ContributorUserGroup
+    firebase_model_class = firebase_ext_models.FbUserGroup
+
+    @typing.override
+    def handle_new_object_on_firebase(self, model_obj: ContributorUserGroup, fb_reference: FbReference):
+        contributor_user_group_data = firebase_ext_models.FbUserGroup(
+            createdAt=int(model_obj.created_at.timestamp()),
+            createdBy=model_obj.created_by.old_id or str(model_obj.created_by_id),
+            description=model_obj.description,
+            name=model_obj.name,
+            nameKey=model_obj.name.lower().strip(),
+            users=None,
+        )
+
+        fb_reference.set(
+            value=firebase_utils.serialize(contributor_user_group_data),
+        )
+
+    @typing.override
+    def handle_object_update_on_firebase(
+        self,
+        model_obj: ContributorUserGroup,
+        fb_obj: firebase_ext_models.FbUserGroup,
+        fb_reference: FbReference,
+    ):
+        fb_reference.update(
+            value=firebase_utils.serialize(
+                firebase_models.FbUserGroupUpdateInput(
+                    description=model_obj.description,
+                    name=model_obj.name,
+                    nameKey=model_obj.name.lower().strip(),
+                ),
+            ),
+        )
+
+    @typing.override
+    def get_firebase_path(self, firebase_id: str, model=ContributorUserGroup):
+        return Config.FirebaseKeys.contributor_user_group(firebase_id)
+
+    @staticmethod
+    @typing.override
+    @app.task()
+    def task(obj_id: int) -> None: ...

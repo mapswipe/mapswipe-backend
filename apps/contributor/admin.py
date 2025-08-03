@@ -8,7 +8,7 @@ from djangoql.admin import DjangoQLSearchMixin
 
 from apps.common.admin import ArchivableResourceAdmin
 
-from .firebase import FirebaseContributorTeam, firebase_contributor_user
+from .firebase import FirebaseContributorTeam, FirebaseContributorUser
 from .models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
 
@@ -42,7 +42,7 @@ class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     @typing.override
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
-        transaction.on_commit(lambda: firebase_contributor_user.delay(obj.id))
+        transaction.on_commit(lambda: FirebaseContributorUser(obj.id).push())
 
 
 @admin.register(ContributorUserGroup)
