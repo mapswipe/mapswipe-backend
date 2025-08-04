@@ -1,6 +1,7 @@
 from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import ProjectTypeEnum
+from apps.tutorial.models import TutorialInformationPageBlockTypeEnum
 from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
 from utils.geo.vector_tile_server.config import VectorTileServerNameEnum
 
@@ -51,3 +52,13 @@ def vector_tile_server_name_enum_to_firebase(
             return firebase_models.FbEnumVectorTileServerName.OPEN_FREE_MAP
         case VectorTileServerNameEnum.VERSATILES:
             return firebase_models.FbEnumVectorTileServerName.VERSATILES
+
+
+def block_type_enum_to_firebase(
+    input_enum: TutorialInformationPageBlockTypeEnum,
+) -> firebase_models.FbEnumInformationPageBlockType:
+    match input_enum:
+        case TutorialInformationPageBlockTypeEnum.TEXT:
+            return firebase_models.FbEnumInformationPageBlockType.TEXT
+        case TutorialInformationPageBlockTypeEnum.IMAGE:
+            return firebase_models.FbEnumInformationPageBlockType.IMAGE

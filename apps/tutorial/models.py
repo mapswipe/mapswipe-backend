@@ -48,6 +48,10 @@ class TutorialStatusEnum(models.IntegerChoices):
     """
 
 
+def generate_tutorial_firebase_id():
+    return f"tutorial_{ulid.ULID()}"
+
+
 class Tutorial(UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
     Status = TutorialStatusEnum
 
@@ -64,6 +68,8 @@ class Tutorial(UserResource, FirebasePushResource):  # type: ignore[reportIncomp
         choices_enum=TutorialStatusEnum,
         default=TutorialStatusEnum.DRAFT,
     )
+
+    firebase_id = models.CharField(max_length=40, unique=True, default=generate_tutorial_firebase_id)
 
     # Type hints
     project_id: int
@@ -120,6 +126,22 @@ class TutorialScenarioPage(UserResource):
         constraints = [
             models.UniqueConstraint(fields=["tutorial", "scenario_page_number"], name="unique_scenario_on_tutorials"),
         ]
+
+    @property
+    def instructions_icon_enum(self) -> IconEnum:
+        return IconEnum(self.instructions_icon)
+
+    @property
+    def hint_icon_enum(self) -> IconEnum | None:
+        if self.hint_icon:
+            return IconEnum(self.hint_icon)
+        return None
+
+    @property
+    def success_icon_enum(self) -> IconEnum | None:
+        if self.success_icon:
+            return IconEnum(self.success_icon)
+        return None
 
     @typing.override
     def __str__(self):

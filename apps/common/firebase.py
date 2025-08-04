@@ -100,7 +100,7 @@ class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
 
                 # NOTE: we want to ignore extra fields from firebase
                 valid_fb_model = RelaxedModel.model_validate(obj=fb_model)
-                valid_fb_model = self.firebase_model_class.model_validate(valid_fb_model)
+                valid_fb_model = self.firebase_model_class.model_validate(obj=valid_fb_model)
 
                 self.handle_object_update_on_firebase(model_obj, valid_fb_model, model_ref)
         except InvalidObjectPushException:

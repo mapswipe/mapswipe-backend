@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from django.contrib.gis.db.models.functions import Area
 from django.db import models
 from firebase_admin.db import Reference as FbReference
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
@@ -251,11 +251,11 @@ class BaseProject[
         # NOTE: We are not reading data from group_ref as it's an expensive operation
         # FIXME(tnagorra): We need to check if the key exists later
         group_ref = self.firebase_helper.ref(
-            Config.FirebaseKeys.project_groups(self.project.id),
+            Config.FirebaseKeys.project_groups(self.project.firebase_id),
         )
         # FIXME(tnagorra): We need to check if the key exists later
         task_ref = self.firebase_helper.ref(
-            Config.FirebaseKeys.project_tasks(self.project.id),
+            Config.FirebaseKeys.project_tasks(self.project.firebase_id),
         )
 
         # FIXME: If taskId is defined, should be private_inactive
@@ -353,7 +353,6 @@ class BaseProject[
             ),
         )
 
-    # FIXME(rup): use common method push_django_to_firebase()
     def push_to_firebase(self):
         if self.project.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
             logger.warning("%s - push_to_firebase called when push is not required", self.project.pk)
@@ -363,7 +362,7 @@ class BaseProject[
 
         try:
             project_ref = self.firebase_helper.ref(
-                Config.FirebaseKeys.project(self.project.id),
+                Config.FirebaseKeys.project(self.project.firebase_id),
             )
             fb_project: typing.Any = project_ref.get()
 
@@ -382,7 +381,14 @@ class BaseProject[
                         extra=log_extra({"project": self.project.pk}),
                     )
                     raise InvalidProjectPushException
-                valid_project = firebase_ext_models.FbProject.model_validate(obj=fb_project)
+
+                class RelaxedModel(firebase_ext_models.FbProject):
+                    model_config = ConfigDict(extra="ignore")
+
+                # NOTE: we want to ignore extra fields from firebase
+                valid_project = RelaxedModel.model_validate(obj=fb_project)
+                valid_project = firebase_ext_models.FbProject.model_validate(obj=valid_project)
+
                 self.handle_project_update_on_firebase(project_ref, valid_project)
         except InvalidProjectPushException:
             self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
