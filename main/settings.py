@@ -100,6 +100,7 @@ env = environ.Env(
     #    to allow custom logics to enable/disable emulator use by firebase-admin
     FIREBASE_EMULATOR_PROJECT_ID=str,  # FIREBASE_DB_URL also uses this value
     FIREBASE_EMULATOR_DATABASE_HOST=str,
+    FIREBASE_EMULATOR_AUTH_HOST=str,
     FIREBASE_EMULATOR_TEST_HOST=(str, None),
     # -- Real (If FIREBASE_EMULATOR_USE is False)
     FIREBASE_DB_URL=str,  # https://mapswipe-dev.firebaseio.com
@@ -486,6 +487,7 @@ FIREBASE_CREDENTIALS_B64_GZ = env("FIREBASE_CREDENTIALS_B64_GZ")
 if FIREBASE_EMULATOR_USE:
     # NOTE: Adding environment variable programmatically
     os.environ["FIREBASE_DATABASE_EMULATOR_HOST"] = env.url("FIREBASE_EMULATOR_DATABASE_HOST").geturl()
+    os.environ["FIREBASE_AUTH_EMULATOR_HOST"] = env.url("FIREBASE_EMULATOR_AUTH_HOST").geturl()
     os.environ["GCLOUD_PROJECT"] = env("FIREBASE_EMULATOR_PROJECT_ID")
     FIREBASE_DB_URL = "https://" + env("FIREBASE_EMULATOR_PROJECT_ID")
 else:

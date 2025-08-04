@@ -758,7 +758,41 @@ class Command(BaseCommand):
             },
         )
 
-    def handle_firebase(self): ...
+    def handle_firebase(self):
+        self.stdout.write("Fetching managers data from firebase authentication")
+
+        # Load manager information from firebase
+        user_qs = User.objects.filter(contributor_user__isnull=False).select_related("contributor_user")
+
+        users_to_fetch_count = user_qs.count()
+
+        for i, user in enumerate(user_qs.all(), start=1):
+            user_firebase_id = user.contributor_user.firebase_id
+            logger.info(
+                "Fetching for user %s/%s: (pk=%s,firebase_id=%s)",
+                i,
+                users_to_fetch_count,
+                user.pk,
+                user_firebase_id,
+            )
+
+            user_fb_data = FH.auth.get_user(user_firebase_id)
+
+            is_project_manager = user_fb_data.custom_claims.get("projectManager", False)
+            is_disabled = user_fb_data.disabled
+            is_active = True
+            if not is_project_manager or is_disabled:
+                is_active = False
+                logger.warning(
+                    "Setting user: %s as inactive because (is_project_manager=%s or is_disabled=%s)",
+                    user.pk,
+                    is_project_manager,
+                    is_disabled,
+                )
+
+            user.email = user_fb_data.email
+            user.is_active = is_active
+            user.save(update_fields=("email", "is_active"))
 
     def _handle(self):
         self.handle_contributor_users()
@@ -768,10 +802,10 @@ class Command(BaseCommand):
         self.handle_contributor_user_user_group_memberships()
         self.handle_project()
         self.handle_aggregated_dataset()
+        self.handle_firebase()
         self.bulk_create_mgr.done()
         self.stdout.write(f"Bulk create summary: {self.bulk_create_mgr.summary()}")
         # self.handle_db()
-        # self.handle_firebase()
 
     def setup_logger(self):
         # TODO(thenav56): This is not good enough... check again

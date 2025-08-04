@@ -2,6 +2,7 @@
 import logging
 
 import firebase_admin
+from firebase_admin import auth
 from firebase_admin.db import reference as firebase_db_reference
 
 from utils.common import parse_b64gzjson_to_dict
@@ -55,6 +56,7 @@ class FirebaseHelper:
             credential=_get_firebase_creds(credential_b64_gz),
             using_emulator=using_emulator,
         )
+        self.auth = auth
 
     def ref(self, key: str):
         return firebase_db_reference(key, app=self.app)
