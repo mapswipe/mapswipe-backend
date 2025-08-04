@@ -7,7 +7,7 @@ from apps.contributor.models import ContributorTeam, ContributorUser, Contributo
 
 @strawberry_django.filters.filter(ContributorUser, lookups=True)
 class ContributorUserFilter:
-    id: strawberry.auto
+    firebase_id: strawberry.auto
     username: strawberry.auto
     team_id: strawberry.auto
 
@@ -45,13 +45,13 @@ class ContributorUserGroupFilter:
         return self.filter_by_user("user_id", queryset, value)
 
     @strawberry_django.filter_field
-    def user_user_id(
+    def firebase_id(
         self,
         queryset: models.QuerySet[ContributorUserGroup],
         value: strawberry.ID,
         prefix: str,
     ) -> tuple[models.QuerySet[ContributorUserGroup], models.Q]:
-        return self.filter_by_user("user__user_id", queryset, value)
+        return self.filter_by_user("user__firebase_id", queryset, value)
 
 
 @strawberry_django.filters.filter(ContributorUserGroupMembership, lookups=True)

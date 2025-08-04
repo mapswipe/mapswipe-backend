@@ -11,10 +11,11 @@ from apps.contributor.models import ContributorTeam, ContributorUser, Contributo
 
 # TODO(thenav56): Test N+1
 def generate_aggregated_user_stat_data_annotate(agg: models.Count | models.Sum):
+    # NOTE: OuterRef is ContributorUser
     return Coalesce(
         models.Subquery(
             AggregatedUserStatData.objects.filter(
-                user_id=models.OuterRef("user_id"),
+                user_id=models.OuterRef("id"),
             )
             .order_by()
             .values("user_id")
@@ -27,6 +28,7 @@ def generate_aggregated_user_stat_data_annotate(agg: models.Count | models.Sum):
 
 
 def generate_aggregated_user_group_stat_data_annotate(agg: models.Count | models.Sum):
+    # NOTE: OuterRef is ContributorUserGroupMembership
     return Coalesce(
         models.Subquery(
             AggregatedUserGroupStatData.objects.filter(
@@ -46,7 +48,7 @@ def generate_aggregated_user_group_stat_data_annotate(agg: models.Count | models
 @strawberry_django.type(ContributorUser)
 class ContributorUserType:
     id: strawberry.ID
-    user_id: strawberry.ID
+    firebase_id: strawberry.ID
     username: strawberry.auto
     created_at: strawberry.auto
 
@@ -129,7 +131,7 @@ class ContributorTeamType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
                 )
                 .order_by()
                 .values("team_id")
-                .annotate(c=models.Count("user_id"))
+                .annotate(c=models.Count("firebase_id"))
                 .values("c")[:1],
                 output_field=models.IntegerField(),
             ),
@@ -142,4 +144,4 @@ class ContributorTeamType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
         self,
         contributor_team: strawberry.Parent[ContributorTeam],
     ) -> models.QuerySet[ContributorUser]:
-        return ContributorUser.objects.filter(team_id=contributor_team.pk).order_by("user_id")
+        return ContributorUser.objects.filter(team_id=contributor_team.pk).order_by("firebase_id")

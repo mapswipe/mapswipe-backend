@@ -40,6 +40,15 @@ env = environ.Env(
     POSTGRES_PASSWORD=str,
     POSTGRES_HOST=str,
     POSTGRES_PORT=(int, 5432),
+    # Existing Database
+    EXISTING_SYSTEM_CONNECT_ENABLED=(bool, False),
+    EXISTING_SYSTEM_API=(str, "https://apps.mapswipe.org"),
+    EXISTING_SYSTEM_API_INSECURE=(bool, False),
+    EXISTING_SYSTEM_POSTGRES_DB=str,
+    EXISTING_SYSTEM_POSTGRES_USER=str,
+    EXISTING_SYSTEM_POSTGRES_PASSWORD=str,
+    EXISTING_SYSTEM_POSTGRES_HOST=str,
+    EXISTING_SYSTEM_POSTGRES_PORT=(int, 5432),
     # Storage
     MEDIA_URL=(str, "media/"),
     STATIC_URL=(str, "static/"),
@@ -95,7 +104,6 @@ env = environ.Env(
     # -- Real (If FIREBASE_EMULATOR_USE is False)
     FIREBASE_DB_URL=str,  # https://mapswipe-dev.firebaseio.com
     FIREBASE_CREDENTIALS_B64_GZ=(str, None),  # gzip -cn credential.json | base64 -w 0
-    GOOGLE_APPLICATION_CREDENTIALS=str,
     # Pytest
     PYTEST_XDIST_WORKER=(str, None),
     # Test
@@ -224,6 +232,25 @@ DATABASES = {
     },
 }
 
+EXISTING_SYSTEM_CONNECT_ENABLED = not IS_TESTING and env("EXISTING_SYSTEM_CONNECT_ENABLED")
+EXISTING_SYSTEM_POSTGRES_KEY = "existing_database"
+if EXISTING_SYSTEM_CONNECT_ENABLED:
+    # API
+    EXISTING_SYSTEM_API = env.url("EXISTING_SYSTEM_API")
+    EXISTING_SYSTEM_API_INSECURE = env.bool("EXISTING_SYSTEM_API_INSECURE")
+
+    # Database
+    DATABASES[EXISTING_SYSTEM_POSTGRES_KEY] = {
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "NAME": env("EXISTING_SYSTEM_POSTGRES_DB"),
+        "USER": env("EXISTING_SYSTEM_POSTGRES_USER"),
+        "PASSWORD": env("EXISTING_SYSTEM_POSTGRES_PASSWORD"),
+        "HOST": env("EXISTING_SYSTEM_POSTGRES_HOST"),
+        "PORT": env("EXISTING_SYSTEM_POSTGRES_PORT"),
+        "OPTIONS": {"options": "-c search_path=public"},
+    }
+    INSTALLED_APPS.append("apps.existing_database")
+    DATABASE_ROUTERS = ["main.db.ExistingDatabaseRouter"]
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

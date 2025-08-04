@@ -19,6 +19,27 @@ if typing.TYPE_CHECKING:
     from apps.tutorial.models import Tutorial
 
 
+class ProjectAssetStatsTypeEnum(models.IntegerChoices):
+    # Common?
+    AGGREGATED_RESULTS = 100, "Aggregated Results (CSV)"
+    AGGREGATED_RESULTS_WITH_GEOMETRY = 101, "Aggregated Results (with Geometry) (GEOJSON)"
+    GROUPS = 104, "Groups (CSV)"
+    HISTORY = 105, "History (GEOJSON)"
+    RESULTS = 106, "Results (CSV)"
+    TASKS = 107, "Tasks (CSV)"
+    USERS = 108, "Users (CSV)"
+    AREA_OF_INTEREST = 109, "Area of Interest (GEOJSON)"
+    # FIND / COMPARE
+    HOT_TASKING_MANAGER_GEOMETRIES = 200, "HOT Tasking Manager Geometries (GEOJSON)"
+    MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES = 201, "Moderate to High Agreement Yes Maybe Geometries (GEOJSON)"
+
+    @classmethod
+    def get_display(cls, value: typing.Self | int) -> str:
+        if value in cls:
+            return str(cls(value).label)
+        return "Unknown"
+
+
 class ProjectTypeEnum(models.IntegerChoices):
     FIND = 1, "Find"
     """ Find project type. Previously known as Classification / Build Area. """
@@ -364,6 +385,14 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
 
 
 class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibleVariableOverride]
+    # TODO(thenav56): add validation
+    # Type specific nested types
+    stats_type = IntegerChoicesField(
+        choices_enum=ProjectAssetStatsTypeEnum,
+        blank=True,
+        null=True,
+    )
+
     project: Project = models.ForeignKey(  # type: ignore[reportAssignmentType]
         Project,
         on_delete=models.CASCADE,

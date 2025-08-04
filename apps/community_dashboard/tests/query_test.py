@@ -330,7 +330,7 @@ class TestCommunityDashboardQuery(TestCase):
                   totalSwipes
                   user {
                     id
-                    userId
+                    firebaseId
                     username
                   }
                 }
@@ -363,7 +363,7 @@ class TestCommunityDashboardQuery(TestCase):
         def _get_user_data(user: ContributorUser):
             return {
                 "id": self.gID(user.pk),
-                "userId": user.user_id,
+                "firebaseId": user.firebase_id,
                 "username": user.username,
             }
 
@@ -493,19 +493,19 @@ class TestCommunityDashboardQuery(TestCase):
     def test_user_query(self):
         query = """
           query MyQuery(
-              $userId: ID!,
+              $firebaseId: ID!,
               $pagination: OffsetPaginationInput!,
               $fromDate: Date!,
               $toDate: Date!,
           ) {
 
-            contributorUserByUserId(userId: $userId) {
+            contributorUserByFirebaseId(firebaseId: $firebaseId) {
               id
-              userId
+              firebaseId
               username
             }
 
-            communityUserStats(userUserId: $userId) {
+            communityUserStats(firebaseId: $firebaseId) {
               id
               stats {
                 totalSwipes
@@ -551,7 +551,7 @@ class TestCommunityDashboardQuery(TestCase):
 
             contributorUserGroups(
                 filters: {
-                  userUserId: $userId,
+                  firebaseId: $firebaseId,
                 },
                 pagination: $pagination,
                 order: {id: ASC},
@@ -630,7 +630,7 @@ class TestCommunityDashboardQuery(TestCase):
             resp = self.query_check(
                 query,
                 variables=dict(
-                    userId=contributor_user.user_id,
+                    firebaseId=contributor_user.firebase_id,
                     pagination=dict(
                         limit=2,
                         offset=offset,
@@ -641,9 +641,9 @@ class TestCommunityDashboardQuery(TestCase):
             )
 
             assert {
-                "contributorUserByUserId": {
+                "contributorUserByFirebaseId": {
                     "id": self.gID(contributor_user.pk),
-                    "userId": contributor_user.user_id,
+                    "firebaseId": contributor_user.firebase_id,
                     "username": contributor_user.username,
                 },
                 "communityUserStats": {

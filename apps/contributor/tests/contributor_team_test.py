@@ -12,9 +12,8 @@ from apps.user.models import User
 from main.tests import TestCase
 
 
-class MockRequest:
-    def __init__(self, user: User):
-        self.user = user
+class MockRequest(typing.NamedTuple):
+    user: User
 
 
 class TestContributorTeam(TestCase):
@@ -31,7 +30,7 @@ class TestContributorTeam(TestCase):
         cls.admin = ContributorTeamAdmin(ContributorTeam, cls.site)
         cls.contributor_team = ContributorTeamFactory.create(**cls.user_resource_kwargs)
         cls.contributor_user = ContributorUserFactory.create(
-            user_id="test_id",
+            firebase_id="test_id",
             team=cls.contributor_team,
         )
 

@@ -15,14 +15,14 @@ from .models import ContributorTeam, ContributorUser, ContributorUserGroup, Cont
 @admin.register(ContributorUser)
 class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     list_display = (
-        "user_id",
+        "firebase_id",
         "username",
         "created_at",
         "modified_at",
     )
     readonly_fields = (
+        "firebase_id",
         "old_id",
-        "user_id",
         "username",
         "firebase_last_pushed",
         "firebase_push_status",

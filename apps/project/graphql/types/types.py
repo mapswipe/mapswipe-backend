@@ -7,6 +7,7 @@ from apps.common.graphql.types import ArchivableResourceTypeMixin, CommonAssetTy
 from apps.contributor.graphql.types import ContributorTeamType
 from apps.project.models import Organization, Project, ProjectAsset
 from apps.tutorial.graphql.types.types import TutorialType
+from main.graphql.context import Info
 from project_types.tile_map_service.compare import project as compare_project
 from project_types.tile_map_service.completeness import project as completeness_project
 from project_types.tile_map_service.find import project as find_project
@@ -38,11 +39,69 @@ class OrganizationType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
 class ProjectAssetType(UserResourceTypeMixin, CommonAssetTypeMixin):
     id: strawberry.ID
     file: strawberry.auto
+    stats_type: strawberry.auto
     project_id: strawberry.ID
 
 
+# Project
+@strawberry.interface
+class ProjectExportAssetTypeMixin:
+    @strawberry.field
+    async def export_aggregated_results(self, info: Info, project: strawberry.Parent[Project]) -> ProjectAssetType | None:
+        return await info.context.dl.project.export.aggregated_results.load(project.pk)
+
+    @strawberry.field
+    async def export_aggregated_results_with_geometry(
+        self,
+        info: Info,
+        project: strawberry.Parent[Project],
+    ) -> ProjectAssetType | None:
+        return await info.context.dl.project.export.aggregated_results_with_geometry.load(project.pk)
+
+    @strawberry.field
+    async def export_groups(self, info: Info, project: strawberry.Parent[Project]) -> ProjectAssetType | None:
+        return await info.context.dl.project.export.groups.load(project.pk)
+
+    @strawberry.field
+    async def export_history(self, info: Info, project: strawberry.Parent[Project]) -> ProjectAssetType | None:
+        return await info.context.dl.project.export.history.load(project.pk)
+
+    @strawberry.field
+    async def export_results(self, info: Info, project: strawberry.Parent[Project]) -> ProjectAssetType | None:
+        return await info.context.dl.project.export.results.load(project.pk)
+
+    @strawberry.field
+    async def export_tasks(self, info: Info, project: strawberry.Parent[Project]) -> ProjectAssetType | None:
+        return await info.context.dl.project.export.tasks.load(project.pk)
+
+    @strawberry.field
+    async def export_users(self, info: Info, project: strawberry.Parent[Project]) -> ProjectAssetType | None:
+        return await info.context.dl.project.export.users.load(project.pk)
+
+    @strawberry.field
+    async def export_area_of_interest(self, info: Info, project: strawberry.Parent[Project]) -> ProjectAssetType | None:
+        return await info.context.dl.project.export.area_of_interest.load(project.pk)
+
+    # Find/Compare
+    @strawberry.field
+    async def export_hot_tasking_manager_geometries(
+        self,
+        info: Info,
+        project: strawberry.Parent[Project],
+    ) -> ProjectAssetType | None:
+        return await info.context.dl.project.export.hot_tasking_manager_geometries.load(project.pk)
+
+    @strawberry.field
+    async def export_moderate_to_high_agreement_yes_maybe_geometries(
+        self,
+        info: Info,
+        project: strawberry.Parent[Project],
+    ) -> ProjectAssetType | None:
+        return await info.context.dl.project.export.moderate_to_high_agreement_yes_maybe_geometries.load(project.pk)
+
+
 @strawberry_django.type(Project)
-class ProjectType(UserResourceTypeMixin):
+class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin):
     id: strawberry.ID
     project_type: strawberry.auto
     requesting_organization_id: strawberry.ID
