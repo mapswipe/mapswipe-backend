@@ -7,6 +7,8 @@ from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 from djangoql.admin import DjangoQLSearchMixin
 
+from apps.common.admin import ArchivableResourceAdmin, FirebaseResourceAdmin
+
 from .models import Organization, Project, ProjectAsset
 
 
@@ -34,13 +36,13 @@ class IncludedInTeamFilter(admin.SimpleListFilter):
 
 
 @admin.register(Organization)
-class OrganizationAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+class OrganizationAdmin(DjangoQLSearchMixin, ArchivableResourceAdmin, FirebaseResourceAdmin, admin.ModelAdmin):
     list_display = ("name",)
     list_filter = ("name",)
 
 
 @admin.register(Project)
-class ProjectAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+class ProjectAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, admin.ModelAdmin):
     list_display = ("topic", "requesting_organization", "project_type", "is_private", "region")
     list_filter = (IncludedInTeamFilter, "topic", "project_type", "is_private", "region")
     list_select_related = True

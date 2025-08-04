@@ -94,3 +94,19 @@ class ArchivableResourceAdmin(UserResourceAdmin, admin.ModelAdmin):
             obj.archived_by = None
             obj.archived_at = None
         super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
+
+
+class FirebaseResourceAdmin(UserResourceAdmin, admin.ModelAdmin):
+    @typing.override
+    def get_readonly_fields(self, *args, **kwargs):
+        readonly_fields = super().get_readonly_fields(*args, **kwargs)  # type: ignore[reportAttributeAccessIssue]
+        return [
+            *dict.fromkeys(
+                [
+                    *readonly_fields,
+                    "firebase_id",
+                    "firebase_last_pushed",
+                    "firebase_push_status",
+                ],
+            ),
+        ]
