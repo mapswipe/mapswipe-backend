@@ -346,9 +346,9 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
         new_project = super().update(instance, validated_data)
 
         if (
-            (old_status_enum != Project.Status.PUBLISHED and new_project.status_enum == Project.Status.PUBLISHED)
-            or old_status_enum == Project.Status.PUBLISHED
-            or old_status_enum == Project.Status.PAUSED
+            old_status_enum == Project.Status.PUBLISHED
+            or (old_status_enum != Project.Status.PUBLISHED and new_project.status_enum == Project.Status.PUBLISHED)
+            or (old_status_enum != Project.Status.PAUSED and new_project.status_enum == Project.Status.PAUSED)
         ):
             new_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
 
