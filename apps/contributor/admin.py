@@ -6,9 +6,9 @@ from django.urls import reverse
 from django.utils.html import format_html
 from djangoql.admin import DjangoQLSearchMixin
 
-from apps.common.admin import ArchivableResourceAdmin
+from apps.common.admin import ArchivableResourceAdmin, FirebaseResourceAdmin
 
-from .firebase import FirebaseContributorTeam, firebase_contributor_user
+from .firebase import FirebaseContributorTeam, FirebaseContributorUser
 from .models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
 
@@ -42,16 +42,16 @@ class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     @typing.override
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
-        transaction.on_commit(lambda: firebase_contributor_user.delay(obj.id))
+        transaction.on_commit(lambda: FirebaseContributorUser(obj.id).push())
 
 
 @admin.register(ContributorUserGroup)
-class ContributorUserGroupAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+class ContributorUserGroupAdmin(DjangoQLSearchMixin, ArchivableResourceAdmin, FirebaseResourceAdmin):
     pass
 
 
 @admin.register(ContributorTeam)
-class ContributorTeamAdmin(ArchivableResourceAdmin, DjangoQLSearchMixin, admin.ModelAdmin):
+class ContributorTeamAdmin(ArchivableResourceAdmin, DjangoQLSearchMixin, FirebaseResourceAdmin, admin.ModelAdmin):
     list_display = (
         "name",
         "is_archived",
