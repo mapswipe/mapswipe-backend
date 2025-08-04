@@ -54,6 +54,12 @@ class ContributorUserGroupMembership(models.Model):
     user_group_id: int
     user_id: int
 
+    class Meta:
+        unique_together = (
+            "user_group",
+            "user",
+        )
+
     @typing.override
     def __str__(self):
         return f"user_group_id={self.user_group_id}, user_id={self.user_id}, is_active={self.is_active}"

@@ -26,6 +26,8 @@ class Config:
     FIREBASE_EMULATOR_TEST_HOST = typing.cast("str | None", settings.FIREBASE_EMULATOR_TEST_HOST)
     FIREBASE_EMULATOR_HOST = os.environ.get("FIREBASE_DATABASE_EMULATOR_HOST")
 
+    ENABLE_DANGER_MODE = typing.cast("bool", settings.ENABLE_DANGER_MODE)
+
     # Existing database
     EXISTING_SYSTEM_CONNECT_ENABLED = typing.cast("bool", settings.EXISTING_SYSTEM_CONNECT_ENABLED)
     EXISTING_SYSTEM_POSTGRES_KEY = typing.cast("str", settings.EXISTING_SYSTEM_POSTGRES_KEY)
