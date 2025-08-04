@@ -47,3 +47,10 @@ class TestContributorTeam(TestCase):
         self.admin.save_model(request, self.contributor_team, form=None, change=True)  # type: ignore[reportArgumentType]
         assert self.contributor_team.is_archived is True
         assert self.contributor_team.archived_by == self.user
+
+    def test_cannot_add_member_to_archived_team(self):
+        self.contributor_team.is_archived = True
+        self.contributor_team.save(update_fields=["is_archived"])
+        self.contributor_user.team = self.contributor_team
+        with pytest.raises(ValidationError):
+            self.contributor_user.clean()
