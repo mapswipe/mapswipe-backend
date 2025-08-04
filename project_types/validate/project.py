@@ -171,6 +171,10 @@ class ValidateProject(
     def __init__(self, project: Project):
         super().__init__(project)
 
+    @typing.override
+    def enable_compression_for_tasks(self) -> bool:
+        return True
+
     def _process_polygons(self, geojson_data: dict[str, Any]) -> list[ValidFeature]:
         """We only want polygon and multipolygon features"""
         try:
@@ -339,7 +343,7 @@ class ValidateProject(
         return firebase_models.FbMappingTaskValidateCreateOnlyInput(
             taskId=task.firebase_id,
             # FIXME(tnagorra): Check if we need to convert this?
-            geojson=task.geometry,
+            geojson=json.load(task.geometry.geojson),
         )
 
     @typing.override

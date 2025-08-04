@@ -173,6 +173,7 @@ class FirebasePullResource(Model):
 
 class AssetMimetypeEnum(models.IntegerChoices):
     GEOJSON = 100, "application/geo+json"
+    JSON = 101, "application/json"
 
     IMAGE_JPEG = 201, "image/jpeg"
     IMAGE_PNG = 202, "image/png"
@@ -208,6 +209,7 @@ class AssetTypeEnum(models.IntegerChoices):
     INPUT = 100, "Input"
     OUTPUT = 200, "Output"
     STATS = 300, "Stats"
+    DEBUG = 400, "Debug"
 
     @classmethod
     def get_display(cls, value: typing.Self | int) -> str:

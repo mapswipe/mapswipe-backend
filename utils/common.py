@@ -140,3 +140,26 @@ def validate_geojson_file(file: ContentFile) -> None:
 
     if not feature_collection.features:
         raise ValidationError("GeoJSON 'features' list cannot be empty.")
+
+
+def gzip_str(string_: str) -> bytes:
+    """
+    Produce a complete gzip-compatible binary string.
+    """
+    out = io.BytesIO()
+    with gzip.GzipFile(fileobj=out, mode="w") as f:
+        f.write(string_.encode())
+    return out.getvalue()
+
+
+def compress_tasks(tasks_list: list[dict[str, typing.Any]]) -> str:
+    """
+    Compress tasks for validate project type using gzip.
+    """
+    # FIXME(tnagorra): Removed replace(" ", "").replace("\n", "")
+    json_string_tasks = json.dumps(tasks_list)
+    compressed_tasks = gzip_str(json_string_tasks)
+    # we need to decode back, but only when using Python 3.6
+    # when using Python 3.7 it just works
+    # Unfortunately the docker image uses Python 3.6
+    return base64.b64encode(compressed_tasks).decode("ascii")
