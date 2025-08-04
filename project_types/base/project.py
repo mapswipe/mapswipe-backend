@@ -213,6 +213,7 @@ class BaseProject[
         ProjectAsset.objects.create(
             project=self.project,
             file=content_file,
+            file_size=content_file.size,
             mimetype=ProjectAsset.Mimetype.JSON,
             type=ProjectAsset.Type.DEBUG,
             # FIXME: Maybe create a internal user like mapswipe-bot

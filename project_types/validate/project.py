@@ -343,7 +343,7 @@ class ValidateProject(
         return firebase_models.FbMappingTaskValidateCreateOnlyInput(
             taskId=task.firebase_id,
             # FIXME(tnagorra): Check if we need to convert this?
-            geojson=task.geometry,
+            geojson=json.load(task.geometry.geojson),
         )
 
     @typing.override

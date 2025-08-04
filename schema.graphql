@@ -103,6 +103,7 @@ scalar AreaSqKm
 
 enum AssetMimetypeEnum {
   GEOJSON
+  JSON
   IMAGE_JPEG
   IMAGE_PNG
   IMAGE_GIF
@@ -162,6 +163,7 @@ enum AssetTypeEnum {
   INPUT
   OUTPUT
   STATS
+  DEBUG
 }
 
 input AssetTypeEnumFilterLookup {

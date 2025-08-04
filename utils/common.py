@@ -156,6 +156,6 @@ def compress_tasks(tasks_list: list[dict[str, typing.Any]]) -> str:
     """
     Compress tasks for validate project type using gzip.
     """
-    json_string_tasks = json.dumps(tasks_list).replace(" ", "").replace("\n", "")
+    json_string_tasks = json.dumps(tasks_list)
     compressed_tasks = gzip_str(json_string_tasks)
     return base64.b64encode(compressed_tasks).decode("ascii")
