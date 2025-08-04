@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='projectasset',
             name='stats_type',
-            field=django_choices_field.fields.IntegerChoicesField(blank=True, choices=[(100, 'Aggregated Results (CSV)'), (101, 'Aggregated Results (with Geometry) (GEOJSON)'), (104, 'Groups (CSV)'), (105, 'History (GEOJSON)'), (106, 'Results (CSV)'), (107, 'Tasks (CSV)'), (108, 'Users (CSV)'), (109, 'Area of Interest (GEOJSON)'), (200, 'HOT Tasking Manager Geometries (GEOJSON)'), (201, 'Moderate to High Agreement Yes Maybe Geometries (GEOJSON)')], choices_enum=apps.project.models.ProjectAssetStatsTypeEnum, null=True),
+            field=django_choices_field.fields.IntegerChoicesField(blank=True, choices=[(100, 'Aggregated Results (CSV)'), (101, 'Aggregated Results (with Geometry) (GEOJSON)'), (104, 'Groups (CSV)'), (105, 'History (CSV)'), (106, 'Results (CSV)'), (107, 'Tasks (CSV)'), (108, 'Users (CSV)'), (109, 'Area of Interest (GEOJSON)'), (200, 'HOT Tasking Manager Geometries (GEOJSON)'), (201, 'Moderate to High Agreement Yes Maybe Geometries (GEOJSON)')], choices_enum=apps.project.models.ProjectAssetExportTypeEnum, null=True),
         ),
     ]

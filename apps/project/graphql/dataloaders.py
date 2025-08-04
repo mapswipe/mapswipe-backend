@@ -6,18 +6,18 @@ from strawberry.dataloader import DataLoader
 
 from apps.common.models import AssetTypeEnum
 from apps.project.models import ProjectAsset
-from apps.project.models import ProjectAssetStatsTypeEnum as AssetStatsEnum
+from apps.project.models import ProjectAssetExportTypeEnum as AssetStatsEnum
 
 if typing.TYPE_CHECKING:
     from .types.types import ProjectAssetType
 
 
-def load_export_assets(stats_type: AssetStatsEnum):
+def load_export_assets(export_type: AssetStatsEnum):
     def load_export_assets_(keys: list[int]) -> list["ProjectAssetType | None"]:
         qs = ProjectAsset.objects.filter(
             project__in=keys,
             type=AssetTypeEnum.STATS,
-            stats_type=stats_type,
+            export_type=export_type,
         )
 
         map_ = {asset.project_id: asset for asset in qs.all()}

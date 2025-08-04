@@ -968,7 +968,7 @@ input ProcessedProjectUpdateInput {
 }
 
 """
-ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, stats_type, project, file)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, export_type, project, file)
 """
 input ProjectAssetCreateInput {
   clientId: String!
@@ -979,8 +979,21 @@ input ProjectAssetCreateInput {
   project: ID!
 }
 
+enum ProjectAssetExportTypeEnum {
+  AGGREGATED_RESULTS
+  AGGREGATED_RESULTS_WITH_GEOMETRY
+  GROUPS
+  HISTORY
+  RESULTS
+  TASKS
+  USERS
+  AREA_OF_INTEREST
+  HOT_TASKING_MANAGER_GEOMETRIES
+  MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES
+}
+
 """
-ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, stats_type, project, file)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, export_type, project, file)
 """
 input ProjectAssetFilter {
   id: IDBaseFilterLookup
@@ -997,21 +1010,8 @@ input ProjectAssetOrder {
   id: Ordering
 }
 
-enum ProjectAssetStatsTypeEnum {
-  AGGREGATED_RESULTS
-  AGGREGATED_RESULTS_WITH_GEOMETRY
-  GROUPS
-  HISTORY
-  RESULTS
-  TASKS
-  USERS
-  AREA_OF_INTEREST
-  HOT_TASKING_MANAGER_GEOMETRIES
-  MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES
-}
-
 """
-ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, stats_type, project, file)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, export_type, project, file)
 """
 type ProjectAssetType implements UserResourceTypeMixin {
   clientId: String!
@@ -1033,7 +1033,7 @@ type ProjectAssetType implements UserResourceTypeMixin {
 
   """The file associated with the asset"""
   file: MapswipeDjangoFileType!
-  statsType: ProjectAssetStatsTypeEnum
+  exportType: ProjectAssetExportTypeEnum
   projectId: ID!
 }
 
