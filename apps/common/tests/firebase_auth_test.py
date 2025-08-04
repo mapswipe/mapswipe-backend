@@ -4,6 +4,7 @@ from unittest import mock
 from django.urls import reverse
 from firebase_admin import auth
 
+from apps.contributor.factories import ContributorUserFactory
 from apps.user.factories import UserFactory
 from main.tests import TestCase
 
@@ -23,17 +24,18 @@ class TestFirebaseAuth(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.contributor_user = ContributorUserFactory.create()
         cls.user_inactive = UserFactory.create(email="fb_inactive@test.com")
 
     @mock.patch("apps.common.serializers.auth.verify_id_token")
     def test_valid_firebase_login(self, mock_verify_id_token: mock.MagicMock):
         user = UserFactory.create(
             email="fb_active@test.com",
-            fb_uid="firebase-user-uid-01",
+            contributor_user=self.contributor_user,
         )
 
         firebase_token_payload = self._get_firebase_token_payload(
-            uid=user.fb_uid,
+            uid=user.contributor_user.firebase_id,
             email=user.email,
             email_verified=True,
         )
@@ -41,10 +43,10 @@ class TestFirebaseAuth(TestCase):
 
         response = self.client.post(FIREBASE_AUTH_URL, {"token": "valid-token"}, format="json")
 
-        assert user.fb_uid == firebase_token_payload["uid"]
+        assert user.contributor_user.firebase_id == firebase_token_payload["uid"]
         user.refresh_from_db()
         assert response.status_code == 200
-        assert user.fb_uid == firebase_token_payload["uid"]
+        assert user.contributor_user.firebase_id == firebase_token_payload["uid"]
 
     @mock.patch("apps.common.serializers.auth.verify_id_token")
     def test_invalid_token(self, mock_verify_id_token: mock.MagicMock):

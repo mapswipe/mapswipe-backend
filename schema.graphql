@@ -360,6 +360,8 @@ type ContributorTimeStatType {
 ContributorUser(id, old_id, firebase_push_status, firebase_last_pushed, team, username, firebase_id, created_at, modified_at)
 """
 input ContributorUserFilter {
+  id: IDBaseFilterLookup
+
   """Firebase User ID (External)"""
   firebaseId: StrFilterLookup
   username: StrFilterLookup
@@ -2114,7 +2116,7 @@ union UpdateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
 scalar Upload
 
 """
-User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, old_id, fb_uid)
+User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, contributor_user)
 """
 input UserFilter {
   id: IDBaseFilterLookup
@@ -2126,7 +2128,7 @@ input UserFilter {
 }
 
 """
-User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, old_id, fb_uid)
+User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, contributor_user)
 """
 type UserMeType {
   id: ID!
@@ -2151,7 +2153,7 @@ interface UserResourceTypeMixin {
 }
 
 """
-User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, old_id, fb_uid)
+User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, contributor_user)
 """
 type UserType {
   id: ID!

@@ -331,8 +331,8 @@ class BaseProject[
 
         project_data = firebase_ext_models.FbProject(
             created=self.project.created_at,
-            # FIXME: use firebase_id later
-            createdBy=self.project.created_by.old_id or str(self.project.created_by_id),
+            # FIXME: What to use for fallback?
+            createdBy=self.project.created_by.firebase_id or str(self.project.created_by_id),
             image=self.project.image.file.url if self.project.image else None,
             isFeatured=self.project.is_featured,
             lookFor=self.project.look_for,

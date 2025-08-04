@@ -100,7 +100,8 @@ class FirebaseContributorUserGroup(FirebasePush[ContributorUserGroup, firebase_e
     def handle_new_object_on_firebase(self, model_obj: ContributorUserGroup, fb_reference: FbReference):
         contributor_user_group_data = firebase_ext_models.FbUserGroup(
             createdAt=int(model_obj.created_at.timestamp()),
-            createdBy=model_obj.created_by.old_id or str(model_obj.created_by_id),
+            # FIXME: What to use for fallback?
+            createdBy=model_obj.created_by.firebase_id or str(model_obj.created_by_id),
             description=model_obj.description,
             name=model_obj.name,
             nameKey=model_obj.name.lower().strip(),

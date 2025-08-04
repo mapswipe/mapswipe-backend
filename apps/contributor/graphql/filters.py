@@ -7,6 +7,7 @@ from apps.contributor.models import ContributorTeam, ContributorUser, Contributo
 
 @strawberry_django.filters.filter(ContributorUser, lookups=True)
 class ContributorUserFilter:
+    id: strawberry.auto
     firebase_id: strawberry.auto
     username: strawberry.auto
     team_id: strawberry.auto

@@ -136,8 +136,8 @@ def before_after_count[**P, R](
 
 
 @cached(cache=LRUCache(maxsize=1000))
-def get_contributor_user_id_by_firebase_id(fb_uid: str) -> int:
-    return ContributorUser.objects.get(firebase_id=fb_uid).pk
+def get_contributor_user_id_by_firebase_id(firebase_id: str) -> int:
+    return ContributorUser.objects.get(firebase_id=firebase_id).pk
 
 
 @cached(cache=LRUCache(maxsize=1000))
@@ -155,11 +155,10 @@ def get_user_by_contributor_user_firebase_id(
         return fallback.pk
 
     return User.objects.get_or_create(
-        # TODO(thenav56): Use ref to contributor user instead of fb_uid
-        fb_uid=firebase_id,
+        contributor_user_id=get_contributor_user_id_by_firebase_id(firebase_id),
         defaults=dict(
             # XXX: Email is required but we don't have emails
-            email=f"{firebase_id}@mapswipe.org",
+            email=f"fixup-{firebase_id}@mapswipe.org",
         ),
     )[0].pk
 
@@ -762,9 +761,9 @@ class Command(BaseCommand):
     def handle_firebase(self): ...
 
     def _handle(self):
+        self.handle_contributor_users()
         self.handle_organization()
         self.handle_teams()
-        self.handle_contributor_users()
         self.handle_contributor_user_groups()
         self.handle_contributor_user_user_group_memberships()
         self.handle_project()
