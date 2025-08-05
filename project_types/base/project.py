@@ -276,7 +276,7 @@ class BaseProject[
                 requiredCount=group.required_count,
             )
             group_project_specific_data = self.get_group_specifics_for_firebase(group)
-            fb_groups[group.pk] = {
+            fb_groups[group.firebase_id] = {
                 **firebase_utils.serialize(group_data),
                 **firebase_utils.serialize(group_project_specific_data),
             }

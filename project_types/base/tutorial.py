@@ -75,7 +75,7 @@ class BaseTutorial[
     @abstractmethod
     def get_tutorial_specifics_for_firebase(self) -> BaseModel: ...
 
-    def _save_tasks_as_json(self, grouped_tasks: dict[int, list[dict[str, typing.Any]]]) -> None:
+    def _save_tasks_as_json(self, grouped_tasks: typing.Any) -> None:
         """
         Generates a JSON file with all tasks and save it as a tutorial asset.
         Using this for debugging purpose of compressed tasks.
@@ -113,23 +113,21 @@ class BaseTutorial[
             *self.get_task_sort_keys(["scenario__scenario_page_number"]),
         )
 
-        fb_tasks: dict[str, dict[str, dict[str, dict]]] = {}
+        fb_tasks: list[dict[str, typing.Any]] = []
         index = 1
         for task in tasks.iterator():
             task_tutorial_specific_data = self.get_task_specifics_for_firebase(task, index)
-            fb_tasks[task.pk] = firebase_utils.serialize(task_tutorial_specific_data)
+            fb_tasks.append(firebase_utils.serialize(task_tutorial_specific_data))
             index += 1
 
         group_key = self.get_tutorial_group_key()
 
-        grouped_tasks_dict: dict[int, typing.Any] = {
+        grouped_tasks_dict: dict[int, list[dict[str, typing.Any]] | str] = {
             group_key: fb_tasks,
         }
         if self.compress_tasks_on_firebase():
             self._save_tasks_as_json(grouped_tasks_dict)
-            grouped_tasks_dict = {
-                group_key: compress_tasks(tasks_list) for group_key, tasks_list in grouped_tasks_dict.items()
-            }
+            grouped_tasks_dict = {group_key: compress_tasks(fb_tasks)}
 
         task_ref.set(value=grouped_tasks_dict)
 
