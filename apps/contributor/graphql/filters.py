@@ -35,16 +35,6 @@ class ContributorUserGroupFilter:
             id__in=membership_qs.values("user_group_id"),
         )
 
-    # FIXME(tnagorra): Does this work?
-    @strawberry_django.filter_field
-    def user_id(
-        self,
-        queryset: models.QuerySet[ContributorUserGroup],
-        value: strawberry.ID,
-        prefix: str,
-    ) -> tuple[models.QuerySet[ContributorUserGroup], models.Q]:
-        return self.filter_by_user("user_id", queryset, value)
-
     @strawberry_django.filter_field
     def firebase_id(
         self,
