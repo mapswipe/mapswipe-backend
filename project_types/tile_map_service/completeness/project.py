@@ -5,7 +5,6 @@ from pydantic import BaseModel, field_validator, model_validator
 from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import Project, ProjectTypeEnum
-from project_types.firebase import raster_tile_server_name_enum_to_firebase, vector_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base import project as base_project
 from utils import fields as custom_fields
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
@@ -19,6 +18,13 @@ FALLBACK_RASTER_LAYER = (
 class OverlayLayerTypeEnum(models.TextChoices):
     VECTOR_TILE = "VECTOR_TILE", "Vector Tile"
     RASTER_TILE = "RASTER_TILE", "Raster Tile"
+
+    def to_firebase(self) -> firebase_models.FbEnumOverlayTileServerType:
+        match self:
+            case OverlayLayerTypeEnum.RASTER_TILE:
+                return firebase_models.FbEnumOverlayTileServerType.RASTER
+            case OverlayLayerTypeEnum.VECTOR_TILE:
+                return firebase_models.FbEnumOverlayTileServerType.VECTOR
 
 
 # FIXME(tnagorra): Add validations
@@ -69,17 +75,6 @@ class OverlayTileServerConfig(BaseModel):
                 return self
 
 
-# FIXME(tnagorra): Move this to project_types/firebase but getting circular dependencies error
-def overlay_type_enum_to_firebase(
-    input_enum: OverlayLayerTypeEnum,
-) -> firebase_models.FbEnumOverlayTileServerType:
-    match input_enum:
-        case OverlayLayerTypeEnum.RASTER_TILE:
-            return firebase_models.FbEnumOverlayTileServerType.RASTER
-        case OverlayLayerTypeEnum.VECTOR_TILE:
-            return firebase_models.FbEnumOverlayTileServerType.VECTOR
-
-
 class CompletenessProjectProperty(base_project.TileMapServiceProjectProperty):
     overlay_tile_server_property: OverlayTileServerConfig
 
@@ -112,7 +107,7 @@ class CompletenessProject(
         tsp_overlay = self.project_type_specifics.overlay_tile_server_property
 
         fb_tile_server = firebase_models.FbObjRasterTileServer(
-            name=raster_tile_server_name_enum_to_firebase(tsp.name),
+            name=tsp.name.to_firebase(),
             credits=tsp.get_config()["credits"],
             url=tsp.get_config()["raw_url"],
             apiKey=tsp.get_config()["api_key"],
@@ -122,7 +117,7 @@ class CompletenessProject(
         # NOTE: Setting background layer as fallback for overlay layer
         if tsp_overlay.type == OverlayLayerTypeEnum.RASTER_TILE and tsp_overlay.raster:
             fb_overlay_tile_server = firebase_models.FbObjRasterTileServer(
-                name=raster_tile_server_name_enum_to_firebase(tsp_overlay.raster.tile_server.name),
+                name=tsp_overlay.raster.tile_server.name.to_firebase(),
                 credits=tsp_overlay.raster.tile_server.get_config()["credits"],
                 url=tsp_overlay.raster.tile_server.get_config()["raw_url"],
                 apiKey=tsp_overlay.raster.tile_server.get_config()["api_key"],
@@ -142,10 +137,10 @@ class CompletenessProject(
             tileServer=fb_tile_server,
             tileServerB=fb_overlay_tile_server,
             overlayTileServer=firebase_models.FbObjUnifiedOverlayTileServer(
-                type=overlay_type_enum_to_firebase(tsp_overlay.type),
+                type=tsp_overlay.type.to_firebase(),
                 vector=firebase_models.FbObjVectorTileServerOverlay(
                     tileServer=firebase_models.FbObjVectorTileServer(
-                        name=vector_tile_server_name_enum_to_firebase(tsp_overlay.vector.tile_server.name),
+                        name=tsp_overlay.vector.tile_server.name.to_firebase(),
                         sourceLayer=tsp_overlay.vector.tile_server.get_config()["source_layer"],
                         credits=tsp_overlay.vector.tile_server.get_config()["credits"],
                         url=tsp_overlay.vector.tile_server.get_config()["url"],
@@ -167,7 +162,7 @@ class CompletenessProject(
                 raster=firebase_models.FbObjRasterTileServerOverlay(
                     opacity=tsp_overlay.raster.opacity,
                     tileServer=firebase_models.FbObjRasterTileServer(
-                        name=raster_tile_server_name_enum_to_firebase(tsp_overlay.raster.tile_server.name),
+                        name=tsp_overlay.raster.tile_server.name.to_firebase(),
                         credits=tsp_overlay.raster.tile_server.get_config()["credits"],
                         url=tsp_overlay.raster.tile_server.get_config()["raw_url"],
                         apiKey=tsp_overlay.raster.tile_server.get_config()["api_key"],

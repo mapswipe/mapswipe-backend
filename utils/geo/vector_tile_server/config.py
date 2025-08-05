@@ -1,6 +1,7 @@
 import typing
 
 from django.db import models
+from pyfirebase_mapswipe import models as firebase_models
 
 
 class VectorTileServerNameEnum(models.TextChoices):
@@ -8,6 +9,17 @@ class VectorTileServerNameEnum(models.TextChoices):
     OPEN_STREET_MAP = "OPEN_STREET_MAP", "Open Street Map"
     OPEN_FREE_MAP = "OPEN_FREE_MAP", "Open Free Map"
     VERSATILES = "VERSATILES", "Versatiles"
+
+    def to_firebase(self) -> firebase_models.FbEnumVectorTileServerName:
+        match self:
+            case VectorTileServerNameEnum.CUSTOM:
+                return firebase_models.FbEnumVectorTileServerName.CUSTOM
+            case VectorTileServerNameEnum.OPEN_STREET_MAP:
+                return firebase_models.FbEnumVectorTileServerName.OPEN_STREET_MAP
+            case VectorTileServerNameEnum.OPEN_FREE_MAP:
+                return firebase_models.FbEnumVectorTileServerName.OPEN_FREE_MAP
+            case VectorTileServerNameEnum.VERSATILES:
+                return firebase_models.FbEnumVectorTileServerName.VERSATILES
 
 
 VectorTileServerNameEnumWithoutCustom = typing.Literal[

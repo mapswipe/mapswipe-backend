@@ -10,6 +10,7 @@ from django.db.models.expressions import Value
 from django.db.models.functions import Concat, Lower
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
+from pyfirebase_mapswipe import models as firebase_models
 
 from apps.common.models import ArchivableResource, CommonAsset, FirebasePushResource, UserResource
 from apps.contributor.models import ContributorTeam
@@ -66,6 +67,19 @@ class ProjectTypeEnum(models.IntegerChoices):
         if value in cls:
             return str(cls(value).label)
         return "Unknown"
+
+    def to_firebase(self) -> firebase_models.FbEnumProjectType:
+        match self:
+            case ProjectTypeEnum.FIND:
+                return firebase_models.FbEnumProjectType.FIND
+            case ProjectTypeEnum.COMPARE:
+                return firebase_models.FbEnumProjectType.COMPARE
+            case ProjectTypeEnum.COMPLETENESS:
+                return firebase_models.FbEnumProjectType.COMPLETENESS
+            case ProjectTypeEnum.VALIDATE:
+                return firebase_models.FbEnumProjectType.VALIDATE
+            case ProjectTypeEnum.VALIDATE_IMAGE:
+                return firebase_models.FbEnumProjectType.VALIDATE_IMAGE
 
 
 class ProjectStatusEnum(models.IntegerChoices):

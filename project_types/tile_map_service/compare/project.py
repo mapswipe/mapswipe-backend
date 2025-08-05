@@ -3,7 +3,6 @@ import typing
 from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import Project, ProjectTask, ProjectTypeEnum
-from project_types.firebase import raster_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base import project as base_project
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
 
@@ -71,14 +70,14 @@ class CompareProject(
         return firebase_models.FbProjectCompareCreateOnlyInput(
             zoomLevel=self.project_type_specifics.zoom_level,
             tileServer=firebase_models.FbObjRasterTileServer(
-                name=raster_tile_server_name_enum_to_firebase(tsp.name),
+                name=tsp.name.to_firebase(),
                 credits=tsp.get_config()["credits"],
                 url=tsp.get_config()["raw_url"],
                 apiKey=tsp.get_config()["api_key"],
                 wmtsLayerName=None,
             ),
             tileServerB=firebase_models.FbObjRasterTileServer(
-                name=raster_tile_server_name_enum_to_firebase(tsp_b.name),
+                name=tsp_b.name.to_firebase(),
                 credits=tsp_b.get_config()["credits"],
                 url=tsp_b.get_config()["raw_url"],
                 apiKey=tsp_b.get_config()["api_key"],

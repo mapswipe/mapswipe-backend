@@ -10,7 +10,6 @@ from apps.project.models import ProjectTypeEnum
 from apps.tutorial.models import Tutorial, TutorialTask
 from project_types.base import tutorial as base_tutorial
 from project_types.base.tutorial import BaseTutorialTaskProperty
-from project_types.firebase import raster_tile_server_name_enum_to_firebase
 
 from .project import ValidateProjectProperty
 
@@ -76,7 +75,7 @@ class ValidateTutorial(
             zoomLevel=18,
             projectType=projectType,
             tileServer=firebase_models.FbObjRasterTileServer(
-                name=raster_tile_server_name_enum_to_firebase(tsp.name),
+                name=tsp.name.to_firebase(),
                 credits=tsp.get_config()["credits"],
                 url=tsp.get_config()["raw_url"],
                 apiKey=tsp.get_config()["api_key"],

@@ -24,7 +24,6 @@ from apps.project.models import (
 )
 from main.config import Config
 from main.logging import log_extra
-from project_types.firebase import project_type_enum_to_firebase
 from utils.common import compress_tasks
 
 logger = logging.getLogger(__name__)
@@ -331,8 +330,8 @@ class BaseProject[
             projectRegion=self.project.region,
             projectTopic=self.project.topic,
             projectTopicKey=self.project.generate_name().lower().strip(),
-            projectType=project_type_enum_to_firebase(self.project.project_type_enum),
-            # project_type=project_type_enum_to_firebase(self.project.project_type_enum), # not needed here
+            projectType=self.project.project_type_enum.to_firebase(),
+            # project_type=self.project.project_type_enum.to_firebase(), # not needed here
             requestingOrganisation=self.project.requesting_organization.name,  # str
             requiredResults=self.project.required_results,
             status=status,

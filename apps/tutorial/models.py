@@ -8,6 +8,7 @@ from django.db import models
 from django.utils.translation import gettext, gettext_lazy
 from django_choices_field import IntegerChoicesField
 from django_stubs_ext.db.models.manager import RelatedManager
+from pyfirebase_mapswipe import models as firebase_models
 
 from apps.common.models import FirebasePushResource, IconEnum, UserResource
 from apps.project.models import CommonAsset, Project
@@ -196,6 +197,13 @@ class TutorialInformationPage(UserResource):
 class TutorialInformationPageBlockTypeEnum(models.IntegerChoices):
     TEXT = 1, "Text"
     IMAGE = 2, "Image"
+
+    def to_firebase(self) -> firebase_models.FbEnumInformationPageBlockType:
+        match self:
+            case TutorialInformationPageBlockTypeEnum.TEXT:
+                return firebase_models.FbEnumInformationPageBlockType.TEXT
+            case TutorialInformationPageBlockTypeEnum.IMAGE:
+                return firebase_models.FbEnumInformationPageBlockType.IMAGE
 
 
 class TutorialInformationPageBlock(UserResource):

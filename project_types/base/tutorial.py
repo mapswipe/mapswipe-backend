@@ -15,7 +15,6 @@ from apps.tutorial.models import (
 )
 from main.config import Config
 from main.logging import log_extra
-from project_types.firebase import block_type_enum_to_firebase
 
 from .project import BaseProjectProperty
 
@@ -151,7 +150,7 @@ class BaseTutorial[
                     blocks=[
                         firebase_models.FbInformationPageBlock(
                             blockNumber=block.block_number,
-                            blockType=block_type_enum_to_firebase(TutorialInformationPageBlockTypeEnum(block.block_type)),
+                            blockType=TutorialInformationPageBlockTypeEnum(block.block_type).to_firebase(),
                             textDescription=block.text,
                             image=block.image.file.url if block.image else None,
                         )

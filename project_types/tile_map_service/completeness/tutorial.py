@@ -5,10 +5,9 @@ from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import ProjectTypeEnum
 from apps.tutorial.models import Tutorial, TutorialTask
-from project_types.firebase import raster_tile_server_name_enum_to_firebase, vector_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base import tutorial as tile_map_service_tutorial
 
-from .project import FALLBACK_RASTER_LAYER, CompletenessProjectProperty, OverlayLayerTypeEnum, overlay_type_enum_to_firebase
+from .project import FALLBACK_RASTER_LAYER, CompletenessProjectProperty, OverlayLayerTypeEnum
 
 
 class CompletenessTutorialTaskProperty(tile_map_service_tutorial.TileMapServiceTutorialTaskProperty): ...
@@ -72,7 +71,7 @@ class CompletenessTutorial(
         # NOTE: Setting background layer as fallback for overlay layer
         if tsp_overlay.type == OverlayLayerTypeEnum.RASTER_TILE and tsp_overlay.raster:
             fb_overlay_tile_server = firebase_models.FbObjRasterTileServer(
-                name=raster_tile_server_name_enum_to_firebase(tsp_overlay.raster.tile_server.name),
+                name=tsp_overlay.raster.tile_server.name.to_firebase(),
                 credits=tsp_overlay.raster.tile_server.get_config()["credits"],
                 url=tsp_overlay.raster.tile_server.get_config()["raw_url"],
                 apiKey=tsp_overlay.raster.tile_server.get_config()["api_key"],
@@ -91,7 +90,7 @@ class CompletenessTutorial(
             zoomLevel=self.project_type_specifics.zoom_level,
             projectType=projectType,
             tileServer=firebase_models.FbObjRasterTileServer(
-                name=raster_tile_server_name_enum_to_firebase(tsp.name),
+                name=tsp.name.to_firebase(),
                 credits=tsp.get_config()["credits"],
                 url=tsp.get_config()["raw_url"],
                 apiKey=tsp.get_config()["api_key"],
@@ -99,10 +98,10 @@ class CompletenessTutorial(
             ),
             tileServerB=fb_overlay_tile_server,
             overlayTileServer=firebase_models.FbObjUnifiedOverlayTileServer(
-                type=overlay_type_enum_to_firebase(tsp_overlay.type),
+                type=tsp_overlay.type.to_firebase(),
                 vector=firebase_models.FbObjVectorTileServerOverlay(
                     tileServer=firebase_models.FbObjVectorTileServer(
-                        name=vector_tile_server_name_enum_to_firebase(tsp_overlay.vector.tile_server.name),
+                        name=tsp_overlay.vector.tile_server.name.to_firebase(),
                         sourceLayer=tsp_overlay.vector.tile_server.get_config()["source_layer"],
                         credits=tsp_overlay.vector.tile_server.get_config()["credits"],
                         url=tsp_overlay.vector.tile_server.get_config()["url"],
@@ -124,7 +123,7 @@ class CompletenessTutorial(
                 raster=firebase_models.FbObjRasterTileServerOverlay(
                     opacity=tsp_overlay.raster.opacity,
                     tileServer=firebase_models.FbObjRasterTileServer(
-                        name=raster_tile_server_name_enum_to_firebase(tsp_overlay.raster.tile_server.name),
+                        name=tsp_overlay.raster.tile_server.name.to_firebase(),
                         credits=tsp_overlay.raster.tile_server.get_config()["credits"],
                         url=tsp_overlay.raster.tile_server.get_config()["raw_url"],
                         apiKey=tsp_overlay.raster.tile_server.get_config()["api_key"],

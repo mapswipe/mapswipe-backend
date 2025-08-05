@@ -26,7 +26,6 @@ from apps.project.models import (
 )
 from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
-from project_types.firebase import raster_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base.project import create_json_dump
 from project_types.validate.api_calls import ohsome
 from utils.custom_options.models import CustomOption
@@ -84,6 +83,15 @@ class ValidateObjectSourceTypeEnum(models.TextChoices):
     OBJECT_GEOJSON_URL = "OBJECT_GEOJSON_URL", "Object GeoJson URL"
     TASKING_MANAGER = "TASKING_MANAGER", "Tasking Manager"
 
+    def to_firebase(self) -> firebase_models.FbEnumValidateInputType:
+        match self:
+            case ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
+                return firebase_models.FbEnumValidateInputType.AOI_FILE
+            case ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL:
+                return firebase_models.FbEnumValidateInputType.LINK
+            case ValidateObjectSourceTypeEnum.TASKING_MANAGER:
+                return firebase_models.FbEnumValidateInputType.TMID
+
 
 class ValidateObjectSourceConfig(BaseModel):
     source_type: ValidateObjectSourceTypeEnum
@@ -140,19 +148,6 @@ class ValidateProjectTaskProperty(base_project.BaseProjectTaskProperty):
     properties: dict[str, Any]
     # NOTE: We need to send geometry to firebase
     # geometry: str
-
-
-# FIXME(tnagorra): Move this to project_types/firebase but getting circular dependencies error
-def validate_source_type_enum_to_firebase(
-    input_enum: ValidateObjectSourceTypeEnum,
-) -> firebase_models.FbEnumValidateInputType:
-    match input_enum:
-        case ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
-            return firebase_models.FbEnumValidateInputType.AOI_FILE
-        case ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL:
-            return firebase_models.FbEnumValidateInputType.LINK
-        case ValidateObjectSourceTypeEnum.TASKING_MANAGER:
-            return firebase_models.FbEnumValidateInputType.TMID
 
 
 class ValidateProject(
@@ -380,12 +375,10 @@ class ValidateProject(
             if custom_opts is not None
             else None,
             filter=obj_source.ohsome_filter,
-            inputType=validate_source_type_enum_to_firebase(
-                obj_source.source_type,
-            ),
+            inputType=obj_source.source_type.to_firebase(),
             TMId=str(obj_source.tasking_manager_project_id) if obj_source.tasking_manager_project_id else None,
             tileServer=firebase_models.FbObjRasterTileServer(
-                name=raster_tile_server_name_enum_to_firebase(tsp.name),
+                name=tsp.name.to_firebase(),
                 credits=tsp.get_config()["credits"],
                 url=tsp.get_config()["raw_url"],
                 apiKey=tsp.get_config()["api_key"],

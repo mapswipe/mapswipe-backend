@@ -3,7 +3,6 @@ import typing
 from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import Project, ProjectTypeEnum
-from project_types.firebase import raster_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base import project as tile_map_service_project
 
 
@@ -38,7 +37,7 @@ class FindProject(
         return firebase_models.FbProjectFindCreateOnlyInput(
             zoomLevel=self.project_type_specifics.zoom_level,
             tileServer=firebase_models.FbObjRasterTileServer(
-                name=raster_tile_server_name_enum_to_firebase(tsp.name),
+                name=tsp.name.to_firebase(),
                 credits=tsp.get_config()["credits"],
                 url=tsp.get_config()["raw_url"],
                 apiKey=tsp.get_config()["api_key"],
