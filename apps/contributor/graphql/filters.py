@@ -35,6 +35,7 @@ class ContributorUserGroupFilter:
             id__in=membership_qs.values("user_group_id"),
         )
 
+    # FIXME(tnagorra): Does this work?
     @strawberry_django.filter_field
     def user_id(
         self,

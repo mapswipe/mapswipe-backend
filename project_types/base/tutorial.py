@@ -1,7 +1,9 @@
+import json
 import logging
 import typing
 from abc import ABC, abstractmethod
 
+from django.core.files.base import ContentFile
 from firebase_admin.db import Reference as FbReference
 from pydantic import BaseModel, ConfigDict
 from pyfirebase_mapswipe import models as firebase_models
@@ -10,11 +12,13 @@ from pyfirebase_mapswipe import utils as firebase_utils
 from apps.common.models import FirebasePushStatusEnum, IconEnum
 from apps.tutorial.models import (
     Tutorial,
+    TutorialAsset,
     TutorialInformationPageBlockTypeEnum,
     TutorialTask,
 )
 from main.config import Config
 from main.logging import log_extra
+from utils.common import compress_tasks
 
 from .project import BaseProjectProperty
 
@@ -71,6 +75,28 @@ class BaseTutorial[
     @abstractmethod
     def get_tutorial_specifics_for_firebase(self) -> BaseModel: ...
 
+    def _save_tasks_as_json(self, grouped_tasks: dict[int, list[dict[str, typing.Any]]]) -> None:
+        """
+        Generates a JSON file with all tasks and save it as a tutorial asset.
+        Using this for debugging purpose of compressed tasks.
+        """
+        task_json = json.dumps(grouped_tasks, separators=(",", ":"))
+        filename = f"tutorial_grouped_tasks_{self.tutorial.pk}.json"
+        content_file = ContentFile(
+            task_json.encode("utf-8"),
+            filename,
+        )
+        TutorialAsset.objects.create(
+            tutorial=self.tutorial,
+            file=content_file,
+            file_size=content_file.size,
+            mimetype=TutorialAsset.Mimetype.JSON,
+            type=TutorialAsset.Type.DEBUG,
+            # FIXME: Maybe create a internal user like mapswipe-bot
+            created_by=self.tutorial.modified_by,
+            modified_by=self.tutorial.modified_by,
+        )
+
     def get_tutorial_group_key(self) -> int:
         return 101
 
@@ -96,11 +122,16 @@ class BaseTutorial[
 
         group_key = self.get_tutorial_group_key()
 
-        task_ref.set(
-            value={
-                str(group_key): fb_tasks,
-            },
-        )
+        grouped_tasks_dict: dict[int, typing.Any] = {
+            group_key: fb_tasks,
+        }
+        if self.compress_tasks_on_firebase():
+            self._save_tasks_as_json(grouped_tasks_dict)
+            grouped_tasks_dict = {
+                group_key: compress_tasks(tasks_list) for group_key, tasks_list in grouped_tasks_dict.items()
+            }
+
+        task_ref.set(value=grouped_tasks_dict)
 
     def create_groups_on_firebase(self, group_ref: FbReference):
         fb_groups: dict[str, dict[str, dict]] = {}

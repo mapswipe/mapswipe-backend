@@ -261,6 +261,7 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
     # Also, used in SQL queries
     project_type_specifics = models.JSONField(blank=True, null=True)
 
+    # FIXME(tnagorra): Do we need to reference this to project table?
     project_type_specific_output: "ProjectAsset | None" = models.ForeignKey(  # type: ignore[reportAssignmentType]
         "project.ProjectAsset",
         related_name="+",
