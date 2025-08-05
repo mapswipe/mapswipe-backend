@@ -2056,6 +2056,9 @@ type TutorialType implements UserResourceTypeMixin {
   name: String!
 
   """Project this tutorial is referring to."""
+  project: ProjectType!
+
+  """Project this tutorial is referring to."""
   projectId: ID!
   status: TutorialStatusEnum!
   scenarios: [TutorialScenarioPageType!]!

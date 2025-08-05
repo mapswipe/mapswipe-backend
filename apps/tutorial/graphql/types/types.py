@@ -26,6 +26,9 @@ from .project_types.find import FindTutorialTaskPropertyType
 from .project_types.validate import ValidateTutorialTaskPropertyType
 from .project_types.validate_image import ValidateImageTutorialTaskPropertyType
 
+if typing.TYPE_CHECKING:
+    from apps.project.graphql.types.types import ProjectType
+
 
 @strawberry_django.type(TutorialAsset)
 class TutorialAssetType(UserResourceTypeMixin, CommonAssetTypeMixin):
@@ -129,6 +132,8 @@ class TutorialInformationPageType(UserResourceTypeMixin):
 class TutorialType(UserResourceTypeMixin):
     id: strawberry.ID
     name: strawberry.auto
+    # NOTE: Got circular import issue
+    project: typing.Annotated["ProjectType", strawberry.lazy("apps.project.graphql.types.types")]
     project_id: strawberry.ID
     status: strawberry.auto
 
