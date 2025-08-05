@@ -3,6 +3,7 @@ import logging
 import typing
 from typing import Any
 
+import requests
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
 from django.db import models
@@ -25,6 +26,7 @@ from apps.project.models import (
     ProjectTaskGroup,
 )
 from main.bulk_managers import BulkCreateManager
+from main.config import Config
 from project_types.base import project as base_project
 from project_types.tile_map_service.base.project import create_json_dump
 from project_types.validate.api_calls import ohsome
@@ -181,6 +183,20 @@ class ValidateProject(
 
         return filtered_features
 
+    # FIXME: add appropriate typing for geojson
+    def _get_object_geometry_from_ohsome(self, geojson: Any):
+        feature_collection = FeatureCollection(**geojson)
+        ohsome_request = {
+            "endpoint": "elements/geometry",
+            "filter": self.project_type_specifics.object_source.ohsome_filter,
+        }
+
+        return ohsome(
+            ohsome_request,
+            feature_collection.model_dump_json(),
+            properties="tags, metadata",
+        )
+
     def _validate_aoi_geojson_file(self):
         if self.project_type_specifics.object_source.source_type != ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
             raise Exception("Invalid object source type for validate geojson file")
@@ -199,19 +215,65 @@ class ValidateProject(
         )
 
         with aoi_asset.file.open() as aoi_file:
-            geojson = json.loads(aoi_file.read())
+            aoi_geojson = json.loads(aoi_file.read())
 
-        feature_collection = FeatureCollection(**geojson)
-        ohsome_request = {
-            "endpoint": "elements/geometry",
-            "filter": self.project_type_specifics.object_source.ohsome_filter,
+        geojson_result = self._get_object_geometry_from_ohsome(aoi_geojson)
+
+        return self._process_polygons(geojson_data=geojson_result)
+
+    def _validate_object_geojson_url(self):
+        url = self.project_type_specifics.object_source.object_geojson_url
+        if url is None:
+            raise Exception("Object Geojson URL is missing")
+
+        logger.info("Fetching object geojson from %s", url)
+
+        # FIXME(frozenhelium): use predefined timeout duration
+        response = requests.get(url, timeout=500)
+        if response.status_code != 200:
+            logger.warning("Failed to fetch object geojson from %s", url)
+
+        logger.info("Successfully fetched object geojson from %s", url)
+        geojson = response.json()
+
+        return self._process_polygons(geojson)
+
+    def _validate_tasking_manager(self):
+        hot_tm_id = self.project_type_specifics.object_source.tasking_manager_project_id
+
+        if hot_tm_id is None:
+            raise Exception("HOT Tasking Manager Project ID is missing")
+
+        hot_tm_url = Config.HOT_TASKING_MANAGER_PROJECT_API_URL.format(
+            project_id=hot_tm_id,
+        )
+
+        # FIXME(frozenhelium): use predefined timeout duration
+        aoi_result = requests.get(hot_tm_url, timeout=500)
+        if aoi_result.status_code != 200:
+            logger.warning("Failed to fetch AOI geojson from HOT for tm_id %s", hot_tm_id)
+
+        logger.info("Successfully fetched AOI geojson from HOT for tm_id %s", hot_tm_id)
+
+        aoi_geometry = aoi_result.json()
+        aoi_geojson = {
+            "type": "FeatureCollection",
+            "metadata": {
+                "project_id": self.project.pk,
+                "hot_tm_project_id": hot_tm_id,
+            },
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": aoi_geometry,
+                    "properties": {
+                        "hot_tm_project_id": hot_tm_id,
+                    },
+                },
+            ],
         }
 
-        geojson_result = ohsome(
-            ohsome_request,
-            feature_collection.model_dump_json(),
-            properties="tags, metadata",
-        )
+        geojson_result = self._get_object_geometry_from_ohsome(aoi_geojson)
 
         return self._process_polygons(geojson_data=geojson_result)
 
@@ -223,8 +285,14 @@ class ValidateProject(
         if self.project_type_specifics.object_source.source_type == ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
             return self._validate_aoi_geojson_file()
 
+        if self.project_type_specifics.object_source.source_type == ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL:
+            return self._validate_object_geojson_url()
+
+        if self.project_type_specifics.object_source.source_type == ValidateObjectSourceTypeEnum.TASKING_MANAGER:
+            return self._validate_tasking_manager()
+
         # TODO(frozenhelium): implement other source types
-        raise Exception("Only AOI Geojson file source type is currently implemented")
+        raise Exception("Invalid object source type")
 
     @typing.override
     def create_tasks(self, group: ProjectTaskGroup, raw_group: ValidateRawGroupItem) -> int:

@@ -13,6 +13,10 @@ if typing.TYPE_CHECKING:
 class Config:
     BASE_DIR = typing.cast("Path", settings.BASE_DIR)
 
+    HOT_TASKING_MANAGER_PROJECT_API_URL = (
+        "https://tasking-manager-production-api.hotosm.org/api/v2/projects/{project_id}/queries/aoi/?as_file=false"
+    )
+
     # NOTE: We get build footprints for validate from OHSOME
     OHSOME_API_LINK = "https://api.ohsome.org/v1/"
     # NOTE: We get changeset information from OSMCha
