@@ -45,7 +45,7 @@ class ValidateImageProject(
         super().__init__(project)
 
     @typing.override
-    def get_task_project_specifics_for_firebase(self, task):
+    def get_task_specifics_for_firebase(self, task):
         task_specifics = self.project_task_property_class(
             **task.project_type_specifics,
         )
@@ -55,7 +55,7 @@ class ValidateImageProject(
         )
 
     @typing.override
-    def get_group_project_specifics_for_firebase(self, group):
+    def get_group_specifics_for_firebase(self, group):
         return firebase_models.FbMappingGroupValidateImageCreateOnlyInput(
             groupId=group.firebase_id,
         )
@@ -64,8 +64,8 @@ class ValidateImageProject(
     # TODO(tnagorra): Define create_tasks
     # TODO(tnagorra): Define create_groups
     # TODO(tnagorra): Define post_create_groups
-    # TODO(tnagorra): Define get_task_project_specifics_for_firebase
-    # TODO(tnagorra): Define get_group_project_specifics_for_firebase
+    # TODO(tnagorra): Define get_task_specifics_for_firebase
+    # TODO(tnagorra): Define get_group_specifics_for_firebase
 
     @typing.override
     def get_project_specifics_for_firebase(self):

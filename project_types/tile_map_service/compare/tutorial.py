@@ -5,7 +5,6 @@ from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import ProjectTypeEnum
 from apps.tutorial.models import Tutorial, TutorialTask
-from project_types.firebase import raster_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base import tutorial as tile_map_service_tutorial
 
 from .project import CompareProjectProperty
@@ -27,7 +26,7 @@ class CompareTutorial(
         super().__init__(tutorial)
 
     @typing.override
-    def get_task_tutorial_specifics_for_firebase(self, task: TutorialTask, index: int):
+    def get_task_specifics_for_firebase(self, task: TutorialTask, index: int):
         tsp = self.project_type_specifics.tile_server_property
         tsp_b = self.project_type_specifics.tile_server_b_property
 
@@ -35,7 +34,7 @@ class CompareTutorial(
             **task.project_type_specifics,
         )
 
-        resp = super().get_task_tutorial_specifics_for_firebase(task, index)
+        resp = super().get_task_specifics_for_firebase(task, index)
 
         return firebase_ext_models.FbCompareTutorialTaskComplete(
             geometry=resp.geometry,
@@ -71,14 +70,14 @@ class CompareTutorial(
             zoomLevel=self.project_type_specifics.zoom_level,
             projectType=projectType,
             tileServer=firebase_models.FbObjRasterTileServer(
-                name=raster_tile_server_name_enum_to_firebase(tsp.name),
+                name=tsp.name.to_firebase(),
                 credits=tsp.get_config()["credits"],
                 url=tsp.get_config()["raw_url"],
                 apiKey=tsp.get_config()["api_key"],
                 wmtsLayerName=None,
             ),
             tileServerB=firebase_models.FbObjRasterTileServer(
-                name=raster_tile_server_name_enum_to_firebase(tsp_b.name),
+                name=tsp_b.name.to_firebase(),
                 credits=tsp_b.get_config()["credits"],
                 url=tsp_b.get_config()["raw_url"],
                 apiKey=tsp_b.get_config()["api_key"],

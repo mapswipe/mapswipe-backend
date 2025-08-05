@@ -26,7 +26,6 @@ from apps.project.models import (
 )
 from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
-from project_types.firebase import raster_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base.project import create_json_dump
 from project_types.validate.api_calls import ohsome
 from utils.custom_options.models import CustomOption
@@ -43,6 +42,7 @@ class ValidateRawGroupItem(TypedDict):
     features: list[ValidFeature]
 
 
+# FIXME(tnagorra): move this to utils
 # FIXME(tnagorra): We need to refactor this codeblock
 # Example: We no longer need tutorial parameter
 def group_input_geometries(features: list[ValidFeature], group_size: int, tutorial: bool = False):
@@ -84,6 +84,15 @@ class ValidateObjectSourceTypeEnum(models.TextChoices):
     OBJECT_GEOJSON_URL = "OBJECT_GEOJSON_URL", "Object GeoJson URL"
     TASKING_MANAGER = "TASKING_MANAGER", "Tasking Manager"
 
+    def to_firebase(self) -> firebase_models.FbEnumValidateInputType:
+        match self:
+            case ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
+                return firebase_models.FbEnumValidateInputType.AOI_FILE
+            case ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL:
+                return firebase_models.FbEnumValidateInputType.LINK
+            case ValidateObjectSourceTypeEnum.TASKING_MANAGER:
+                return firebase_models.FbEnumValidateInputType.TMID
+
 
 class ValidateObjectSourceConfig(BaseModel):
     source_type: ValidateObjectSourceTypeEnum
@@ -114,7 +123,7 @@ class ValidateObjectSourceConfig(BaseModel):
                 return self
             case ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL:
                 if self.object_geojson_url is None:
-                    raise ValueError("Object GeoJSON Url is required")
+                    raise ValueError("Object GeoJSON URL is required")
                 return self
             case ValidateObjectSourceTypeEnum.TASKING_MANAGER:
                 if self.tasking_manager_project_id is None:
@@ -142,19 +151,6 @@ class ValidateProjectTaskProperty(base_project.BaseProjectTaskProperty):
     # geometry: str
 
 
-# FIXME(tnagorra): Move this to project_types/firebase but getting circular dependencies error
-def validate_source_type_enum_to_firebase(
-    input_enum: ValidateObjectSourceTypeEnum,
-) -> firebase_models.FbEnumValidateInputType:
-    match input_enum:
-        case ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
-            return firebase_models.FbEnumValidateInputType.AOI_FILE
-        case ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL:
-            return firebase_models.FbEnumValidateInputType.LINK
-        case ValidateObjectSourceTypeEnum.TASKING_MANAGER:
-            return firebase_models.FbEnumValidateInputType.TMID
-
-
 class ValidateProject(
     base_project.BaseProject[
         ValidateProjectProperty,
@@ -170,10 +166,6 @@ class ValidateProject(
 
     def __init__(self, project: Project):
         super().__init__(project)
-
-    @typing.override
-    def enable_compression_for_tasks(self) -> bool:
-        return True
 
     def _process_polygons(self, geojson_data: dict[str, Any]) -> list[ValidFeature]:
         """We only want polygon and multipolygon features"""
@@ -338,16 +330,21 @@ class ValidateProject(
         self.project.project_type_specific_output = asset
         self.project.save(update_fields=("project_type_specific_output",))
 
+    # FIREBASE
+
     @typing.override
-    def get_task_project_specifics_for_firebase(self, task: ProjectTask):
+    def compress_tasks_on_firebase(self) -> bool:
+        return True
+
+    @typing.override
+    def get_task_specifics_for_firebase(self, task: ProjectTask):
         return firebase_models.FbMappingTaskValidateCreateOnlyInput(
             taskId=task.firebase_id,
-            # FIXME(tnagorra): Check if we need to convert this?
-            geojson=json.load(task.geometry.geojson),
+            geojson=json.loads(task.geometry.geojson),
         )
 
     @typing.override
-    def get_group_project_specifics_for_firebase(self, group: ProjectTaskGroup):
+    def get_group_specifics_for_firebase(self, group: ProjectTaskGroup):
         return firebase_models.FbMappingGroupValidateCreateOnlyInput(
             groupId=group.firebase_id,
         )
@@ -380,12 +377,10 @@ class ValidateProject(
             if custom_opts is not None
             else None,
             filter=obj_source.ohsome_filter,
-            inputType=validate_source_type_enum_to_firebase(
-                obj_source.source_type,
-            ),
+            inputType=obj_source.source_type.to_firebase(),
             TMId=str(obj_source.tasking_manager_project_id) if obj_source.tasking_manager_project_id else None,
             tileServer=firebase_models.FbObjRasterTileServer(
-                name=raster_tile_server_name_enum_to_firebase(tsp.name),
+                name=tsp.name.to_firebase(),
                 credits=tsp.get_config()["credits"],
                 url=tsp.get_config()["raw_url"],
                 apiKey=tsp.get_config()["api_key"],

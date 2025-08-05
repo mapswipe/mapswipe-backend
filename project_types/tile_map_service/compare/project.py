@@ -3,7 +3,6 @@ import typing
 from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import Project, ProjectTask, ProjectTypeEnum
-from project_types.firebase import raster_tile_server_name_enum_to_firebase
 from project_types.tile_map_service.base import project as base_project
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
 
@@ -34,12 +33,14 @@ class CompareProject(
         if typing.TYPE_CHECKING:
             assert project.project_type == ProjectTypeEnum.COMPARE, f"{type(self)} is defined for COMPARE"
 
+    # FIREBASE
+
     @typing.override
-    def skip_tasks_for_firebase(self) -> bool:
+    def skip_tasks_on_firebase(self) -> bool:
         return False
 
     @typing.override
-    def get_task_project_specifics_for_firebase(self, task: ProjectTask):
+    def get_task_specifics_for_firebase(self, task: ProjectTask) -> firebase_models.FbMappingTaskCompareCreateOnlyInput:
         task_specifics = self.project_task_property_class(
             **task.project_type_specifics,
         )
@@ -64,21 +65,21 @@ class CompareProject(
         )
 
     @typing.override
-    def get_project_specifics_for_firebase(self):
+    def get_project_specifics_for_firebase(self) -> firebase_models.FbProjectCompareCreateOnlyInput:
         tsp = self.project_type_specifics.tile_server_property
         tsp_b = self.project_type_specifics.tile_server_b_property
 
         return firebase_models.FbProjectCompareCreateOnlyInput(
             zoomLevel=self.project_type_specifics.zoom_level,
             tileServer=firebase_models.FbObjRasterTileServer(
-                name=raster_tile_server_name_enum_to_firebase(tsp.name),
+                name=tsp.name.to_firebase(),
                 credits=tsp.get_config()["credits"],
                 url=tsp.get_config()["raw_url"],
                 apiKey=tsp.get_config()["api_key"],
                 wmtsLayerName=None,
             ),
             tileServerB=firebase_models.FbObjRasterTileServer(
-                name=raster_tile_server_name_enum_to_firebase(tsp_b.name),
+                name=tsp_b.name.to_firebase(),
                 credits=tsp_b.get_config()["credits"],
                 url=tsp_b.get_config()["raw_url"],
                 apiKey=tsp_b.get_config()["api_key"],

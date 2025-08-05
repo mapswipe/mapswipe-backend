@@ -15,6 +15,7 @@ class CeleryLock:
         PROJECT_LOAD_GEOMETRY = "PROJECT_LOAD_GEOMETRY_{0}"
         # FIXME(tnagorra): Rename this to project push to firebase
         PUSH_PROJECT_TO_FIREBASE = "PUSH_PROJECT_TO_FIREBASE_{0}"
+        TUTORIAL_PUSH_TO_FIREBASE = "TUTORIAL_PUSH_TO_FIREBASE_{0}"
 
     @staticmethod
     @contextmanager
