@@ -36,5 +36,5 @@ def push_project_to_firebase(project_id: int):
 
     project = Project.objects.get(pk=project_id)
     project_type_handler = get_project_type_handler(project.project_type_enum)(project)
-    project_type_handler.push_to_firebase()
+    project_type_handler.push_project_on_firebase()
     return True

@@ -2,6 +2,7 @@ import typing
 
 from django.conf import settings
 from django.db import models
+from pyfirebase_mapswipe import models as firebase_models
 
 
 class RasterTileServerNameEnum(models.TextChoices):
@@ -12,6 +13,23 @@ class RasterTileServerNameEnum(models.TextChoices):
     MAXAR_PREMIUM = "MAXAR_PREMIUM", "Maxar Premium"
     ESRI = "ESRI", "ESRI World Imagery"
     ESRI_BETA = "ESRI_BETA", "ESRI World Imagery (Clarity) Beta"
+
+    def to_firebase(self) -> firebase_models.FbEnumRasterTileServerName:
+        match self:
+            case RasterTileServerNameEnum.CUSTOM:
+                return firebase_models.FbEnumRasterTileServerName.CUSTOM
+            case RasterTileServerNameEnum.BING:
+                return firebase_models.FbEnumRasterTileServerName.BING
+            case RasterTileServerNameEnum.MAPBOX:
+                return firebase_models.FbEnumRasterTileServerName.MAPBOX
+            case RasterTileServerNameEnum.MAXAR_STANDARD:
+                return firebase_models.FbEnumRasterTileServerName.MAXAR_STANDARD
+            case RasterTileServerNameEnum.MAXAR_PREMIUM:
+                return firebase_models.FbEnumRasterTileServerName.MAXAR_PREMIUM
+            case RasterTileServerNameEnum.ESRI:
+                return firebase_models.FbEnumRasterTileServerName.ESRI
+            case RasterTileServerNameEnum.ESRI_BETA:
+                return firebase_models.FbEnumRasterTileServerName.ESRI_BETA
 
 
 RasterTileServerNameEnumWithoutCustom = typing.Literal[

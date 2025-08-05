@@ -4,12 +4,14 @@ from warnings import deprecated
 
 import ulid
 from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.geos import GEOSGeometry
 from django.db import models
 from django.db.models import ExpressionWrapper, Q
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat, Lower
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
+from pyfirebase_mapswipe import models as firebase_models
 
 from apps.common.models import ArchivableResource, CommonAsset, FirebasePushResource, UserResource
 from apps.contributor.models import ContributorTeam
@@ -66,6 +68,19 @@ class ProjectTypeEnum(models.IntegerChoices):
         if value in cls:
             return str(cls(value).label)
         return "Unknown"
+
+    def to_firebase(self) -> firebase_models.FbEnumProjectType:
+        match self:
+            case ProjectTypeEnum.FIND:
+                return firebase_models.FbEnumProjectType.FIND
+            case ProjectTypeEnum.COMPARE:
+                return firebase_models.FbEnumProjectType.COMPARE
+            case ProjectTypeEnum.COMPLETENESS:
+                return firebase_models.FbEnumProjectType.COMPLETENESS
+            case ProjectTypeEnum.VALIDATE:
+                return firebase_models.FbEnumProjectType.VALIDATE
+            case ProjectTypeEnum.VALIDATE_IMAGE:
+                return firebase_models.FbEnumProjectType.VALIDATE_IMAGE
 
 
 class ProjectStatusEnum(models.IntegerChoices):
@@ -247,6 +262,7 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
     # Also, used in SQL queries
     project_type_specifics = models.JSONField(blank=True, null=True)
 
+    # FIXME(tnagorra): Do we need to reference this to project table?
     project_type_specific_output: "ProjectAsset | None" = models.ForeignKey(  # type: ignore[reportAssignmentType]
         "project.ProjectAsset",
         related_name="+",
@@ -458,7 +474,7 @@ class ProjectTask(FirebasePushResource):
 
     # NOTE(tnagorra): The geometry is only necessary for validate project type
     # FIXME(thenav56): Existing gid_models.MultiPolygonField(srid=4326, blank=True, null=True)
-    geometry = gis_models.GeometryField(null=True, blank=True, default=None, dim=2)
+    geometry: GEOSGeometry | None = gis_models.GeometryField(null=True, blank=True, default=None, dim=2)  # type: ignore[reportIncompatibleVariableOverride]
 
     # TODO(thenav56): Currently this field collects any data not stored by another fields, pulled from firebase.
     # Also, used in SQL queries

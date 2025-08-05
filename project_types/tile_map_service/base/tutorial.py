@@ -35,7 +35,7 @@ class TileMapServiceBaseTutorial[
         return [*existing_values, "project_type_specifics__tile_x", "project_type_specifics__tile_y"]
 
     @typing.override
-    def get_task_tutorial_specifics_for_firebase(
+    def get_task_specifics_for_firebase(
         self,
         task: TutorialTask,
         index: int,
@@ -75,7 +75,7 @@ class TileMapServiceBaseTutorial[
         )
 
     @typing.override
-    def get_group_tutorial_specifics_for_firebase(self):
+    def get_group_specifics_for_firebase(self):
         scenarios_count = TutorialScenarioPage.objects.filter(tutorial_id=self.tutorial.pk).count()
 
         return firebase_models.FbTileMapServiceTutorialGroup(

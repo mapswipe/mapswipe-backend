@@ -2,32 +2,32 @@ import typing
 
 from apps.project.models import ProjectTypeEnum
 
-from .tile_map_service.compare import tutorial as compare_tutorial
 from .tile_map_service.compare.project import CompareProject, CompareProjectProperty
-from .tile_map_service.completeness import tutorial as completeness_tutorial
+from .tile_map_service.compare.tutorial import CompareTutorial, CompareTutorialTaskProperty
 from .tile_map_service.completeness.project import CompletenessProject, CompletenessProjectProperty
-from .tile_map_service.find import tutorial as find_tutorial
+from .tile_map_service.completeness.tutorial import CompletenessTutorial, CompletenessTutorialTaskProperty
 from .tile_map_service.find.project import FindProject, FindProjectProperty
-from .validate import tutorial as validate_tutorial
+from .tile_map_service.find.tutorial import FindTutorial, FindTutorialTaskProperty
 from .validate.project import ValidateProject, ValidateProjectProperty
-from .validate_image import tutorial as validate_image_tutorial
+from .validate.tutorial import ValidateTutorial, ValidateTutorialTaskProperty
 from .validate_image.project import ValidateImageProject, ValidateImageProjectProperty
+from .validate_image.tutorial import ValidateImageTutorialTaskProperty
 
 
 def get_tutorial_task_property(project_type: ProjectTypeEnum | None):
     if project_type is None:
         return None
     if project_type == ProjectTypeEnum.COMPARE:
-        return ("compare", compare_tutorial.CompareTutorialTaskProperty)
+        return ("compare", CompareTutorialTaskProperty)
     if project_type == ProjectTypeEnum.FIND:
-        return ("find", find_tutorial.FindTutorialTaskProperty)
+        return ("find", FindTutorialTaskProperty)
     if project_type == ProjectTypeEnum.VALIDATE:
-        return ("validate", validate_tutorial.ValidateTutorialTaskProperty)
+        return ("validate", ValidateTutorialTaskProperty)
     if project_type == ProjectTypeEnum.VALIDATE_IMAGE:
         # TODO(tnagorra): Need to confirm if validate_image or validateImage
-        return ("validate_image", validate_image_tutorial.ValidateImageTutorialTaskProperty)
+        return ("validate_image", ValidateImageTutorialTaskProperty)
     if project_type == ProjectTypeEnum.COMPLETENESS:
-        return ("completeness", completeness_tutorial.CompletenessTutorialTaskProperty)
+        return ("completeness", CompletenessTutorialTaskProperty)
     typing.assert_never(project_type)
 
 
@@ -93,3 +93,51 @@ def get_project_type_handler(project_type: ProjectTypeEnum) -> ProjectTypeHandle
             return CompletenessProject
         case ProjectTypeEnum.VALIDATE_IMAGE:
             return ValidateImageProject
+
+
+type TutorialTypeHandlers = type[CompareTutorial | ValidateTutorial | FindTutorial | CompletenessTutorial]
+
+
+@typing.overload
+def get_tutorial_type_handler(
+    tutorial_type: typing.Literal[ProjectTypeEnum.FIND],
+) -> type[FindTutorial]: ...
+
+
+@typing.overload
+def get_tutorial_type_handler(
+    tutorial_type: typing.Literal[ProjectTypeEnum.COMPARE],
+) -> type[CompareTutorial]: ...
+
+
+@typing.overload
+def get_tutorial_type_handler(
+    tutorial_type: typing.Literal[ProjectTypeEnum.VALIDATE],
+) -> type[ValidateTutorial]: ...
+
+
+@typing.overload
+def get_tutorial_type_handler(
+    tutorial_type: typing.Literal[ProjectTypeEnum.COMPLETENESS],
+) -> type[CompletenessTutorial]: ...
+
+
+# FIXME(tnagorra): Handle validate_image
+@typing.overload
+def get_tutorial_type_handler(
+    tutorial_type: typing.Literal[ProjectTypeEnum.VALIDATE_IMAGE],
+) -> type[typing.Any]: ...
+
+
+def get_tutorial_type_handler(tutorial_type: ProjectTypeEnum) -> TutorialTypeHandlers:
+    match tutorial_type:
+        case ProjectTypeEnum.FIND:
+            return FindTutorial
+        case ProjectTypeEnum.COMPARE:
+            return CompareTutorial
+        case ProjectTypeEnum.VALIDATE:
+            return ValidateTutorial
+        case ProjectTypeEnum.COMPLETENESS:
+            return CompletenessTutorial
+        case ProjectTypeEnum.VALIDATE_IMAGE:
+            raise Exception("Validate Image tutorial is not yet supported")

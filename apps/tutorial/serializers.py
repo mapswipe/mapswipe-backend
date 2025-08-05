@@ -1,10 +1,12 @@
 import typing
 
 import pydantic
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext
 from rest_framework import serializers
 
+from apps.common.models import FirebasePushStatusEnum
 from apps.common.serializers import CommonAssetSerializer, DrfContextType, UserResourceSerializer
 from apps.project.models import Project, ProjectTypeEnum
 from project_types.store import get_tutorial_task_property
@@ -19,6 +21,7 @@ from .models import (
     TutorialScenarioPage,
     TutorialTask,
 )
+from .tasks import push_tutorial_to_firebase
 
 
 class TutorialTaskSerializerContextType(DrfContextType):
@@ -386,13 +389,15 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
         information_pages_data = self.initial_data.get("information_pages") or []
         validated_data.pop("scenarios", None)
         validated_data.pop("information_pages", None)
-        tutorial = super().update(instance, validated_data)
+
+        old_status_enum = instance.status_enum
+        new_tutorial = super().update(instance, validated_data)
 
         scenario_qs = TutorialScenarioPage.objects.filter(
-            tutorial=tutorial.pk,
+            tutorial=new_tutorial.pk,
         )
         information_page_qs = TutorialInformationPage.objects.filter(
-            tutorial=tutorial.pk,
+            tutorial=new_tutorial.pk,
         )
 
         for scenario_data in scenarios_data:
@@ -405,7 +410,7 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
                 instance=scenario_instance,
                 context={
                     **self.context,
-                    "tutorial": tutorial,
+                    "tutorial": new_tutorial,
                 },
             )
             scenario_serializer.is_valid(raise_exception=True)
@@ -421,13 +426,21 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
                 instance=information_page_instance,
                 context={
                     **self.context,
-                    "tutorial": tutorial,
+                    "tutorial": new_tutorial,
                 },
             )
             information_page_serializer.is_valid(raise_exception=True)
             information_page_serializer.save()
 
-        return tutorial
+        if (
+            old_status_enum != Tutorial.Status.PUBLISHED and new_tutorial.status_enum == Tutorial.Status.PUBLISHED
+        ) or old_status_enum == Tutorial.Status.PUBLISHED:
+            new_tutorial.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+
+            # FIXME: We can call this on batch later as well or handle error scenario
+            transaction.on_commit(lambda: push_tutorial_to_firebase.delay(new_tutorial.pk))
+
+        return new_tutorial
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py

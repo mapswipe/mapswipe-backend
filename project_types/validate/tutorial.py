@@ -10,7 +10,6 @@ from apps.project.models import ProjectTypeEnum
 from apps.tutorial.models import Tutorial, TutorialTask
 from project_types.base import tutorial as base_tutorial
 from project_types.base.tutorial import BaseTutorialTaskProperty
-from project_types.firebase import raster_tile_server_name_enum_to_firebase
 
 from .project import ValidateProjectProperty
 
@@ -37,7 +36,11 @@ class ValidateTutorial(
         super().__init__(tutorial)
 
     @typing.override
-    def get_task_tutorial_specifics_for_firebase(self, task: TutorialTask, index: int):
+    def compress_tasks_on_firebase(self) -> bool:
+        return True
+
+    @typing.override
+    def get_task_specifics_for_firebase(self, task: TutorialTask, index: int):
         task_specifics = self.tutorial_task_property_class(
             **task.project_type_specifics,
         )
@@ -58,7 +61,7 @@ class ValidateTutorial(
         )
 
     @typing.override
-    def get_group_tutorial_specifics_for_firebase(self):
+    def get_group_specifics_for_firebase(self):
         return firebase_ext_models.FbEmptyModel()
 
     @typing.override
@@ -76,7 +79,7 @@ class ValidateTutorial(
             zoomLevel=18,
             projectType=projectType,
             tileServer=firebase_models.FbObjRasterTileServer(
-                name=raster_tile_server_name_enum_to_firebase(tsp.name),
+                name=tsp.name.to_firebase(),
                 credits=tsp.get_config()["credits"],
                 url=tsp.get_config()["raw_url"],
                 apiKey=tsp.get_config()["api_key"],
