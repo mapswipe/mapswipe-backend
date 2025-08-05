@@ -4,6 +4,7 @@ from warnings import deprecated
 
 import ulid
 from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.geos import GEOSGeometry
 from django.db import models
 from django.db.models import ExpressionWrapper, Q
 from django.db.models.expressions import Value
@@ -473,7 +474,7 @@ class ProjectTask(FirebasePushResource):
 
     # NOTE(tnagorra): The geometry is only necessary for validate project type
     # FIXME(thenav56): Existing gid_models.MultiPolygonField(srid=4326, blank=True, null=True)
-    geometry = gis_models.GeometryField(null=True, blank=True, default=None, dim=2)
+    geometry: GEOSGeometry | None = gis_models.GeometryField(null=True, blank=True, default=None, dim=2)  # type: ignore[reportIncompatibleVariableOverride]
 
     # TODO(thenav56): Currently this field collects any data not stored by another fields, pulled from firebase.
     # Also, used in SQL queries

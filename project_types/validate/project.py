@@ -338,6 +338,7 @@ class ValidateProject(
 
     @typing.override
     def get_task_specifics_for_firebase(self, task: ProjectTask):
+        assert task.geometry is not None, "Task geometry must not be None"
         return firebase_models.FbMappingTaskValidateCreateOnlyInput(
             taskId=task.firebase_id,
             geojson=json.loads(task.geometry.geojson),
