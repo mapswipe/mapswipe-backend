@@ -42,6 +42,7 @@ class ValidateRawGroupItem(TypedDict):
     features: list[ValidFeature]
 
 
+# FIXME(tnagorra): move this to utils
 # FIXME(tnagorra): We need to refactor this codeblock
 # Example: We no longer need tutorial parameter
 def group_input_geometries(features: list[ValidFeature], group_size: int, tutorial: bool = False):
@@ -122,7 +123,7 @@ class ValidateObjectSourceConfig(BaseModel):
                 return self
             case ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL:
                 if self.object_geojson_url is None:
-                    raise ValueError("Object GeoJSON Url is required")
+                    raise ValueError("Object GeoJSON URL is required")
                 return self
             case ValidateObjectSourceTypeEnum.TASKING_MANAGER:
                 if self.tasking_manager_project_id is None:
@@ -165,10 +166,6 @@ class ValidateProject(
 
     def __init__(self, project: Project):
         super().__init__(project)
-
-    @typing.override
-    def enable_compression_for_tasks(self) -> bool:
-        return True
 
     def _process_polygons(self, geojson_data: dict[str, Any]) -> list[ValidFeature]:
         """We only want polygon and multipolygon features"""
@@ -333,16 +330,21 @@ class ValidateProject(
         self.project.project_type_specific_output = asset
         self.project.save(update_fields=("project_type_specific_output",))
 
+    # FIREBASE
+
     @typing.override
-    def get_task_project_specifics_for_firebase(self, task: ProjectTask):
+    def compress_tasks_on_firebase(self) -> bool:
+        return True
+
+    @typing.override
+    def get_task_specifics_for_firebase(self, task: ProjectTask):
         return firebase_models.FbMappingTaskValidateCreateOnlyInput(
             taskId=task.firebase_id,
-            # FIXME(tnagorra): Check if we need to convert this?
-            geojson=json.load(task.geometry.geojson),
+            geojson=json.loads(task.geometry.geojson),
         )
 
     @typing.override
-    def get_group_project_specifics_for_firebase(self, group: ProjectTaskGroup):
+    def get_group_specifics_for_firebase(self, group: ProjectTaskGroup):
         return firebase_models.FbMappingGroupValidateCreateOnlyInput(
             groupId=group.firebase_id,
         )

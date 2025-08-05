@@ -26,14 +26,14 @@ class FindTutorial(
         super().__init__(tutorial)
 
     @typing.override
-    def get_task_tutorial_specifics_for_firebase(self, task: TutorialTask, index: int):
+    def get_task_specifics_for_firebase(self, task: TutorialTask, index: int):
         tsp = self.project_type_specifics.tile_server_property
 
         task_specifics = self.tutorial_task_property_class(
             **task.project_type_specifics,
         )
 
-        resp = super().get_task_tutorial_specifics_for_firebase(task, index)
+        resp = super().get_task_specifics_for_firebase(task, index)
 
         return firebase_ext_models.FbFindTutorialTaskComplete(
             geometry=resp.geometry,

@@ -198,13 +198,24 @@ class BaseProject[
             self.project.update_status(Project.Status.FAILED, True)
             return False
 
-    def _generate_and_save_task_file(self, grouped_tasks: dict[int, list[dict[str, typing.Any]]]) -> None:
+    # FIREBASE
+
+    @abstractmethod
+    def get_task_specifics_for_firebase(self, task: ProjectTask) -> BaseModel: ...
+
+    @abstractmethod
+    def get_group_specifics_for_firebase(self, group: ProjectTaskGroup) -> BaseModel: ...
+
+    @abstractmethod
+    def get_project_specifics_for_firebase(self) -> BaseModel: ...
+
+    def _save_tasks_as_json(self, grouped_tasks: dict[int, list[dict[str, typing.Any]]]) -> None:
         """
         Generates a JSON file with all tasks and save it as a project asset.
-        Using this for debugging purpose of zipped tasks file.
+        Using this for debugging purpose of compressed tasks.
         """
         task_json = json.dumps(grouped_tasks, separators=(",", ":"))
-        filename = f"project_grouped_tasks_{self.project.id}.json"
+        filename = f"project_grouped_tasks_{self.project.pk}.json"
         content_file = ContentFile(
             task_json.encode("utf-8"),
             filename,
@@ -220,7 +231,13 @@ class BaseProject[
             modified_by=self.project.modified_by,
         )
 
-    def handle_new_tasks_on_firebase(self, task_ref: FbReference):
+    def skip_tasks_on_firebase(self) -> bool:
+        return False
+
+    def compress_tasks_on_firebase(self) -> bool:
+        return False
+
+    def create_tasks_on_firebase(self, task_ref: FbReference):
         tasks = ProjectTask.objects.filter(task_group__project_id=self.project.pk)
         grouped_tasks: dict[int, list[dict[str, typing.Any]]] = defaultdict(list)
 
@@ -228,7 +245,7 @@ class BaseProject[
             task_data = firebase_models.FbMappingTaskCreateOnlyInput(
                 projectId=self.project.firebase_id,
             )
-            task_project_specific_data = self.get_task_project_specifics_for_firebase(task)
+            task_project_specific_data = self.get_task_specifics_for_firebase(task)
             serialized_task = {
                 **firebase_utils.serialize(task_data),
                 **firebase_utils.serialize(task_project_specific_data),
@@ -236,21 +253,18 @@ class BaseProject[
 
             grouped_tasks[task.task_group_id].append(serialized_task)
 
-        grouped_tasks_dict: dict[int, typing.Any] = dict(grouped_tasks)
+        grouped_tasks_dict: dict[int, typing.Any] = grouped_tasks
 
-        # NOTE: We are using compression to reduce the size of the data sent to Firebase
-        if self.enable_compression_for_tasks():
-            # NOTE: Saving the raw file for debugging purpose
-            self._generate_and_save_task_file(grouped_tasks)
-
+        if self.compress_tasks_on_firebase():
+            self._save_tasks_as_json(grouped_tasks)
             grouped_tasks_dict = {
-                group_id: compress_tasks(tasks_list) for group_id, tasks_list in grouped_tasks_dict.items()
+                group_key: compress_tasks(tasks_list) for group_key, tasks_list in grouped_tasks_dict.items()
             }
 
         # Use Bulk Manager
         task_ref.set(value=grouped_tasks_dict)
 
-    def handle_new_groups_on_firebase(self, group_ref: FbReference):
+    def create_groups_on_firebase(self, group_ref: FbReference):
         groups = ProjectTaskGroup.objects.filter(project_id=self.project.pk)
         fb_groups: dict[str, dict[str, dict]] = {}
         for group in groups.iterator():
@@ -261,7 +275,7 @@ class BaseProject[
                 numberOfTasks=group.number_of_tasks,
                 requiredCount=group.required_count,
             )
-            group_project_specific_data = self.get_group_project_specifics_for_firebase(group)
+            group_project_specific_data = self.get_group_specifics_for_firebase(group)
             fb_groups[group.pk] = {
                 **firebase_utils.serialize(group_data),
                 **firebase_utils.serialize(group_project_specific_data),
@@ -270,22 +284,7 @@ class BaseProject[
         # FIXME(tnagorra): Use bulk uploader
         group_ref.set(value=fb_groups)
 
-    @abstractmethod
-    def get_task_project_specifics_for_firebase(self, task: ProjectTask) -> BaseModel: ...
-
-    @abstractmethod
-    def get_group_project_specifics_for_firebase(self, group: ProjectTaskGroup) -> BaseModel: ...
-
-    @abstractmethod
-    def get_project_specifics_for_firebase(self) -> BaseModel: ...
-
-    def skip_tasks_for_firebase(self) -> bool:
-        return False
-
-    def enable_compression_for_tasks(self) -> bool:
-        return False
-
-    def handle_new_project_on_firebase(self, project_ref: FbReference):
+    def create_project_on_firebase(self, project_ref: FbReference):
         assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
         assert self.project.tutorial is not None, "Tutorial is required before project can be pushed to firebase"
 
@@ -305,9 +304,9 @@ class BaseProject[
             # FIXME: If taskId is defined, should be private_active
             status = firebase_models.FbEnumProjectStatus.PRIVATE_ACTIVE
 
-        if not self.skip_tasks_for_firebase():
-            self.handle_new_tasks_on_firebase(task_ref)
-        self.handle_new_groups_on_firebase(group_ref)
+        if not self.skip_tasks_on_firebase():
+            self.create_tasks_on_firebase(task_ref)
+        self.create_groups_on_firebase(group_ref)
 
         project_data = firebase_ext_models.FbProject(
             created=self.project.created_at,
@@ -351,7 +350,7 @@ class BaseProject[
             },
         )
 
-    def handle_project_update_on_firebase(self, project_ref: FbReference, fb_project: firebase_ext_models.FbProject):
+    def update_project_on_firebase(self, project_ref: FbReference, fb_project: firebase_ext_models.FbProject):
         assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
 
         status = fb_project.status
@@ -394,7 +393,7 @@ class BaseProject[
             ),
         )
 
-    def push_to_firebase(self):
+    def push_project_on_firebase(self):
         if self.project.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
             logger.warning("%s - push_to_firebase called when push is not required", self.project.pk)
             return
@@ -414,7 +413,7 @@ class BaseProject[
                         extra=log_extra({"project": self.project.pk}),
                     )
                     raise InvalidProjectPushException
-                self.handle_new_project_on_firebase(project_ref)
+                self.create_project_on_firebase(project_ref)
             else:
                 if fb_project is None:
                     logger.error(
@@ -430,7 +429,7 @@ class BaseProject[
                 valid_project = RelaxedModel.model_validate(obj=fb_project)
                 valid_project = firebase_ext_models.FbProject.model_validate(obj=valid_project)
 
-                self.handle_project_update_on_firebase(project_ref, valid_project)
+                self.update_project_on_firebase(project_ref, valid_project)
         except InvalidProjectPushException:
             self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
         except Exception:

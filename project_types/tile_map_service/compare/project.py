@@ -33,12 +33,14 @@ class CompareProject(
         if typing.TYPE_CHECKING:
             assert project.project_type == ProjectTypeEnum.COMPARE, f"{type(self)} is defined for COMPARE"
 
+    # FIREBASE
+
     @typing.override
-    def skip_tasks_for_firebase(self) -> bool:
+    def skip_tasks_on_firebase(self) -> bool:
         return False
 
     @typing.override
-    def get_task_project_specifics_for_firebase(self, task: ProjectTask):
+    def get_task_specifics_for_firebase(self, task: ProjectTask) -> firebase_models.FbMappingTaskCompareCreateOnlyInput:
         task_specifics = self.project_task_property_class(
             **task.project_type_specifics,
         )
@@ -63,7 +65,7 @@ class CompareProject(
         )
 
     @typing.override
-    def get_project_specifics_for_firebase(self):
+    def get_project_specifics_for_firebase(self) -> firebase_models.FbProjectCompareCreateOnlyInput:
         tsp = self.project_type_specifics.tile_server_property
         tsp_b = self.project_type_specifics.tile_server_b_property
 

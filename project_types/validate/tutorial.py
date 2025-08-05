@@ -36,7 +36,11 @@ class ValidateTutorial(
         super().__init__(tutorial)
 
     @typing.override
-    def get_task_tutorial_specifics_for_firebase(self, task: TutorialTask, index: int):
+    def compress_tasks_on_firebase(self) -> bool:
+        return True
+
+    @typing.override
+    def get_task_specifics_for_firebase(self, task: TutorialTask, index: int):
         task_specifics = self.tutorial_task_property_class(
             **task.project_type_specifics,
         )
@@ -57,7 +61,7 @@ class ValidateTutorial(
         )
 
     @typing.override
-    def get_group_tutorial_specifics_for_firebase(self):
+    def get_group_specifics_for_firebase(self):
         return firebase_ext_models.FbEmptyModel()
 
     @typing.override

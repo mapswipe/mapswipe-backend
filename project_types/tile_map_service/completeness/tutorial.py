@@ -26,7 +26,7 @@ class CompletenessTutorial(
         super().__init__(tutorial)
 
     @typing.override
-    def get_task_tutorial_specifics_for_firebase(self, task: TutorialTask, index: int):
+    def get_task_specifics_for_firebase(self, task: TutorialTask, index: int):
         tsp = self.project_type_specifics.tile_server_property
         tsp_overlay = self.project_type_specifics.overlay_tile_server_property
 
@@ -34,7 +34,7 @@ class CompletenessTutorial(
             **task.project_type_specifics,
         )
 
-        resp = super().get_task_tutorial_specifics_for_firebase(task, index)
+        resp = super().get_task_specifics_for_firebase(task, index)
 
         return firebase_ext_models.FbCompletenessTutorialTaskComplete(
             geometry=resp.geometry,

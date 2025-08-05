@@ -241,16 +241,21 @@ class TileMapServiceBaseProject[
 
             return aoi_geometry
 
+    # FIREBASE
+
     @typing.override
-    def skip_tasks_for_firebase(self) -> bool:
+    def skip_tasks_on_firebase(self) -> bool:
         return True
 
     @typing.override
-    def get_task_project_specifics_for_firebase(self, task: ProjectTask) -> BaseModel:
+    def get_task_specifics_for_firebase(self, task: ProjectTask) -> BaseModel:
         return firebase_ext_models.FbEmptyModel()
 
     @typing.override
-    def get_group_project_specifics_for_firebase(self, group: ProjectTaskGroup) -> BaseModel:
+    def get_group_specifics_for_firebase(
+        self,
+        group: ProjectTaskGroup,
+    ) -> firebase_models.FbMappingGroupTileMapServiceCreateOnlyInput:
         task_group_specifics = self.project_task_group_property_class(
             **group.project_type_specifics,
         )

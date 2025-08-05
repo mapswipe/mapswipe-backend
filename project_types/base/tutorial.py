@@ -62,13 +62,25 @@ class BaseTutorial[
         super().__init_subclass__(**kwargs)
         cls._inheritance_checks()
 
+    @abstractmethod
+    def get_task_specifics_for_firebase(self, task: TutorialTask, index: int) -> BaseModel: ...
+
+    @abstractmethod
+    def get_group_specifics_for_firebase(self) -> BaseModel: ...
+
+    @abstractmethod
+    def get_tutorial_specifics_for_firebase(self) -> BaseModel: ...
+
     def get_tutorial_group_key(self) -> int:
         return 101
 
     def get_task_sort_keys(self, existing_values: list[str]) -> list[str]:
         return existing_values
 
-    def handle_new_tasks_on_firebase(self, task_ref: FbReference):
+    def compress_tasks_on_firebase(self) -> bool:
+        return False
+
+    def create_tasks_on_firebase(self, task_ref: FbReference):
         tasks = TutorialTask.objects.filter(
             scenario__tutorial_id=self.tutorial.pk,
         ).order_by(
@@ -78,7 +90,7 @@ class BaseTutorial[
         fb_tasks: dict[str, dict[str, dict[str, dict]]] = {}
         index = 1
         for task in tasks.iterator():
-            task_tutorial_specific_data = self.get_task_tutorial_specifics_for_firebase(task, index)
+            task_tutorial_specific_data = self.get_task_specifics_for_firebase(task, index)
             fb_tasks[task.pk] = firebase_utils.serialize(task_tutorial_specific_data)
             index += 1
 
@@ -90,7 +102,7 @@ class BaseTutorial[
             },
         )
 
-    def handle_new_groups_on_firebase(self, group_ref: FbReference):
+    def create_groups_on_firebase(self, group_ref: FbReference):
         fb_groups: dict[str, dict[str, dict]] = {}
 
         group_key = self.get_tutorial_group_key()
@@ -105,7 +117,7 @@ class BaseTutorial[
             projectId=self.tutorial.firebase_id,
             requiredCount=0,
         )
-        group_tutorial_specific_data = self.get_group_tutorial_specifics_for_firebase()
+        group_tutorial_specific_data = self.get_group_specifics_for_firebase()
         fb_groups[str(group_key)] = {
             **firebase_utils.serialize(base_tutorial_specific_data),
             **firebase_utils.serialize(group_tutorial_specific_data),
@@ -113,16 +125,7 @@ class BaseTutorial[
 
         group_ref.set(value=fb_groups)
 
-    @abstractmethod
-    def get_task_tutorial_specifics_for_firebase(self, task: TutorialTask, index: int) -> BaseModel: ...
-
-    @abstractmethod
-    def get_group_tutorial_specifics_for_firebase(self) -> BaseModel: ...
-
-    @abstractmethod
-    def get_tutorial_specifics_for_firebase(self) -> BaseModel: ...
-
-    def handle_new_tutorial_on_firebase(self, tutorial_ref: FbReference):
+    def create_tutorial_on_firebase(self, tutorial_ref: FbReference):
         # NOTE: We are not reading data from group_ref as it's an expensive operation
         # FIXME(tnagorra): We need to check if the key exists later
         group_ref = self.firebase_helper.ref(
@@ -133,8 +136,8 @@ class BaseTutorial[
             Config.FirebaseKeys.tutorial_tasks(self.tutorial.firebase_id),
         )
 
-        self.handle_new_tasks_on_firebase(task_ref)
-        self.handle_new_groups_on_firebase(group_ref)
+        self.create_tasks_on_firebase(task_ref)
+        self.create_groups_on_firebase(group_ref)
 
         scenarios = self.tutorial.scenarios.all()
         informationPages = self.tutorial.information_pages.all()
@@ -203,7 +206,7 @@ class BaseTutorial[
             },
         )
 
-    def handle_tutorial_update_on_firebase(self, tutorial_ref: FbReference, fb_tutorial: firebase_models.FbBaseTutorial):
+    def update_tutorial_on_firebase(self, tutorial_ref: FbReference, fb_tutorial: firebase_models.FbBaseTutorial):
         # NOTE: We are not reading data from group_ref as it's an expensive operation
         # FIXME(tnagorra): We need to check if the key exists later
         group_ref = self.firebase_helper.ref(
@@ -214,8 +217,8 @@ class BaseTutorial[
             Config.FirebaseKeys.project_tasks(self.tutorial.firebase_id),
         )
 
-        self.handle_new_tasks_on_firebase(task_ref)
-        self.handle_new_groups_on_firebase(group_ref)
+        self.create_tasks_on_firebase(task_ref)
+        self.create_groups_on_firebase(group_ref)
 
         scenarios = self.tutorial.scenarios.all()
 
@@ -264,7 +267,7 @@ class BaseTutorial[
             },
         )
 
-    def push_to_firebase(self):
+    def push_tutorial_on_firebase(self):
         if self.tutorial.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
             logger.warning("%s - push_to_firebase called when push is not required", self.tutorial.pk)
             return
@@ -284,7 +287,7 @@ class BaseTutorial[
                         extra=log_extra({"tutorial": self.tutorial.pk}),
                     )
                     raise InvalidTutorialPushException
-                self.handle_new_tutorial_on_firebase(tutorial_ref)
+                self.create_tutorial_on_firebase(tutorial_ref)
             else:
                 if fb_tutorial is None:
                     logger.error(
@@ -300,7 +303,7 @@ class BaseTutorial[
                 valid_tutorial = RelaxedModel.model_validate(obj=fb_tutorial)
                 valid_tutorial = firebase_models.FbBaseTutorial.model_validate(obj=valid_tutorial)
 
-                self.handle_tutorial_update_on_firebase(tutorial_ref, valid_tutorial)
+                self.update_tutorial_on_firebase(tutorial_ref, valid_tutorial)
         except InvalidTutorialPushException:
             self.tutorial.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
         except Exception:
