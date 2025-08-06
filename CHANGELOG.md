@@ -1,5 +1,111 @@
 # Changelog
 
+## [0.2.0-dev1](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev0..v0.2.0-dev1) - 2025-08-06
+### Changes:
+
+#### 🚀  Features
+
+- *(admin)* Remove inline contributor user create on team - ([a38f69b](https://github.com/mapswipe/mapswipe-backend/commit/a38f69b74965d5a13ed1d2b10547f6bb607195a6))
+- *(asset)* Add validation checks for geojson data - ([deec09b](https://github.com/mapswipe/mapswipe-backend/commit/deec09b9d5a2343a3c54cd7a79be40a4c445e720))
+- *(asset)* Remove size type from the MapswipeDjangoFileType - ([90f7bdd](https://github.com/mapswipe/mapswipe-backend/commit/90f7bdde7d868b3cc22c2747afdce19f322f94c2))
+- *(asset)* Add common asset mixing for project and tutorial - ([5715995](https://github.com/mapswipe/mapswipe-backend/commit/57159954e4269736b5adc4de3a419c309b14256a))
+- *(ci)* Add docker logs in "Start app resources" after failure - ([19abb35](https://github.com/mapswipe/mapswipe-backend/commit/19abb3583f7a6d23c54b2febde343539f6d0d95d))
+- *(data-migration)* Add script to load data from existing_database - ([5a130fe](https://github.com/mapswipe/mapswipe-backend/commit/5a130feeab0993d46f4d9999d6a01de1b8f78d48))
+- *(data-migration)* Pre management command changes - ([a97734e](https://github.com/mapswipe/mapswipe-backend/commit/a97734ea1efbd5bfab77e84e3e2c234849126237))
+- *(data-migration)* Setup app for existing_database - ([445a9ae](https://github.com/mapswipe/mapswipe-backend/commit/445a9ae381db893286e3f61e8bda96774684fb13))
+- *(firebase)* Setup Firebase bulk manager for set and update - ([ebcad80](https://github.com/mapswipe/mapswipe-backend/commit/ebcad80abc80c72459eb2ad1759741ba99a4592c))
+- *(firebase)* Sync (push) tutorial to firebase - ([b76b606](https://github.com/mapswipe/mapswipe-backend/commit/b76b6061bc60d6f091f1d336673937ba26d68b1e))
+- *(firebase)* Support pushing find/compare/completeness tutorial data to firebase - ([5cc5cc7](https://github.com/mapswipe/mapswipe-backend/commit/5cc5cc7fd62c8fbd751870348f221a5c7db1e6a4))
+- *(firebase)* Setup base for pushing tutorial data to firebase - ([2300cc0](https://github.com/mapswipe/mapswipe-backend/commit/2300cc0b9bd72fa6e359c039f87d9097294ff96a))
+- *(firebase)* Allow extra fields when validating data from firebase - ([16a6016](https://github.com/mapswipe/mapswipe-backend/commit/16a60163b2df5d1855b751d00ae58cd11fe4013b))
+- *(firebase)* Validate data before updating the data - ([264b649](https://github.com/mapswipe/mapswipe-backend/commit/264b6498dabee774c06c55915b62f355a2189308))
+- *(firebase)* Introduce firebase_id to replace canonical_id - ([2a7b43e](https://github.com/mapswipe/mapswipe-backend/commit/2a7b43e44f50d39cbe2d70fdae6ebb99397afe1d))
+- *(project)* Add compression feature for the tasks - ([45361f1](https://github.com/mapswipe/mapswipe-backend/commit/45361f1c584b672338d6ba8e8fbd94908ed06847))
+- *(project)* Add export project asset - ([02b01d4](https://github.com/mapswipe/mapswipe-backend/commit/02b01d4192c10c90f6a36766472996314db9f48d))
+- *(projectasset)* Add validations checks on project assets - ([a2e9909](https://github.com/mapswipe/mapswipe-backend/commit/a2e9909cdeda0201091c58e520df4fd0a13a9052))
+- *(query)* Add custom option for image validate and normal validate - ([b71033e](https://github.com/mapswipe/mapswipe-backend/commit/b71033edf01f172274d16248eaa2b6f7a619f438))
+- *(tutorial)* Add project type on tutorial type - ([f01b81d](https://github.com/mapswipe/mapswipe-backend/commit/f01b81d1bf68b13d5a780249a18465e107d2a72e))
+- *(tutorial)* Use tutorial asset for block images - ([ed851ac](https://github.com/mapswipe/mapswipe-backend/commit/ed851ac29453e9bbfeb896bada0011a2cd2aced4))
+- *(tutorial)* Add validation check for project on tutorial - ([5dd7ba4](https://github.com/mapswipe/mapswipe-backend/commit/5dd7ba4dec4ca92374367a6b27f6a07eb081bc3c))
+- *(tutorial)* State transition for tutorial - ([040f3b3](https://github.com/mapswipe/mapswipe-backend/commit/040f3b3c060fb1e673e2f46ea03487d579df7cc8))
+- *(tutorial-asset)* Add Tutorial Asset and validation checks - ([7aebd7d](https://github.com/mapswipe/mapswipe-backend/commit/7aebd7d979f62ec15225bea9eb9e043cf19a4ec2))
+- *(validate)* Implement remaining object sources - ([a6e6d93](https://github.com/mapswipe/mapswipe-backend/commit/a6e6d9374b0fed7a25c64a00540f572e48c28049))
+
+#### 🐛 Bug Fixes
+
+- *(asset)* [**breaking**] Send image object instead of pk for tutorial asset - ([5e145f6](https://github.com/mapswipe/mapswipe-backend/commit/5e145f63baa5498df679b77a57463b6c6d627bf7))
+- *(assets)* Add client_id on project and tutorial assets - ([b8bfb51](https://github.com/mapswipe/mapswipe-backend/commit/b8bfb51afa239f1eb88b32d639726d7310d8d029))
+- *(contributorUserGroups)* Add unique_together for user+user_group - ([422f854](https://github.com/mapswipe/mapswipe-backend/commit/422f854ee1777b4d9aea02a530cdfdedcea28003))
+- *(firebase)* Update information_pages on tutorial edit - ([3e3c4d5](https://github.com/mapswipe/mapswipe-backend/commit/3e3c4d59fb4eff2b9576b85d8bd9647145f0a4a9))
+- *(firebase)* Fix issue with team and status while syncing to firebase - ([79f59ee](https://github.com/mapswipe/mapswipe-backend/commit/79f59ee25e7192cfc606e5ab4362b6f95167480c))
+- *(firebase)* Fix group id pushed to firebase - ([c3ee11f](https://github.com/mapswipe/mapswipe-backend/commit/c3ee11f62dba5d6120539256c797a1f4320ffec3))
+- *(firebase)* Add tutorial_ prefix on tutorial firebase id - ([58011a8](https://github.com/mapswipe/mapswipe-backend/commit/58011a8d1b0a6f610ea02b366ee17bfa236d0f6e))
+- *(firebase)* Update key used for group and task references - ([6bba0d3](https://github.com/mapswipe/mapswipe-backend/commit/6bba0d32cba5037dc2d4f8cffeb2e06977f0c0b4))
+- *(firebase)* Send null to clear values in firebase - ([2c4dc88](https://github.com/mapswipe/mapswipe-backend/commit/2c4dc88ff2e4be59270a11fd1443fbbeb07edeb5))
+- *(firebase)* Update firebase push logic for contributor user - ([7aa7207](https://github.com/mapswipe/mapswipe-backend/commit/7aa7207c65080867436c1b668d910953c857fea3))
+- *(migration)* Rebase and merge migrations - ([fff11f5](https://github.com/mapswipe/mapswipe-backend/commit/fff11f5ec403a6c0cac487ff2c09de04067e5dc9))
+- *(task)* Geojson load issue on project task geometry - ([1f9ed32](https://github.com/mapswipe/mapswipe-backend/commit/1f9ed325a4e1444d6bd51983c5035b080bfbd5bc))
+- *(tutorial)* Remove project from tutorial update serializer - ([cc25d41](https://github.com/mapswipe/mapswipe-backend/commit/cc25d41b03db6dfd5c651c8945b96020ddb979f1))
+- *(validate)* Fix issue with task grouping - ([cb7eb0c](https://github.com/mapswipe/mapswipe-backend/commit/cb7eb0c40add9803339219a8ce72fcbbb031517b))
+- *(validate-project)* Load geojson for the geometry in validate-project - ([3cd6213](https://github.com/mapswipe/mapswipe-backend/commit/3cd62134e03d42562da6c7ad8968ab0b4b483358))
+
+#### 🚜 Refactor
+
+- *(asset)* Change asset mixin to asset serializer - ([f21bdee](https://github.com/mapswipe/mapswipe-backend/commit/f21bdee0fc2fea327d00895ca8993e472c20587f))
+- *(contributor)* Rename user_id to firebase_id for ContributorUser - ([6d99101](https://github.com/mapswipe/mapswipe-backend/commit/6d99101bfa608242bf485d414c45e0e0acc5d346))
+- *(firebase)* Remove unused function push_django_to_firebase - ([135ac25](https://github.com/mapswipe/mapswipe-backend/commit/135ac2581dec18be55478c686037d2615771c2c8))
+- *(firebase)* Rename method names for project and tutorial sync - ([89d6a5d](https://github.com/mapswipe/mapswipe-backend/commit/89d6a5da5657896453a861ea835fbb251fb68b13))
+- *(firebase)* Add to_firebase method on enum for transformation - ([16d9ade](https://github.com/mapswipe/mapswipe-backend/commit/16d9ade4a5cac50dab956293a636e2ab36a9aa4f))
+- *(validate)* Cleanup hot_tm_url generation - ([11ca640](https://github.com/mapswipe/mapswipe-backend/commit/11ca640064ee2bad6f9dbca5e319e5a83c62813f))
+
+#### 🧪 Testing
+
+- *(tutorial)* Add validation of CUD inputs with empty list input - ([b521d82](https://github.com/mapswipe/mapswipe-backend/commit/b521d82ce7c2c63c08b87a57dec9a8c4e99350ea))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(admin)* Restrict user to add membership in archived team. - ([cbb3cb3](https://github.com/mapswipe/mapswipe-backend/commit/cbb3cb35a9883b8a4b7cbdd6dc0f418284e83eb7))
+- *(admin)* Add a common firebase resource admin. - ([81d4d04](https://github.com/mapswipe/mapswipe-backend/commit/81d4d048ff9fe5cc309da539d22abd2c23536fcd))
+- *(admin)* Add management command to create dummy contributor user - ([1e1e33e](https://github.com/mapswipe/mapswipe-backend/commit/1e1e33e3c34b5b0c84fc3cd77c885333949681c2))
+- *(ci)* Move firebase-test before docker build - ([3209921](https://github.com/mapswipe/mapswipe-backend/commit/32099216c60c5ac6fdd0e42063c3ca27511b0b15))
+- *(contributor)* Remove obsolete user_id filter - ([09dfc92](https://github.com/mapswipe/mapswipe-backend/commit/09dfc9245556ce91fe17f131966e1115a9b03dfe))
+- *(contributor-team)* Sync team member to firebase when team update or create - ([6428b85](https://github.com/mapswipe/mapswipe-backend/commit/6428b85d315bb862938eb063960a29cb2262ce33))
+- *(firebase)* Use schema with optional lists and mappings in firebase - ([0050efa](https://github.com/mapswipe/mapswipe-backend/commit/0050efa9ba987fdf311afd4eedf335178f699014))
+- *(firebase)* Sync user group to firebase. - ([1ab8614](https://github.com/mapswipe/mapswipe-backend/commit/1ab86146b2482e97bf5eb62e2083e435a980c02d))
+- *(firebase)* Update sub-module with yarn+git install fix - ([67871be](https://github.com/mapswipe/mapswipe-backend/commit/67871bef0372ebfcdf585a3987bb7220aa5f7d2d))
+- *(firebase)* Sync team members to firebase while removing team member - ([098e266](https://github.com/mapswipe/mapswipe-backend/commit/098e266419137ff4041c79221b5dc3435a002d88))
+- *(firebase)* Add common func for push_to_firebase - ([b1375f5](https://github.com/mapswipe/mapswipe-backend/commit/b1375f59380938312e508625188dd703e5089882))
+- *(migration)* Generate migration for tutorialasset - ([2ef2ecc](https://github.com/mapswipe/mapswipe-backend/commit/2ef2ecc83024d7a079ad7047f35a8ef23c1e85d1))
+- *(migrations)* Add a merge migration - ([c24bd9d](https://github.com/mapswipe/mapswipe-backend/commit/c24bd9d3cb338f59d629c0f1c2324eab2b7463da))
+- *(migrations)* Add a merge migration - ([78c9a56](https://github.com/mapswipe/mapswipe-backend/commit/78c9a56e0d7e7d159f4754dfb3cbd345c5be23d0))
+- *(migrations)* Rebase and merge the migrations - ([9e4fe65](https://github.com/mapswipe/mapswipe-backend/commit/9e4fe657b63b9010bc8db927aeb64d3695b77769))
+- *(test)* Add unit test. - ([89e3ab0](https://github.com/mapswipe/mapswipe-backend/commit/89e3ab05c88d5ab1691e9f85deafceb249fab4a1))
+
+### 🍻 Pull Requests (18)
+- (#68) [Breaking! Tutorial state transition and asset ](https://github.com/mapswipe/mapswipe-backend/pull/68)
+- (#83) [Feature/sync team member to firebase](https://github.com/mapswipe/mapswipe-backend/pull/83)
+- (#84) [Add validation checks for geojson asset](https://github.com/mapswipe/mapswipe-backend/pull/84)
+- (#85) [Remove size field from the MapswipeDjangoFileType](https://github.com/mapswipe/mapswipe-backend/pull/85)
+- (#86) [Feat/data migration](https://github.com/mapswipe/mapswipe-backend/pull/86)
+- (#87) [Feat(tutorial): use tutorial asset for block images](https://github.com/mapswipe/mapswipe-backend/pull/87)
+- (#88) [Send NULL to firebase to enable clearing data](https://github.com/mapswipe/mapswipe-backend/pull/88)
+- (#89) [Firebase: Sync user group](https://github.com/mapswipe/mapswipe-backend/pull/89)
+- (#90) [ContributorUser: Cannot add member to archived team.](https://github.com/mapswipe/mapswipe-backend/pull/90)
+- (#91) [Feat: push firebase data for find, compare, completensss and validate tutorial](https://github.com/mapswipe/mapswipe-backend/pull/91)
+- (#93) [Feat: Task compression on validate project](https://github.com/mapswipe/mapswipe-backend/pull/93)
+- (#94) [Feat/custom option](https://github.com/mapswipe/mapswipe-backend/pull/94)
+- (#98) [Add project type on tutorial type](https://github.com/mapswipe/mapswipe-backend/pull/98)
+- (#99) [Implement remaining object sources for validate project](https://github.com/mapswipe/mapswipe-backend/pull/99)
+- (#100) [Fix issue on task geometry json load](https://github.com/mapswipe/mapswipe-backend/pull/100)
+- (#101) [Feat/tutorial firebase push](https://github.com/mapswipe/mapswipe-backend/pull/101)
+- (#102) [Add Unit Test](https://github.com/mapswipe/mapswipe-backend/pull/102)
+- (#103) [Feature: Firebase Bulk upload](https://github.com/mapswipe/mapswipe-backend/pull/103)
+
+### :tada: New Contributors (2)
+
+- [@sandeshit](https://github.com/sandeshit) made their first contribution
+- [@AdityaKhatri](https://github.com/AdityaKhatri) made their first contribution in [#87](https://github.com/mapswipe/mapswipe-backend/pull/87)
+
 ## [0.2.0-dev0](https://github.com/mapswipe/mapswipe-backend/compare/v0.1.0..v0.2.0-dev0) - 2025-07-30
 ### Changes:
 
@@ -141,10 +247,8 @@ contributor team. - ([bc8ab4a](https://github.com/mapswipe/mapswipe-backend/comm
 - (#81) [Sync source_layer to firebase for completeness project](https://github.com/mapswipe/mapswipe-backend/pull/81)
 - (#82) [Fix(firebase): fix common func for sync to firebase](https://github.com/mapswipe/mapswipe-backend/pull/82)
 
-### :tada: New Contributors (3)
+### :tada: New Contributors (1)
 
-- [@Rup-Narayan-Rajbanshi](https://github.com/Rup-Narayan-Rajbanshi) made their first contribution
-- [@susilnem](https://github.com/susilnem) made their first contribution
 - [@kopitek8](https://github.com/kopitek8) made their first contribution
 
 ## [0.1.0] - 2025-05-30
