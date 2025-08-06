@@ -244,9 +244,7 @@ class ValidateProject(
         if hot_tm_id is None:
             raise Exception("HOT Tasking Manager Project ID is missing")
 
-        hot_tm_url = Config.HOT_TASKING_MANAGER_PROJECT_API_URL.format(
-            project_id=hot_tm_id,
-        )
+        hot_tm_url = f"{Config.HOT_TASKING_MANAGER_PROJECT_API_LINK}projects/{hot_tm_id}/queries/aoi/?as_file=false"
 
         # FIXME(frozenhelium): use predefined timeout duration
         aoi_result = requests.get(hot_tm_url, timeout=500)
