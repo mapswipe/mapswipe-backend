@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
+from ulid import ULID
 
 from apps.common.models import FirebasePushStatusEnum
 from apps.project.models import (
@@ -221,6 +222,7 @@ class BaseProject[
             filename,
         )
         ProjectAsset.objects.create(
+            client_id=str(ULID()),
             project=self.project,
             file=content_file,
             file_size=content_file.size,

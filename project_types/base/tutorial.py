@@ -8,6 +8,7 @@ from firebase_admin.db import Reference as FbReference
 from pydantic import BaseModel, ConfigDict
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
+from ulid import ULID
 
 from apps.common.models import FirebasePushStatusEnum, IconEnum
 from apps.tutorial.models import (
@@ -87,6 +88,7 @@ class BaseTutorial[
             filename,
         )
         TutorialAsset.objects.create(
+            client_id=str(ULID()),
             tutorial=self.tutorial,
             file=content_file,
             file_size=content_file.size,
