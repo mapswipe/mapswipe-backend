@@ -618,6 +618,28 @@ class TestTutorialMutation(TestCase):
             ),
         ), content
 
+        # Updating Tutorial: Check for deletions?
+        tutorial_data = {
+            "clientId": str(ULID()),
+            "name": "My other tutorial",
+            "scenarios": [],
+            "informationPages": [],
+        }
+
+        information_pages_count = latest_tutorial.information_pages.count()
+        scenarios_count = latest_tutorial.scenarios.count()
+
+        content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
+        resp_data = content["data"]["updateTutorial"]
+        assert resp_data["errors"] is None, content
+
+        latest_tutorial.refresh_from_db()
+
+        assert latest_tutorial.information_pages.count() > 0
+        assert latest_tutorial.scenarios.count() > 0
+        assert latest_tutorial.information_pages.count() == information_pages_count
+        assert latest_tutorial.scenarios.count() == scenarios_count
+
     def test_tutorial_state_transitions(self):
         # Create a draft tutorial
         tutorial = TutorialFactory.create(
