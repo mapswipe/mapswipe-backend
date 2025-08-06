@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from django.apps import apps
 from django.db import models
+from firebase_admin.db import Reference as FbReference
 
 
 class BaseBulkManager:
@@ -98,3 +99,51 @@ class BulkUpdateManager(BaseBulkManager):
     @typing.override
     def summary(self):
         return {"updated": dict(self._summary)}
+
+
+# NOTE: Inorder to remove certain item from database, you need to pass `None` as the value of the item.
+
+
+class BulkManagerSummary(typing.TypedDict):
+    count: int
+
+
+class FirebaseBulkManager[T]:
+    def __init__(self, ref: FbReference, chunk_size: int = 150):
+        """
+        :param ref: Firebase reference object (Realtime DB)
+        :param chunk_size: Number of items to batch before committing
+        """
+        self.ref = ref
+        self.chunk_size = chunk_size
+        self._buffer: dict[str, T] = {}
+        self._written_count = 0
+
+    def _commit(self) -> None:
+        """
+        Commit the current buffer to Firebase and clear the buffer.
+        """
+        self.ref.update(self._buffer)
+        self._written_count += len(self._buffer)
+        self._buffer.clear()
+
+    def add(self, key: str, value: T) -> None:
+        """
+        Add a single item to the buffer. When buffer reaches chunk_size, flush it.
+        :param key: Firebase node/document ID
+        :param value: Data to be written to the Firebase
+        """
+        self._buffer[key] = value
+        if len(self._buffer) >= self.chunk_size:
+            self._commit()
+
+    def done(self) -> None:
+        """Flush any remaining data in the buffer."""
+        if self._buffer:
+            self._commit()
+
+    def summary(self) -> BulkManagerSummary:
+        """
+        Returns a summary of the number of items written.
+        """
+        return {"count": self._written_count}

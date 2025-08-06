@@ -23,6 +23,7 @@ from apps.project.models import (
     ProjectTaskGroup,
     ProjectTypeEnum,
 )
+from main.bulk_managers import FirebaseBulkManager
 from main.config import Config
 from main.logging import log_extra
 from utils.common import compress_tasks
@@ -210,7 +211,7 @@ class BaseProject[
     @abstractmethod
     def get_project_specifics_for_firebase(self) -> BaseModel: ...
 
-    def _save_tasks_as_json(self, grouped_tasks: dict[int, list[dict[str, typing.Any]]]) -> None:
+    def _save_tasks_as_json(self, grouped_tasks: dict[str, list[dict[str, typing.Any]]]) -> None:
         """
         Generates a JSON file with all tasks and save it as a project asset.
         Using this for debugging purpose of compressed tasks.
@@ -241,7 +242,7 @@ class BaseProject[
 
     def create_tasks_on_firebase(self, task_ref: FbReference):
         tasks = ProjectTask.objects.filter(task_group__project_id=self.project.pk)
-        grouped_tasks: dict[int, list[dict[str, typing.Any]]] = defaultdict(list)
+        grouped_tasks: dict[str, list[dict[str, typing.Any]]] = defaultdict(list)
 
         for task in tasks.iterator():
             task_data = firebase_models.FbMappingTaskCreateOnlyInput(
@@ -255,7 +256,7 @@ class BaseProject[
 
             grouped_tasks[task.task_group.firebase_id].append(serialized_task)
 
-        grouped_tasks_dict: dict[int, typing.Any] = grouped_tasks
+        grouped_tasks_dict: dict[str, typing.Any] = grouped_tasks
 
         if self.compress_tasks_on_firebase():
             self._save_tasks_as_json(grouped_tasks)
@@ -263,12 +264,20 @@ class BaseProject[
                 group_key: compress_tasks(tasks_list) for group_key, tasks_list in grouped_tasks_dict.items()
             }
 
-        # Use Bulk Manager
-        task_ref.set(value=grouped_tasks_dict)
+        firebase_bulk_mgr = FirebaseBulkManager(ref=task_ref)
+        for group_key, task in grouped_tasks_dict.items():
+            firebase_bulk_mgr.add(
+                key=group_key,
+                value=task,
+            )
+        firebase_bulk_mgr.done()
 
     def create_groups_on_firebase(self, group_ref: FbReference):
         groups = ProjectTaskGroup.objects.filter(project_id=self.project.pk)
         fb_groups: dict[str, dict[str, dict]] = {}
+
+        firebase_bulk_mgr = FirebaseBulkManager(ref=group_ref)
+
         for group in groups.iterator():
             group_data = firebase_ext_models.FbMappingGroup(
                 finishedCount=0,
@@ -282,9 +291,12 @@ class BaseProject[
                 **firebase_utils.serialize(group_data),
                 **firebase_utils.serialize(group_project_specific_data),
             }
+            firebase_bulk_mgr.add(
+                key=group.firebase_id,
+                value=fb_groups[group.firebase_id],
+            )
 
-        # FIXME(tnagorra): Use bulk uploader
-        group_ref.set(value=fb_groups)
+        firebase_bulk_mgr.done()
 
     def create_project_on_firebase(self, project_ref: FbReference):
         assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
