@@ -147,7 +147,8 @@ def gzip_str(string_: str) -> bytes:
     Produce a complete gzip-compatible binary string.
     """
     out = io.BytesIO()
-    with gzip.GzipFile(fileobj=out, mode="w") as f:
+    # NOTE : mtime=0 (keeps timestamp constant which result same zip output each time)
+    with gzip.GzipFile(fileobj=out, mode="w", mtime=0) as f:
         f.write(string_.encode())
     return out.getvalue()
 
