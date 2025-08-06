@@ -53,9 +53,9 @@ def group_input_geometries(features: list[ValidFeature], group_size: int, tutori
     # we will simply start with min group id = 100
     group_id = 100
     group_id_string = f"g{group_id}"
-    feature_count = 0
-    for feature in features:
-        if feature_count % (group_size + 1) == 0:
+    for feature_count, feature in enumerate(features):
+        feature_id = feature_count + 1
+        if feature_id % (group_size + 1) == 0:
             group_id += 1
             group_id_string = f"g{group_id}"
 
@@ -68,7 +68,7 @@ def group_input_geometries(features: list[ValidFeature], group_size: int, tutori
         # we use a new id here based on the count
         # since we are not sure that GetFID returns unique values
         if not tutorial:
-            groups[group_id_string]["feature_ids"].append(feature_count)
+            groups[group_id_string]["feature_ids"].append(feature_id)
         # In the tutorial the feature id is defined by the "screen" attribute.
         # We do this so that we can sort by the feature id later and
         # get the screens displayed in the right order on the app.

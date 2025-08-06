@@ -253,7 +253,7 @@ class BaseProject[
                 **firebase_utils.serialize(task_project_specific_data),
             }
 
-            grouped_tasks[task.task_group_id].append(serialized_task)
+            grouped_tasks[task.task_group.firebase_id].append(serialized_task)
 
         grouped_tasks_dict: dict[int, typing.Any] = grouped_tasks
 
