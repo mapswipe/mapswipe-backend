@@ -3,7 +3,7 @@ import typing
 from pydantic import BaseModel, field_validator, model_validator
 
 from utils import fields as custom_fields
-from utils.geo.tile_functions import tile_coords_and_zoom_to_quadKey
+from utils.geo.tile_functions import tile_coords_and_zoom_to_quad_key
 
 from .config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNormConfig
 
@@ -41,10 +41,10 @@ class RasterTileServerConfig(BaseModel):
 
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
         url = self.get_config()["url"]
-        if "{quadkey}" in url:
-            quadkey = tile_coords_and_zoom_to_quadKey(tile_x, tile_y, tile_z)
+        if "{quad_key}" in url:
+            quad_key = tile_coords_and_zoom_to_quad_key(tile_x, tile_y, tile_z)
             return url.format(
-                quadkey=quadkey,
+                quad_key=quad_key,
             )
         return url.format(
             x=tile_x,

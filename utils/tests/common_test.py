@@ -36,7 +36,7 @@ class TestUtils(TestCase):
         valid_urls = [
             "https://example.com/tiles/{x}/{y}/{z}.jpg",
             "https://tileserver.com/tiles/{z}/{x}/{-y}.png",
-            "https://tileserver.com/tiles/{quadkey}.png",
+            "https://tileserver.com/tiles/{quad_key}.png",
         ]
         for url in valid_urls:
             validate_imagery_url(url)
@@ -47,11 +47,11 @@ class TestUtils(TestCase):
 
         url = "https://tileserver.com/tiles/invalid.png"
         with pytest.raises(ValidationError):
-            validate_imagery_url(url, support_quadkey=True)
+            validate_imagery_url(url, support_quad_key=True)
 
         url = "https://tileserver.com/tiles/{a}/{b}/{c}.png"
         with pytest.raises(ValidationError):
-            validate_imagery_url(url, support_quadkey=False)
+            validate_imagery_url(url, support_quad_key=False)
 
     def test_validate_ulid(self):
         # test valid ulid
@@ -188,8 +188,8 @@ class TestUtils(TestCase):
         url = "https://example.com/tiles/{x}/{y}/{z}.jpg"
         _validate_raster_tile_url(url)
 
-        # test with quadkey in url
-        url = "https://tileserver.com/tiles/{quadkey}.png"
+        # test with quad_key in url
+        url = "https://tileserver.com/tiles/{quad_key}.png"
         _validate_raster_tile_url(url)
 
         # test invalid url
@@ -211,8 +211,8 @@ class TestUtils(TestCase):
         with pytest.raises(ValidationError):
             _validate_vector_tile_url(url)
 
-        # test url with quadkey should throw value error
-        url = "https://tileserver.com/tiles/{quadkey}.png"
+        # test url with quad_key should throw value error
+        url = "https://tileserver.com/tiles/{quad_key}.png"
         with pytest.raises(ValidationError):
             _validate_vector_tile_url(url)
 

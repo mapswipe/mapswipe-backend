@@ -14,7 +14,7 @@ from geojson_pydantic import FeatureCollection
 from ulid import ULID
 
 
-def validate_imagery_url(url: str, *, support_quadkey: bool | None = True):
+def validate_imagery_url(url: str, *, support_quad_key: bool | None = True):
     """Check if imagery url contains xyz or quad key placeholders."""
     if all([substring in url for substring in ["{x}", "{y}", "{z}"]]) and not any(
         [substring in url for substring in ["{{x}}", "{{y}}", "{{z}}"]],
@@ -24,13 +24,13 @@ def validate_imagery_url(url: str, *, support_quadkey: bool | None = True):
         [substring in url for substring in ["{{x}}", "{{-y}}", "{{z}}"]],
     ):
         return
-    # NOTE: We are using quadkey instead of quad_key because client-side libraries directly supports quadkey
-    if support_quadkey and ("{quadkey}" in url and "{{quadkey}}" not in url):
+    # NOTE: We are using quad_key instead of quad_key because client-side libraries directly supports quad_key
+    if support_quad_key and ("{quad_key}" in url and "{{quad_key}}" not in url):
         return
 
-    if support_quadkey:
+    if support_quad_key:
         raise ValidationError(
-            gettext("The imagery url '%s' must contain {x}, {y} (or {-y}) and {z} or the {quadkey} placeholders.") % url,
+            gettext("The imagery url '%s' must contain {x}, {y} (or {-y}) and {z} or the {quad_key} placeholders.") % url,
         )
     raise ValidationError(
         gettext("The imagery url '%s' must contain {x}, {y} (or {-y}) and {z} placeholders.") % url,

@@ -22,13 +22,13 @@ def _validate_url(value: typing.Any):
 
 def _validate_raster_tile_url(value: typing.Any):
     url = _validate_url(value)
-    validate_imagery_url(value, support_quadkey=True)
+    validate_imagery_url(value, support_quad_key=True)
     return url
 
 
 def _validate_vector_tile_url(value: typing.Any):
     url = _validate_url(value)
-    validate_imagery_url(value, support_quadkey=False)
+    validate_imagery_url(value, support_quad_key=False)
     return url
 
 

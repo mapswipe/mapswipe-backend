@@ -59,7 +59,7 @@ class RasterConfig:
         match name:
             case RasterTileServerNameEnum.BING:
                 api_key = settings.MAP_IMAGE_BING_API_KEY
-                url = "https://ecn.t0.tiles.virtualearth.net/tiles/a{{quadkey}}.jpeg?g=7505&token={apiKey}"
+                url = "https://ecn.t0.tiles.virtualearth.net/tiles/a{{quad_key}}.jpeg?g=7505&token={apiKey}"
                 return {
                     "url": url.format(apiKey=api_key),
                     "raw_url": url.format(apiKey="{apiKey}"),
