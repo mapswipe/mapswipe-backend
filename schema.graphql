@@ -626,6 +626,14 @@ input CustomOptionInput {
   subOptions: [CustomSubOptionInput!]
 }
 
+type CustomOptionType {
+  title: String!
+  icon: IconEnum!
+  value: Int!
+  description: String!
+  iconColor: String!
+}
+
 input CustomSubOptionInput {
   clientId: String!
 
@@ -1568,6 +1576,7 @@ type Query {
   projectAsset(id: ID!): ProjectAssetType! @isAuthenticated
   projectAssets(pagination: OffsetPaginationInput, filters: ProjectAssetFilter, order: ProjectAssetOrder): ProjectAssetTypeOffsetPaginated! @isAuthenticated
   organization(id: ID!): OrganizationType! @isAuthenticated
+  defaultCustomOptions(projectType: ProjectTypeEnum!): [CustomOptionType!]! @isAuthenticated
   organizations(includeAll: Boolean! = false, filters: OrganizationFilter, order: OrganizationOrder, pagination: OffsetPaginationInput): OrganizationTypeOffsetPaginated! @isAuthenticated
   projects(includeAll: Boolean! = false, filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated! @isAuthenticated
   tutorial(id: ID!): TutorialType! @isAuthenticated

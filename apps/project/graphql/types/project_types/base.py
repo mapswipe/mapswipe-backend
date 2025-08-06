@@ -1,5 +1,6 @@
 import strawberry
 
+from apps.common.models import IconEnum
 from utils.custom_options.models import CustomOption, CustomSubOption
 from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
 from utils.geo.raster_tile_server.models import (
@@ -50,6 +51,15 @@ class RasterTileServerType:
 class RasterTileServersType:
     vector: list[VectorTileServerType]
     raster: list[RasterTileServerType]
+
+
+@strawberry.type
+class CustomOptionType:
+    title: str
+    icon: IconEnum
+    value: int
+    description: str
+    icon_color: str
 
 
 # Tile server

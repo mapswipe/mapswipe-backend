@@ -4,13 +4,19 @@ from django.db.models import QuerySet
 from strawberry_django.pagination import OffsetPaginated
 from strawberry_django.permissions import IsAuthenticated
 
-from apps.project.models import Organization, Project
+from apps.project.custom_options import get_custom_options
+from apps.project.models import Organization, Project, ProjectTypeEnum
 from utils.geo.raster_tile_server.config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNameEnumWithoutCustom
 from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum, VectorTileServerNameEnumWithoutCustom
 
 from .filters import OrganizationFilter, ProjectAssetFilter, ProjectFilter
 from .orders import OrganizationOrder, ProjectAssetOrder, ProjectOrder
-from .types.project_types.base import RasterTileServersType, RasterTileServerType, VectorTileServerType
+from .types.project_types.base import (
+    CustomOptionType,
+    RasterTileServersType,
+    RasterTileServerType,
+    VectorTileServerType,
+)
 from .types.types import (
     OrganizationType,
     ProjectAssetType,
@@ -54,6 +60,20 @@ def get_tile_servers() -> RasterTileServersType:
 
 @strawberry.type
 class Query:
+    @strawberry.field(extensions=[IsAuthenticated()])
+    def default_custom_options(self, project_type: ProjectTypeEnum) -> list[CustomOptionType]:
+        custom_options = get_custom_options(project_type=project_type)
+        return [
+            CustomOptionType(
+                title=item["title"],
+                icon=item["icon"],
+                value=item["value"],
+                description=item["description"],
+                icon_color=item["icon_color"],
+            )
+            for item in custom_options
+        ]
+
     tile_servers: RasterTileServersType = strawberry.field(resolver=get_tile_servers, extensions=[IsAuthenticated()])
 
     # Private --------------------
