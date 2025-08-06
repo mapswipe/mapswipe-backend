@@ -1,13 +1,22 @@
 import gzip
 import json
 import typing
+from unittest.mock import MagicMock, patch
 
 import pytest  # type: ignore[reportMissingImports]
+import ulid
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from pydantic_core import ValidationError as PydanticValidationError
 
+from apps.tutorial.models import generate_tutorial_firebase_id
 from main.tests import TestCase
+from project_types.validate.api_calls import (
+    ValidateApiCallError,
+    query_osm,
+    query_osmcha,
+    remove_troublesome_chars,
+)
 from utils.common import (
     compress_tasks,
     gzip_str,
@@ -231,3 +240,136 @@ class TestUtils(TestCase):
         compressed_task = compress_tasks(original_json)
         result = parse_b64gzjson_to_dict(compressed_task)
         assert result == original_json
+
+    def test_generate_tutorial_firebase_id(self):
+        def is_valid_ulid(value: str) -> bool:
+            try:
+                ulid.ULID.from_str(value)
+                return True
+            except ValueError:
+                return False
+
+        tutorial_firebase_id = generate_tutorial_firebase_id()
+        assert tutorial_firebase_id.startswith("tutorial_")
+
+        # check is_valid
+        split_id = tutorial_firebase_id.split("_")
+        assert is_valid_ulid(str(split_id[1])) is True
+
+        # check unique tutorial id
+        tutorial_firebase_id_a = generate_tutorial_firebase_id()
+        assert tutorial_firebase_id != tutorial_firebase_id_a
+
+    def test_remove_troublesome_chars(self):
+        data = [
+            ("Hello\nWorld", "Hello World"),
+            ('She said "Hello"', "She said Hello"),
+            ("It's fine", "Its fine"),
+            ("  Hello 'World'\n", "Hello World"),
+            (None, None),
+            (123, 123),
+        ]
+        for input_str, expected in data:
+            result = remove_troublesome_chars(input_str)
+            assert result == expected
+
+    @patch("project_types.validate.api_calls.retry_get")
+    def test_query_osmcha(self, mock_retry_get):
+        changeset_ids = [12345, 67890]
+        changeset_results = {}
+
+        # Fake API JSON response
+        mock_response_data = {
+            "features": [
+                {
+                    "id": "12345",
+                    "properties": {
+                        "user": "Jhon Doe",
+                        "uid": 1001,
+                        "comment": "This is test comment\n",
+                        "editor": "Ram",
+                    },
+                },
+                {
+                    "id": "67890",
+                    "properties": {
+                        "user": "Hari",
+                        "uid": 1002,
+                        "comment": "It's cold",
+                        "editor": "Shyam 'Bahadur'",
+                    },
+                },
+            ],
+        }
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = mock_response_data
+        mock_retry_get.return_value = mock_response
+
+        query_osmcha(changeset_ids, changeset_results)
+
+        assert changeset_results == {
+            12345: {
+                "username": "Jhon Doe",
+                "userid": 1001,
+                "comment": "This is test comment",
+                "editor": "Ram",
+            },
+            67890: {
+                "username": "Hari",
+                "userid": 1002,
+                "comment": "Its cold",
+                "editor": "Shyam Bahadur",
+            },
+        }
+
+        # check for other status code to raise error
+        mock_response.status_code = 403
+        with pytest.raises(ValidateApiCallError):
+            query_osmcha(changeset_ids, changeset_results)
+
+    @patch("project_types.validate.api_calls.retry_get")
+    def test_query_osm(self, mock_retry_get):
+        changeset_ids = [12345, 67890]
+        changeset_results = {}
+
+        xml_response = """
+        <osm>
+            <changeset id="12345" user='Jhon "Doe"' uid="1001">
+                <tag k="comment" v="\nThis is a test comment\n"/>
+                <tag k="created_by" v="Ram"/>
+            </changeset>
+            <changeset id="67890" user="Hari Bahadur" uid="1002">
+                <tag k="comment" v="test comment"/>
+                <tag k="created_by" v="Shyam"/>
+            </changeset>
+        </osm>
+        """
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.content = xml_response.encode("utf-8")
+        mock_retry_get.return_value = mock_response
+
+        result = query_osm(changeset_ids, changeset_results)
+
+        assert result == {
+            12345: {
+                "username": "Jhon Doe",
+                "userid": "1001",
+                "comment": "This is a test comment",
+                "editor": "Ram",
+            },
+            67890: {
+                "username": "Hari Bahadur",
+                "userid": "1002",
+                "comment": "test comment",
+                "editor": "Shyam",
+            },
+        }
+
+        # check for other status code to raise error
+        mock_response.status_code = 500
+        with pytest.raises(ValidateApiCallError):
+            query_osm([12345], {})

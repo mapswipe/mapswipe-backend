@@ -22,7 +22,7 @@ def remove_troublesome_chars(string: str | None):
         return string
     troublesome_chars = {'"': "", "'": "", "\n": " "}
     for k, v in troublesome_chars.items():
-        string = string.replace(k, v)
+        string = string.replace(k, v).strip()
     return string
 
 
@@ -37,6 +37,7 @@ def retry_get(url: str, retries: int | None = 3, timeout: int | None = 4, to_osm
         return session.get(url, timeout=timeout)
 
 
+# FIXME(rup) Not used anywhere
 def geojsonToFeatureCollection(geojson: dict) -> dict:
     """Take a GeoJson and wrap it in a FeatureCollection."""
     if geojson["type"] != "FeatureCollection":
