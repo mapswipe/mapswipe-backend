@@ -1,7 +1,7 @@
 import logging
-import mimetypes
 import typing
 
+import magic
 from django.core.exceptions import ValidationError
 from django.http.request import HttpRequest
 from django.template.defaultfilters import filesizeformat
@@ -184,29 +184,35 @@ class CommonAssetSerializer(serializers.ModelSerializer[CommonAsset]):
                 ),
             )
 
-        # https://docs.python.org/3/library/mimetypes.html#mimetypes.guess_type
-        mimetype, *_ = mimetypes.guess_type(file_content.name)  # type: ignore[reportUnknownArgumentType]
+        file_content.seek(0)
+        file_head = file_content.read(2048)
+        file_content.seek(0)
 
-        # TODO(susilnem): Use library like filemagic to determine mimetype instead?
-        if mimetype is None:
-            raise serializers.ValidationError(
-                gettext("Could not determine mimetype of the file: %s") % file_content.name,
-            )
+        mimetype = magic.from_buffer(file_head, mime=True)
+        provided_mimetype = attrs.get("mimetype")
+        detected_mimetype = CommonAsset.Mimetype.get_mimetype_by_label(mimetype)
 
         if not CommonAsset.Mimetype.is_valid_mimetype(mimetype):
             raise serializers.ValidationError(
-                gettext("File mimetype is not supported: %s") % mimetype,
+                gettext("File mimetype is not supported: %s") % provided_mimetype,
             )
 
-        if "mimetype" in attrs and CommonAsset.Mimetype.get_mimetype_by_label(mimetype) != attrs["mimetype"]:
-            raise serializers.ValidationError(
-                gettext("File mimetype does not match the provided mimetype: %s") % mimetype,
-            )
-
-        if attrs["mimetype"] == CommonAsset.Mimetype.GEOJSON:
+        # Special handling for GEOJSON pretending to be JSON
+        if provided_mimetype == CommonAsset.Mimetype.GEOJSON:
+            if detected_mimetype != CommonAsset.Mimetype.JSON:
+                raise serializers.ValidationError(
+                    gettext("Expected a GEOJSON file, but got: %s") % mimetype,
+                )
             validate_geojson_file(file_content)
+            final_mimetype_enum = CommonAsset.Mimetype.get_mimetype_by_label("application/geo+json")
+        else:
+            if provided_mimetype and detected_mimetype != provided_mimetype:
+                raise serializers.ValidationError(
+                    gettext("File mimetype does not match the provided mimetype: %s") % mimetype,
+                )
+            final_mimetype_enum = detected_mimetype  # Set detected mimetype
 
-        attrs["mimetype"] = CommonAsset.Mimetype.get_mimetype_by_label(mimetype)
+        attrs["mimetype"] = final_mimetype_enum
         attrs["file_size"] = file_size
 
     @typing.override
