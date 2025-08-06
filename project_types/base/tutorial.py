@@ -252,12 +252,28 @@ class BaseTutorial[
         self.create_groups_on_firebase(group_ref)
 
         scenarios = self.tutorial.scenarios.all()
+        informationPages = self.tutorial.information_pages.all()
 
         tutorial_data = firebase_models.FbBaseTutorial(
             exampleImage1=None,
             exampleImage2=None,
             contributorCount=0,
-            informationPages=[],
+            informationPages=[
+                firebase_models.FbInformationPage(
+                    title=informationPage.title,
+                    pageNumber=informationPage.page_number,
+                    blocks=[
+                        firebase_models.FbInformationPageBlock(
+                            blockNumber=block.block_number,
+                            blockType=TutorialInformationPageBlockTypeEnum(block.block_type).to_firebase(),
+                            textDescription=block.text,
+                            image=block.image.file.url if block.image else None,
+                        )
+                        for block in informationPage.blocks.all()
+                    ],
+                )
+                for informationPage in informationPages
+            ],
             lookFor=self.tutorial.project.look_for,
             name=self.tutorial.name,
             progress=0,
