@@ -391,13 +391,13 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
         validated_data.pop("information_pages", None)
 
         old_status_enum = instance.status_enum
-        new_tutorial = super().update(instance, validated_data)
+        updated_tutorial = super().update(instance, validated_data)
 
         scenario_qs = TutorialScenarioPage.objects.filter(
-            tutorial=new_tutorial.pk,
+            tutorial=updated_tutorial.pk,
         )
         information_page_qs = TutorialInformationPage.objects.filter(
-            tutorial=new_tutorial.pk,
+            tutorial=updated_tutorial.pk,
         )
 
         for scenario_data in scenarios_data:
@@ -410,7 +410,7 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
                 instance=scenario_instance,
                 context={
                     **self.context,
-                    "tutorial": new_tutorial,
+                    "tutorial": updated_tutorial,
                 },
             )
             scenario_serializer.is_valid(raise_exception=True)
@@ -426,21 +426,21 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
                 instance=information_page_instance,
                 context={
                     **self.context,
-                    "tutorial": new_tutorial,
+                    "tutorial": updated_tutorial,
                 },
             )
             information_page_serializer.is_valid(raise_exception=True)
             information_page_serializer.save()
 
         if (
-            old_status_enum != Tutorial.Status.PUBLISHED and new_tutorial.status_enum == Tutorial.Status.PUBLISHED
+            old_status_enum != Tutorial.Status.PUBLISHED and updated_tutorial.status_enum == Tutorial.Status.PUBLISHED
         ) or old_status_enum == Tutorial.Status.PUBLISHED:
-            new_tutorial.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+            updated_tutorial.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
 
             # FIXME: We can call this on batch later as well or handle error scenario
-            transaction.on_commit(lambda: push_tutorial_to_firebase.delay(new_tutorial.pk))
+            transaction.on_commit(lambda: push_tutorial_to_firebase.delay(updated_tutorial.pk))
 
-        return new_tutorial
+        return updated_tutorial
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py

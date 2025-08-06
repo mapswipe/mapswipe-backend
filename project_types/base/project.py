@@ -300,11 +300,18 @@ class BaseProject[
             Config.FirebaseKeys.project_tasks(self.project.firebase_id),
         )
 
-        # FIXME: If taskId is defined, should be private_inactive
-        status = firebase_models.FbEnumProjectStatus.INACTIVE
         if self.project.status_enum == ProjectStatusEnum.PUBLISHED:
-            # FIXME: If taskId is defined, should be private_active
-            status = firebase_models.FbEnumProjectStatus.PRIVATE_ACTIVE
+            status = (
+                firebase_models.FbEnumProjectStatus.ACTIVE
+                if not self.project.team_id
+                else firebase_models.FbEnumProjectStatus.PRIVATE_ACTIVE
+            )
+        else:
+            status = (
+                firebase_models.FbEnumProjectStatus.INACTIVE
+                if not self.project.team_id
+                else firebase_models.FbEnumProjectStatus.PRIVATE_INACTIVE
+            )
 
         if not self.skip_tasks_on_firebase():
             self.create_tasks_on_firebase(task_ref)
@@ -355,6 +362,7 @@ class BaseProject[
     def update_project_on_firebase(self, project_ref: FbReference, fb_project: firebase_ext_models.FbProject):
         assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
 
+        # NOTE: We need to add this validation so that "FINISHED" is not overridden
         status = fb_project.status
         if (
             status
@@ -364,14 +372,20 @@ class BaseProject[
             ]
             and self.project.status_enum == ProjectStatusEnum.PUBLISHED
         ):
-            # FIXME: If taskId is defined, should be private_active
-            status = firebase_models.FbEnumProjectStatus.ACTIVE
+            status = (
+                firebase_models.FbEnumProjectStatus.ACTIVE
+                if not self.project.team_id
+                else firebase_models.FbEnumProjectStatus.PRIVATE_ACTIVE
+            )
         elif status in [
             firebase_models.FbEnumProjectStatus.ACTIVE,
             firebase_models.FbEnumProjectStatus.PRIVATE_ACTIVE,
         ] and self.project.status_enum in [ProjectStatusEnum.ARCHIVED, ProjectStatusEnum.PAUSED]:
-            # FIXME: If taskId is defined, should be private_inactive
-            status = firebase_models.FbEnumProjectStatus.INACTIVE
+            status = (
+                firebase_models.FbEnumProjectStatus.INACTIVE
+                if not self.project.team_id
+                else firebase_models.FbEnumProjectStatus.PRIVATE_INACTIVE
+            )
 
         project_ref.update(
             value=firebase_utils.serialize(
