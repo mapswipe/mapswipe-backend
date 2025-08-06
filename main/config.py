@@ -13,6 +13,9 @@ if typing.TYPE_CHECKING:
 class Config:
     BASE_DIR = typing.cast("Path", settings.BASE_DIR)
 
+    # NOTE: We get AOI for validate from HOT tasking manager
+    HOT_TASKING_MANAGER_PROJECT_API_LINK = "https://tasking-manager-production-api.hotosm.org/api/v2/"
+
     # NOTE: We get build footprints for validate from OHSOME
     OHSOME_API_LINK = "https://api.ohsome.org/v1/"
     # NOTE: We get changeset information from OSMCha

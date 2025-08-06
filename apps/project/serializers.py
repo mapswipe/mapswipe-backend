@@ -343,17 +343,17 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
     @typing.override
     def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:
         old_status_enum = instance.status_enum
-        new_project = super().update(instance, validated_data)
+        updated_project = super().update(instance, validated_data)
 
         if (
-            old_status_enum != Project.Status.PUBLISHED and new_project.status_enum == Project.Status.PUBLISHED
+            old_status_enum != Project.Status.PUBLISHED and updated_project.status_enum == Project.Status.PUBLISHED
         ) or old_status_enum == Project.Status.PUBLISHED:
-            new_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+            updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
 
             # FIXME: We can call this on batch later as well or handle error scenario
-            transaction.on_commit(lambda: push_project_to_firebase.delay(new_project.pk))
+            transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
 
-        return new_project
+        return updated_project
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
