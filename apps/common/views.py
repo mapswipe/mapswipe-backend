@@ -13,6 +13,8 @@ from health_check.views import MainView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.contributor.models import ContributorUser
+
 from .serializers import FirebaseAuthRequestSerializer
 
 logger = logging.getLogger(__name__)
@@ -68,6 +70,10 @@ class FirebaseAuthView(APIView):
     authentication_classes = []
     permission_classes = []
 
+    @staticmethod
+    def _400_response(message: str) -> Response:
+        return Response({"non_field_errors": [message]}, 400)
+
     @extend_schema(
         description=gettext("use firebase id_token to authenticate"),
         request=FirebaseAuthRequestSerializer,
@@ -80,8 +86,26 @@ class FirebaseAuthView(APIView):
         token: FirebaseDecodedIdToken = token_serializer.validated_data["token"]
         user = token_serializer.validated_data["user"]
 
-        user.fb_uid = token.uid
-        user.save(update_fields=("fb_uid",))
+        if user.contributor_user is not None:
+            if user.contributor_user.firebase_id != token.uid:
+                return self._400_response(
+                    gettext(
+                        "Provided firebase_id didn't match with the existing user's email configuration."
+                        " If you think this is a unexpected, please contact system admin to resolve this issue.",
+                    ),
+                )
+        else:
+            contributor_user = ContributorUser.objects.filter(firebase_id=token.uid).first()
+            if contributor_user is None:
+                return self._400_response(
+                    gettext(
+                        "Provided firebase_id doesn't exists in this system."
+                        " If you think this is a unexpected, please contact system admin to resolve this issue.",
+                    ),
+                )
+
+            user.contributor_user = contributor_user
+            user.save(update_fields=("contributor_user",))
 
         login(request, user)
 

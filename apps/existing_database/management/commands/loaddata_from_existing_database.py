@@ -36,7 +36,7 @@ from apps.project.models import (
     Organization,
     Project,
     ProjectAsset,
-    ProjectAssetStatsTypeEnum,
+    ProjectAssetExportTypeEnum,
     ProjectTypeEnum,
 )
 from apps.user.models import User
@@ -136,8 +136,8 @@ def before_after_count[**P, R](
 
 
 @cached(cache=LRUCache(maxsize=1000))
-def get_contributor_user_id_by_firebase_id(fb_uid: str) -> int:
-    return ContributorUser.objects.get(firebase_id=fb_uid).pk
+def get_contributor_user_id_by_firebase_id(firebase_id: str) -> int:
+    return ContributorUser.objects.get(firebase_id=firebase_id).pk
 
 
 @cached(cache=LRUCache(maxsize=1000))
@@ -155,11 +155,10 @@ def get_user_by_contributor_user_firebase_id(
         return fallback.pk
 
     return User.objects.get_or_create(
-        # TODO(thenav56): Use ref to contributor user instead of fb_uid
-        fb_uid=firebase_id,
+        contributor_user_id=get_contributor_user_id_by_firebase_id(firebase_id),
         defaults=dict(
             # XXX: Email is required but we don't have emails
-            email=f"{firebase_id}@mapswipe.org",
+            email=f"fixup-{firebase_id}@mapswipe.org",
         ),
     )[0].pk
 
@@ -207,6 +206,7 @@ def generate_django_content_file_from_url(
     return ContentFile(response.content, name=filename)
 
 
+# TODO: This is a partial solution, doesn't cover all cases
 def parse_project_name(name: str) -> tuple[str, str, int] | None:
     def sanitize_name(name: str) -> str:
         return " ".join(name.replace("\n", " ").strip().split())
@@ -289,85 +289,85 @@ def create_project(
         )
 
 
-def get_api_url_by_project_asset_type(asset_type: ProjectAssetStatsTypeEnum, project_old_id: str):
-    if asset_type == ProjectAssetStatsTypeEnum.AGGREGATED_RESULTS:
+def get_api_url_by_project_export_type(export_type: ProjectAssetExportTypeEnum, project_old_id: str):
+    if export_type == ProjectAssetExportTypeEnum.AGGREGATED_RESULTS:
         return f"/api/agg_results/agg_results_{project_old_id}.csv.gz"
-    if asset_type == ProjectAssetStatsTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY:
+    if export_type == ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY:
         return f"/api/agg_results/agg_results_{project_old_id}_geom.geojson.gz"
-    if asset_type == ProjectAssetStatsTypeEnum.GROUPS:
+    if export_type == ProjectAssetExportTypeEnum.GROUPS:
         return f"/api/groups/groups_{project_old_id}.csv.gz"
-    if asset_type == ProjectAssetStatsTypeEnum.HISTORY:
+    if export_type == ProjectAssetExportTypeEnum.HISTORY:
         return f"/api/history/history_{project_old_id}.csv"
-    if asset_type == ProjectAssetStatsTypeEnum.RESULTS:
+    if export_type == ProjectAssetExportTypeEnum.RESULTS:
         return f"/api/results/results_{project_old_id}.csv.gz"
-    if asset_type == ProjectAssetStatsTypeEnum.TASKS:
+    if export_type == ProjectAssetExportTypeEnum.TASKS:
         return f"/api/tasks/tasks_{project_old_id}.csv.gz"
-    if asset_type == ProjectAssetStatsTypeEnum.USERS:
+    if export_type == ProjectAssetExportTypeEnum.USERS:
         return f"/api/users/users_{project_old_id}.csv.gz"
-    if asset_type == ProjectAssetStatsTypeEnum.AREA_OF_INTEREST:
+    if export_type == ProjectAssetExportTypeEnum.AREA_OF_INTEREST:
         return f"/api/project_geometries/project_geom_{project_old_id}.geojson"
-    if asset_type == ProjectAssetStatsTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES:
+    if export_type == ProjectAssetExportTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES:
         return f"/api/yes_maybe/yes_maybe_{project_old_id}.geojson"
-    if asset_type == ProjectAssetStatsTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES:
+    if export_type == ProjectAssetExportTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES:
         return f"/api/hot_tm/hot_tm_{project_old_id}.geojson"
-    typing.assert_never(asset_type)
+    typing.assert_never(export_type)
 
 
-def get_meme_type_by_project_asset_type(asset_type: ProjectAssetStatsTypeEnum):
-    if asset_type == ProjectAssetStatsTypeEnum.AGGREGATED_RESULTS:
+def get_meme_type_by_project_export_type(export_type: ProjectAssetExportTypeEnum):
+    if export_type == ProjectAssetExportTypeEnum.AGGREGATED_RESULTS:
         return AssetMimetypeEnum.GZIP
-    if asset_type == ProjectAssetStatsTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY:
+    if export_type == ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY:
         return AssetMimetypeEnum.GZIP
-    if asset_type == ProjectAssetStatsTypeEnum.GROUPS:
+    if export_type == ProjectAssetExportTypeEnum.GROUPS:
         return AssetMimetypeEnum.GZIP
-    if asset_type == ProjectAssetStatsTypeEnum.HISTORY:
+    if export_type == ProjectAssetExportTypeEnum.HISTORY:
         return AssetMimetypeEnum.CSV
-    if asset_type == ProjectAssetStatsTypeEnum.RESULTS:
+    if export_type == ProjectAssetExportTypeEnum.RESULTS:
         return AssetMimetypeEnum.GZIP
-    if asset_type == ProjectAssetStatsTypeEnum.TASKS:
+    if export_type == ProjectAssetExportTypeEnum.TASKS:
         return AssetMimetypeEnum.GZIP
-    if asset_type == ProjectAssetStatsTypeEnum.USERS:
+    if export_type == ProjectAssetExportTypeEnum.USERS:
         return AssetMimetypeEnum.GZIP
-    if asset_type == ProjectAssetStatsTypeEnum.AREA_OF_INTEREST:
+    if export_type == ProjectAssetExportTypeEnum.AREA_OF_INTEREST:
         return AssetMimetypeEnum.GEOJSON
-    if asset_type == ProjectAssetStatsTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES:
+    if export_type == ProjectAssetExportTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES:
         return AssetMimetypeEnum.GEOJSON
-    if asset_type == ProjectAssetStatsTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES:
+    if export_type == ProjectAssetExportTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES:
         return AssetMimetypeEnum.GEOJSON
-    typing.assert_never(asset_type)
+    typing.assert_never(export_type)
 
 
 def create_project_assets(project: Project):
-    common_asset_types = [
+    common_export_types = [
         # Common
-        ProjectAssetStatsTypeEnum.AGGREGATED_RESULTS,
-        ProjectAssetStatsTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY,
-        ProjectAssetStatsTypeEnum.GROUPS,
-        ProjectAssetStatsTypeEnum.HISTORY,
-        ProjectAssetStatsTypeEnum.RESULTS,
-        ProjectAssetStatsTypeEnum.TASKS,
-        ProjectAssetStatsTypeEnum.USERS,
-        ProjectAssetStatsTypeEnum.AREA_OF_INTEREST,
+        ProjectAssetExportTypeEnum.AGGREGATED_RESULTS,
+        ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY,
+        ProjectAssetExportTypeEnum.GROUPS,
+        ProjectAssetExportTypeEnum.HISTORY,
+        ProjectAssetExportTypeEnum.RESULTS,
+        ProjectAssetExportTypeEnum.TASKS,
+        ProjectAssetExportTypeEnum.USERS,
+        ProjectAssetExportTypeEnum.AREA_OF_INTEREST,
     ]
 
-    asset_type_by_project_types = {
+    export_type_by_project_types = {
         ProjectTypeEnum.FIND: [
-            *common_asset_types,
-            ProjectAssetStatsTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES,
-            ProjectAssetStatsTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES,
+            *common_export_types,
+            ProjectAssetExportTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES,
+            ProjectAssetExportTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES,
         ],
         ProjectTypeEnum.COMPARE: [
-            *common_asset_types,
-            ProjectAssetStatsTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES,
-            ProjectAssetStatsTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES,
+            *common_export_types,
+            ProjectAssetExportTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES,
+            ProjectAssetExportTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES,
         ],
     }
 
-    for asset_type in asset_type_by_project_types.get(project.project_type_enum, common_asset_types):
-        if ProjectAsset.objects.filter(project=project, stats_type=asset_type).exists():
+    for export_type in export_type_by_project_types.get(project.project_type_enum, common_export_types):
+        if ProjectAsset.objects.filter(project=project, export_type=export_type).exists():
             continue
 
-        file_url = get_api_url_by_project_asset_type(asset_type, project.old_id)
+        file_url = get_api_url_by_project_export_type(export_type, project.old_id)
         content_file = generate_django_content_file_from_url(file_url)
 
         if content_file is None:
@@ -378,9 +378,9 @@ def create_project_assets(project: Project):
             project=project,
             client_id=str(ULID()),
             type=AssetTypeEnum.STATS,
-            stats_type=asset_type,
+            export_type=export_type,
             file=content_file,
-            mimetype=get_meme_type_by_project_asset_type(asset_type),
+            mimetype=get_meme_type_by_project_export_type(export_type),
             file_size=content_file.size,
             created_by=project.created_by,
             modified_by=project.modified_by,
@@ -758,20 +758,54 @@ class Command(BaseCommand):
             },
         )
 
-    def handle_firebase(self): ...
+    def handle_firebase(self):
+        self.stdout.write("Fetching managers data from firebase authentication")
+
+        # Load manager information from firebase
+        user_qs = User.objects.filter(contributor_user__isnull=False).select_related("contributor_user")
+
+        users_to_fetch_count = user_qs.count()
+
+        for i, user in enumerate(user_qs.all(), start=1):
+            user_firebase_id = user.contributor_user.firebase_id
+            logger.info(
+                "Fetching for user %s/%s: (pk=%s,firebase_id=%s)",
+                i,
+                users_to_fetch_count,
+                user.pk,
+                user_firebase_id,
+            )
+
+            user_fb_data = FH.auth.get_user(user_firebase_id)
+
+            is_project_manager = user_fb_data.custom_claims.get("projectManager", False)
+            is_disabled = user_fb_data.disabled
+            is_active = True
+            if not is_project_manager or is_disabled:
+                is_active = False
+                logger.warning(
+                    "Setting user: %s as inactive because (is_project_manager=%s or is_disabled=%s)",
+                    user.pk,
+                    is_project_manager,
+                    is_disabled,
+                )
+
+            user.email = user_fb_data.email
+            user.is_active = is_active
+            user.save(update_fields=("email", "is_active"))
 
     def _handle(self):
+        self.handle_contributor_users()
         self.handle_organization()
         self.handle_teams()
-        self.handle_contributor_users()
         self.handle_contributor_user_groups()
         self.handle_contributor_user_user_group_memberships()
         self.handle_project()
         self.handle_aggregated_dataset()
+        self.handle_firebase()
         self.bulk_create_mgr.done()
         self.stdout.write(f"Bulk create summary: {self.bulk_create_mgr.summary()}")
         # self.handle_db()
-        # self.handle_firebase()
 
     def setup_logger(self):
         # TODO(thenav56): This is not good enough... check again

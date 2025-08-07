@@ -14,12 +14,20 @@ class UserCreationForm(forms.ModelForm):
 
 @admin.register(User)
 class UserAdmin(DjangoUserAdmin):
-    list_display = ("email", "first_name", "last_name", "is_staff")
+    list_display = (
+        "email",
+        "contributor_user__firebase_id",
+        "contributor_user__username",
+        "first_name",
+        "last_name",
+        "is_staff",
+    )
     list_filter = ("is_staff", "is_superuser", "is_active", "groups")
     search_fields = ("first_name", "last_name", "email")
     ordering = ("email",)
     add_form = UserCreationForm
-    readonly_fields = ("display_name", "fb_uid")
+    readonly_fields = ("display_name",)
+    autocomplete_fields = ("contributor_user",)
 
     fieldsets = (
         (
@@ -38,7 +46,7 @@ class UserAdmin(DjangoUserAdmin):
                     "first_name",
                     "last_name",
                     "display_name",
-                    "fb_uid",
+                    "contributor_user",
                 ),
             },
         ),

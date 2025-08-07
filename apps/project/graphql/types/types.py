@@ -39,7 +39,7 @@ class OrganizationType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
 class ProjectAssetType(UserResourceTypeMixin, CommonAssetTypeMixin):
     id: strawberry.ID
     file: strawberry.auto
-    stats_type: strawberry.auto
+    export_type: strawberry.auto
     project_id: strawberry.ID
 
 

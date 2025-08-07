@@ -21,12 +21,12 @@ if typing.TYPE_CHECKING:
     from apps.tutorial.models import Tutorial
 
 
-class ProjectAssetStatsTypeEnum(models.IntegerChoices):
+class ProjectAssetExportTypeEnum(models.IntegerChoices):
     # Common?
     AGGREGATED_RESULTS = 100, "Aggregated Results (CSV)"
     AGGREGATED_RESULTS_WITH_GEOMETRY = 101, "Aggregated Results (with Geometry) (GEOJSON)"
     GROUPS = 104, "Groups (CSV)"
-    HISTORY = 105, "History (GEOJSON)"
+    HISTORY = 105, "History (CSV)"
     RESULTS = 106, "Results (CSV)"
     TASKS = 107, "Tasks (CSV)"
     USERS = 108, "Users (CSV)"
@@ -403,8 +403,8 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
 class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibleVariableOverride]
     # TODO(thenav56): add validation
     # Type specific nested types
-    stats_type = IntegerChoicesField(
-        choices_enum=ProjectAssetStatsTypeEnum,
+    export_type = IntegerChoicesField(
+        choices_enum=ProjectAssetExportTypeEnum,
         blank=True,
         null=True,
     )
