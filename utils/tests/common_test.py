@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from pydantic_core import ValidationError as PydanticValidationError
 
+from apps.tutorial.models import generate_tutorial_firebase_id
 from main.tests import TestCase
 from utils.common import (
     compress_tasks,
@@ -262,3 +263,15 @@ class TestUtils(TestCase):
         compressed_task = compress_tasks(original_json)
         result = parse_b64gzjson_to_dict(compressed_task)
         assert result == original_json
+
+    def test_generate_tutorial_firebase_id(self):
+        tutorial_firebase_id = generate_tutorial_firebase_id()
+        assert tutorial_firebase_id.startswith("tutorial_")
+
+        # check is_valid
+        split_id = tutorial_firebase_id.split("_")
+        validate_ulid(str(split_id[1]))
+
+        # check unique tutorial id
+        tutorial_firebase_id_a = generate_tutorial_firebase_id()
+        assert tutorial_firebase_id != tutorial_firebase_id_a
