@@ -73,10 +73,10 @@ def pixel_coords_to_tile_address(pixel_x: float, pixel_y: float):
     return t
 
 
-def tile_coords_and_zoom_to_quadKey(tile_x: int, tile_y: int, zoom: int) -> str:
-    """Create a quadkey for use with certain tileservers that use them, e.g. Bing."""
+def tile_coords_and_zoom_to_quad_key(tile_x: int, tile_y: int, zoom: int) -> str:
+    """Create a quad_key for use with certain tileservers that use them, e.g. Bing."""
 
-    quadKey = ""
+    quad_key = ""
     for i in range(zoom, 0, -1):
         digit = 0
         mask = 1 << (i - 1)
@@ -84,15 +84,15 @@ def tile_coords_and_zoom_to_quadKey(tile_x: int, tile_y: int, zoom: int) -> str:
             digit += 1
         if (tile_y & mask) != 0:
             digit += 2
-        quadKey += str(digit)
-    return quadKey
+        quad_key += str(digit)
+    return quad_key
 
 
 # FIXME(tnagorra): This is not used.
-def quadkey_to_bing_url(quadkey: str, api_key: str):
+def quad_key_to_bing_url(quad_key: str, api_key: str):
     """Create a tile image URL linking to a Bing tile server."""
     # FIXME(tnagorra): We should not hardcode the urls
-    return f"https://ecn.t0.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=7505&mkt=en-US&token={api_key}"
+    return f"https://ecn.t0.tiles.virtualearth.net/tiles/a{quad_key}.jpeg?g=7505&mkt=en-US&token={api_key}"
 
 
 # FIXME(tnagorra): Add typings for osgeo
