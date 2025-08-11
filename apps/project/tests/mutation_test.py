@@ -13,6 +13,7 @@ from apps.contributor.factories import ContributorTeamFactory
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
     Project,
+    ProjectAssetInputTypeEnum,
     ProjectStatusEnum,
     ProjectTask,
     ProjectTaskGroup,
@@ -127,6 +128,23 @@ class Mutation:
                 type
                 mimetype
                 projectId
+                assetTypeSpecifics {
+                  ... on AoiGeometryAssetPropertyType {
+                    __typename
+                    area
+                    bbox
+                    center
+                  }
+                  ... on ObjectImageAssetPropertyType {
+                    __typename
+                    image {
+                      id
+                    }
+                    annotations {
+                      id
+                    }
+                  }
+                }
               }
             }
           }
@@ -429,14 +447,20 @@ class TestProjectMutation(TestCase):
         return create_project_aoi_asset_query(
             query_check_func=self.query_check,
             query=Mutation.CREATE_PROJECT_ASSET,
-            project_asset_data=project_asset_data,
+            project_asset_data={
+                **project_asset_data,
+                "inputType": self.genum(ProjectAssetInputTypeEnum.AOI_GEOMETRY),
+            },
         )
 
     def _create_project_image_asset(self, project_asset_data: dict, **kwargs):
         return create_project_image_asset_query(
             query_check_func=self.query_check,
             query=Mutation.CREATE_PROJECT_ASSET,
-            project_asset_data=project_asset_data,
+            project_asset_data={
+                **project_asset_data,
+                "inputType": self.genum(ProjectAssetInputTypeEnum.COVER_IMAGE),
+            },
         )
 
     def _create_project_mutation(self, project_data: dict, **kwargs):
@@ -681,6 +705,10 @@ class TestProjectMutation(TestCase):
         resp_data = content["data"]["createProjectAsset"]
         assert resp_data["errors"] is None, content
         aoi_geometry_asset = resp_data["result"]
+
+        assert aoi_geometry_asset["assetTypeSpecifics"]["area"] == 0.003933815667455078
+        assert aoi_geometry_asset["assetTypeSpecifics"]["center"] == [85.31965030726025, 27.701474012628434]
+        assert aoi_geometry_asset["assetTypeSpecifics"]["bbox"] == [85.28138075927546, 27.65808616735157, 85.35521103605072, 27.742487621391874]
 
         # Creating Project Image Asset
         project_asset_data = {
@@ -937,14 +965,20 @@ class TestProjectTypeMutation(TestCase):
         return create_project_aoi_asset_query(
             query_check_func=self.query_check,
             query=Mutation.CREATE_PROJECT_ASSET,
-            project_asset_data=project_asset_data,
+            project_asset_data={
+                **project_asset_data,
+                "inputType": self.genum(ProjectAssetInputTypeEnum.AOI_GEOMETRY),
+            },
         )
 
     def _create_project_image_asset(self, project_asset_data: dict, **kwargs):
         return create_project_image_asset_query(
             query_check_func=self.query_check,
             query=Mutation.CREATE_PROJECT_ASSET,
-            project_asset_data=project_asset_data,
+            project_asset_data={
+                **project_asset_data,
+                "inputType": self.genum(ProjectAssetInputTypeEnum.COVER_IMAGE),
+            },
         )
 
     def _create_project_mutation(self, project_data: dict, **kwargs):

@@ -41,6 +41,9 @@ PydanticVectorTileServerUrl = typing.Annotated[str, BeforeValidator(_validate_ve
 
 PydanticLongText = typing.Annotated[str, Field(strict=True, max_length=1000)]
 
+PydanticLat = typing.Annotated[float, Field(strict=True, ge=-90, le=90)]
+PydanticLng = typing.Annotated[float, Field(strict=True, ge=-180, le=180)]
+
 PydanticOpacity = typing.Annotated[
     float,
     Field(

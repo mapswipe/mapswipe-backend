@@ -5,14 +5,13 @@ from django.utils.functional import cached_property
 from strawberry.dataloader import DataLoader
 
 from apps.common.models import AssetTypeEnum
-from apps.project.models import ProjectAsset
-from apps.project.models import ProjectAssetExportTypeEnum as AssetStatsEnum
+from apps.project.models import ProjectAsset, ProjectAssetExportTypeEnum
 
 if typing.TYPE_CHECKING:
     from .types.types import ProjectAssetType
 
 
-def load_export_assets(export_type: AssetStatsEnum):
+def load_export_assets(export_type: ProjectAssetExportTypeEnum):
     def load_export_assets_(keys: list[int]) -> list["ProjectAssetType | None"]:
         qs = ProjectAsset.objects.filter(
             project__in=keys,
@@ -30,44 +29,50 @@ def load_export_assets(export_type: AssetStatsEnum):
 class ProjectExportDataLoader:
     @cached_property
     def aggregated_results(self):
-        return DataLoader(load_fn=sync_to_async(load_export_assets(AssetStatsEnum.AGGREGATED_RESULTS)))
+        return DataLoader(load_fn=sync_to_async(load_export_assets(ProjectAssetExportTypeEnum.AGGREGATED_RESULTS)))
 
     @cached_property
     def aggregated_results_with_geometry(self):
-        return DataLoader(load_fn=sync_to_async(load_export_assets(AssetStatsEnum.AGGREGATED_RESULTS_WITH_GEOMETRY)))
+        return DataLoader(
+            load_fn=sync_to_async(load_export_assets(ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY))
+        )
 
     @cached_property
     def groups(self):
-        return DataLoader(load_fn=sync_to_async(load_export_assets(AssetStatsEnum.GROUPS)))
+        return DataLoader(load_fn=sync_to_async(load_export_assets(ProjectAssetExportTypeEnum.GROUPS)))
 
     @cached_property
     def history(self):
-        return DataLoader(load_fn=sync_to_async(load_export_assets(AssetStatsEnum.HISTORY)))
+        return DataLoader(load_fn=sync_to_async(load_export_assets(ProjectAssetExportTypeEnum.HISTORY)))
 
     @cached_property
     def results(self):
-        return DataLoader(load_fn=sync_to_async(load_export_assets(AssetStatsEnum.RESULTS)))
+        return DataLoader(load_fn=sync_to_async(load_export_assets(ProjectAssetExportTypeEnum.RESULTS)))
 
     @cached_property
     def tasks(self):
-        return DataLoader(load_fn=sync_to_async(load_export_assets(AssetStatsEnum.TASKS)))
+        return DataLoader(load_fn=sync_to_async(load_export_assets(ProjectAssetExportTypeEnum.TASKS)))
 
     @cached_property
     def users(self):
-        return DataLoader(load_fn=sync_to_async(load_export_assets(AssetStatsEnum.USERS)))
+        return DataLoader(load_fn=sync_to_async(load_export_assets(ProjectAssetExportTypeEnum.USERS)))
 
     @cached_property
     def area_of_interest(self):
-        return DataLoader(load_fn=sync_to_async(load_export_assets(AssetStatsEnum.AREA_OF_INTEREST)))
+        return DataLoader(load_fn=sync_to_async(load_export_assets(ProjectAssetExportTypeEnum.AREA_OF_INTEREST)))
 
     @cached_property
     def hot_tasking_manager_geometries(self):
-        return DataLoader(load_fn=sync_to_async(load_export_assets(AssetStatsEnum.HOT_TASKING_MANAGER_GEOMETRIES)))
+        return DataLoader(
+            load_fn=sync_to_async(load_export_assets(ProjectAssetExportTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES))
+        )
 
     @cached_property
     def moderate_to_high_agreement_yes_maybe_geometries(self):
         return DataLoader(
-            load_fn=sync_to_async(load_export_assets(AssetStatsEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES)),
+            load_fn=sync_to_async(
+                load_export_assets(ProjectAssetExportTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES)
+            ),
         )
 
 

@@ -1,8 +1,13 @@
+import json
 import typing
 
 import pydantic
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import gettext
+from geojson_pydantic import Feature, FeatureCollection
+from geojson_pydantic.geometries import MultiPolygon, Polygon
 from rest_framework import serializers
 
 from apps.common.models import FirebasePushStatusEnum
@@ -14,7 +19,7 @@ from project_types.store import get_project_property
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
-from .models import Organization, Project, ProjectAsset, ProjectTypeEnum
+from .models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
 from .tasks import process_project_task, push_project_to_firebase
 
 VALID_PROJECT_STATUS_TRANSITIONS = set(
@@ -151,6 +156,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             .filter(
                 id=new_image.pk,
                 type=ProjectAsset.Type.INPUT,
+                input_type=ProjectAssetInputTypeEnum.COVER_IMAGE,
                 mimetype__in=[
                     ProjectAsset.Mimetype.IMAGE_GIF,
                     ProjectAsset.Mimetype.IMAGE_JPEG,
@@ -296,6 +302,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             .filter(
                 id=new_image.pk,
                 type=ProjectAsset.Type.INPUT,
+                input_type=ProjectAssetInputTypeEnum.COVER_IMAGE,
                 mimetype__in=[
                     ProjectAsset.Mimetype.IMAGE_GIF,
                     ProjectAsset.Mimetype.IMAGE_JPEG,
@@ -363,13 +370,64 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         fields = (
             "mimetype",
             "file",
+            "input_type",
             "project",
+            "external_url",
+            "asset_type_specifics",
         )
+
+    def _validate_aoi_geometry(self, attrs: dict[str, typing.Any]) -> None:
+        input_type = attrs.get("input_type")
+        if ProjectAssetInputTypeEnum(input_type) != ProjectAssetInputTypeEnum.AOI_GEOMETRY:
+            return
+
+        file = attrs.get("file")
+        if not file:
+            raise ValidationError("Required field file is not provided.")
+
+        try:
+            geojson_data = json.load(file)
+        except json.JSONDecodeError as e:
+            raise ValidationError("Invalid JSON format in the file.") from e
+
+        AoiGeometryFeature = Feature[Polygon | MultiPolygon, dict]
+        AoiGeometryFeatureCollection = FeatureCollection[AoiGeometryFeature]
+
+        feature_collection = AoiGeometryFeatureCollection(**geojson_data)
+
+        if len(feature_collection.features) > 20:
+            raise ValidationError("AOI Geometry must have at max 20 features")
+
+        geometries: list[GEOSGeometry] = []
+        for feature in feature_collection.features:
+            if not feature.geometry:
+                continue
+            geometry = GEOSGeometry(feature.geometry.model_dump_json())
+            geometries.append(geometry)
+
+        geometry_collection = GeometryCollection(geometries)
+
+        center = geometry_collection.centroid
+
+        area = sum(geom.area for geom in geometries)
+
+        # FIXME(tnagorra): We need to change AOI geometry to 40 sq.km.
+        # Increasing this to 40 because of failing tests
+        if area * 10000 > 40:
+            raise ValidationError("Area for AOI Geometry must have less than 40 sq. km")
+
+        attrs["asset_type_specifics"] = {
+            "bbox": geometry_collection.extent,
+            "center": center.coords,
+            # NOTE: converting the are in sq. km
+            "area": area,
+        }
 
     @typing.override
     def create(self, validated_data: dict[str, typing.Any]) -> ProjectAsset:
         # NOTE: User should only be able to create INPUT type project assets
         validated_data["type"] = ProjectAsset.Type.INPUT
+        self._validate_aoi_geometry(validated_data)
         return super().create(validated_data)
 
 

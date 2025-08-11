@@ -5,7 +5,7 @@ import strawberry_django
 
 from apps.common.graphql.types import ArchivableResourceTypeMixin, CommonAssetTypeMixin, UserResourceTypeMixin
 from apps.contributor.graphql.types import ContributorTeamType
-from apps.project.models import Organization, Project, ProjectAsset
+from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum
 from apps.tutorial.graphql.types.types import TutorialType
 from main.graphql.context import Info
 from project_types.tile_map_service.compare import project as compare_project
@@ -13,11 +13,13 @@ from project_types.tile_map_service.completeness import project as completeness_
 from project_types.tile_map_service.find import project as find_project
 from project_types.validate import project as validate_project
 from project_types.validate_image import project as validate_image_project
+from utils.asset_types.models import AoiGeometryAssetProperty, ObjectImageAssetProperty
+
+from .asset_types import AoiGeometryAssetPropertyType, ObjectImageAssetPropertyType
 
 # NOTE: We are importing base for side-effect
 # The tile server types are required by the following imports
 from .project_types import base  # noqa: F401  # isort: skip # type: ignore[reportUnusedImport]
-
 from .project_types.compare import CompareProjectPropertyType
 from .project_types.completeness import CompletenessProjectPropertyType
 from .project_types.find import FindProjectPropertyType
@@ -40,7 +42,25 @@ class ProjectAssetType(UserResourceTypeMixin, CommonAssetTypeMixin):
     id: strawberry.ID
     file: strawberry.auto
     export_type: strawberry.auto
+    input_type: strawberry.auto
+    external_url: strawberry.auto
     project_id: strawberry.ID
+
+    @strawberry_django.field(only=["asset_type_specifics", "input_type"])
+    async def asset_type_specifics(
+        self,
+        project_asset: strawberry.Parent[ProjectAsset],
+    ) -> AoiGeometryAssetPropertyType | ObjectImageAssetPropertyType | None:
+        data = project_asset.asset_type_specifics
+        if data is None:
+            return None
+        if project_asset.input_type_enum == ProjectAssetInputTypeEnum.AOI_GEOMETRY:
+            return typing.cast("AoiGeometryAssetPropertyType", AoiGeometryAssetProperty.model_validate(data))
+        if project_asset.input_type_enum == ProjectAssetInputTypeEnum.OBJECT_IMAGE:
+            return typing.cast("ObjectImageAssetPropertyType", ObjectImageAssetProperty.model_validate(data))
+        if project_asset.input_type_enum == ProjectAssetInputTypeEnum.COVER_IMAGE:
+            return None
+        typing.assert_never(project_asset.input_type_enum)
 
 
 # Project

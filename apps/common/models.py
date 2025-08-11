@@ -20,6 +20,12 @@ class FirebasePushStatusEnum(models.IntegerChoices):
     FAILED = 4, "Failed"
 
 
+class UploadHelper:
+    @staticmethod
+    def common_asset(instance: "CommonAsset", filename: str):
+        return f"common/asset/{instance.type}/{ULID()!s}/{filename}"
+
+
 # -- Abstracts
 class UserResource(Model):
     # FIXME(tnagorra): Should users be able to edit this?
@@ -237,7 +243,20 @@ class CommonAsset(Model):
 
     marked_as_deleted = models.BooleanField(
         default=False,
-        help_text=gettext_lazy("If this flag is enabled, this project asset will be deleted in the future"),
+        help_text=gettext_lazy("If this flag is enabled, this asset will be deleted in the future"),
+    )
+
+    file = models.FileField(
+        upload_to=UploadHelper.common_asset,
+        help_text=gettext_lazy("The file associated with the asset"),
+        null=True,
+        blank=True,
+    )
+
+    external_url = models.CharField(
+        null=True,
+        blank=True,
+        help_text=gettext_lazy("Provide link to the file associated with the asset"),
     )
 
     class Meta(TypedModelMeta):  # type: ignore[reportIncompatibleVariableOverride]
