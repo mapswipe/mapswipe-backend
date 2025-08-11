@@ -127,6 +127,7 @@ class BaseTutorial[
         grouped_tasks_dict: dict[int, list[dict[str, typing.Any]] | str] = {
             group_key: fb_tasks,
         }
+
         if self.compress_tasks_on_firebase():
             self._save_tasks_as_json(grouped_tasks_dict)
             grouped_tasks_dict = {group_key: compress_tasks(fb_tasks)}

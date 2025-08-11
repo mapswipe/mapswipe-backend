@@ -175,8 +175,21 @@ class FirebaseAuthResponseSerializer(serializers.Serializer[typing.Any]):
 
 
 class CommonAssetSerializer(serializers.ModelSerializer[CommonAsset]):
+    def _validate_type_and_external_url(self, attrs: dict[str, typing.Any]) -> None:
+        file_content: ContentFile[bytes] | None = attrs.get("file")
+        external_url: ContentFile[bytes] | None = attrs.get("external_url")
+
+        if not file_content and not external_url:
+            raise serializers.ValidationError(gettext("Either file or external_url must be defined"))
+
+        if file_content and external_url:
+            raise serializers.ValidationError(gettext("Both file and external_url cannot be defined"))
+
     def _validate_file_size(self, attrs: dict[str, typing.Any]) -> None:
-        file_content: ContentFile[bytes] = attrs["file"]
+        file_content: ContentFile[bytes] | None = attrs.get("file")
+        if not file_content:
+            attrs["file_size"] = 0
+            return
 
         if file_content.size > CommonAsset.MAX_FILE_SIZE:
             raise serializers.ValidationError(
@@ -189,7 +202,9 @@ class CommonAssetSerializer(serializers.ModelSerializer[CommonAsset]):
         attrs["file_size"] = file_content.size
 
     def _validate_file_mimetype(self, attrs: dict[str, typing.Any]) -> None:
-        file_content: ContentFile[bytes] = attrs["file"]
+        file_content: ContentFile[bytes] | None = attrs.get("file")
+        if not file_content:
+            return
 
         file_content.seek(0)
         file_head = file_content.read(2048)
@@ -223,6 +238,7 @@ class CommonAssetSerializer(serializers.ModelSerializer[CommonAsset]):
 
     @typing.override
     def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
+        self._validate_type_and_external_url(attrs)
         self._validate_file_size(attrs)
         self._validate_file_mimetype(attrs)
         return super().validate(attrs)

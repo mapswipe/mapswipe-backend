@@ -1,0 +1,48 @@
+import datetime
+
+from pydantic import BaseModel
+
+from utils import fields as custom_fields
+
+
+class AoiGeometryAssetProperty(BaseModel):
+    bbox: tuple[
+        custom_fields.PydanticLng,
+        custom_fields.PydanticLng,
+        custom_fields.PydanticLat,
+        custom_fields.PydanticLng,
+    ]
+    center: tuple[
+        custom_fields.PydanticLng,
+        custom_fields.PydanticLat,
+    ]
+    # NOTE: The area is in square meter. Multiply by 10^4 to get square kilometer.
+    area: custom_fields.PydanticPositiveFloat
+
+
+class ObjectImage(BaseModel):
+    id: custom_fields.PydanticPositiveInt
+    license: custom_fields.PydanticPositiveInt | None
+    coco_url: custom_fields.PydanticUrl | None
+    flickr_url: custom_fields.PydanticUrl | None
+    width: custom_fields.PydanticPositiveInt
+    height: custom_fields.PydanticPositiveInt
+    file_name: str
+    date_captured: datetime.datetime
+
+
+class ObjectImageAnnotation(BaseModel):
+    # NOTE: `id` is not required in coco format but we might need this to be required
+    id: custom_fields.PydanticPositiveInt
+    image_id: custom_fields.PydanticPositiveInt
+    category_id: custom_fields.PydanticPositiveInt
+    iscrowd: custom_fields.PydanticPositiveInt | None
+    segmentation: list[list[float]] | None
+    area: custom_fields.PydanticPositiveFloat | None
+    bbox: tuple[float, float, float, float]
+
+
+class ObjectImageAssetProperty(BaseModel):
+    image: ObjectImage
+    # NOTE: We have not added categories, info and licenses
+    annotations: list[ObjectImageAnnotation] | None

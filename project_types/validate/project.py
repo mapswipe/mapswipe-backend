@@ -22,6 +22,7 @@ from apps.common.models import (
 from apps.project.models import (
     Project,
     ProjectAsset,
+    ProjectAssetInputTypeEnum,
     ProjectTask,
     ProjectTaskGroup,
 )
@@ -198,6 +199,7 @@ class ValidateProject(
         )
 
     def _validate_aoi_geojson_file(self):
+        # FIXME: we need to move this outside of json
         if self.project_type_specifics.object_source.source_type != ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
             raise Exception("Invalid object source type for validate geojson file")
 
@@ -210,6 +212,7 @@ class ValidateProject(
         aoi_asset = ProjectAsset.usable_objects().get(
             id=self.project_type_specifics.object_source.aoi_geometry,
             type=AssetTypeEnum.INPUT,
+            input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
             mimetype=AssetMimetypeEnum.GEOJSON,
             project_id=self.project.pk,
         )
@@ -348,6 +351,7 @@ class ValidateProject(
 
             # Create new tasks for this group
             total_tasks = self.create_tasks(new_group, raw_group)
+            # FIXME(tnagorra): This is not correct
             logger.info("Created %s tasks for group: %s", total_tasks, new_group.pk)
 
     @typing.override
@@ -365,6 +369,7 @@ class ValidateProject(
                 "type": "Feature",
                 "geometry": geojson,
                 "properties": {
+                    # FIXME(tnagorra): revisit this, should we use firebase_id
                     "group_id": task.task_group_id,
                     "task_id": task.pk,
                 },

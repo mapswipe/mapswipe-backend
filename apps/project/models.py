@@ -28,6 +28,18 @@ if typing.TYPE_CHECKING:
     from apps.tutorial.models import Tutorial
 
 
+class ProjectAssetInputTypeEnum(models.IntegerChoices):
+    AOI_GEOMETRY = 100, "AOI Geometry"
+    OBJECT_IMAGE = 200, "Image with object annotations"
+    COVER_IMAGE = 201, "Image for project cover"
+
+    @classmethod
+    def get_display(cls, value: typing.Self | int) -> str:
+        if value in cls:
+            return str(cls(value).label)
+        return "Unknown"
+
+
 class ProjectAssetExportTypeEnum(models.IntegerChoices):
     # Common?
     AGGREGATED_RESULTS = 100, "Aggregated Results (CSV)"
@@ -441,6 +453,11 @@ class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibl
         blank=True,
         null=True,
     )
+    input_type = IntegerChoicesField(
+        choices_enum=ProjectAssetInputTypeEnum,
+        blank=True,
+        null=True,
+    )
 
     project: Project = models.ForeignKey(  # type: ignore[reportAssignmentType]
         Project,
@@ -451,7 +468,16 @@ class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibl
     file = OverwritableFileField(
         upload_to=UploadHelper.project_asset,
         help_text=gettext_lazy("The file associated with the asset"),
+        null=True,
+        blank=True,
     )
+
+    # This depends on the input_type
+    asset_type_specifics = models.JSONField(default=dict)
+
+    @property
+    def input_type_enum(self):
+        return ProjectAssetInputTypeEnum(self.input_type)
 
     # Type hints
     project_id: int
