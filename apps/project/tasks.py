@@ -6,6 +6,7 @@ from apps.project.exports import overall_stats
 from apps.project.models import Project
 from main.cache import CeleryLock
 from project_types.store import get_project_type_handler
+from utils.slack import MapswipeSlack
 
 logger = logging.getLogger(__name__)
 
@@ -69,3 +70,134 @@ def regenerate_global_project_assets():
 
     overall_stats.generate()
     return True
+class SlackMessage:
+    @classmethod
+    async def get_message(
+        cls,
+        input_data: Project,
+    ) -> MapswipeSlack.MapswipeSlackMessageArgumentType:
+        if input_data.progress == 100:
+            text = "Project reached 100%"
+            blocks = [
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "GREAT! PROJECT REACHED 100%  :tada:",
+                    },
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "Congratulations on completing the project!",
+                    },
+                },
+                {
+                    "type": "divider",
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"_*Project Name:* {input_data.topic} - {input_data.region} ({input_data.project_number}) {input_data.requesting_organization.name}",  # noqa: E501
+                    },
+                    "accessory": {
+                        "type": "image",
+                        "image_url": "https://pbs.twimg.com/profile_images/625633822235693056/lNGUneLX_400x400.jpg",
+                        "alt_text": "cute cat",
+                    },
+                },
+                {
+                    "type": "divider",
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "You can now set this project to _'finished'_ and create a another one.",
+                    },
+                    "accessory": {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Visit Dashboard",
+                            "emoji": True,
+                        },
+                        "value": "manager-dashboard",
+                        "url": "https://managers.mapswipe.org/",
+                        "action_id": "button-action",
+                    },
+                },
+            ]
+            return {
+                "text": text,
+                "blocks": blocks,
+            }
+
+        if 90 <= input_data.progress < 100:
+            text = "Progress reached 90%"
+            blocks = [
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "ALMOST THERE! PROJECT REACHED 90% :hourglass_flowing_sand:",
+                    },
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "The project is almost at completion!",
+                    },
+                },
+                {
+                    "type": "divider",
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"_*Project Name:* {input_data.topic} - {input_data.region} ({input_data.project_number}) {input_data.requesting_organization.name} \n",  # noqa: E501
+                    },
+                    "accessory": {
+                        "type": "image",
+                        "image_url": "https://pbs.twimg.com/profile_images/625633822235693056/lNGUneLX_400x400.jpg",
+                        "alt_text": "cute cat",
+                    },
+                },
+                {
+                    "type": "divider",
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "Get your next projects ready.",
+                    },
+                    "accessory": {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Visit Dashboard",
+                            "emoji": True,
+                        },
+                        "value": "manager-dashboard",
+                        "url": "https://managers.mapswipe.org/",
+                        "action_id": "button-action",
+                    },
+                },
+            ]
+            return {
+                "text": text,  # Required fallback
+                "blocks": blocks,
+            }
+
+        return {"text": "", "blocks": []}
+
+
+async def mapswipe_send_message(data: Project):
+    mapslack = MapswipeSlack()
+    message = await SlackMessage.get_message(input_data=data)
+    await mapslack.send_slack_message(**message)
