@@ -23,9 +23,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     && apt-get install -y --no-install-recommends \
         # Build required packages
         gdal-bin build-essential gcc libc-dev libgdal-dev libproj-dev \
+        libmagic1 \
         # Helper packages
         procps \
-	libmagic1\
     && uv lock --locked --offline \
         && uv sync --frozen --no-install-project --all-groups \
     # Clean-up

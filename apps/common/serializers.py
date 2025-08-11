@@ -13,7 +13,7 @@ from rest_framework import serializers
 from apps.common.models import ArchivableResource, UserResource
 from apps.project.models import CommonAsset
 from apps.user.models import User
-from utils.common import validate_geojson_file, validate_ulid
+from utils.common import validate_ulid
 
 from .types import FirebaseDecodedIdToken
 
@@ -170,52 +170,54 @@ class FirebaseAuthResponseSerializer(serializers.Serializer[typing.Any]):
 
 
 class CommonAssetSerializer(serializers.ModelSerializer[CommonAsset]):
-    def _validate_file(self, attrs: dict[str, typing.Any]) -> None:
+    def _validate_file_size(self, attrs: dict[str, typing.Any]) -> None:
         file_content: ContentFile[bytes] = attrs["file"]
-        file_size = file_content.size
-        max_file_size = CommonAsset.MAX_FILE_SIZE
 
-        if file_size > max_file_size:
+        if file_content.size > CommonAsset.MAX_FILE_SIZE:
             raise serializers.ValidationError(
                 gettext("Filesize should be less than: %s. Current is: %s")
                 % (
-                    filesizeformat(max_file_size),
-                    filesizeformat(file_size),
+                    filesizeformat(CommonAsset.MAX_FILE_SIZE),
+                    filesizeformat(file_content.size),
                 ),
             )
+        attrs["file_size"] = file_content.size
+
+    def _validate_file_mimetype(self, attrs: dict[str, typing.Any]) -> None:
+        file_content: ContentFile[bytes] = attrs["file"]
 
         file_content.seek(0)
         file_head = file_content.read(2048)
         file_content.seek(0)
 
         mimetype = magic.from_buffer(file_head, mime=True)
+        if not CommonAsset.Mimetype.is_valid_mimetype(mimetype):
+            raise serializers.ValidationError(
+                gettext("File mimetype is not supported: %s") % mimetype,
+            )
+
         provided_mimetype = attrs.get("mimetype")
         detected_mimetype = CommonAsset.Mimetype.get_mimetype_by_label(mimetype)
 
-        if not CommonAsset.Mimetype.is_valid_mimetype(mimetype):
+        if not provided_mimetype:
+            provided_mimetype = detected_mimetype
+
+        # Geojson is a special case of JSON file. We will validate the geojson later
+        if provided_mimetype == CommonAsset.Mimetype.GEOJSON and detected_mimetype == CommonAsset.Mimetype.JSON:
+            detected_mimetype = CommonAsset.Mimetype.GEOJSON
+
+        if detected_mimetype != provided_mimetype:
             raise serializers.ValidationError(
-                gettext("File mimetype is not supported: %s") % provided_mimetype,
+                gettext("File mimetype does not match the provided mimetype: Expected %s, but got %s")
+                % (
+                    provided_mimetype,
+                    detected_mimetype,
+                ),
             )
-
-        # Special handling for GEOJSON pretending to be JSON
-        if provided_mimetype == CommonAsset.Mimetype.GEOJSON:
-            if detected_mimetype != CommonAsset.Mimetype.JSON:
-                raise serializers.ValidationError(
-                    gettext("Expected a GEOJSON file, but got: %s") % mimetype,
-                )
-            validate_geojson_file(file_content)
-            final_mimetype_enum = CommonAsset.Mimetype.get_mimetype_by_label("application/geo+json")
-        else:
-            if provided_mimetype and detected_mimetype != provided_mimetype:
-                raise serializers.ValidationError(
-                    gettext("File mimetype does not match the provided mimetype: %s") % mimetype,
-                )
-            final_mimetype_enum = detected_mimetype  # Set detected mimetype
-
-        attrs["mimetype"] = final_mimetype_enum
-        attrs["file_size"] = file_size
+        attrs["mimetype"] = provided_mimetype
 
     @typing.override
     def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
-        self._validate_file(attrs)
+        self._validate_file_size(attrs)
+        self._validate_file_mimetype(attrs)
         return super().validate(attrs)
