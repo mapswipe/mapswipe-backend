@@ -183,7 +183,7 @@ class BaseProject[
         # We need to be careful not to delete assets that are currently used
         ProjectAsset.usable_objects().filter(
             project=self.project.pk,
-            type__in=[ProjectAsset.Type.OUTPUT, ProjectAsset.Type.EXPORT],
+            type__in=[ProjectAsset.Type.OUTPUT, ProjectAsset.Type.EXPORT, ProjectAsset.Type.DEBUG],
         ).update(marked_as_deleted=True)
 
         try:
