@@ -131,6 +131,10 @@ env = environ.Env(
     PYTEST_XDIST_WORKER=(str, None),
     # Test
     ENABLE_DANGER_MODE=(bool, False),
+    # Slack
+    SLACK_BOT_ENABLED=(bool, False),
+    SLACK_WEBHOOK_URL=(str, None),
+    SLACK_BOT_NAME=(str, None),
 )
 
 ENABLE_DANGER_MODE = env("ENABLE_DANGER_MODE")
@@ -514,6 +518,12 @@ if SENTRY_ENABLED:
         monitor_celery_beat_tasks=env("SENTRY_MONITOR_CELERY_BEAT_TASKS"),
     )
     SENTRY_CONFIG.init_sentry()
+
+# Slack
+SLACK_BOT_ENABLED = env("SLACK_BOT_ENABLED")
+if SLACK_BOT_ENABLED:
+    SLACK_WEBHOOK_URL = env("SLACK_WEBHOOK_URL")
+    SLACK_BOT_NAME = env("SLACK_BOT_NAME")
 
 # Strawberry
 ENABLE_STRAWBERRY_GRAPHIQL = env("ENABLE_STRAWBERRY_GRAPHIQL")
