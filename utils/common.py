@@ -5,6 +5,7 @@ import io
 import json
 import re
 import typing
+from warnings import deprecated
 
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
@@ -119,6 +120,7 @@ def parse_b64gzjson_to_dict(text: str) -> dict[str, typing.Any]:
         return json.loads(json_bytes.decode("utf-8"))
 
 
+@deprecated("We can directly use geojson_pydantic with more specific geometry")
 def validate_geojson_file(file: ContentFile) -> None:
     """
     Validates if the given file contains a valid GeoJSON FeatureCollection.

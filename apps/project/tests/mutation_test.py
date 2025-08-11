@@ -1,9 +1,11 @@
 import typing
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import call, patch
 
 from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
+from PIL import Image
 from ulid import ULID
 
 from apps.common.models import AssetMimetypeEnum
@@ -37,8 +39,12 @@ def create_project_image_asset_query(
     with (
         NamedTemporaryFile(dir=settings.TEMP_DIR, suffix=".jpeg") as image_file,
     ):
-        # Mock image
-        image_file.write(b"base64image")
+        img = Image.new("RGB", (10, 10), color="red")
+        buf = BytesIO()
+        img.save(buf, format="JPEG")
+        buf.seek(0)
+
+        image_file.write(buf.read())
         image_file.seek(0)
 
         return query_check_func(
@@ -689,6 +695,7 @@ class TestProjectMutation(TestCase):
 
         # Change the mimetype
         # Fails as mimetype mismatching
+        project_asset_data["clientId"] = str(ULID())
         project_asset_data["mimetype"] = self.genum(AssetMimetypeEnum.IMAGE_PNG)
         content = self._create_project_image_asset(project_asset_data, assert_errors=True)
         resp_data = content["data"]["createProjectAsset"]
