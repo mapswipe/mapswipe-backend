@@ -1,5 +1,6 @@
 import os
 import typing
+from dataclasses import dataclass
 
 from django.conf import settings
 
@@ -124,3 +125,27 @@ class Config:
 
 # FIXME: Import utils/geo/raster_tile_server/config.py here
 # FIXME: Import utils/geo/vector_tile_server/config.py here
+
+
+class Slack:
+    @dataclass
+    class SlackConfigDisabled:
+        enabled: typing.Literal[False]
+
+    @dataclass
+    class SlackConfigEnabled:
+        enabled: typing.Literal[True]
+        webhook_url: str
+        bot_name: str
+
+    SlackConfig = SlackConfigEnabled | SlackConfigDisabled
+
+    @classmethod
+    def load_slack_config(cls) -> SlackConfig:
+        if settings.SLACK_BOT_ENABLED:
+            return cls.SlackConfigEnabled(
+                enabled=True,
+                webhook_url=settings.SLACK_WEBHOOK_URL,
+                bot_name=settings.SLACK_BOT_NAME,
+            )
+        return cls.SlackConfigDisabled(enabled=False)
