@@ -7,7 +7,6 @@ from pyfirebase_mapswipe import utils as firebase_utils
 
 from apps.common.firebase import FirebasePush
 from apps.project.models import Organization
-from main.celery import app
 from main.config import Config
 
 logger = logging.getLogger(__name__)
@@ -52,9 +51,3 @@ class FirebaseOrganizationPush(FirebasePush[Organization, firebase_models.FbOrga
     @typing.override
     def get_firebase_path(self, firebase_id: str, model=Organization):
         return Config.FirebaseKeys.organization(firebase_id)
-
-    @staticmethod
-    @typing.override
-    @app.task()
-    def task(obj_id: int) -> None:
-        FirebaseOrganizationPush(obj_id).push()

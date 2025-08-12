@@ -64,7 +64,7 @@ class ContributorTeamAdmin(ArchivableResourceAdmin, DjangoQLSearchMixin, Firebas
     @typing.override
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
-        transaction.on_commit(lambda: FirebaseContributorTeam.task.delay(obj.id))
+        transaction.on_commit(lambda: FirebaseContributorTeam(obj.id).push())
 
     def view_team_members(self, obj):
         url = reverse("admin:contributor_contributoruser_changelist") + f"?team__id__exact={obj.id}"

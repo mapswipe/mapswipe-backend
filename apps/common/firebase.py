@@ -6,7 +6,6 @@ from firebase_admin.db import Reference as FbReference
 from pydantic import BaseModel, ConfigDict
 
 from apps.common.models import FirebasePushResource, FirebasePushStatusEnum
-from main.celery import app
 from main.config import Config
 
 logger = logging.getLogger(__name__)
@@ -114,13 +113,3 @@ class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
             model_obj.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
         else:
             model_obj.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
-
-    # FIXME: Implement init subclass to check if abstract methods are implemented on subclasses
-    @staticmethod
-    @abc.abstractmethod
-    @app.task()
-    def task(obj_id: int) -> None:
-        """
-        if you define this func in multiple classes in the same file celery will always use the first one
-        """
-        ...
