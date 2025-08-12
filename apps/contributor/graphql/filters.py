@@ -16,7 +16,6 @@ class ContributorUserFilter:
 @strawberry_django.filters.filter(ContributorUserGroup, lookups=True)
 class ContributorUserGroupFilter:
     id: strawberry.auto
-    name: strawberry.auto
     is_archived: strawberry.auto
 
     @staticmethod
@@ -45,6 +44,15 @@ class ContributorUserGroupFilter:
     ) -> tuple[models.QuerySet[ContributorUserGroup], models.Q]:
         return self.filter_by_user("user__firebase_id", queryset, value)
 
+    @strawberry_django.filter_field
+    def name(
+        self,
+        queryset: models.QuerySet[ContributorUserGroup],
+        value: str,
+        prefix: str,
+    ) -> tuple[models.QuerySet[ContributorUserGroup], models.Q]:
+        return queryset, models.Q(name__unaccent__icontains=value)
+
 
 @strawberry_django.filters.filter(ContributorUserGroupMembership, lookups=True)
 class ContributorUserGroupMembershipFilter:
@@ -55,5 +63,13 @@ class ContributorUserGroupMembershipFilter:
 @strawberry_django.filters.filter(ContributorTeam, lookups=True)
 class ContributorTeamFilter:
     id: strawberry.auto
-    name: strawberry.auto
     is_archived: strawberry.auto
+
+    @strawberry_django.filter_field
+    def name(
+        self,
+        queryset: models.QuerySet[ContributorTeam],
+        value: str,
+        prefix: str,
+    ) -> tuple[models.QuerySet[ContributorTeam], models.Q]:
+        return queryset, models.Q(name__unaccent__icontains=value)

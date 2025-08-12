@@ -8,9 +8,7 @@ from apps.project.models import Organization, Project, ProjectAsset
 @strawberry_django.filters.filter(Project, lookups=True)
 class ProjectFilter:
     id: strawberry.auto
-    topic: strawberry.auto
     project_number: strawberry.auto
-    region: strawberry.auto
     project_type: strawberry.auto
     requesting_organization_id: strawberry.auto
     is_featured: strawberry.auto
@@ -29,7 +27,25 @@ class ProjectFilter:
         queryset = queryset.alias(
             _name=Project.generate_name_query(prefix),
         )
-        return queryset, models.Q(_name__icontains=value)
+        return queryset, models.Q(_name__unaccent__icontains=value)
+
+    @strawberry_django.filter_field
+    def topic(
+        self,
+        queryset: models.QuerySet[Project],
+        value: str,
+        prefix: str,
+    ) -> tuple[models.QuerySet[Project], models.Q]:
+        return queryset, models.Q(topic__unaccent__icontains=value)
+
+    @strawberry_django.filter_field
+    def region(
+        self,
+        queryset: models.QuerySet[Project],
+        value: str,
+        prefix: str,
+    ) -> tuple[models.QuerySet[Project], models.Q]:
+        return queryset, models.Q(region__unaccent__icontains=value)
 
 
 @strawberry_django.filters.filter(ProjectAsset, lookups=True)
@@ -45,5 +61,13 @@ class ProjectAssetFilter:
 @strawberry_django.filters.filter(Organization, lookups=True)
 class OrganizationFilter:
     id: strawberry.auto
-    name: strawberry.auto
     is_archived: strawberry.auto
+
+    @strawberry_django.filter_field
+    def name(
+        self,
+        queryset: models.QuerySet[Organization],
+        value: str,
+        prefix: str,
+    ) -> tuple[models.QuerySet[Organization], models.Q]:
+        return queryset, models.Q(name__unaccent__icontains=value)
