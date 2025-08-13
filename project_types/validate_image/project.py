@@ -1,6 +1,8 @@
 import logging
 import typing
 
+from django.db import models
+from pydantic import BaseModel
 from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import Project
@@ -10,12 +12,27 @@ from utils.custom_options.models import CustomOption
 
 logger = logging.getLogger(__name__)
 
+class ValidateImageSourceTypeEnum(models.TextChoices):
+    DIRECT_IMAGE_FILES = "DIRECT_IMAGE_FILES", "Direct image files"
+    ANNOTATION_FILE = "ANNOTATION_FILE", "Annotation file"
+
+    def to_firebase(self) -> firebase_models.FbEnumValidateImageInputType:
+        match self:
+            case ValidateImageSourceTypeEnum.DIRECT_IMAGE_FILES:
+                return firebase_models.FbEnumValidateImageInputType.DIRECT_IMAGE_FILES
+            case ValidateImageSourceTypeEnum.ANNOTATION_FILE:
+                return firebase_models.FbEnumValidateImageInputType.ANNOTATION_FILE
+
+class ValidateObjectSourceConfig(BaseModel):
+    source_type: ValidateImageSourceTypeEnum
 
 class ValidateImageProjectProperty(base_project.BaseProjectProperty):
     annotations_file: custom_fields.PydanticId | None = None
     # FIXME(tnagorra): Do we use existing look_for or add a new field for question
     # base_question: custom_fields.PydanticLongText
     custom_options: list[CustomOption] | None = None
+
+    # image_source: ValidateImageSourceConfig
 
 
 class ValidateImageProjectTaskGroupProperty(base_project.BaseProjectTaskGroupProperty): ...
