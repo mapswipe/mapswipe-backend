@@ -3,6 +3,8 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.translation import gettext_lazy as _
 
+from apps.common.admin import ReadOnlyAdmin
+
 from .models import User
 
 
@@ -13,7 +15,7 @@ class UserCreationForm(forms.ModelForm):
 
 
 @admin.register(User)
-class UserAdmin(DjangoUserAdmin):
+class UserAdmin(DjangoUserAdmin, ReadOnlyAdmin):
     list_display = (
         "email",
         "contributor_user__firebase_id",
