@@ -79,7 +79,6 @@ class ProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
     verification_number: strawberry.auto
     group_size: strawberry.auto
     max_tasks_per_user: strawberry.auto
-    status: strawberry.auto
     tutorial: strawberry.ID | None = strawberry.UNSET
     requesting_organization: strawberry.ID | None = strawberry.UNSET
     image: strawberry.ID | None = strawberry.UNSET
@@ -101,6 +100,11 @@ class ProcessedProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
     requesting_organization: strawberry.ID | None = strawberry.UNSET
     image: strawberry.ID | None = strawberry.UNSET
     team: strawberry.ID | None = strawberry.UNSET
+
+
+@strawberry_django.partial(Project)
+class ProjectStatusUpdateInput(UserResourceTopLevelUpdateInputMixin):
+    status: strawberry.auto
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py
