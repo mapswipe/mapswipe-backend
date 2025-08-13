@@ -22,13 +22,13 @@ class AoiGeometryAssetProperty(BaseModel):
 
 class ObjectImage(BaseModel):
     id: custom_fields.PydanticPositiveInt
-    license: custom_fields.PydanticPositiveInt | None
-    coco_url: custom_fields.PydanticUrl | None
-    flickr_url: custom_fields.PydanticUrl | None
-    width: custom_fields.PydanticPositiveInt
-    height: custom_fields.PydanticPositiveInt
+    license: custom_fields.PydanticPositiveInt | None = None
+    coco_url: custom_fields.PydanticUrl | None = None
+    flickr_url: custom_fields.PydanticUrl | None = None
+    width: custom_fields.PydanticPositiveInt | None = None
+    height: custom_fields.PydanticPositiveInt | None = None
     file_name: str
-    date_captured: datetime.datetime
+    date_captured: datetime.datetime | None = None
 
 
 class ObjectImageAnnotation(BaseModel):
@@ -45,4 +45,4 @@ class ObjectImageAnnotation(BaseModel):
 class ObjectImageAssetProperty(BaseModel):
     image: ObjectImage
     # NOTE: We have not added categories, info and licenses
-    annotations: list[ObjectImageAnnotation] | None
+    annotations: list[ObjectImageAnnotation] | None = None

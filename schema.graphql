@@ -26,6 +26,7 @@ type AppEnumCollection {
   RasterTileServerNameEnum: [AppEnumCollectionRasterTileServerNameEnum!]!
   VectorTileServerNameEnum: [AppEnumCollectionVectorTileServerNameEnum!]!
   ValidateObjectSourceTypeEnum: [AppEnumCollectionValidateObjectSourceTypeEnum!]!
+  ValidateImageSourceTypeEnum: [AppEnumCollectionValidateImageSourceTypeEnum!]!
   OverlayLayerTypeEnum: [AppEnumCollectionOverlayLayerTypeEnum!]!
   IconEnum: [AppEnumCollectionIconEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
@@ -102,6 +103,11 @@ type AppEnumCollectionTutorialInformationPageBlockTypeEnum {
 
 type AppEnumCollectionTutorialStatusEnum {
   key: TutorialStatusEnum!
+  label: String!
+}
+
+type AppEnumCollectionValidateImageSourceTypeEnum {
+  key: ValidateImageSourceTypeEnum!
   label: String!
 }
 
@@ -2378,11 +2384,18 @@ type UserTypeOffsetPaginated {
 input ValidateImageProjectPropertyInput {
   annotationsFile: String = null
   customOptions: [CustomOptionInput!] = null
+  sourceType: ValidateImageSourceTypeEnum!
 }
 
 type ValidateImageProjectPropertyType {
   annotationsFile: String
   customOptions: [ProjectCustomOption!]
+  sourceType: ValidateImageSourceTypeEnum!
+}
+
+enum ValidateImageSourceTypeEnum {
+  DIRECT_IMAGES
+  DATASET_FILE
 }
 
 input ValidateImageTutorialTaskPropertyInput {
