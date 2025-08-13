@@ -44,7 +44,9 @@ dependencies = [
     "firebase-admin==6.9.0",
     "pyfirebase-mapswipe",
     "python-magic>=0.4.27",
-    "pandas~=2.3.1",
+    "mercantile>=1.2.1",
+    "vt2geojson",
+    "pandas~=2.3.1"
 ]
 
 [dependency-groups]

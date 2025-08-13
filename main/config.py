@@ -39,6 +39,10 @@ class Config:
     # NOTE: We get changeset information if missing from OSMCha
     OSM_API_LINK = "https://www.openstreetmap.org/api/0.6/"
 
+    # NOTE: We get mapillary data from mapillary
+    MAPILLARY_API_LINK = "https://graph.mapillary.com/"
+    MAPILLARY_API_KEY = typing.cast("str", settings.MAPILLARY_API_KEY)
+
     FIREBASE_HELPER = typing.cast("FirebaseHelper", settings.FIREBASE_HELPER)
     FIREBASE_EMULATOR_USE = typing.cast("str | None", settings.FIREBASE_EMULATOR_USE)
     FIREBASE_EMULATOR_TEST_HOST = typing.cast("str | None", settings.FIREBASE_EMULATOR_TEST_HOST)
