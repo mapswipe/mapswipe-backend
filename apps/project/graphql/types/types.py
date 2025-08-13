@@ -21,6 +21,8 @@ from .asset_types import AoiGeometryAssetPropertyType, ObjectImageAssetPropertyT
 # The tile server types are required by the following imports
 from .project_types import base  # noqa: F401  # isort: skip # type: ignore[reportUnusedImport]
 
+from apps.common.graphql.inputs import UserResourceTopLevelUpdateInputMixin
+
 from .project_types.compare import CompareProjectPropertyType
 from .project_types.completeness import CompletenessProjectPropertyType
 from .project_types.find import FindProjectPropertyType
@@ -31,6 +33,11 @@ from .project_types.validate_image import ValidateImageProjectPropertyType
 @strawberry_django.type(Project)
 class ProjectStatusType:
     id: strawberry.ID
+    status: strawberry.auto
+
+
+@strawberry_django.partial(Project)
+class ProjectStatusUpdateInput(UserResourceTopLevelUpdateInputMixin):
     status: strawberry.auto
 
 
