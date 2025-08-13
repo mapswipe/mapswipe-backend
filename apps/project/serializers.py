@@ -31,15 +31,7 @@ VALID_PROJECT_STATUS_TRANSITIONS = set(
         (Project.Status.DRAFT, Project.Status.DISCARDED),
         (Project.Status.FAILED, Project.Status.MARKED_AS_READY),
         (Project.Status.FAILED, Project.Status.DISCARDED),
-    ],
-)
-
-
-VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS = set(
-    [
         # NOTE: Transition from MARKED_AS_READY are updated by the system
-        # (Project.Status.MARKED_AS_READY, Project.Status.FAILED),
-        # (Project.Status.MARKED_AS_READY, Project.Status.READY),
         (Project.Status.READY, Project.Status.PUBLISHED),
         (Project.Status.READY, Project.Status.DISCARDED),
         (Project.Status.PUBLISHED, Project.Status.ARCHIVED),
@@ -102,7 +94,6 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             "group_size",
             "max_tasks_per_user",
             "project_type_specifics",
-            "status",
             "tutorial",
             "team",
         )
@@ -113,25 +104,6 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
                 gettext("Cannot use archived team on a project."),
             )
         return team
-
-    def validate_status(self, new_status: Project.Status | int) -> Project.Status:
-        assert self.instance is not None, "Project does not exist."
-
-        if not isinstance(new_status, Project.Status):
-            new_status = Project.Status(new_status)
-
-        if (
-            self.instance.status_enum != new_status
-            and (self.instance.status_enum, new_status) not in VALID_PROJECT_STATUS_TRANSITIONS
-        ):
-            raise serializers.ValidationError(
-                gettext("Project status cannot be changed from %s to %s")
-                % (
-                    self.instance.status_enum.label,
-                    new_status.label,
-                ),
-            )
-        return new_status
 
     def validate_tutorial(self, tutorial: Tutorial | None) -> Tutorial | None:
         assert self.instance is not None
@@ -232,16 +204,6 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         self._validate_project_type_specifics(attrs)
         return super().validate(attrs)
 
-    @typing.override
-    def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:  # type: ignore[reportIncompatibleMethodOverride]
-        old_status_enum = instance.status_enum
-        new_project = super().update(instance, validated_data)
-
-        if old_status_enum != Project.Status.MARKED_AS_READY and new_project.status_enum == Project.Status.MARKED_AS_READY:
-            transaction.on_commit(lambda: process_project_task.delay(new_project.pk))
-
-        return new_project
-
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class ProcessedProjectSerializer(UserResourceSerializer[Project]):
@@ -261,7 +223,6 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             "additional_info_url",
             "description",
             "image",
-            "status",
             "tutorial",
             "team",
         )
@@ -272,22 +233,6 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
                 gettext("Cannot use archived team on a project."),
             )
         return team
-
-    def validate_status(self, new_status: Project.Status | int):
-        assert self.instance is not None, "Project does not exist."
-
-        if not isinstance(new_status, Project.Status):
-            new_status = Project.Status(new_status)
-
-        if (
-            self.instance.status_enum != new_status
-            and (self.instance.status_enum, new_status) not in VALID_PROCESSED_PROJECT_STATUS_TRANSITIONS
-        ):
-            raise serializers.ValidationError(
-                gettext("Project status cannot be changed from %s to %s")
-                % (self.instance.status_enum.label, new_status.label),
-            )
-        return new_status
 
     def validate_image(self, new_image: ProjectAsset | None):
         assert self.instance is not None
@@ -317,11 +262,6 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
         current_tutorial = self.instance.tutorial
         tutorial = new_tutorial or current_tutorial
 
-        if tutorial is None and attrs.get("status") == Project.Status.PUBLISHED:
-            raise serializers.ValidationError(
-                {"tutorial": gettext("Tutorial is required before publishing a project.")},
-            )
-
         # FIXME(susilnem): Check if we should use new_tutorial.status or new_status.status_enum
         if new_tutorial and new_tutorial != current_tutorial and new_tutorial.status_enum == Tutorial.Status.ARCHIVED:
             raise serializers.ValidationError(gettext("Cannot assign archived tutorial to the project."))
@@ -339,21 +279,6 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
         self._validate_tutorial(attrs)
         return super().validate(attrs)
-
-    @typing.override
-    def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:
-        old_status_enum = instance.status_enum
-        updated_project = super().update(instance, validated_data)
-
-        if (
-            old_status_enum != Project.Status.PUBLISHED and updated_project.status_enum == Project.Status.PUBLISHED
-        ) or old_status_enum == Project.Status.PUBLISHED:
-            updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
-
-            # FIXME: We can call this on batch later as well or handle error scenario
-            transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
-
-        return updated_project
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
@@ -490,3 +415,59 @@ class OrganizationSerializer(UserResourceSerializer[Organization], ArchivableRes
         organization = super().update(instance, validated_data)
         FirebaseOrganizationPush(organization).trigger()
         return organization
+
+
+class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        model = Project
+        fields = ("status",)
+
+    def validate_status(self, new_status: Project.Status | int) -> Project.Status:
+        assert self.instance is not None, "Project does not exist."
+
+        if not isinstance(new_status, Project.Status):
+            new_status = Project.Status(new_status)
+
+        if (
+            self.instance.status_enum != new_status
+            and (self.instance.status_enum, new_status) not in VALID_PROJECT_STATUS_TRANSITIONS
+        ):
+            raise serializers.ValidationError(
+                gettext("Project status cannot be changed from %s to %s")
+                % (
+                    self.instance.status_enum.label,
+                    new_status.label,
+                ),
+            )
+
+        if new_status == Project.Status.PUBLISHED and not self.instance.tutorial:
+            raise serializers.ValidationError(
+                {"tutorial": gettext("Tutorial is required before publishing a project.")},
+            )
+        if new_status == Project.Status.MARKED_AS_READY and not self.instance.project_type_specifics:
+            raise serializers.ValidationError(
+                gettext("project_type_specifics is required when project status is %s") % (new_status.label),
+            )
+
+        return new_status
+
+    @typing.override
+    def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:  # type: ignore[reportIncompatibleMethodOverride]
+        old_status_enum = instance.status_enum
+        updated_project = super().update(instance, validated_data)
+
+        if (
+            old_status_enum != Project.Status.MARKED_AS_READY
+            and updated_project.status_enum == Project.Status.MARKED_AS_READY
+        ):
+            transaction.on_commit(lambda: process_project_task.delay(updated_project.pk))
+
+        if (
+            old_status_enum != Project.Status.PUBLISHED and updated_project.status_enum == Project.Status.PUBLISHED
+        ) or old_status_enum == Project.Status.PUBLISHED:
+            updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+
+            # FIXME: We can call this on batch later as well or handle error scenario
+            transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
+
+        return updated_project
