@@ -346,12 +346,12 @@ ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by,
 """
 input ContributorTeamFilter {
   id: IDBaseFilterLookup
-  name: StrFilterLookup
   isArchived: BoolBaseFilterLookup
   AND: ContributorTeamFilter
   OR: ContributorTeamFilter
   NOT: ContributorTeamFilter
   DISTINCT: Boolean
+  name: String
 }
 
 input ContributorTeamOrder {
@@ -434,13 +434,13 @@ ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modifie
 """
 input ContributorUserGroupFilter {
   id: IDBaseFilterLookup
-  name: StrFilterLookup
   isArchived: BoolBaseFilterLookup
   AND: ContributorUserGroupFilter
   OR: ContributorUserGroupFilter
   NOT: ContributorUserGroupFilter
   DISTINCT: Boolean
   firebaseId: ID
+  name: String
 }
 
 type ContributorUserGroupFilteredStats implements ContributorUserUserGroupBaseFilterStatsQuery {
@@ -965,12 +965,12 @@ Organization(id, client_id, created_at, modified_at, created_by, modified_by, is
 """
 input OrganizationFilter {
   id: IDBaseFilterLookup
-  name: StrFilterLookup
   isArchived: BoolBaseFilterLookup
   AND: OrganizationFilter
   OR: OrganizationFilter
   NOT: OrganizationFilter
   DISTINCT: Boolean
+  name: String
 }
 
 input OrganizationOrder {
@@ -1322,9 +1322,7 @@ Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id,
 """
 input ProjectFilter {
   id: IDBaseFilterLookup
-  topic: StrFilterLookup
   projectNumber: IntComparisonFilterLookup
-  region: StrFilterLookup
   projectType: ProjectTypeEnumFilterLookup
 
   """Which group, institution or community is requesting this project?"""
@@ -1342,6 +1340,8 @@ input ProjectFilter {
   NOT: ProjectFilter
   DISTINCT: Boolean
   name: String
+  topic: String
+  region: String
 }
 
 input ProjectOrder {
@@ -2332,11 +2332,11 @@ User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is
 """
 input UserFilter {
   id: IDBaseFilterLookup
-  displayName: StrFilterLookup
   AND: UserFilter
   OR: UserFilter
   NOT: UserFilter
   DISTINCT: Boolean
+  displayName: String
 }
 
 """

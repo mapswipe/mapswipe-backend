@@ -2,6 +2,7 @@ import strawberry
 import strawberry_django
 from django.db import models
 
+from apps.common.filters import unaccented_filter
 from apps.project.models import Organization, Project, ProjectAsset
 
 
@@ -29,23 +30,13 @@ class ProjectFilter:
         )
         return queryset, models.Q(_name__unaccent__icontains=value)
 
-    @strawberry_django.filter_field
-    def topic(
-        self,
-        queryset: models.QuerySet[Project],
-        value: str,
-        prefix: str,
-    ) -> tuple[models.QuerySet[Project], models.Q]:
-        return queryset, models.Q(topic__unaccent__icontains=value)
+    @unaccented_filter("topic")
+    def topic(self):
+        pass
 
-    @strawberry_django.filter_field
-    def region(
-        self,
-        queryset: models.QuerySet[Project],
-        value: str,
-        prefix: str,
-    ) -> tuple[models.QuerySet[Project], models.Q]:
-        return queryset, models.Q(region__unaccent__icontains=value)
+    @unaccented_filter("region")
+    def region(self):
+        pass
 
 
 @strawberry_django.filters.filter(ProjectAsset, lookups=True)
@@ -63,11 +54,6 @@ class OrganizationFilter:
     id: strawberry.auto
     is_archived: strawberry.auto
 
-    @strawberry_django.filter_field
-    def name(
-        self,
-        queryset: models.QuerySet[Organization],
-        value: str,
-        prefix: str,
-    ) -> tuple[models.QuerySet[Organization], models.Q]:
-        return queryset, models.Q(name__unaccent__icontains=value)
+    @unaccented_filter("name")
+    def name(self):
+        pass

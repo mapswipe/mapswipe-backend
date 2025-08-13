@@ -2,6 +2,7 @@ import strawberry
 import strawberry_django
 from django.db import models
 
+from apps.common.filters import unaccented_filter
 from apps.contributor.models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
 
@@ -44,14 +45,9 @@ class ContributorUserGroupFilter:
     ) -> tuple[models.QuerySet[ContributorUserGroup], models.Q]:
         return self.filter_by_user("user__firebase_id", queryset, value)
 
-    @strawberry_django.filter_field
-    def name(
-        self,
-        queryset: models.QuerySet[ContributorUserGroup],
-        value: str,
-        prefix: str,
-    ) -> tuple[models.QuerySet[ContributorUserGroup], models.Q]:
-        return queryset, models.Q(name__unaccent__icontains=value)
+    @unaccented_filter("name")
+    def name(self):
+        pass
 
 
 @strawberry_django.filters.filter(ContributorUserGroupMembership, lookups=True)
@@ -65,11 +61,6 @@ class ContributorTeamFilter:
     id: strawberry.auto
     is_archived: strawberry.auto
 
-    @strawberry_django.filter_field
-    def name(
-        self,
-        queryset: models.QuerySet[ContributorTeam],
-        value: str,
-        prefix: str,
-    ) -> tuple[models.QuerySet[ContributorTeam], models.Q]:
-        return queryset, models.Q(name__unaccent__icontains=value)
+    @unaccented_filter("name")
+    def name(self):
+        pass

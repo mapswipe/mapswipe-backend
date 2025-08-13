@@ -1,7 +1,7 @@
 import strawberry
 import strawberry_django
-from django.db import models
 
+from apps.common.filters import unaccented_filter
 from apps.user.models import User
 
 
@@ -9,11 +9,6 @@ from apps.user.models import User
 class UserFilter:
     id: strawberry.auto
 
-    @strawberry_django.filter_field
-    def display_name(
-        self,
-        queryset: models.QuerySet[User],
-        value: str,
-        prefix: str,
-    ) -> tuple[models.QuerySet[User], models.Q]:
-        return queryset, models.Q(display_name__unaccent__icontains=value)
+    @unaccented_filter("display_name")
+    def display_name(self):
+        pass
