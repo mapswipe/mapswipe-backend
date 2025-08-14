@@ -54,7 +54,6 @@ class ContributorTeamAdmin(
     ArchivableResourceAdmin,
     DjangoQLSearchMixin,
     FirebaseResourceAdmin,
-    ReadOnlyAdmin,
     admin.ModelAdmin,
 ):
     list_display = (

@@ -117,3 +117,15 @@ class ReadOnlyAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         # Get all model field names
         return [f.name for f in self.model._meta.fields]
+
+    @typing.override
+    def has_add_permission(self, *args, **kwargs):
+        return False
+
+    @typing.override
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
+    @typing.override
+    def has_change_permission(self, request, obj=None):
+        return False
