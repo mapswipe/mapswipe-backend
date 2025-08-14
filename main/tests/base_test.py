@@ -1,3 +1,4 @@
+import logging
 import typing
 import warnings
 from datetime import datetime
@@ -9,6 +10,8 @@ from django.test import TestCase as BaseTestCase
 from django.test import override_settings
 
 from main.config import Config
+
+logger = logging.getLogger(__name__)
 
 TEST_CACHES = {
     "default": {
@@ -52,9 +55,11 @@ class TestCase(BaseTestCase):
         from django.core.cache import cache
 
         # Clear all test cache
+        logger.info("Clearing cache")
         cache.clear()
 
         # Clear firebase data
+        logger.info("Clearing firebase database")
         self.clear_firebase_data()
 
         super().setUp()

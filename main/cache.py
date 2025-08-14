@@ -11,13 +11,17 @@ cache: DefaultClient = caches["default"]  # type: ignore[reportAssignmentType]
 class CeleryLock:
     class Key:
         CLEAR_EXPIRED_DJANGO_SESSIONS = "CLEAR_EXPIRED_DJANGO_SESSIONS"
+
         # FIXME(tnagorra): Rename this to project process task
         PROJECT_LOAD_GEOMETRY = "PROJECT_LOAD_GEOMETRY_{0}"
         # FIXME(tnagorra): Rename this to project push to firebase
         PUSH_PROJECT_TO_FIREBASE = "PUSH_PROJECT_TO_FIREBASE_{0}"
+
         TUTORIAL_PUSH_TO_FIREBASE = "TUTORIAL_PUSH_TO_FIREBASE_{0}"
         PROJECT_EXPORTS_GENERATE = "PROJECT_GENERATE_EXPORTS_{0}"
         MAPPING_SESSION_PULL_FROM_FIREBASE = "MAPPING_SESSION_PULL_FROM_FIREBASE"
+
+        USERS_PULL_FROM_FIREBASE = "USERS_PULL_FROM_FIREBASE"
 
     @staticmethod
     @contextmanager
