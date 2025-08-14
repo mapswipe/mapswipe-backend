@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import typing
 from typing import Any, TypedDict
 
@@ -27,43 +28,9 @@ logger = logging.getLogger(__name__)
 class ValidFeature(Feature[Polygon | MultiPolygon, dict[str, Any]]): ...
 
 
-class ValidateRawGroupItem(TypedDict):
+class StreetRawGroupItem(TypedDict):
     feature_ids: list[int]
     features: list[ValidFeature]
-
-
-def group_input_geometries(features: list[ValidFeature], group_size: int, tutorial: bool = False):
-    groups: dict[str, ValidateRawGroupItem] = {}
-
-    # we will simply start with min group id = 100
-    group_id = 100
-    group_id_string = f"g{group_id}"
-    for feature_count, feature in enumerate(features):
-        feature_id = feature_count + 1
-        if feature_id % (group_size + 1) == 0:
-            group_id += 1
-            group_id_string = f"g{group_id}"
-
-        try:
-            groups[group_id_string]
-        except KeyError:
-            new_feature_group: ValidateRawGroupItem = {"feature_ids": [], "features": []}
-            groups[group_id_string] = new_feature_group
-
-        # we use a new id here based on the count
-        # since we are not sure that GetFID returns unique values
-        if not tutorial:
-            groups[group_id_string]["feature_ids"].append(feature_id)
-        # In the tutorial the feature id is defined by the "screen" attribute.
-        # We do this so that we can sort by the feature id later and
-        # get the screens displayed in the right order on the app.
-        elif feature.properties is not None:
-            groups[group_id_string]["feature_ids"].append(
-                feature.properties["screen"],
-            )
-        groups[group_id_string]["features"].append(feature)
-
-    return groups
 
 
 class StreetMappilaryImageFilters(BaseModel):
@@ -97,7 +64,7 @@ class StreetMappilaryImageFilters(BaseModel):
     )
 
 
-class StreetProperty(base_project.BaseProjectProperty):
+class StreetProjectProperty(base_project.BaseProjectProperty):
     aoi_geometry: custom_fields.PydanticId
     custom_options: list[CustomOption] | None = None
     mappilary_image_filters: StreetMappilaryImageFilters
@@ -114,14 +81,14 @@ class StreetTaskProperty(base_project.BaseProjectTaskProperty):
 
 class StreetProject(
     base_project.BaseProject[
-        StreetProperty,
+        StreetProjectProperty,
         StreetTaskGroupProperty,
         StreetTaskProperty,
-        list[ValidFeature],
-        ValidateRawGroupItem,
+        StreetRawGroupItem,
+        list[tuple[int, ValidFeature]],
     ],
 ):
-    project_property_class = StreetProperty
+    project_property_class = StreetProjectProperty
     project_task_group_property_class = StreetTaskGroupProperty
     project_task_property_class = StreetTaskProperty
 
@@ -131,7 +98,7 @@ class StreetProject(
             assert project.project_type == ProjectTypeEnum.STREET, f"{type(self)} is defined for STREET"
 
     @typing.override
-    def validate(self) -> list[ValidFeature]:
+    def validate(self) -> StreetRawGroupItem:
         """Validate project before creating groups"""
         self.project.update_processing_status(Project.ProcessingStatus.VALIDATING_GEOMETRY, True)
 
@@ -147,7 +114,7 @@ class StreetProject(
 
         mappilary_image_filters = self.project_type_specifics.mappilary_image_filters
 
-        image_ids, geometries = get_image_metadata(
+        image_metadata_data = get_image_metadata(
             aoi_geojson=aoi_geojson,
             is_pano=mappilary_image_filters.is_pano,
             creator_id=mappilary_image_filters.creator_id,
@@ -157,19 +124,24 @@ class StreetProject(
             randomize_order=mappilary_image_filters.randomize_order,
             sampling_threshold=mappilary_image_filters.sampling_threshold,
         )
+        return StreetRawGroupItem(
+            feature_ids=image_metadata_data["ids"],
+            features=image_metadata_data["geometries"],
+        )
 
     @typing.override
-    def create_tasks(self, group: ProjectTaskGroup, raw_group: ValidateRawGroupItem) -> int:
+    def create_tasks(
+        self,
+        /,
+        group: ProjectTaskGroup,
+        raw_group: list[tuple[int, ValidFeature]],
+        previous_tasks_count: int,
+    ) -> int:
         """Create tasks for a group."""
         bulk_mgr = BulkCreateManager(chunk_size=1000)
+        tasks_count = previous_tasks_count
 
-        tasks_count = 0
-        features = raw_group["features"]
-        f_ids = raw_group["feature_ids"]
-
-        for i, f_id in enumerate(f_ids):
-            feature = features[i]
-
+        for f_id, feature in raw_group:
             if feature.geometry is not None:
                 geom = ogr.CreateGeometryFromJson(
                     feature.geometry.model_dump_json(),
@@ -198,13 +170,21 @@ class StreetProject(
         return tasks_count
 
     @typing.override
-    def create_groups(self, resp: list[ValidFeature]):
+    def create_groups(self, resp: StreetRawGroupItem):
         self.project.update_processing_status(Project.ProcessingStatus.GENERATING_GROUPS_AND_TASKS, True)
-        raw_groups = group_input_geometries(resp, self.project.group_size)
+        number_of_groups = math.ceil(len(resp["feature_ids"]) / self.project.group_size)
 
-        for group_key, raw_group in raw_groups.items():
+        total_tasks_accumulated: int = 0
+
+        for group_id in range(number_of_groups):
+            start_index = group_id * self.project.group_size
+            end_index = start_index + self.project.group_size
+
+            group_features = resp["features"][start_index:end_index]
+            group_feature_ids = resp["feature_ids"][start_index:end_index]
+            raw_group = list(zip(group_feature_ids, group_features, strict=True))
             new_group = ProjectTaskGroup.objects.create(
-                firebase_id=group_key,
+                firebase_id=f"g{group_id}",
                 project_id=self.project.pk,
                 number_of_tasks=0,
                 progress=0,
@@ -214,8 +194,9 @@ class StreetProject(
             )
 
             # Create new tasks for this group
-            total_tasks = self.create_tasks(new_group, raw_group)
+            total_tasks = self.create_tasks(new_group, raw_group, total_tasks_accumulated)
             logger.info("Created %s tasks for group: %s", total_tasks, new_group.pk)
+            total_tasks_accumulated += total_tasks
 
     @typing.override
     def post_create_groups(self):

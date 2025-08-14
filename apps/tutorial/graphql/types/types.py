@@ -17,6 +17,7 @@ from apps.tutorial.models import (
 
 import apps.project.graphql.types.asset_types  # noqa: F401  # isort: skip # type: ignore[reportUnusedImport]
 
+from project_types.street import tutorial as street_tutorial
 from project_types.tile_map_service.compare import tutorial as compare_tutorial
 from project_types.tile_map_service.completeness import tutorial as completeness_tutorial
 from project_types.tile_map_service.find import tutorial as find_tutorial
@@ -26,6 +27,7 @@ from project_types.validate_image import tutorial as validate_image_tutorial
 from .project_types.compare import CompareTutorialTaskPropertyType
 from .project_types.completeness import CompletenessTutorialTaskPropertyType
 from .project_types.find import FindTutorialTaskPropertyType
+from .project_types.street import StreetTutorialTaskPropertyType
 from .project_types.validate import ValidateTutorialTaskPropertyType
 from .project_types.validate_image import ValidateImageTutorialTaskPropertyType
 
@@ -62,6 +64,7 @@ class TutorialTaskType(UserResourceTypeMixin):
         | ValidateTutorialTaskPropertyType
         | ValidateImageTutorialTaskPropertyType
         | CompletenessTutorialTaskPropertyType
+        | StreetTutorialTaskPropertyType
         | None
     ):
         data = task.project_type_specifics
@@ -90,6 +93,11 @@ class TutorialTaskType(UserResourceTypeMixin):
             return typing.cast(
                 "CompletenessTutorialTaskPropertyType",
                 completeness_tutorial.CompletenessTutorialTaskProperty.model_validate(data),
+            )
+        if project_type_enum == Project.Type.STREET:
+            return typing.cast(
+                "StreetTutorialTaskPropertyType",
+                street_tutorial.StreetTutorialTaskProperty.model_validate(data),
             )
         typing.assert_never(project_type_enum)
 
