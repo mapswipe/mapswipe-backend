@@ -8,7 +8,6 @@ from pyfirebase_mapswipe import utils as firebase_utils
 
 from apps.common.firebase import FirebasePush
 from apps.contributor.models import ContributorTeam, ContributorUser, ContributorUserGroup
-from main.celery import app
 from main.config import Config
 
 logger = logging.getLogger(__name__)
@@ -51,12 +50,6 @@ class FirebaseContributorTeam(FirebasePush[ContributorTeam, firebase_models.FbTe
     def get_firebase_path(self, firebase_id: str, model=ContributorTeam):
         return Config.FirebaseKeys.contributor_team(firebase_id)
 
-    @staticmethod
-    @typing.override
-    @app.task()
-    def task(obj_id: int) -> None:
-        FirebaseContributorTeam(obj_id).push()
-
 
 class FirebaseContributorUser(FirebasePush[ContributorUser, firebase_ext_models.FbUser]):
     model_class = ContributorUser
@@ -85,11 +78,6 @@ class FirebaseContributorUser(FirebasePush[ContributorUser, firebase_ext_models.
     @typing.override
     def get_firebase_path(self, firebase_id: str, model=ContributorUser):
         return Config.FirebaseKeys.contributor_user(firebase_id)
-
-    @staticmethod
-    @typing.override
-    @app.task()
-    def task(obj_id: int) -> None: ...
 
 
 class FirebaseContributorUserGroup(FirebasePush[ContributorUserGroup, firebase_ext_models.FbUserGroup]):
@@ -132,8 +120,3 @@ class FirebaseContributorUserGroup(FirebasePush[ContributorUserGroup, firebase_e
     @typing.override
     def get_firebase_path(self, firebase_id: str, model=ContributorUserGroup):
         return Config.FirebaseKeys.contributor_user_group(firebase_id)
-
-    @staticmethod
-    @typing.override
-    @app.task()
-    def task(obj_id: int) -> None: ...

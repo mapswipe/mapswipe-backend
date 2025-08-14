@@ -72,7 +72,7 @@ class Config:
 
         @staticmethod
         def organization(organization_id: str):
-            return f"/v2/organisation/{organization_id}/"
+            return f"/v2/organisations/{organization_id}/"
 
         @staticmethod
         def contributor_team(contributor_team_id: str):
