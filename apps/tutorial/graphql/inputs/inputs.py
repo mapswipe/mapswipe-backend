@@ -154,6 +154,10 @@ class TutorialAssetCreateInput(UserResourceCreateInputMixin):
 @strawberry_django.partial(Tutorial)
 class TutorialUpdateInput(UserResourceTopLevelUpdateInputMixin):
     name: strawberry.auto
-    status: strawberry.auto
     scenarios: list[TutorialScenarioPageInput] | None = strawberry.UNSET
     information_pages: list[TutorialInformationPageInput] | None = strawberry.UNSET
+
+
+@strawberry_django.partial(Tutorial)
+class TutorialStatusUpdateInput(UserResourceTopLevelUpdateInputMixin):
+    status: strawberry.auto

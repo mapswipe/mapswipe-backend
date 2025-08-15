@@ -290,7 +290,6 @@ class Mutation:
           }
         }
     """
-
     UPDATE_PROJECT_STATUS = """
         mutation UpdateProjectStatus($pk: ID!, $data: ProjectStatusUpdateInput!) {
           updateProjectStatus(pk: $pk, data: $data) {
@@ -1209,7 +1208,6 @@ class TestProjectTypeMutation(TestCase):
         resp_data = content["data"]["updateProjectStatus"]
         assert resp_data["errors"] is None, content
         assert resp_data["result"]["status"] == self.genum(Project.Status.MARKED_AS_READY)
-
         latest_project.refresh_from_db()
         assert latest_project.processing_status is None
 

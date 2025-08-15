@@ -492,3 +492,44 @@ class TutorialAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Tuto
                 typing.assert_never(input_type_enum)
 
         return attrs
+
+
+class TutorialStatusUpdateSerializer(UserResourceSerializer[Tutorial]):
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        model = Tutorial
+        fields = ("status",)
+
+    @typing.override
+    def validate(self, attrs: dict[str, typing.Any]):
+        assert self.instance is not None, "Tutorial does not exist."
+        new_status = attrs.get("status")
+
+        if not isinstance(new_status, Tutorial.Status):
+            new_status = Tutorial.Status(new_status)
+
+        if (
+            self.instance.status_enum != new_status
+            and (self.instance.status_enum, new_status) not in VALID_TUTORIAL_STATUS_TRANSITIONS
+        ):
+            raise serializers.ValidationError(
+                gettext("Tutorial status cannot be changed from %s to %s")
+                % (
+                    self.instance.status_enum.label,
+                    new_status.label,
+                ),
+            )
+        return super().validate(attrs)
+
+    @typing.override
+    def update(self, instance: Tutorial, validated_data: dict[typing.Any, typing.Any]):
+        old_status_enum = instance.status_enum
+        updated_tutorial = super().update(instance, validated_data)
+        if (
+            old_status_enum != Tutorial.Status.PUBLISHED and updated_tutorial.status_enum == Tutorial.Status.PUBLISHED
+        ) or old_status_enum == Tutorial.Status.PUBLISHED:
+            updated_tutorial.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+
+            # FIXME: We can call this on batch later as well or handle error scenario
+            transaction.on_commit(lambda: push_tutorial_to_firebase.delay(updated_tutorial.pk))
+
+        return updated_tutorial

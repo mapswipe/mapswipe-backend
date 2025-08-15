@@ -170,6 +170,30 @@ class Mutation:
         }
     """
 
+    UPDATE_TUTORIAL_STATUS = """
+        mutation UpdateTutorialStatus($data: TutorialStatusUpdateInput!, $pk: ID!) {
+          updateTutorialStatus(data: $data, pk: $pk) {
+            ... on OperationInfo {
+              __typename
+              messages {
+                code
+                field
+                kind
+                message
+              }
+            }
+            ... on TutorialStatusTypeMutationResponseType {
+              errors
+              ok
+              result {
+                id
+                status
+                }
+              }
+            }
+        }
+    """
+
 
 class TestTutorialMutation(TestCase):
     @typing.override
@@ -208,6 +232,15 @@ class TestTutorialMutation(TestCase):
     def _update_tutorial_mutation(self, pk: str, tutorial_data: dict, **kwargs):
         return self.query_check(
             query=Mutation.UPDATE_TUTORIAL,
+            variables={
+                "data": tutorial_data,
+                "pk": pk,
+            },
+        )
+
+    def _update_tutorial_status_mutation(self, pk: str, tutorial_data: dict, **kwargs):
+        return self.query_check(
+            query=Mutation.UPDATE_TUTORIAL_STATUS,
             variables={
                 "data": tutorial_data,
                 "pk": pk,
@@ -406,6 +439,14 @@ class TestTutorialMutation(TestCase):
 
         latest_tutorial.refresh_from_db()
 
+        # Update tutorial status to publish
+        status_data = {
+            "clientId": latest_tutorial.client_id,
+            "status": self.genum(TutorialStatusEnum.PUBLISHED),
+        }
+        self._update_tutorial_status_mutation(latest_tutorial.pk, status_data)
+        latest_tutorial.refresh_from_db()
+
         assert resp_data == self.g_mutation_response(
             ok=True,
             result=dict(
@@ -470,9 +511,9 @@ class TestTutorialMutation(TestCase):
         tutorial_from_res = resp_data["result"]
         tutorial_from_res.pop("projectId")
         tutorial_from_res.pop("id")
+        tutorial_from_res.pop("status")
         tutorial_data = {
             **tutorial_from_res,
-            "status": self.genum(TutorialStatusEnum.PUBLISHED),
             "scenarios": [
                 {
                     "update": {
@@ -660,9 +701,9 @@ class TestTutorialMutation(TestCase):
                 "clientId": tutorial.client_id,
                 "status": self.genum(new_status),
             }
-            response = self._update_tutorial_mutation(str(tutorial.pk), data)
+            response = self._update_tutorial_status_mutation(str(tutorial.pk), data)
 
-            resp_data = response["data"]["updateTutorial"]
+            resp_data = response["data"]["updateTutorialStatus"]
             assert resp_data["errors"] is None, response
             tutorial.refresh_from_db()
             assert tutorial.status == new_status
@@ -681,9 +722,9 @@ class TestTutorialMutation(TestCase):
                 "clientId": tutorial.client_id,
                 "status": self.genum(new_status),
             }
-            response = self._update_tutorial_mutation(str(tutorial.pk), data)
+            response = self._update_tutorial_status_mutation(str(tutorial.pk), data)
 
-            resp_data = response["data"]["updateTutorial"]
+            resp_data = response["data"]["updateTutorialStatus"]
             assert resp_data["errors"] is not None, response
             assert "Tutorial status cannot be changed" in resp_data["errors"][0]["messages"], response
             tutorial.refresh_from_db()

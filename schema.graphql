@@ -847,6 +847,7 @@ type Mutation {
   createTutorial(data: TutorialCreateInput!): CreateTutorialPayload! @isAuthenticated
   updateTutorial(data: TutorialUpdateInput!, pk: ID!): UpdateTutorialPayload! @isAuthenticated
   createTutorialAsset(data: TutorialAssetCreateInput!): CreateTutorialAssetPayload! @isAuthenticated
+  updateTutorialStatus(data: TutorialStatusUpdateInput!, pk: ID!): UpdateTutorialStatusPayload! @isAuthenticated
   createContributorUserGroup(data: ContributorUserGroupCreateInput!): CreateContributorUserGroupPayload! @isAuthenticated
   updateContributorUserGroup(data: ContributorUserGroupUpdateInput!, pk: ID!): UpdateContributorUserGroupPayload! @isAuthenticated
 }
@@ -2241,6 +2242,28 @@ input TutorialStatusEnumFilterLookup {
 }
 
 """
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
+"""
+type TutorialStatusType {
+  id: ID!
+  status: TutorialStatusEnum!
+}
+
+type TutorialStatusTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: TutorialStatusType
+}
+
+"""
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
+"""
+input TutorialStatusUpdateInput {
+  clientId: String!
+  status: TutorialStatusEnum
+}
+
+"""
 TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
 """
 input TutorialTaskCreateInput {
@@ -2332,7 +2355,6 @@ Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id
 input TutorialUpdateInput {
   clientId: String!
   name: String
-  status: TutorialStatusEnum
   scenarios: [TutorialScenarioPageInput!]
   informationPages: [TutorialInformationPageInput!]
 }
@@ -2348,6 +2370,8 @@ union UpdateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
 union UpdateProjectStatusPayload = ProjectStatusTypeMutationResponseType | OperationInfo
 
 union UpdateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
+
+union UpdateTutorialStatusPayload = TutorialStatusTypeMutationResponseType | OperationInfo
 
 scalar Upload
 
