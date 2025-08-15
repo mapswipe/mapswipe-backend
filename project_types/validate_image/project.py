@@ -11,6 +11,7 @@ from utils.custom_options.models import CustomOption
 
 logger = logging.getLogger(__name__)
 
+
 class ValidateImageSourceTypeEnum(models.TextChoices):
     DIRECT_IMAGES = "DIRECT_IMAGES", "Direct images"
     DATASET_FILE = "DATASET_FILE", "Dataset file"
@@ -21,6 +22,7 @@ class ValidateImageSourceTypeEnum(models.TextChoices):
                 return firebase_models.FbEnumValidateImageInputType.DIRECT_IMAGES
             case ValidateImageSourceTypeEnum.DATASET_FILE:
                 return firebase_models.FbEnumValidateImageInputType.DATASET_FILE
+
 
 class ValidateImageProjectProperty(base_project.BaseProjectProperty):
     # FIXME(frozenhleium): This is not required any more

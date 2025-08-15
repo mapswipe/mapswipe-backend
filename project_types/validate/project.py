@@ -12,7 +12,6 @@ from geojson_pydantic.geometries import MultiPolygon, Polygon
 from osgeo import ogr
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 from pyfirebase_mapswipe import models as firebase_models
-from typing_extensions import TypedDict
 from ulid import ULID
 
 from apps.common.models import (
@@ -31,6 +30,7 @@ from main.config import Config
 from project_types.base import project as base_project
 from project_types.tile_map_service.base.project import create_json_dump
 from project_types.validate.api_calls import ohsome
+from utils.common import Grouping, to_groups
 from utils.custom_options.models import CustomOption
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
 
@@ -38,48 +38,6 @@ logger = logging.getLogger(__name__)
 
 
 class ValidFeature(Feature[Polygon | MultiPolygon, dict[str, Any]]): ...
-
-
-class ValidateRawGroupItem(TypedDict):
-    feature_ids: list[int]
-    features: list[ValidFeature]
-
-
-# FIXME(tnagorra): move this to utils
-# FIXME(tnagorra): We need to refactor this codeblock
-# Example: We no longer need tutorial parameter
-def group_input_geometries(features: list[ValidFeature], group_size: int, tutorial: bool = False):
-    groups: dict[str, ValidateRawGroupItem] = {}
-
-    # we will simply start with min group id = 100
-    group_id = 100
-    group_id_string = f"g{group_id}"
-    for feature_count, feature in enumerate(features):
-        feature_id = feature_count + 1
-        if feature_id % (group_size + 1) == 0:
-            group_id += 1
-            group_id_string = f"g{group_id}"
-
-        try:
-            groups[group_id_string]
-        except KeyError:
-            new_feature_group: ValidateRawGroupItem = {"feature_ids": [], "features": []}
-            groups[group_id_string] = new_feature_group
-
-        # we use a new id here based on the count
-        # since we are not sure that GetFID returns unique values
-        if not tutorial:
-            groups[group_id_string]["feature_ids"].append(feature_id)
-        # In the tutorial the feature id is defined by the "screen" attribute.
-        # We do this so that we can sort by the feature id later and
-        # get the screens displayed in the right order on the app.
-        elif feature.properties is not None:
-            groups[group_id_string]["feature_ids"].append(
-                feature.properties["screen"],
-            )
-        groups[group_id_string]["features"].append(feature)
-
-    return groups
 
 
 class ValidateObjectSourceTypeEnum(models.TextChoices):
@@ -160,7 +118,7 @@ class ValidateProject(
         ValidateProjectTaskGroupProperty,
         ValidateProjectTaskProperty,
         list[ValidFeature],
-        ValidateRawGroupItem,
+        Grouping[ValidFeature],
     ],
 ):
     project_property_class = ValidateProjectProperty
@@ -184,8 +142,9 @@ class ValidateProject(
 
         return filtered_features
 
-    # FIXME: add appropriate typing for geojson
     def _get_object_geometry_from_ohsome(self, geojson: Any):
+        # FIXME(frozenhelium): add appropriate typing for geojson
+        # FIXME(tnagorra): Check if object spreading works with nested object and validation
         feature_collection = FeatureCollection(**geojson)
         ohsome_request = {
             "endpoint": "elements/geometry",
@@ -292,11 +251,10 @@ class ValidateProject(
         if self.project_type_specifics.object_source.source_type == ValidateObjectSourceTypeEnum.TASKING_MANAGER:
             return self._validate_tasking_manager()
 
-        # TODO(frozenhelium): implement other source types
         raise Exception("Invalid object source type")
 
     @typing.override
-    def create_tasks(self, group: ProjectTaskGroup, raw_group: ValidateRawGroupItem) -> int:
+    def create_tasks(self, group: ProjectTaskGroup, raw_group: Grouping[ValidFeature]) -> int:
         """Create tasks for a group."""
         bulk_mgr = BulkCreateManager(chunk_size=1000)
 
@@ -336,7 +294,7 @@ class ValidateProject(
     @typing.override
     def create_groups(self, resp: list[ValidFeature]):
         self.project.update_processing_status(Project.ProcessingStatus.GENERATING_GROUPS_AND_TASKS, True)
-        raw_groups = group_input_geometries(resp, self.project.group_size)
+        raw_groups = to_groups(resp, self.project.group_size)
 
         for group_key, raw_group in raw_groups.items():
             new_group = ProjectTaskGroup.objects.create(

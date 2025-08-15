@@ -178,3 +178,34 @@ def tb_name(model: type[models.Model]) -> str:
 def fd_name(field: typing.Any) -> str:
     """Return django model table fields's column name"""
     return field.field.column
+
+
+class Grouping[T](typing.TypedDict):
+    feature_ids: list[int]
+    features: list[T]
+
+
+def to_groups[T](features: list[T], group_size: int, start_index: int = 100):
+    groups: dict[str, Grouping[T]] = {}
+
+    # we will simply start with min group id = 100
+    group_id = start_index
+    group_id_string = f"g{group_id}"
+
+    for feature_count, feature in enumerate(features):
+        feature_id = feature_count + 1
+        if feature_id % (group_size + 1) == 0:
+            group_id += 1
+            group_id_string = f"g{group_id}"
+
+        try:
+            groups[group_id_string]
+        except KeyError:
+            new_feature_group: Grouping[T] = {"feature_ids": [], "features": []}
+            groups[group_id_string] = new_feature_group
+
+        # we use a new id here based on the count
+        groups[group_id_string]["feature_ids"].append(feature_id)
+        groups[group_id_string]["features"].append(feature)
+
+    return groups
