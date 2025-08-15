@@ -868,7 +868,7 @@ type ObjectImageAnnotationType {
 
 input ObjectImageAssetPropertyInput {
   image: ObjectImageInput!
-  annotations: [ObjectImageAnnotationInput!]
+  annotations: [ObjectImageAnnotationInput!] = null
 }
 
 type ObjectImageAssetPropertyType {
@@ -879,33 +879,25 @@ type ObjectImageAssetPropertyType {
 input ObjectImageInput {
   """A positive int value"""
   id: Int!
-  license: Int
-  cocoUrl: String
-  flickrUrl: String
-
-  """A positive int value"""
-  width: Int!
-
-  """A positive int value"""
-  height: Int!
   fileName: String!
-  dateCaptured: DateTime!
+  cocoUrl: String = null
+  flickrUrl: String = null
+  license: Int = null
+  width: Int = null
+  height: Int = null
+  dateCaptured: DateTime = null
 }
 
 type ObjectImageType {
   """A positive int value"""
   id: Int!
-  license: Int
+  fileName: String!
   cocoUrl: String
   flickrUrl: String
-
-  """A positive int value"""
-  width: Int!
-
-  """A positive int value"""
-  height: Int!
-  fileName: String!
-  dateCaptured: DateTime!
+  license: Int
+  width: Int
+  height: Int
+  dateCaptured: DateTime
 }
 
 type OffsetPaginationInfo {
@@ -2382,15 +2374,13 @@ type UserTypeOffsetPaginated {
 }
 
 input ValidateImageProjectPropertyInput {
-  annotationsFile: String = null
-  customOptions: [CustomOptionInput!] = null
   sourceType: ValidateImageSourceTypeEnum!
+  customOptions: [CustomOptionInput!] = null
 }
 
 type ValidateImageProjectPropertyType {
-  annotationsFile: String
-  customOptions: [ProjectCustomOption!]
   sourceType: ValidateImageSourceTypeEnum!
+  customOptions: [ProjectCustomOption!]
 }
 
 enum ValidateImageSourceTypeEnum {

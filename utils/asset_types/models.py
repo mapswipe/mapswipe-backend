@@ -22,12 +22,12 @@ class AoiGeometryAssetProperty(BaseModel):
 
 class ObjectImage(BaseModel):
     id: custom_fields.PydanticPositiveInt
+    file_name: str
     license: custom_fields.PydanticPositiveInt | None = None
     coco_url: custom_fields.PydanticUrl | None = None
     flickr_url: custom_fields.PydanticUrl | None = None
     width: custom_fields.PydanticPositiveInt | None = None
     height: custom_fields.PydanticPositiveInt | None = None
-    file_name: str
     date_captured: datetime.datetime | None = None
 
 
