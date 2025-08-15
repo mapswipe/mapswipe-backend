@@ -18,7 +18,6 @@ from apps.project.models import Project, ProjectAsset, ProjectTask, ProjectTaskG
 from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
 from project_types.street.api_calls import get_image_metadata
-from utils import fields as custom_fields
 from utils.common import create_json_dump
 from utils.custom_options.models import CustomOption
 
@@ -65,7 +64,7 @@ class StreetMappilaryImageFilters(BaseModel):
 
 
 class StreetProjectProperty(base_project.BaseProjectProperty):
-    aoi_geometry: custom_fields.PydanticId
+    aoi_geometry: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")] | None = None
     custom_options: list[CustomOption] | None = None
     mappilary_image_filters: StreetMappilaryImageFilters
 
@@ -174,6 +173,7 @@ class StreetProject(
         self.project.update_processing_status(Project.ProcessingStatus.GENERATING_GROUPS_AND_TASKS, True)
         number_of_groups = math.ceil(len(resp["feature_ids"]) / self.project.group_size)
 
+        # FIXME (susilnem): We can directly use the firebase_id instead of total_tasks_accumulated
         total_tasks_accumulated: int = 0
 
         for group_id in range(number_of_groups):
