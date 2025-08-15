@@ -319,7 +319,7 @@ class ValidateProject(
 
                 bulk_mgr.add(
                     ProjectTask(
-                        firebase_id=f"t{tasks_count + 1}",
+                        firebase_id=f"t{f_id}",
                         task_group_id=group.pk,
                         geometry=geometry_str,
                         project_type_specifics=self.project_task_property_class(
