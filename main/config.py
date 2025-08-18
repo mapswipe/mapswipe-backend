@@ -83,8 +83,16 @@ class Config:
             return f"/v2/users/{user_id}"
 
         @staticmethod
-        def contributor_user_group(group_id: str | int):
+        def contributor_user_group(group_id: str | int):  # TODO: int?
             return f"/v2/userGroups/{group_id}"
+
+        @staticmethod
+        def results_projects():
+            return "/v2/results/"
+
+        @staticmethod
+        def results_project_groups(project_id: str):
+            return f"/v2/results/{project_id}"
 
 
 # FIXME: Import utils/geo/raster_tile_server/config.py here
