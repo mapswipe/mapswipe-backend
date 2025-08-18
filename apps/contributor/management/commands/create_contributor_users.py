@@ -9,6 +9,7 @@ from pyfirebase_mapswipe import extended_models as firebase_extended_models
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
 
+from apps.common.models import FirebasePushStatusEnum
 from apps.contributor.factories import ContributorTeamFactory, ContributorUserFactory
 from apps.contributor.models import ContributorTeam, ContributorUser
 from apps.user.factories import UserFactory
@@ -65,6 +66,7 @@ class Command(BaseCommand):
         )
         team_a, team_b = ContributorTeamFactory.create_batch(2, **user_resources)
         for team in [team_a, team_b]:
+            team.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
             push_team_to_firebase(team)
 
         team_a_members = ContributorUserFactory.create_batch(5, team=team_a, firebase_last_pushed=timezone.now())
@@ -72,6 +74,7 @@ class Command(BaseCommand):
         no_team_members = ContributorUserFactory.create_batch(5, firebase_last_pushed=timezone.now())
         for team_members in [team_a_members, team_b_members, no_team_members]:
             for member in team_members:
+                member.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
                 push_team_member_to_firebase(member)
 
         logger.info("Contributor users created successfully")

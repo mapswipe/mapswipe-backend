@@ -7,6 +7,7 @@ from django.utils.html import format_html
 from djangoql.admin import DjangoQLSearchMixin
 
 from apps.common.admin import ArchivableResourceAdmin, FirebaseResourceAdmin
+from apps.common.models import FirebasePushStatusEnum
 
 from .firebase import FirebaseContributorTeam, FirebaseContributorUser
 from .models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
@@ -42,6 +43,7 @@ class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     @typing.override
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
+        obj.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
         transaction.on_commit(lambda: FirebaseContributorUser(obj.id).push())
 
 
@@ -64,6 +66,7 @@ class ContributorTeamAdmin(ArchivableResourceAdmin, DjangoQLSearchMixin, Firebas
     @typing.override
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
+        obj.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
         transaction.on_commit(lambda: FirebaseContributorTeam(obj.id).push())
 
     def view_team_members(self, obj):
