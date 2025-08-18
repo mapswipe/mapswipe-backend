@@ -2,48 +2,49 @@ import json
 import typing
 from pathlib import Path
 
+import pytest
+from django.conf import settings
+
 from apps.user.factories import UserFactory
 from main.tests import TestCase
 
-BASE_DIR = Path(__file__).resolve().parent
 
-
-class Mutation:
-    CREATE = """
-    mutation CreateOrganization($data: OrganizationCreateInput!) {
-        createorganizationinput(data: $data) {
-            ... on OperationInfo {
-                __typename
-                messages {
-                    code
-                    field
-                    kind
-                    message
+class TestOrganizationE2E(TestCase):
+    class Mutation:
+        CREATE = """
+        mutation CreateOrganization($data: OrganizationCreateInput!) {
+            createOrganization(data: $data) {
+                ... on OperationInfo {
+                    __typename
+                    messages {
+                        code
+                        field
+                        kind
+                        message
+                    }
                 }
-            }
-            ... on OrganizationTypeMutationResponseType {
-                ok
-                errors
-                result {
-                    id
-                    name
-                    description
-                    clientId
-                    isArchived
+                ... on OrganizationTypeMutationResponseType {
+                    ok
+                    errors
+                    result {
+                        id
+                        name
+                        description
+                        clientId
+                        isArchived
+                    }
                 }
             }
         }
-    }
-    """
+        """
 
-
-class TestOrganization(TestCase):
     @typing.override
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.user = UserFactory.create()
-        cls.filename = BASE_DIR / "test_data" / "organization" / "data.json"
+        # settings.BASE_DIR points to project root
+        cls.filename = Path(settings.BASE_DIR) / "test_data" / "organization" / "data.json"
 
     def load_inputs(self) -> list[dict]:
         with self.filename.open("r", encoding="utf-8") as f:
@@ -58,8 +59,15 @@ class TestOrganization(TestCase):
                 self.Mutation.CREATE,
                 variables={"data": data},
             )
-            result = content["data"]["createorganizationinput"]["result"]
+
+            # Ensure the GraphQL response is not None
+            resp = content["data"].get("createOrganization")
+            if resp is None:
+                pytest.fail(f"GraphQL returned null: {content}")
+
+            # Ensure the mutation result is present
+            if resp.get("result") is None:
+                pytest.fail(f"CreateOrganization failed with response: {resp}")
+
+            result = resp["result"]
             assert result["name"] == data["name"]
-
-
-
