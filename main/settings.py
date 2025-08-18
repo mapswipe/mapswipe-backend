@@ -288,10 +288,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-TEMP_DIR = env("TEMP_DIR")
+TEMP_DIR = Path(env("TEMP_DIR"))
 MEDIA_URL = env("MEDIA_URL")
 STATIC_URL = env("STATIC_URL")
 
+STORAGE_OVERWRITE_KEY = "default-overwrite"
 if env("AWS_S3_ENABLED"):
     AWS_S3_CONFIG_OPTIONS = {
         "endpoint_url": env("AWS_S3_ENDPOINT_URL"),
@@ -322,11 +323,37 @@ if env("AWS_S3_ENABLED"):
         },
     }
 
+    STORAGES[STORAGE_OVERWRITE_KEY] = {
+        **STORAGES["default"],
+        "OPTIONS": {
+            **STORAGES["default"]["OPTIONS"],
+            "file_overwrite": True,
+        },
+    }
+
 else:
     # Filesystem
     MEDIA_ROOT = env("MEDIA_ROOT")
     STATIC_ROOT = env("STATIC_ROOT")
 
+    # Django's default https://docs.djangoproject.com/en/5.2/ref/settings/#storages
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
+    STORAGES[STORAGE_OVERWRITE_KEY] = {
+        **STORAGES["default"],
+        "OPTIONS": {
+            "allow_overwrite": True,
+        },
+    }
+
+assert STORAGE_OVERWRITE_KEY in STORAGES, f"{STORAGE_OVERWRITE_KEY} should be defined in STORAGES"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

@@ -469,3 +469,9 @@ class BaseProject[
             self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
         else:
             self.project.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
+
+    def generate_exports(self):
+        from apps.project.exports.exports import export_project_data
+
+        # NOTE: Currently the logic is same for each project
+        export_project_data(self.project)

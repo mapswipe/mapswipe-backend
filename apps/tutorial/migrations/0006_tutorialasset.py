@@ -6,6 +6,7 @@ import django.db.models.deletion
 import django.db.models.manager
 import django_choices_field.fields
 import utils.common
+import main.fields
 from django.conf import settings
 from django.db import migrations, models
 
@@ -27,7 +28,7 @@ class Migration(migrations.Migration):
                 ('modified_at', models.DateTimeField(auto_now=True)),
                 ('type', django_choices_field.fields.IntegerChoicesField(choices=[(100, 'Input'), (200, 'Output'), (300, 'Stats')], choices_enum=apps.common.models.AssetTypeEnum)),
                 ('mimetype', django_choices_field.fields.IntegerChoicesField(choices=[(100, 'application/geo+json'), (201, 'image/jpeg'), (202, 'image/png'), (203, 'image/gif')], choices_enum=apps.common.models.AssetMimetypeEnum)),
-                ('file', models.FileField(help_text='The file associated with the asset', upload_to=apps.tutorial.models.UploadHelper.tutorial_asset)),
+                ('file', main.fields.OverwritableFileField(help_text='The file associated with the asset', upload_to=apps.tutorial.models.UploadHelper.tutorial_asset)),
                 ('file_size', models.PositiveIntegerField(help_text='The size of the file in bytes')),
                 ('marked_as_deleted', models.BooleanField(default=False, help_text='If this flag is enabled, this tutorial asset will be deleted in the future')),
                 ('created_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='%(class)s_created', to=settings.AUTH_USER_MODEL)),

@@ -10,8 +10,16 @@ if typing.TYPE_CHECKING:
     from utils.firebase import FirebaseHelper
 
 
+if settings.IS_TESTING:
+    assert settings.FIREBASE_EMULATOR_USE is True, "Always use firebase emulator while TESTING"
+
+
 class Config:
     BASE_DIR = typing.cast("Path", settings.BASE_DIR)
+    TEMP_DIR = typing.cast("Path", settings.TEMP_DIR)
+
+    # Misc
+    STORAGE_OVERWRITE_KEY = typing.cast("str", settings.STORAGE_OVERWRITE_KEY)
 
     # NOTE: We get AOI for validate from HOT tasking manager
     HOT_TASKING_MANAGER_PROJECT_API_LINK = "https://tasking-manager-production-api.hotosm.org/api/v2/"

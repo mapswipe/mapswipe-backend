@@ -11,6 +11,8 @@ from strawberry.scalars import JSON
 from strawberry.types import Info
 from strawberry_django.fields.types import field_type_map
 
+from main.fields import OverwritableFileField
+
 # generalize all the CustomErrorType
 CustomErrorType = strawberry.scalar(
     typing.NewType("CustomErrorType", object),
@@ -72,5 +74,6 @@ class MapswipeDjangoFileType:
 field_type_map.update(
     {
         models.FileField: MapswipeDjangoFileType,
+        OverwritableFileField: MapswipeDjangoFileType,
     },
 )

@@ -12,6 +12,7 @@ from pyfirebase_mapswipe import models as firebase_models
 
 from apps.common.models import FirebasePushResource, IconEnum, UserResource
 from apps.project.models import CommonAsset, Project
+from main.fields import OverwritableFileField
 
 
 class UploadHelper:
@@ -89,7 +90,7 @@ class TutorialAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatib
         related_name="+",
     )
 
-    file = models.FileField(
+    file = OverwritableFileField(
         upload_to=UploadHelper.tutorial_asset,
         help_text=gettext_lazy("The file associated with the asset"),
     )
