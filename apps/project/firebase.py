@@ -1,13 +1,16 @@
 import logging
 import typing
+from typing import cast
 
 from firebase_admin.db import Reference as FbReference
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
 
-from apps.common.firebase import FirebasePush
+from apps.common.firebase import FirebasePush, FirebasePushStatusEnum
 from apps.project.models import Organization
+from main.celery import app
 from main.config import Config
+from utils.celery import RetryableTask
 
 logger = logging.getLogger(__name__)
 
@@ -51,3 +54,11 @@ class FirebaseOrganizationPush(FirebasePush[Organization, firebase_models.FbOrga
     @typing.override
     def get_firebase_path(self, firebase_id: str, model=Organization):
         return Config.FirebaseKeys.organization(firebase_id)
+
+    @typing.override
+    @app.task(bind=True, base=RetryableTask)
+    def retrigger_push(self, object_id: int):
+        logger.info("Retrrigger organization firebase push")
+        obj = FirebaseOrganizationPush.model_class.objects.get(id=object_id)
+        obj.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+        FirebaseOrganizationPush(object_id, celery_task=cast("RetryableTask", self)).push()

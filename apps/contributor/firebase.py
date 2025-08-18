@@ -1,14 +1,17 @@
 import logging
 import typing
+from typing import cast
 
 from firebase_admin.db import Reference as FbReference
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
 
-from apps.common.firebase import FirebasePush
+from apps.common.firebase import FirebasePush, FirebasePushStatusEnum
 from apps.contributor.models import ContributorTeam, ContributorUser, ContributorUserGroup
+from main.celery import app
 from main.config import Config
+from utils.celery import RetryableTask
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +53,14 @@ class FirebaseContributorTeam(FirebasePush[ContributorTeam, firebase_models.FbTe
     def get_firebase_path(self, firebase_id: str, model=ContributorTeam):
         return Config.FirebaseKeys.contributor_team(firebase_id)
 
+    @typing.override
+    @app.task(bind=True, base=RetryableTask)
+    def retrigger_push(self, object_id: int):
+        logger.info("Retrrigger contributor team firebase push")
+        obj = FirebaseContributorTeam.model_class.objects.get(id=object_id)
+        obj.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+        FirebaseContributorTeam(object_id, celery_task=cast("RetryableTask", self)).push()
+
 
 class FirebaseContributorUser(FirebasePush[ContributorUser, firebase_ext_models.FbUser]):
     model_class = ContributorUser
@@ -78,6 +89,14 @@ class FirebaseContributorUser(FirebasePush[ContributorUser, firebase_ext_models.
     @typing.override
     def get_firebase_path(self, firebase_id: str, model=ContributorUser):
         return Config.FirebaseKeys.contributor_user(firebase_id)
+
+    @typing.override
+    @app.task(bind=True, base=RetryableTask)
+    def retrigger_push(self, object_id: int):
+        logger.info("Retrrigger contributor user firebase push")
+        obj = FirebaseContributorUser.model_class.objects.get(id=object_id)
+        obj.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+        FirebaseContributorUser(object_id, celery_task=cast("RetryableTask", self)).push()
 
 
 class FirebaseContributorUserGroup(FirebasePush[ContributorUserGroup, firebase_ext_models.FbUserGroup]):
@@ -120,3 +139,11 @@ class FirebaseContributorUserGroup(FirebasePush[ContributorUserGroup, firebase_e
     @typing.override
     def get_firebase_path(self, firebase_id: str, model=ContributorUserGroup):
         return Config.FirebaseKeys.contributor_user_group(firebase_id)
+
+    @typing.override
+    @app.task(bind=True, base=RetryableTask)
+    def retrigger_push(self, object_id: int):
+        logger.info("Retrrigger contributor user group firebase push")
+        obj = FirebaseContributorUserGroup.model_class.objects.get(id=object_id)
+        obj.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+        FirebaseContributorUserGroup(object_id, celery_task=cast("RetryableTask", self)).push()

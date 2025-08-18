@@ -2,9 +2,12 @@ import logging
 
 from celery import shared_task
 
+from apps.common.firebase import FirebasePush
+from apps.common.models import FirebasePushStatusEnum
 from apps.project.models import Project
 from main.cache import CeleryLock
 from project_types.store import get_project_type_handler
+from utils.celery import RetryableTask
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +30,8 @@ def process_project_task(project_id: int):
         return False
 
 
-@shared_task
-def push_project_to_firebase(project_id: int):
+@shared_task(bind=True, base=RetryableTask)
+def push_project_to_firebase(self: RetryableTask, project_id: int):
     with CeleryLock.redis_lock(CeleryLock.Key.PUSH_PROJECT_TO_FIREBASE.format(project_id)) as acquired:
         if not acquired:
             logger.warning("Project(id: %s) push project to firebase already running", project_id)
@@ -36,7 +39,19 @@ def push_project_to_firebase(project_id: int):
 
     project = Project.objects.get(pk=project_id)
     project_type_handler = get_project_type_handler(project.project_type_enum)(project)
-    project_type_handler.push_project_on_firebase()
+    try:
+        project_type_handler.push_project_on_firebase()
+    except Exception as exc:
+        project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+        FirebasePush.handle_firebase_push_error(
+            exc,
+            self,
+            Project,
+            FirebasePush.MAX_RETRY_LIMIT,
+            FirebasePush.MIN_RETRY_DELAY,
+            FirebasePush.MAX_RETRY_DELAY,
+            project.id,
+        )
     return True
 
 

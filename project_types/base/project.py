@@ -465,6 +465,7 @@ class BaseProject[
                 self.update_project_on_firebase(project_ref, valid_project)
         except InvalidProjectPushException:
             self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
+            raise
         except Exception:
             logger.error(
                 "push_to_firebase failed",
@@ -472,6 +473,7 @@ class BaseProject[
                 exc_info=True,
             )
             self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
+            raise
         else:
             self.project.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
 
