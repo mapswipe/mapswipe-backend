@@ -41,6 +41,30 @@ class ProjectAssetExportTypeEnum(models.IntegerChoices):
             return str(cls(value).label)
         return "Unknown"
 
+    @staticmethod
+    def get_meme_type(export_type: "ProjectAssetExportTypeEnum"):
+        if export_type == ProjectAssetExportTypeEnum.AGGREGATED_RESULTS:
+            return AssetMimetypeEnum.GZIP
+        if export_type == ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY:
+            return AssetMimetypeEnum.GZIP
+        if export_type == ProjectAssetExportTypeEnum.GROUPS:
+            return AssetMimetypeEnum.GZIP
+        if export_type == ProjectAssetExportTypeEnum.HISTORY:
+            return AssetMimetypeEnum.CSV
+        if export_type == ProjectAssetExportTypeEnum.RESULTS:
+            return AssetMimetypeEnum.GZIP
+        if export_type == ProjectAssetExportTypeEnum.TASKS:
+            return AssetMimetypeEnum.GZIP
+        if export_type == ProjectAssetExportTypeEnum.USERS:
+            return AssetMimetypeEnum.GZIP
+        if export_type == ProjectAssetExportTypeEnum.AREA_OF_INTEREST:
+            return AssetMimetypeEnum.GEOJSON
+        if export_type == ProjectAssetExportTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES:
+            return AssetMimetypeEnum.GEOJSON
+        if export_type == ProjectAssetExportTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES:
+            return AssetMimetypeEnum.GEOJSON
+        typing.assert_never(export_type)
+
 
 class ProjectTypeEnum(models.IntegerChoices):
     FIND = 1, "Find"
@@ -449,6 +473,7 @@ class ProjectTaskGroup(FirebasePushResource):
     time_spent_max_allowed = models.FloatField(null=True, default=None)
 
     # Type hints
+    id: int
     project_id: int
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
@@ -482,6 +507,7 @@ class ProjectTask(FirebasePushResource):
     project_type_specifics = models.JSONField()
 
     # Type hints
+    id: int
     task_group_id: int
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]

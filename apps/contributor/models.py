@@ -30,6 +30,9 @@ class ContributorUser(FirebasePushResource):
     created_at = models.DateTimeField(null=True)
     modified_at = models.DateTimeField(null=True)
 
+    # Type hints
+    id: int
+
     @typing.override
     def __str__(self):
         return self.username

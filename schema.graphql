@@ -162,7 +162,7 @@ input AssetMimetypeEnumFilterLookup {
 enum AssetTypeEnum {
   INPUT
   OUTPUT
-  STATS
+  EXPORT
   DEBUG
 }
 

@@ -9,9 +9,13 @@ def log_render_extra_context(record: logging.LogRecord):
     NOTE: This will appear in logs when used with logger.xxx(..., extra={'context': {..content}})
     """
     extra_str = ""
+    custom_thread_name = ""
     if extra_raw := getattr(record, "context", None):
         extra_str = f" - EXTRA:{extra_raw!s}"
+    if thread_name := getattr(record, "threadName", None):
+        custom_thread_name = thread_name if thread_name != "MainThread" else "M"
     record.context = extra_str
+    record.customThreadName = custom_thread_name
     return True
 
 

@@ -512,7 +512,7 @@ LOGGING = {
     },
     "formatters": {
         "simple": {
-            "format": ("%(asctime)s: - %(threadName)s/%(levelname)s - %(name)s - %(message)s %(context)s"),
+            "format": ("%(asctime)s: - %(customThreadName)s/%(levelname)s - %(name)s - %(message)s %(context)s"),
             "datefmt": "%Y-%m-%dT%H:%M:%S",
         },
     },
@@ -547,7 +547,7 @@ if DEBUG:
             "colored_verbose": {
                 "()": "colorlog.ColoredFormatter",
                 "format": (
-                    "%(log_color)s%(asctime)s: %(threadName)s - %(levelname)-s%(red)s %(module)-s%(reset)s "
+                    "%(log_color)s%(asctime)s: %(customThreadName)s - %(levelname)-s%(red)s %(name)-s%(reset)s "
                     "%(blue)s%(message)s %(context)s"
                 ),
             },

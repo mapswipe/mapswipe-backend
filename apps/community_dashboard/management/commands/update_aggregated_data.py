@@ -14,16 +14,7 @@ from apps.community_dashboard.models import (
 )
 from apps.mapping.models import MappingSession, MappingSessionUserGroup
 from apps.project.models import Project, ProjectTaskGroup, ProjectTypeEnum
-
-
-def tb_name(model: type[models.Model]) -> str:
-    return model._meta.db_table
-
-
-# FIXME(thenav56): Add typing for the field
-def fd_name(field: typing.Any) -> str:
-    return field.field.column
-
+from utils.common import fd_name, tb_name
 
 UPDATE_USER_DATA_SQL = f"""
     INSERT INTO "{tb_name(AggregatedUserStatData)}" (

@@ -18,7 +18,7 @@ from django.db.utils import IntegrityError
 from django.utils import timezone
 from ulid import ULID
 
-from apps.common.models import AssetMimetypeEnum, AssetTypeEnum
+from apps.common.models import AssetTypeEnum
 from apps.community_dashboard.models import (
     AggregatedTracking,
     AggregatedTrackingTypeEnum,
@@ -313,30 +313,6 @@ def get_api_url_by_project_export_type(export_type: ProjectAssetExportTypeEnum, 
     typing.assert_never(export_type)
 
 
-def get_meme_type_by_project_export_type(export_type: ProjectAssetExportTypeEnum):
-    if export_type == ProjectAssetExportTypeEnum.AGGREGATED_RESULTS:
-        return AssetMimetypeEnum.GZIP
-    if export_type == ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY:
-        return AssetMimetypeEnum.GZIP
-    if export_type == ProjectAssetExportTypeEnum.GROUPS:
-        return AssetMimetypeEnum.GZIP
-    if export_type == ProjectAssetExportTypeEnum.HISTORY:
-        return AssetMimetypeEnum.CSV
-    if export_type == ProjectAssetExportTypeEnum.RESULTS:
-        return AssetMimetypeEnum.GZIP
-    if export_type == ProjectAssetExportTypeEnum.TASKS:
-        return AssetMimetypeEnum.GZIP
-    if export_type == ProjectAssetExportTypeEnum.USERS:
-        return AssetMimetypeEnum.GZIP
-    if export_type == ProjectAssetExportTypeEnum.AREA_OF_INTEREST:
-        return AssetMimetypeEnum.GEOJSON
-    if export_type == ProjectAssetExportTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES:
-        return AssetMimetypeEnum.GEOJSON
-    if export_type == ProjectAssetExportTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES:
-        return AssetMimetypeEnum.GEOJSON
-    typing.assert_never(export_type)
-
-
 def create_project_assets(project: Project):
     common_export_types = [
         # Common
@@ -377,10 +353,10 @@ def create_project_assets(project: Project):
         ProjectAsset.objects.create(
             project=project,
             client_id=str(ULID()),
-            type=AssetTypeEnum.STATS,
+            type=AssetTypeEnum.EXPORT,
             export_type=export_type,
             file=content_file,
-            mimetype=get_meme_type_by_project_export_type(export_type),
+            mimetype=ProjectAssetExportTypeEnum.get_meme_type(export_type),
             file_size=content_file.size,
             created_by=project.created_by,
             modified_by=project.modified_by,
@@ -393,16 +369,7 @@ class Command(BaseCommand):
     def __init__(self, *args: typing.Any, **kwargs: typing.Any):
         super().__init__(*args, **kwargs)
         self.bulk_create_mgr = BulkCreateManager()
-        self.bot_user = self.get_bot_user()
-
-    def get_bot_user(self) -> User:
-        return User.objects.get_or_create(
-            email="bot@mapswipe.org",
-            defaults=dict(
-                first_name="Mapswipe",
-                last_name="Bot",
-            ),
-        )[0]
+        self.bot_user = User.get_bot_user()
 
     @before_after_count(Organization)
     def handle_organization(self):
@@ -800,6 +767,7 @@ class Command(BaseCommand):
         self.handle_teams()
         self.handle_contributor_user_groups()
         self.handle_contributor_user_user_group_memberships()
+        # TODO: self.handle_contributor_user_user_group_memberships_logs()
         self.handle_project()
         self.handle_aggregated_dataset()
         self.handle_firebase()
