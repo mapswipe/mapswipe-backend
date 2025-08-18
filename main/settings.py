@@ -52,6 +52,7 @@ env = environ.Env(
     SESSION_COOKIE_DOMAIN=str,  # .example.com
     CSRF_COOKIE_DOMAIN=str,  # .example.com
     MAPSWIPE_ADDITIONAL_TRUSTED_ORIGINS=(list, []),  # https://app1.example.com,https://app2.example.com
+    MANAGER_DASHBOARD_URL=(str, "https://managers.mapswipe.org/"),
     # NOTE: Changing TIME_ZONE will break celery periodic tasks https://django-celery-beat.readthedocs.io/en/latest/#important-warning-about-time-zones
     TIME_ZONE=(str, "UTC"),
     # Database
@@ -154,7 +155,7 @@ APP_ENVIRONMENT = env("APP_ENVIRONMENT").upper()
 APP_TYPE = env("APP_TYPE").upper()
 APP_RELEASE = env("APP_RELEASE") or GIT_HELPER.commit_sha
 SECRET_KEY = env("SECRET_KEY")
-
+MANAGER_DASHBOARD_URL = env("MANAGER_DASHBOARD_URL")
 DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = [

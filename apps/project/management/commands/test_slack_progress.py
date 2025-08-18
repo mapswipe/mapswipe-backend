@@ -1,11 +1,10 @@
-import asyncio
 import typing
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from apps.project.models import Project
-from apps.project.tasks import mapswipe_send_message  # import your async function
-
+from apps.project.tasks import send_message_for_progress
+from utils.common import get_absolute_file_url
 
 class Command(BaseCommand):
     help = "Test sending a Slack progress message for a given project"
@@ -13,27 +12,28 @@ class Command(BaseCommand):
     @typing.override
     def add_arguments(self, parser):
         parser.add_argument(
-            "--client_id",
+            "--project_id",
             type=str,
             required=True,
-            help="ULID of the project to test",
+            help="ID of the project to test",
         )
 
     @typing.override
     def handle(self, *args, **options):
-        project_id = options["client_id"]
+        project_id = options["project_id"]
 
         try:
-            project = Project.objects.select_related("requesting_organization").get(client_id=project_id)
+            project = Project.objects.get(id=project_id)
         except Project.DoesNotExist:
-            self.stderr.write(self.style.ERROR(f"Project with id={project_id} does not exist"))
-            return  # Exit the command gracefully
+            raise CommandError(f"Project with id={project_id} does not exist")
+        
+        project_name = project.generate_name()
+        progress = project.progress
+        if project.image:
+            cover_image_url = get_absolute_file_url(project.image.file)
+        else:
+            cover_image_url = "https://pbs.twimg.com/profile_images/625633822235693056/lNGUneLX_400x400.jpg"
 
-        self.stdout.write(
-            self.style.NOTICE(f"Sending Slack message for project {project.id} with progress {project.progress}"),
-        )
-
-        # Run the async Slack sending in the event loop
-        asyncio.run(mapswipe_send_message(project))
-
+        send_message_for_progress.delay(project_name=project_name, progress=progress, cover_image=cover_image_url)
         self.stdout.write(self.style.SUCCESS("Slack message sent successfully"))
+     
