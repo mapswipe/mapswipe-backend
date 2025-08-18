@@ -95,12 +95,14 @@ class TestContributorFirebase(TestCase):
         pull_users_from_firebase()
 
         # ram should be updated to Ram
-        ContributorUser.objects.get(username="Ram")
-        ContributorUser.objects.get(username="Laxman")
+        ram_updated = ContributorUser.objects.get(firebase_id=ram.firebase_id)
+        assert ram_updated.username == "Ram"
+        laxman_updated = ContributorUser.objects.get(firebase_id=laxman.firebase_id)
+        assert laxman_updated.username == "Laxman"
 
         # gita, sita should be created
-        ContributorUser.objects.get(username="gita")
-        ContributorUser.objects.get(username="sita")
+        ContributorUser.objects.get(firebase_id=gita.firebase_id)
+        ContributorUser.objects.get(firebase_id=sita.firebase_id)
 
         # total users should increase by 1
         assert ContributorUser.objects.all().count() == 6
