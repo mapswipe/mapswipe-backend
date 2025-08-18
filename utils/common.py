@@ -5,13 +5,17 @@ import io
 import json
 import re
 import typing
+from urllib.parse import urlunparse
 from warnings import deprecated
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
+from django.core.files.storage import FileSystemStorage, default_storage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models.fields import files
+from django.db.models.fields.files import FieldFile
 from django.utils.translation import gettext
 from geojson_pydantic import FeatureCollection
 from ulid import ULID
@@ -219,3 +223,8 @@ def to_groups[T](features: list[T], group_size: int, start_index: int = 100):
         groups[group_id_string]["features"].append(feature)
 
     return groups
+def get_absolute_file_url(image_file: FieldFile) -> str:
+    url = image_file.url
+    if isinstance(default_storage, FileSystemStorage):
+        return f"{urlunparse(settings.APP_DOMAIN)}{url}"
+    return url

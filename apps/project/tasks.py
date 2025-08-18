@@ -1,6 +1,7 @@
 import logging
 
 from celery import shared_task
+from django.conf import settings
 
 from apps.project.models import Project
 from main.cache import CeleryLock
@@ -65,11 +66,26 @@ def generate_project_exports(
     return True
 class SlackMessage:
     @classmethod
-    async def get_message(
+    def get_message_for_project_progress(
         cls,
-        input_data: Project,
+        project_name: str,
+        progress: int,
+        cover_image: str,
     ) -> MapswipeSlack.MapswipeSlackMessageArgumentType:
-        if input_data.progress == 100:
+        manager_dashboard_block = {
+            "accessory": {
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Visit Dashboard",
+                    "emoji": True,
+                },
+                "value": "manager-dashboard",
+                "url": settings.MANAGER_DASHBOARD_URL,
+                "action_id": "button-action",
+            },
+        }
+        if progress == 100:
             text = "Project reached 100%"
             blocks = [
                 {
@@ -93,12 +109,12 @@ class SlackMessage:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"_*Project Name:* {input_data.topic} - {input_data.region} ({input_data.project_number}) {input_data.requesting_organization.name}",  # noqa: E501
+                        "text": f"_*Project Name:* {project_name}",
                     },
                     "accessory": {
                         "type": "image",
-                        "image_url": "https://pbs.twimg.com/profile_images/625633822235693056/lNGUneLX_400x400.jpg",
-                        "alt_text": "cute cat",
+                        "image_url": cover_image,
+                        "alt_text": "Project image",
                     },
                 },
                 {
@@ -110,17 +126,7 @@ class SlackMessage:
                         "type": "mrkdwn",
                         "text": "You can now set this project to _'finished'_ and create a another one.",
                     },
-                    "accessory": {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Visit Dashboard",
-                            "emoji": True,
-                        },
-                        "value": "manager-dashboard",
-                        "url": "https://managers.mapswipe.org/",
-                        "action_id": "button-action",
-                    },
+                    **manager_dashboard_block,
                 },
             ]
             return {
@@ -128,7 +134,7 @@ class SlackMessage:
                 "blocks": blocks,
             }
 
-        if 90 <= input_data.progress < 100:
+        if 90 <= progress < 100:
             text = "Progress reached 90%"
             blocks = [
                 {
@@ -152,12 +158,12 @@ class SlackMessage:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"_*Project Name:* {input_data.topic} - {input_data.region} ({input_data.project_number}) {input_data.requesting_organization.name} \n",  # noqa: E501
+                        "text": f"_*Project Name:* {project_name}",
                     },
                     "accessory": {
                         "type": "image",
-                        "image_url": "https://pbs.twimg.com/profile_images/625633822235693056/lNGUneLX_400x400.jpg",
-                        "alt_text": "cute cat",
+                        "image_url": cover_image,
+                        "alt_text": "Project image",
                     },
                 },
                 {
@@ -169,17 +175,7 @@ class SlackMessage:
                         "type": "mrkdwn",
                         "text": "Get your next projects ready.",
                     },
-                    "accessory": {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Visit Dashboard",
-                            "emoji": True,
-                        },
-                        "value": "manager-dashboard",
-                        "url": "https://managers.mapswipe.org/",
-                        "action_id": "button-action",
-                    },
+                    **manager_dashboard_block,
                 },
             ]
             return {
@@ -190,7 +186,13 @@ class SlackMessage:
         return {"text": "", "blocks": []}
 
 
-async def mapswipe_send_message(data: Project):
+@shared_task
+def mapswipe_send_message(project_name: str, progress: int, cover_image: str):
+    logger.info("Sending slack message")
     mapslack = MapswipeSlack()
-    message = await SlackMessage.get_message(input_data=data)
-    await mapslack.send_slack_message(**message)
+    message = SlackMessage.get_message_for_project_progress(
+        project_name=project_name,
+        progress=progress,
+        cover_image=cover_image,
+    )
+    mapslack.send_slack_message(**message)
