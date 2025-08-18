@@ -86,6 +86,63 @@ PydanticZoomLevel = typing.Annotated[int, Field(strict=True, ge=0, lt=23)]
 PydanticUlid = typing.Annotated[str, Field(strict=True, pattern=r"^[0-9A-Z]{26}$")]
 
 
+PydanticIsPano = typing.Annotated[
+    bool | None,
+    Field(
+        default=False,
+        description="Filter for images that are panoramas.",
+    ),
+]
+
+PydanticCreatorId = typing.Annotated[
+    str | None,
+    Field(
+        default=None,
+        description="Filter for images created by a specific user.",
+    ),
+]
+
+PydanticOrganizationId = typing.Annotated[
+    str | None,
+    Field(
+        default=None,
+        description="Filter for images that belong to a specific organization.",
+    ),
+]
+
+PydanticStartTime = typing.Annotated[
+    str | None,
+    Field(
+        default=None,
+        description="Filter for images captured after this timestamp.",
+    ),
+]
+
+PydanticEndTime = typing.Annotated[
+    str | None,
+    Field(
+        default=None,
+        description="Filter for images captured before this timestamp.",
+    ),
+]
+
+PydanticRandomizeOrder = typing.Annotated[
+    bool,
+    Field(
+        default=False,
+        description="Randomize the order of the images.",
+    ),
+]
+
+PydanticSamplingThreshold = typing.Annotated[
+    int | None,
+    Field(
+        default=None,
+        description="Sampling threshold for filtering images.",
+    ),
+]
+
+
 def validate_percentage(value: float | int):
     if not (0 <= value <= 100):
         raise ValidationError(

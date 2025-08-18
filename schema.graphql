@@ -1947,9 +1947,9 @@ input StrFilterLookup {
   startsWith: String
 }
 
-type StreetMappilaryImageFilters {
+type StreetMapillaryImageFilters {
   """Filter for images created by a specific user."""
-  creatorId: Int
+  creatorId: String
 
   """Filter for images captured before this timestamp."""
   endTime: String
@@ -1970,15 +1970,15 @@ type StreetMappilaryImageFilters {
   startTime: String
 }
 
-input StreetMappilaryImageFiltersInput {
+input StreetMapillaryImageFiltersInput {
   """Filter for images created by a specific user."""
-  creatorId: Int = null
+  creatorId: String = null
 
   """Filter for images captured before this timestamp."""
   endTime: String = null
 
   """Filter for images that are panoramas."""
-  isPano: Boolean = null
+  isPano: Boolean = false
 
   """Filter for images that belong to a specific organization."""
   organizationId: String = null
@@ -1996,13 +1996,13 @@ input StreetMappilaryImageFiltersInput {
 input StreetProjectPropertyInput {
   aoiGeometry: String = null
   customOptions: [CustomOptionInput!] = null
-  mappilaryImageFilters: StreetMappilaryImageFiltersInput!
+  mapillaryImageFilters: StreetMapillaryImageFiltersInput!
 }
 
 type StreetProjectPropertyType {
   aoiGeometry: String
   customOptions: [ProjectCustomOption!]
-  mappilaryImageFilters: StreetMappilaryImageFilters!
+  mapillaryImageFilters: StreetMapillaryImageFilters!
 }
 
 type StreetTutorialTaskPropertyType {

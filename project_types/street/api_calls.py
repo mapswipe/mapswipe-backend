@@ -2,26 +2,32 @@ import logging
 from collections.abc import Hashable
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
-from typing import Any
+from typing import Any, TypedDict
 from warnings import deprecated
 
 import mercantile
 import pandas as pd
 import requests
-from django.contrib.gis.geos import Point
 from geojson_pydantic import FeatureCollection
-from geojson_pydantic.geometries import MultiPolygon as GeoJsonMultiPolygon
-from geojson_pydantic.geometries import Polygon as GeojsonPolygon
+from geojson_pydantic.geometries import MultiPolygon as PydanticMultiPolygon
+from geojson_pydantic.geometries import Polygon as PydanticPolygon
 from pydantic import ValidationError
-from shapely import MultiPolygon, Polygon, box, unary_union
+from shapely import MultiPolygon, Point, Polygon, box, unary_union
+from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 from vt2geojson import tools as vt2geojson_tools
 
 from main.config import Config
 from main.logging import log_extra_response
+from utils import fields as custom_fields
 from utils.spatial_sampling import spatial_sampling
 
 logger = logging.getLogger(__name__)
+
+
+class StreetRawGroupItem(TypedDict):
+    ids: list[int]
+    geometries: list[Point]
 
 
 class StreetException(Exception):
@@ -69,13 +75,13 @@ def geojson_to_polygon(geojson_data: dict[str, Any]):
     except ValidationError as e:
         raise ValueError("Invalid GeoJSON FeatureCollection") from e
 
-    polygon_types = (GeojsonPolygon, GeoJsonMultiPolygon)
-    filtered_features = [feature for feature in fc.features if isinstance(feature.geometry, polygon_types)]
+    polygon_types = (PydanticPolygon, PydanticMultiPolygon)
+    geometries = [shape(feature.geometry) for feature in fc.features if isinstance(feature.geometry, polygon_types)]
 
-    if not filtered_features:
+    if not geometries:
         raise ValueError("No valid Polygon or MultiPolygon found in the GeoJSON FeatureCollection")
 
-    return unary_union(filtered_features)
+    return unary_union(geometries)
 
 
 def coordinate_download(
@@ -254,14 +260,14 @@ def get_image_metadata(
     *,
     aoi_geojson: dict[str, Any],
     level: int = 14,
-    is_pano: bool | None = None,
-    creator_id: int | None = None,
-    organization_id: str | None = None,
-    start_time: str | None = None,
-    end_time: str | None = None,
-    randomize_order: bool = False,
-    sampling_threshold: int | None = None,
-) -> dict[str, list[Any]]:
+    is_pano: custom_fields.PydanticIsPano = False,
+    creator_id: custom_fields.PydanticCreatorId = None,
+    organization_id: custom_fields.PydanticOrganizationId = None,
+    start_time: custom_fields.PydanticStartTime = None,
+    end_time: custom_fields.PydanticEndTime = None,
+    randomize_order: custom_fields.PydanticRandomizeOrder = False,
+    sampling_threshold: custom_fields.PydanticSamplingThreshold = None,
+) -> StreetRawGroupItem:
     kwargs = {
         "is_pano": is_pano,
         "creator_id": creator_id,
@@ -296,7 +302,7 @@ def get_image_metadata(
             f"Too many Images with selected filter options for the AoI: {total_images}",
         )
 
-    return {
-        "ids": downloaded_metadata["id"].tolist(),
-        "geometries": downloaded_metadata["geometry"].tolist(),
-    }
+    return StreetRawGroupItem(
+        ids=downloaded_metadata["id"].tolist(),
+        geometries=downloaded_metadata["geometry"].tolist(),
+    )

@@ -153,12 +153,11 @@ class TileMapServiceBaseProject[
         self,
         group: ProjectTaskGroup,
         raw_group: tile_grouping.RawGroup,
-        previous_tasks_count: int = 0,
     ) -> int:
         """Create tasks for a group."""
         bulk_mgr = BulkCreateManager(chunk_size=1000)
 
-        tasks_count = previous_tasks_count
+        tasks_count = 0
         for tile_x in range(raw_group["xMin"], raw_group["xMax"] + 1):
             for tile_y in range(raw_group["yMin"], raw_group["yMax"] + 1):
                 geometry = tile_functions.geometry_from_tile_coords(

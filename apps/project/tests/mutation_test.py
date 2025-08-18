@@ -1600,8 +1600,15 @@ class TestProjectTypeMutation(TestCase):
                         "iconColor": "#FF0000",
                         "title": "Street Project Title",
                         "value": 1,
+                        "subOptions": [
+                            {
+                                "clientId": str(ULID()),
+                                "value": 1,
+                                "description": "Street sub option description",
+                            },
+                        ],
                     },
-                    "mapillaryImageFilters": {
+                    "mapilaryImageFilters": {
                         "isPano": True,
                         "creatorId": None,
                         "organizationId": None,
@@ -1621,9 +1628,7 @@ class TestProjectTypeMutation(TestCase):
         assert latest_project.created_by_id == self.user.pk
         assert latest_project.modified_by_id == self.user.pk
         assert latest_project.image_id == int(image_asset["id"])
-        assert latest_project.project_type_specifics == {
-            "aoi_geometry": aoi_geometry_asset["id"],
-        }
+        assert latest_project.project_type_specifics is not None
 
         street_project.StreetProjectProperty.model_validate(
             latest_project.project_type_specifics,

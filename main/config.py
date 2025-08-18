@@ -40,7 +40,7 @@ class Config:
     OSM_API_LINK = "https://www.openstreetmap.org/api/0.6/"
 
     # NOTE: We get mapillary data from mapillary
-    MAPILLARY_API_LINK = "https://graph.mapillary.com/"
+    MAPILLARY_API_LINK = "https://tiles.mapillary.com/maps/vtp/mly1_computed_public/2/"
     MAPILLARY_API_KEY = typing.cast("str", settings.MAPILLARY_API_KEY)
 
     FIREBASE_HELPER = typing.cast("FirebaseHelper", settings.FIREBASE_HELPER)

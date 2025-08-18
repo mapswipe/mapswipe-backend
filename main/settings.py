@@ -113,7 +113,6 @@ env = environ.Env(
     MAP_IMAGE_ESRI_BETA_API_KEY=str,
     OSMCHA_API_KEY=str,  # os.environ["OSMCHA_API_KEY"]
     # Mapillary
-    MAPILLARY_API_LINK=str,
     MAPILLARY_API_KEY=str,  # os.environ["MAPILLARY_API_KEY"]
     # MAP_IMAGE_DIGITAL_GLOBE_API_KEY=str,
     # Firebase
@@ -538,8 +537,6 @@ MAP_IMAGE_ESRI_BETA_API_KEY = env("MAP_IMAGE_ESRI_BETA_API_KEY")
 OSMCHA_API_KEY = env("OSMCHA_API_KEY")
 
 # Mapillary
-
-MAPILLARY_API_LINK = env("MAPILLARY_API_LINK")
 MAPILLARY_API_KEY = env("MAPILLARY_API_KEY")
 
 # Firebase

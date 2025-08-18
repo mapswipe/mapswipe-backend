@@ -164,6 +164,6 @@ def get_tutorial_type_handler(tutorial_type: ProjectTypeEnum) -> TutorialTypeHan
         case ProjectTypeEnum.COMPLETENESS:
             return CompletenessTutorial
         case ProjectTypeEnum.VALIDATE_IMAGE:
-            raise Exception("Validate Image tutorial is not yet supported")
+            return ValidateImageTutorial
         case ProjectTypeEnum.STREET:
-            raise Exception("Street tutorial is not yet supported")
+            return StreetTutorial

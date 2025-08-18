@@ -2,71 +2,41 @@ import json
 import logging
 import math
 import typing
-from typing import Any, TypedDict
 
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
-from geojson_pydantic import Feature
-from geojson_pydantic.geometries import MultiPolygon, Polygon
-from osgeo import ogr
 from pydantic import BaseModel, Field
 from pyfirebase_mapswipe import models as firebase_models
+from shapely import to_wkt
+from shapely.geometry.point import Point
 from ulid import ULID
 
 from apps.common.models import AssetMimetypeEnum, AssetTypeEnum
 from apps.project.models import Project, ProjectAsset, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
 from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
-from project_types.street.api_calls import get_image_metadata
+from project_types.street.api_calls import StreetRawGroupItem, get_image_metadata
+from utils import fields as custom_fields
 from utils.common import create_json_dump
 from utils.custom_options.models import CustomOption
 
 logger = logging.getLogger(__name__)
 
 
-class ValidFeature(Feature[Polygon | MultiPolygon, dict[str, Any]]): ...
-
-
-class StreetRawGroupItem(TypedDict):
-    feature_ids: list[int]
-    features: list[ValidFeature]
-
-
-class StreetMappilaryImageFilters(BaseModel):
-    is_pano: bool | None = Field(
-        default=None,
-        description="Filter for images that are panoramas.",
-    )
-    creator_id: int | None = Field(
-        default=None,
-        description="Filter for images created by a specific user.",
-    )
-    organization_id: str | None = Field(
-        default=None,
-        description="Filter for images that belong to a specific organization.",
-    )
-    start_time: str | None = Field(
-        default=None,
-        description="Filter for images captured after this timestamp.",
-    )
-    end_time: str | None = Field(
-        default=None,
-        description="Filter for images captured before this timestamp.",
-    )
-    randomize_order: bool = Field(
-        default=False,
-        description="Randomize the order of the images.",
-    )
-    sampling_threshold: int | None = Field(
-        default=None,
-        description="Sampling threshold for filtering images.",
-    )
+class StreetMapillaryImageFilters(BaseModel):
+    is_pano: custom_fields.PydanticIsPano
+    creator_id: custom_fields.PydanticCreatorId
+    organization_id: custom_fields.PydanticOrganizationId
+    start_time: custom_fields.PydanticStartTime
+    end_time: custom_fields.PydanticEndTime
+    randomize_order: custom_fields.PydanticRandomizeOrder
+    sampling_threshold: custom_fields.PydanticSamplingThreshold
 
 
 class StreetProjectProperty(base_project.BaseProjectProperty):
     aoi_geometry: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")] | None = None
     custom_options: list[CustomOption] | None = None
-    mappilary_image_filters: StreetMappilaryImageFilters
+    mapillary_image_filters: StreetMapillaryImageFilters
 
 
 class StreetTaskGroupProperty(base_project.BaseProjectTaskGroupProperty): ...
@@ -84,7 +54,7 @@ class StreetProject(
         StreetTaskGroupProperty,
         StreetTaskProperty,
         StreetRawGroupItem,
-        list[tuple[int, ValidFeature]],
+        list[tuple[int, Point]],
     ],
 ):
     project_property_class = StreetProjectProperty
@@ -104,28 +74,23 @@ class StreetProject(
         aoi_asset = ProjectAsset.usable_objects().get(
             id=self.project_type_specifics.aoi_geometry,
             type=AssetTypeEnum.INPUT,
-            mimetype=AssetMimetypeEnum.GEOJSON,
             project_id=self.project.pk,
         )
 
         with aoi_asset.file.open() as aoi_file:
             aoi_geojson = json.loads(aoi_file.read())
 
-        mappilary_image_filters = self.project_type_specifics.mappilary_image_filters
+        mapillary_image_filters = self.project_type_specifics.mapillary_image_filters
 
-        image_metadata_data = get_image_metadata(
+        return get_image_metadata(
             aoi_geojson=aoi_geojson,
-            is_pano=mappilary_image_filters.is_pano,
-            creator_id=mappilary_image_filters.creator_id,
-            organization_id=mappilary_image_filters.organization_id,
-            start_time=mappilary_image_filters.start_time,
-            end_time=mappilary_image_filters.end_time,
-            randomize_order=mappilary_image_filters.randomize_order,
-            sampling_threshold=mappilary_image_filters.sampling_threshold,
-        )
-        return StreetRawGroupItem(
-            feature_ids=image_metadata_data["ids"],
-            features=image_metadata_data["geometries"],
+            is_pano=mapillary_image_filters.is_pano,
+            creator_id=mapillary_image_filters.creator_id,
+            organization_id=mapillary_image_filters.organization_id,
+            start_time=mapillary_image_filters.start_time,
+            end_time=mapillary_image_filters.end_time,
+            randomize_order=mapillary_image_filters.randomize_order,
+            sampling_threshold=mapillary_image_filters.sampling_threshold,
         )
 
     @typing.override
@@ -133,37 +98,28 @@ class StreetProject(
         self,
         /,
         group: ProjectTaskGroup,
-        raw_group: list[tuple[int, ValidFeature]],
-        previous_tasks_count: int,
+        raw_group: list[tuple[int, Point]],
     ) -> int:
         """Create tasks for a group."""
         bulk_mgr = BulkCreateManager(chunk_size=1000)
-        tasks_count = previous_tasks_count
+        tasks_count = 0
 
         for f_id, feature in raw_group:
-            if feature.geometry is not None:
-                geom = ogr.CreateGeometryFromJson(
-                    feature.geometry.model_dump_json(),
-                )
+            geometry_str = to_wkt(feature)
 
-                if geom.GetCoordinateDimension() == 3:
-                    geom.FlattenTo2D()
-
-                geometry_str = geom.ExportToWkt()
-
-                bulk_mgr.add(
-                    ProjectTask(
-                        firebase_id=f"t{tasks_count + 1}",
-                        task_group_id=group.pk,
+            bulk_mgr.add(
+                ProjectTask(
+                    firebase_id=f"t{f_id}",
+                    task_group_id=group.pk,
+                    geometry=geometry_str,
+                    project_type_specifics=self.project_task_property_class(
+                        task_id=f"t{f_id}",
+                        group_id=f"g{group.pk}",
                         geometry=geometry_str,
-                        project_type_specifics=self.project_task_property_class(
-                            task_id=f"t{f_id}",
-                            group_id=f"g{group.pk}",
-                            geometry=geometry_str,
-                        ).model_dump(),
-                    ),
-                )
-                tasks_count += 1
+                    ).model_dump(),
+                ),
+            )
+            tasks_count += 1
 
         bulk_mgr.done()
         return tasks_count
@@ -171,17 +127,14 @@ class StreetProject(
     @typing.override
     def create_groups(self, resp: StreetRawGroupItem):
         self.project.update_processing_status(Project.ProcessingStatus.GENERATING_GROUPS_AND_TASKS, True)
-        number_of_groups = math.ceil(len(resp["feature_ids"]) / self.project.group_size)
-
-        # FIXME (susilnem): We can directly use the firebase_id instead of total_tasks_accumulated
-        total_tasks_accumulated: int = 0
+        number_of_groups = math.ceil(len(resp["ids"]) / self.project.group_size)
 
         for group_id in range(number_of_groups):
             start_index = group_id * self.project.group_size
             end_index = start_index + self.project.group_size
 
-            group_features = resp["features"][start_index:end_index]
-            group_feature_ids = resp["feature_ids"][start_index:end_index]
+            group_features = resp["geometries"][start_index:end_index]
+            group_feature_ids = resp["ids"][start_index:end_index]
             raw_group = list(zip(group_feature_ids, group_features, strict=True))
             new_group = ProjectTaskGroup.objects.create(
                 firebase_id=f"g{group_id}",
@@ -194,9 +147,8 @@ class StreetProject(
             )
 
             # Create new tasks for this group
-            total_tasks = self.create_tasks(new_group, raw_group, total_tasks_accumulated)
+            total_tasks = self.create_tasks(new_group, raw_group)
             logger.info("Created %s tasks for group: %s", total_tasks, new_group.pk)
-            total_tasks_accumulated += total_tasks
 
     @typing.override
     def post_create_groups(self):
@@ -237,7 +189,7 @@ class StreetProject(
             file_size=file.size,
             type=AssetTypeEnum.OUTPUT,
             mimetype=AssetMimetypeEnum.GEOJSON,
-            # FIXME(tnagorra): Maybe create a internal user like mapswipe-bot
+            # FIXME(susilnem): Maybe create a internal user like mapswipe-bot
             created_by=self.project.modified_by,
             modified_by=self.project.modified_by,
         )
