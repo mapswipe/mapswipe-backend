@@ -842,9 +842,7 @@ input ObjectImageAnnotationInput {
 
   """A positive int value"""
   imageId: Int!
-
-  """A positive int value"""
-  categoryId: Int!
+  categoryId: Int
   iscrowd: Int
   segmentation: [[Float!]!]
   area: Float
@@ -857,9 +855,7 @@ type ObjectImageAnnotationType {
 
   """A positive int value"""
   imageId: Int!
-
-  """A positive int value"""
-  categoryId: Int!
+  categoryId: Int
   iscrowd: Int
   segmentation: [[Float!]!]
   area: Float
@@ -880,9 +876,9 @@ input ObjectImageInput {
   """A positive int value"""
   id: Int!
   fileName: String!
+  license: Int = null
   cocoUrl: String = null
   flickrUrl: String = null
-  license: Int = null
   width: Int = null
   height: Int = null
   dateCaptured: DateTime = null
@@ -892,9 +888,9 @@ type ObjectImageType {
   """A positive int value"""
   id: Int!
   fileName: String!
+  license: Int
   cocoUrl: String
   flickrUrl: String
-  license: Int
   width: Int
   height: Int
   dateCaptured: DateTime
@@ -2389,11 +2385,19 @@ enum ValidateImageSourceTypeEnum {
 }
 
 input ValidateImageTutorialTaskPropertyInput {
-  question: String!
+  url: String!
+  fileName: String!
+  width: Int = null
+  height: Int = null
+  annotation: ObjectImageAnnotationInput = null
 }
 
 type ValidateImageTutorialTaskPropertyType {
-  question: String!
+  url: String!
+  fileName: String!
+  width: Int
+  height: Int
+  annotation: ObjectImageAnnotationType
 }
 
 type ValidateObjectSourceConfig {

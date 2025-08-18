@@ -81,7 +81,7 @@ class ValidateImageProject(
             type=AssetTypeEnum.INPUT,
             input_type=ProjectAssetInputTypeEnum.OBJECT_IMAGE,
             # mimetype=AssetMimetypeEnum.GEOJSON,
-            file__is_null=False,
+            file__isnull=False,
         )
 
         image_assets_count = image_assets.count()
@@ -108,7 +108,7 @@ class ValidateImageProject(
             type=AssetTypeEnum.INPUT,
             input_type=ProjectAssetInputTypeEnum.OBJECT_IMAGE,
             # mimetype=AssetMimetypeEnum.GEOJSON,
-            external_url__is_null=False,
+            external_url__isnull=False,
         )
 
         image_assets_count = image_assets.count()
@@ -119,7 +119,8 @@ class ValidateImageProject(
 
         inputs: list[ValidImage] = []
         for image_asset in image_assets.iterator():
-            asset_specifics = ObjectImageAssetProperty(**image_asset.asset_type_specifics)
+            # FIXME(frozenhelium): inspect the case discrepency of objectImage
+            asset_specifics = ObjectImageAssetProperty(**image_asset.asset_type_specifics.get('objectImage'))
 
             annotations = asset_specifics.annotations
             if annotations:

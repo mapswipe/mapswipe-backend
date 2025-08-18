@@ -35,10 +35,10 @@ class ObjectImageAnnotation(BaseModel):
     # NOTE: `id` is not required in coco format but we might need this to be required
     id: custom_fields.PydanticPositiveInt
     image_id: custom_fields.PydanticPositiveInt
-    category_id: custom_fields.PydanticPositiveInt
-    iscrowd: custom_fields.PydanticPositiveInt | None
-    segmentation: list[list[float]] | None
-    area: custom_fields.PydanticPositiveFloat | None
+    category_id: custom_fields.PydanticPositiveInt | None = None
+    iscrowd: custom_fields.PydanticPositiveInt | None = None
+    segmentation: list[list[float]] | None = None
+    area: custom_fields.PydanticPositiveFloat | None = None
     bbox: tuple[float, float, float, float]
 
 

@@ -14,6 +14,9 @@ from apps.tutorial.models import (
     TutorialScenarioPage,
     TutorialTask,
 )
+
+import apps.project.graphql.types.asset_types # noqa: F401  # isort: skip # type: ignore[reportUnusedImport]
+
 from project_types.tile_map_service.compare import tutorial as compare_tutorial
 from project_types.tile_map_service.completeness import tutorial as completeness_tutorial
 from project_types.tile_map_service.find import tutorial as find_tutorial
