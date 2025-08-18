@@ -1,0 +1,32 @@
+[
+  {
+    "clientId": "aa6a00b1-5599-4087-b534-8034e5a9eb53",
+    "name": "International Federation of Red Cross and Red Crescent Societies",
+    "description": "World's largest humanitarian network, helping people before, during and after disasters.",
+    "abbreviation": "IFRC"
+  },
+  {
+    "clientId": "cc8a3c6a-1006-48d7-81ed-4dbd115b5704",
+    "name": "United Nations Office for the Coordination of Humanitarian Affairs",
+    "description": "Coordinates international humanitarian response to emergencies and disasters.",
+    "abbreviation": "OCHA"
+  },
+  {
+    "clientId": "6b8c9071-65ac-4902-8193-468cbadec758",
+    "name": "World Health Organization",
+    "description": "Specialized agency of the United Nations responsible for international public health.",
+    "abbreviation": "WHO"
+  },
+  {
+    "clientId": "b02e1925-aa00-4536-bf27-42b8454da94b",
+    "name": "Save the Children",
+    "description": "International NGO that promotes children's rights, provides relief and helps support children in developing countries.",
+    "abbreviation": "STC"
+  },
+  {
+    "clientId": "756be524-6bff-44f4-b734-65b47bce3d30",
+    "name": "ToggleCorp",
+    "description": "Technology company building data systems for humanitarian and development organizations.",
+    "abbreviation": "TC"
+  }
+]
