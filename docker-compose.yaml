@@ -21,7 +21,8 @@ x-server: &base_server_setup
     ENABLE_STRAWBERRY_GRAPHIQL: ${ENABLE_STRAWBERRY_GRAPHIQL:-true}
     # Domain configs
     APP_DOMAIN: ${APP_DOMAIN:-http://localhost:8000}
-    FRONTEND_DOMAIN: ${FRONTEND_DOMAIN:-http://localhost:3000}  # NOTE: Not used right now
+    MANAGER_DASHBOARD_DOMAIN: ${MANAGER_DASHBOARD_DOMAIN:-http://localhost:3000}
+    COMMUNITY_DASHBOARD_DOMAIN: ${COMMUNITY_DASHBOARD_DOMAIN:-http://localhost:3100}
     SESSION_COOKIE_DOMAIN: ${SESSION_COOKIE_DOMAIN:-localhost}
     CSRF_COOKIE_DOMAIN: ${CSRF_COOKIE_DOMAIN:-localhost}
     # Postgres

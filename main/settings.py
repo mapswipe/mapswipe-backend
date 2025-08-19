@@ -3,6 +3,8 @@ import os
 import socket
 import sys
 from pathlib import Path
+from urllib.parse import ParseResult
+from urllib.parse import urlparse as _urlparse
 
 import environ
 
@@ -13,6 +15,10 @@ from utils.git import GitHelper
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def urlparse(value: str) -> ParseResult:
+    return _urlparse(value.strip("/"))
 
 
 env = environ.Env(
@@ -30,6 +36,8 @@ env = environ.Env(
     APP_DOMAIN=str,  # Eg: https://api.example.org
     MEDIA_STORAGE_DOMAIN=(str, None),
     FRONTEND_DOMAIN=str,  # Eg: https://web.example.org
+    MANAGER_DASHBOARD_DOMAIN=str,  # Eg: https://managers.mapswipe.org
+    COMMUNITY_DASHBOARD_DOMAIN=str,  # Eg: https://community.mapswipe.org/
     SESSION_COOKIE_DOMAIN=str,  # .example.com
     CSRF_COOKIE_DOMAIN=str,  # .example.com
     MAPSWIPE_ADDITIONAL_TRUSTED_ORIGINS=(list, []),  # https://app1.example.com,https://app2.example.com
@@ -120,9 +128,10 @@ GIT_HELPER = GitHelper(BASE_DIR)
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 APP_LOG_LEVEL = env("APP_LOG_LEVEL")
-APP_DOMAIN = env.url("APP_DOMAIN")
-MEDIA_STORAGE_DOMAIN = env.url("MEDIA_STORAGE_DOMAIN") or APP_DOMAIN
-FRONTEND_DOMAIN = env.url("FRONTEND_DOMAIN")
+APP_DOMAIN = urlparse(env("APP_DOMAIN"))
+MEDIA_STORAGE_DOMAIN = urlparse(env("MEDIA_STORAGE_DOMAIN")) or APP_DOMAIN
+MANAGER_DASHBOARD_DOMAIN = urlparse(env("MANAGER_DASHBOARD_DOMAIN"))
+COMMUNITY_DASHBOARD_DOMAIN = urlparse(env("COMMUNITY_DASHBOARD_DOMAIN"))
 APP_ENVIRONMENT = env("APP_ENVIRONMENT").upper()
 APP_TYPE = env("APP_TYPE").upper()
 APP_RELEASE = env("APP_RELEASE") or GIT_HELPER.commit_sha
@@ -239,7 +248,7 @@ EXISTING_SYSTEM_CONNECT_ENABLED = not IS_TESTING and env("EXISTING_SYSTEM_CONNEC
 EXISTING_SYSTEM_POSTGRES_KEY = "existing_database"
 if EXISTING_SYSTEM_CONNECT_ENABLED:
     # API
-    EXISTING_SYSTEM_API = env.url("EXISTING_SYSTEM_API")
+    EXISTING_SYSTEM_API = urlparse(env("EXISTING_SYSTEM_API"))
     EXISTING_SYSTEM_API_INSECURE = env.bool("EXISTING_SYSTEM_API_INSECURE")
 
     # Database
@@ -411,7 +420,8 @@ HEALTHCHECK_CACHE_KEY = "mapswipe_healthcheck_key"
 
 MAPSWIPE_TRUSTED_ORIGINS = [
     APP_DOMAIN.geturl(),
-    FRONTEND_DOMAIN.geturl(),
+    MANAGER_DASHBOARD_DOMAIN.geturl(),
+    COMMUNITY_DASHBOARD_DOMAIN.geturl(),
     *env("MAPSWIPE_ADDITIONAL_TRUSTED_ORIGINS"),
 ]
 
@@ -515,12 +525,12 @@ FIREBASE_EMULATOR_TEST_HOST = env("FIREBASE_EMULATOR_TEST_HOST")
 FIREBASE_CREDENTIALS_B64_GZ = env("FIREBASE_CREDENTIALS_B64_GZ")
 if FIREBASE_EMULATOR_USE:
     # NOTE: Adding environment variable programmatically
-    os.environ["FIREBASE_DATABASE_EMULATOR_HOST"] = env.url("FIREBASE_EMULATOR_DATABASE_HOST").geturl()
-    os.environ["FIREBASE_AUTH_EMULATOR_HOST"] = env.url("FIREBASE_EMULATOR_AUTH_HOST").geturl()
+    os.environ["FIREBASE_DATABASE_EMULATOR_HOST"] = urlparse(env("FIREBASE_EMULATOR_DATABASE_HOST")).geturl()
+    os.environ["FIREBASE_AUTH_EMULATOR_HOST"] = urlparse(env("FIREBASE_EMULATOR_AUTH_HOST")).geturl()
     os.environ["GCLOUD_PROJECT"] = env("FIREBASE_EMULATOR_PROJECT_ID")
     FIREBASE_DB_URL = "https://" + env("FIREBASE_EMULATOR_PROJECT_ID")
 else:
-    FIREBASE_DB_URL = env.url("FIREBASE_DB_URL").geturl()
+    FIREBASE_DB_URL = urlparse(env("FIREBASE_DB_URL")).geturl()
 
 FIREBASE_HELPER = FirebaseHelper(
     FIREBASE_DB_URL,
