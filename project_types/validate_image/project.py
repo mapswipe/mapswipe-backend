@@ -114,8 +114,8 @@ class ValidateImageProject(
         image_assets_count = image_assets.count()
         if image_assets_count <= 0:
             raise Exception("There should be at least 1 image")
-        if image_assets_count > 1000:
-            raise Exception("There should be at most 1000 images")
+        if image_assets_count > 10000:
+            raise Exception("There should be at most 10000 images")
 
         inputs: list[ValidImage] = []
         for image_asset in image_assets.iterator():
