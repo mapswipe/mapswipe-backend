@@ -54,6 +54,7 @@ class ProjectTaskGroupFactory(DjangoModelFactory):
     firebase_id = factory.LazyFunction(lambda: str(ULID()))
     project_type_specifics = factory.LazyAttribute(lambda _: {})
     number_of_tasks = 100
+    number_of_groups = 10
     required_count = 50
 
     finished_count = 50

@@ -530,6 +530,7 @@ class ProjectTaskGroup(FirebasePushResource):
 
     number_of_tasks = models.IntegerField[int, int]()
     required_count = models.IntegerField[int, int]()
+    number_of_groups = models.IntegerField[int, int]()
 
     finished_count = models.IntegerField[int, int](default=0)
     progress = models.PositiveSmallIntegerField[int, int](default=0, validators=[validate_percentage])

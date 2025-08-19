@@ -1994,13 +1994,13 @@ input StreetMapillaryImageFiltersInput {
 }
 
 input StreetProjectPropertyInput {
-  aoiGeometry: String = null
+  aoiGeometry: String!
   customOptions: [CustomOptionInput!] = null
   mapillaryImageFilters: StreetMapillaryImageFiltersInput!
 }
 
 type StreetProjectPropertyType {
-  aoiGeometry: String
+  aoiGeometry: String!
   customOptions: [ProjectCustomOption!]
   mapillaryImageFilters: StreetMapillaryImageFilters!
 }

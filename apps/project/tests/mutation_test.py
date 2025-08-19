@@ -8,7 +8,7 @@ from django.core.files.temp import NamedTemporaryFile
 from PIL import Image
 from ulid import ULID
 
-from apps.common.models import AssetMimetypeEnum, IconEnum
+from apps.common.models import IconEnum
 from apps.contributor.factories import ContributorTeamFactory
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
@@ -1641,11 +1641,10 @@ class TestProjectTypeMutation(TestCase):
             "clientId": project_client_id,
             "status": self.genum(Project.Status.MARKED_AS_READY),
         }
-        content = self._update_project_mutation(project_id, project_data)
-        resp_data = content["data"]["updateProject"]
+        content = self._update_project_status_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProjectStatus"]
         assert resp_data["errors"] is None, content
         assert resp_data["result"]["status"] == self.genum(Project.Status.MARKED_AS_READY)
-        assert resp_data["result"]["processingStatus"] is None
 
         mock_requests.assert_called_once()
         mock_requests.assert_has_calls([call(int(project_id))])

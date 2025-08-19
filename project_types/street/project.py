@@ -5,7 +5,7 @@ import typing
 
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from pyfirebase_mapswipe import models as firebase_models
 from shapely import to_wkt
 from shapely.geometry.point import Point
@@ -34,7 +34,7 @@ class StreetMapillaryImageFilters(BaseModel):
 
 
 class StreetProjectProperty(base_project.BaseProjectProperty):
-    aoi_geometry: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")] | None = None
+    aoi_geometry: custom_fields.PydanticId
     custom_options: list[CustomOption] | None = None
     mapillary_image_filters: StreetMapillaryImageFilters
 
@@ -109,11 +109,11 @@ class StreetProject(
 
             bulk_mgr.add(
                 ProjectTask(
-                    firebase_id=f"t{f_id}",
+                    firebase_id=f"{f_id}",
                     task_group_id=group.pk,
                     geometry=geometry_str,
                     project_type_specifics=self.project_task_property_class(
-                        task_id=f"t{f_id}",
+                        task_id=f"{f_id}",
                         group_id=f"g{group.pk}",
                         geometry=geometry_str,
                     ).model_dump(),
@@ -140,6 +140,7 @@ class StreetProject(
                 firebase_id=f"g{group_id}",
                 project_id=self.project.pk,
                 number_of_tasks=0,
+                number_of_groups=0,
                 progress=0,
                 finished_count=0,
                 required_count=0,
@@ -214,6 +215,7 @@ class StreetProject(
     def get_group_specifics_for_firebase(self, group: ProjectTaskGroup):
         return firebase_models.FbMappingGroupStreetCreateOnlyInput(
             groupId=group.firebase_id,
+            numberOfGroups=group.number_of_groups,
         )
 
     @typing.override
