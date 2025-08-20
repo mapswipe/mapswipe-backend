@@ -21,7 +21,8 @@ class AoiGeometryAssetProperty(BaseModel):
 
 
 class ObjectImage(BaseModel):
-    id: custom_fields.PydanticPositiveInt
+    # NOTE: converting id and image_id to string as large integers are not supported
+    id: custom_fields.PydanticId
     file_name: str
     license: custom_fields.PydanticPositiveInt | None = None
     coco_url: custom_fields.PydanticUrl | None = None
@@ -33,9 +34,11 @@ class ObjectImage(BaseModel):
 
 class ObjectImageAnnotation(BaseModel):
     # NOTE: `id` is not required in coco format but we might need this to be required
-    id: custom_fields.PydanticPositiveInt
-    image_id: custom_fields.PydanticPositiveInt
-    category_id: custom_fields.PydanticPositiveInt | None = None
+    # NOTE: converting id and image_id to string as large integers are not supported
+    id: custom_fields.PydanticId
+    # NOTE: converting id and image_id to string as large integers are not supported
+    image_id: custom_fields.PydanticId
+    category_id: custom_fields.PydanticId | None = None
     iscrowd: custom_fields.PydanticPositiveInt | None = None
     segmentation: list[list[float]] | None = None
     area: custom_fields.PydanticPositiveFloat | None = None
