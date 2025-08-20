@@ -7,6 +7,7 @@ import django.db.models.functions.text
 import django.db.models.manager
 import django_choices_field.fields
 import utils.fields
+import main.fields
 from django.db import migrations, models
 
 
@@ -78,7 +79,7 @@ class Migration(migrations.Migration):
                 ('modified_at', models.DateTimeField(auto_now=True)),
                 ('type', django_choices_field.fields.IntegerChoicesField(choices=[(100, 'Input'), (200, 'Output'), (300, 'Stats')], choices_enum=apps.common.models.AssetTypeEnum)),
                 ('mimetype', django_choices_field.fields.IntegerChoicesField(choices=[(100, 'application/geo+json'), (201, 'image/jpeg'), (202, 'image/png'), (203, 'image/gif')], choices_enum=apps.common.models.AssetMimetypeEnum)),
-                ('file', models.FileField(help_text='The file associated with the asset', upload_to=apps.project.models.UploadHelper.project_asset)),
+                ('file', main.fields.OverwritableFileField(help_text='The file associated with the asset', upload_to=apps.project.models.UploadHelper.project_asset)),
                 ('marked_as_deleted', models.BooleanField(default=False, help_text='If this flag is enabled, this project asset will be deleted in the future')),
             ],
             options={

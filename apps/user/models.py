@@ -19,6 +19,7 @@ class User(AbstractUser):
     # FIXME(tnagorra): We might need to skip the indexing
     # TODO(tnagorra): Rename this to firebase_userid
 
+    # TODO: change this to one-to-one field
     contributor_user = models.ForeignKey(
         "contributor.ContributorUser",
         on_delete=models.PROTECT,
@@ -51,6 +52,16 @@ class User(AbstractUser):
         if self.contributor_user_id:
             return self.contributor_user.firebase_id
         return None
+
+    @classmethod
+    def get_bot_user(cls) -> typing.Self:
+        return cls.objects.get_or_create(
+            email="bot@mapswipe.org",
+            defaults=dict(
+                first_name="Mapswipe",
+                last_name="Bot",
+            ),
+        )[0]
 
     @typing.override
     def save(self, *args, **kwargs):

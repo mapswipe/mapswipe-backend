@@ -47,6 +47,11 @@ class UserResourceSerializer[ModelType: UserResource, ContextType: DrfContextTyp
 
         try:
             validate_ulid(new_client_id)
+            # TODO: Add test for this
+            if self.instance and self.instance.client_id and self.instance.client_id != new_client_id:
+                raise serializers.ValidationError(
+                    gettext("client_id is immutable, current client_id '%s'") % self.instance.client_id,
+                )
             return new_client_id
         except ValidationError as err:
             raise serializers.ValidationError(

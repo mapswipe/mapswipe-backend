@@ -10,8 +10,16 @@ if typing.TYPE_CHECKING:
     from utils.firebase import FirebaseHelper
 
 
+if settings.IS_TESTING:
+    assert settings.FIREBASE_EMULATOR_USE is True, "Always use firebase emulator while TESTING"
+
+
 class Config:
     BASE_DIR = typing.cast("Path", settings.BASE_DIR)
+    TEMP_DIR = typing.cast("Path", settings.TEMP_DIR)
+
+    # Misc
+    STORAGE_OVERWRITE_KEY = typing.cast("str", settings.STORAGE_OVERWRITE_KEY)
 
     # NOTE: We get AOI for validate from HOT tasking manager
     HOT_TASKING_MANAGER_PROJECT_API_LINK = "https://tasking-manager-production-api.hotosm.org/api/v2/"
@@ -83,8 +91,16 @@ class Config:
             return f"/v2/users/{user_id}"
 
         @staticmethod
-        def contributor_user_group(group_id: str | int):
+        def contributor_user_group(group_id: str | int):  # TODO: int?
             return f"/v2/userGroups/{group_id}"
+
+        @staticmethod
+        def results_projects():
+            return "/v2/results/"
+
+        @staticmethod
+        def results_project_groups(project_id: str):
+            return f"/v2/results/{project_id}"
 
 
 # FIXME: Import utils/geo/raster_tile_server/config.py here

@@ -16,6 +16,8 @@ class CeleryLock:
         # FIXME(tnagorra): Rename this to project push to firebase
         PUSH_PROJECT_TO_FIREBASE = "PUSH_PROJECT_TO_FIREBASE_{0}"
         TUTORIAL_PUSH_TO_FIREBASE = "TUTORIAL_PUSH_TO_FIREBASE_{0}"
+        PROJECT_EXPORTS_GENERATE = "PROJECT_GENERATE_EXPORTS_{0}"
+        MAPPING_SESSION_PULL_FROM_FIREBASE = "MAPPING_SESSION_PULL_FROM_FIREBASE"
 
     @staticmethod
     @contextmanager

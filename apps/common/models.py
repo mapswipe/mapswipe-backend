@@ -208,7 +208,7 @@ class AssetMimetypeEnum(models.IntegerChoices):
 class AssetTypeEnum(models.IntegerChoices):
     INPUT = 100, "Input"
     OUTPUT = 200, "Output"
-    STATS = 300, "Stats"
+    EXPORT = 300, "Export"
     DEBUG = 400, "Debug"
 
     @classmethod
@@ -216,6 +216,18 @@ class AssetTypeEnum(models.IntegerChoices):
         if value in cls:
             return str(cls(value).label)
         return "Unknown"
+
+    @classmethod
+    def get_string_for_filepath(cls, value: typing.Self) -> str:
+        if value == cls.INPUT:
+            return "input"
+        if value == cls.OUTPUT:
+            return "output"
+        if value == cls.EXPORT:
+            return "export"
+        if value == cls.DEBUG:
+            return "debug"
+        typing.assert_never(value)
 
 
 class CommonAsset(Model):
@@ -242,6 +254,10 @@ class CommonAsset(Model):
 
     class Meta(TypedModelMeta):  # type: ignore[reportIncompatibleVariableOverride]
         abstract = True
+
+    @property
+    def type_enum(self):
+        return AssetTypeEnum(self.type)
 
     @classmethod
     def usable_objects(cls):

@@ -183,7 +183,7 @@ class BaseProject[
         # We need to be careful not to delete assets that are currently used
         ProjectAsset.usable_objects().filter(
             project=self.project.pk,
-            type__in=[ProjectAsset.Type.OUTPUT, ProjectAsset.Type.STATS],
+            type__in=[ProjectAsset.Type.OUTPUT, ProjectAsset.Type.EXPORT],
         ).update(marked_as_deleted=True)
 
         try:
@@ -195,8 +195,12 @@ class BaseProject[
             self.project.update_processing_status(Project.ProcessingStatus.COMPLETED, True)
             self.project.update_status(Project.Status.READY, True)
             return True
-        except ValidationException as ex:
-            logger.error(ex)
+        except ValidationException:
+            logger.warning(
+                "process_project failed: %s",
+                self.project.id,
+                exc_info=True,
+            )
             self.project.update_status(Project.Status.FAILED, True)
             return False
 
@@ -469,3 +473,9 @@ class BaseProject[
             self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
         else:
             self.project.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
+
+    def generate_exports(self):
+        from apps.project.exports.exports import export_project_data
+
+        # NOTE: Currently the logic is same for each project
+        export_project_data(self.project)

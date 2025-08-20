@@ -10,6 +10,7 @@ from warnings import deprecated
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import models
 from django.utils.translation import gettext
 from geojson_pydantic import FeatureCollection
 from ulid import ULID
@@ -99,8 +100,8 @@ def to_camel_case(snake_str: str):
 
 
 def to_snake_case(name: str):
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+    s1 = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
 def create_json_dump(item: dict[typing.Any, typing.Any]) -> bytes:
@@ -166,3 +167,14 @@ def compress_tasks(tasks_list: list[dict[str, typing.Any]]) -> str:
     # when using Python 3.7 it just works
     # Unfortunately the docker image uses Python 3.6
     return base64.b64encode(compressed_tasks).decode("ascii")
+
+
+def tb_name(model: type[models.Model]) -> str:
+    """Return django model table name"""
+    return model._meta.db_table
+
+
+# FIXME(thenav56): Add typing for the field
+def fd_name(field: typing.Any) -> str:
+    """Return django model table fields's column name"""
+    return field.field.column

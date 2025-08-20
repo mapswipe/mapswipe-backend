@@ -2,7 +2,6 @@
 import typing
 from warnings import deprecated
 
-import ulid
 from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.geos import GEOSGeometry
 from django.db import models
@@ -13,8 +12,16 @@ from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
 from pyfirebase_mapswipe import models as firebase_models
 
-from apps.common.models import ArchivableResource, CommonAsset, FirebasePushResource, UserResource
+from apps.common.models import (
+    ArchivableResource,
+    AssetMimetypeEnum,
+    AssetTypeEnum,
+    CommonAsset,
+    FirebasePushResource,
+    UserResource,
+)
 from apps.contributor.models import ContributorTeam
+from main.fields import OverwritableFileField
 from utils.fields import validate_percentage
 
 if typing.TYPE_CHECKING:
@@ -40,6 +47,30 @@ class ProjectAssetExportTypeEnum(models.IntegerChoices):
         if value in cls:
             return str(cls(value).label)
         return "Unknown"
+
+    @staticmethod
+    def get_mimetype(export_type: "ProjectAssetExportTypeEnum"):
+        if export_type == ProjectAssetExportTypeEnum.AGGREGATED_RESULTS:
+            return AssetMimetypeEnum.GZIP
+        if export_type == ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY:
+            return AssetMimetypeEnum.GZIP
+        if export_type == ProjectAssetExportTypeEnum.GROUPS:
+            return AssetMimetypeEnum.GZIP
+        if export_type == ProjectAssetExportTypeEnum.HISTORY:
+            return AssetMimetypeEnum.CSV
+        if export_type == ProjectAssetExportTypeEnum.RESULTS:
+            return AssetMimetypeEnum.GZIP
+        if export_type == ProjectAssetExportTypeEnum.TASKS:
+            return AssetMimetypeEnum.GZIP
+        if export_type == ProjectAssetExportTypeEnum.USERS:
+            return AssetMimetypeEnum.GZIP
+        if export_type == ProjectAssetExportTypeEnum.AREA_OF_INTEREST:
+            return AssetMimetypeEnum.GEOJSON
+        if export_type == ProjectAssetExportTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES:
+            return AssetMimetypeEnum.GEOJSON
+        if export_type == ProjectAssetExportTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES:
+            return AssetMimetypeEnum.GEOJSON
+        typing.assert_never(export_type)
 
 
 class ProjectTypeEnum(models.IntegerChoices):
@@ -144,7 +175,9 @@ class ProjectProcessingStatusEnum(models.IntegerChoices):
 class UploadHelper:
     @staticmethod
     def project_asset(instance: "ProjectAsset", filename: str):
-        return f"project/{instance.project_id}/asset/{instance.type}/{ulid.ULID()!s}/{filename}"
+        client_id = instance.client_id
+        asset_type_str = AssetTypeEnum.get_string_for_filepath(instance.type_enum)
+        return f"project/{instance.project_id}/asset/{asset_type_str}/{client_id}/{filename}"
 
     @deprecated("This is kept because it's referenced in migrations")
     @staticmethod
@@ -415,7 +448,7 @@ class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibl
         related_name="+",
     )
 
-    file = models.FileField(
+    file = OverwritableFileField(
         upload_to=UploadHelper.project_asset,
         help_text=gettext_lazy("The file associated with the asset"),
     )
@@ -449,6 +482,7 @@ class ProjectTaskGroup(FirebasePushResource):
     time_spent_max_allowed = models.FloatField(null=True, default=None)
 
     # Type hints
+    id: int
     project_id: int
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
@@ -482,6 +516,7 @@ class ProjectTask(FirebasePushResource):
     project_type_specifics = models.JSONField()
 
     # Type hints
+    id: int
     task_group_id: int
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]

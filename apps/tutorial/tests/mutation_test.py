@@ -620,7 +620,7 @@ class TestTutorialMutation(TestCase):
 
         # Updating Tutorial: Check for deletions?
         tutorial_data = {
-            "clientId": str(ULID()),
+            "clientId": latest_tutorial.client_id,
             "name": "My other tutorial",
             "scenarios": [],
             "informationPages": [],

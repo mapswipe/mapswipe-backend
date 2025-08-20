@@ -1,0 +1,392 @@
+import logging
+import typing
+from collections import defaultdict
+
+import dateutil.parser
+from django.db import connection, transaction
+
+from apps.contributor.models import ContributorUser, ContributorUserGroup
+from apps.mapping.models import (
+    MappingSession,
+    MappingSessionClientTypeEnum,
+    MappingSessionResult,
+    MappingSessionResultTemp,
+    MappingSessionUserGroup,
+    MappingSessionUserGroupTemp,
+)
+
+# import geojson
+from apps.project.models import Project, ProjectTask, ProjectTaskGroup
+from apps.project.tasks import generate_project_exports
+from main.bulk_managers import BulkCreateManager
+from main.config import Config
+from main.logging import log_extra
+from utils.common import fd_name, tb_name
+
+logger = logging.getLogger(__name__)
+
+
+class FirebaseCleanupAlreadyDoneException(Exception): ...
+
+
+class FirebaseCleanup:
+    def __init__(self):
+        # NOTE: We need to set value to None to clear the value in firebase
+        self._mapping_sessions: defaultdict[str, defaultdict[str, dict[str, None]]] = defaultdict(
+            lambda: defaultdict(lambda: defaultdict(None)),
+        )
+        # NOTE: We need to set value to None to clear the value in firebase
+        self._root_project: dict[str, None] = {}
+        self._done = False
+
+    def _already_done_check(self):
+        if self._done:
+            raise FirebaseCleanupAlreadyDoneException("done already called")
+
+    def add_mapping_session(
+        self,
+        *,
+        project_firebase_id: str,
+        group_firebase_id: str,
+        contributor_user_firebase_id: str,
+    ):
+        """
+        Flags a contributor's mapping session data in a project group for deletion in Firebase.
+        """
+        self._already_done_check()
+        self._mapping_sessions[project_firebase_id][group_firebase_id][contributor_user_firebase_id] = None
+
+    def add_project(
+        self,
+        *,
+        project_firebase_id: str,
+    ):
+        """
+        ⚠️ Use with caution!
+        Flags all mapping sessions related to a project in Firebase for deletion.
+        """
+        self._already_done_check()
+        self._root_project[project_firebase_id] = None
+
+    def done(self):
+        if self._mapping_sessions:
+            logger.info("Cleanup up firebase results")
+            # Trigger generate_project_exports for updated projects
+            for project_firebase_id in self._mapping_sessions:
+                transaction.on_commit(
+                    # XXX: we loose type check with s (signature)
+                    generate_project_exports.s(project_firebase_id=project_firebase_id).delay,
+                )
+
+            # clear keys from firebase
+            Config.FIREBASE_HELPER.ref(Config.FirebaseKeys.results_projects()).update(self._mapping_sessions)
+            logger.info("Cleared firebase results")
+
+        if self._root_project:
+            for project_firebase_id in self._root_project:
+                logger.warning("Cleanup up firebase results by project: %s", project_firebase_id)
+            # clear keys from firebase
+            Config.FIREBASE_HELPER.ref(Config.FirebaseKeys.results_projects()).update(self._root_project)
+            logger.info("Cleared firebase results by project")
+
+        self._done = True
+
+
+def dict_iterator(dict_: dict[object, object]):
+    return dict_.items()
+
+
+def list_iterator(list_: list[object]):
+    return enumerate(list_)
+
+
+def results_complete(
+    mapping_session_data: dict[str, typing.Any],
+    project_firebase_id: str,
+    group_firebase_id: str,
+    contributor_user_firebase_id: str,
+    required_attributes: list[str],
+) -> bool:
+    """check if all attributes are set"""
+    complete = True
+    for attribute in required_attributes:
+        if attribute not in mapping_session_data:
+            complete = False
+            logger.error(
+                "missing mapping_sessions attribute '%s' ",
+                attribute,
+                extra=log_extra(
+                    dict(
+                        project_firebase_id=project_firebase_id,
+                        group_firebase_id=group_firebase_id,
+                        contributor_user_firebase_id=contributor_user_firebase_id,
+                    ),
+                ),
+            )
+    return complete
+
+
+SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSIONS = f"""
+    INSERT INTO {tb_name(MappingSession)} (
+        -- Ref
+        {fd_name(MappingSession.project_task_group)},
+        {fd_name(MappingSession.contributor_user_id)},
+        -- Swipe Metadata (Aggregates)
+        {fd_name(MappingSession.start_time)},
+        {fd_name(MappingSession.end_time)},
+        {fd_name(MappingSession.items_count)},
+        -- Device metadata
+        {fd_name(MappingSession.app_version)},
+        {fd_name(MappingSession.client_type)}
+    ) (
+        SELECT
+            -- Ref
+            PTG.{fd_name(ProjectTaskGroup.id)},                         -- project_task_group_id
+            CU.{fd_name(ContributorUser.id)},                           -- contributor_user_id
+            -- Swipe Metadata (Aggregates)
+            min(RT.{fd_name(MappingSessionResultTemp.start_time)}),      -- start_time
+            max(RT.{fd_name(MappingSessionResultTemp.end_time)}),        -- end_time
+            COUNT(*),                                                    -- items_count
+            -- Device metadata
+            RT.{fd_name(MappingSessionResultTemp.app_version)},          -- app_version
+            RT.{fd_name(MappingSessionResultTemp.client_type)}           -- client_type
+        FROM
+            {tb_name(MappingSessionResultTemp)} RT
+                -- Project
+                LEFT JOIN {tb_name(Project)} P ON
+                    P.{fd_name(Project.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.project_firebase_id)}
+                -- Project Task Group
+                LEFT JOIN {tb_name(ProjectTaskGroup)} PTG ON
+                    PTG.{fd_name(ProjectTaskGroup.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.group_firebase_id)} AND
+                    PTG.{fd_name(ProjectTaskGroup.project)} = P.{fd_name(Project.id)}
+                -- Contributor User
+                LEFT JOIN {tb_name(ContributorUser)} CU ON
+                    CU.{fd_name(ContributorUser.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.contributor_user_firebase_id)}
+        GROUP BY
+            PTG.{fd_name(ProjectTaskGroup.id)},
+            CU.{fd_name(ContributorUser.id)},
+            RT.{fd_name(MappingSessionResultTemp.app_version)},
+            RT.{fd_name(MappingSessionResultTemp.client_type)}
+    )
+    ON CONFLICT (
+         {fd_name(MappingSession.project_task_group)},
+         {fd_name(MappingSession.contributor_user)}
+    )
+    DO NOTHING;
+"""  # noqa: E501
+
+SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_RESULTS = f"""
+    INSERT INTO {tb_name(MappingSessionResult)} (
+        -- Ref
+        {fd_name(MappingSessionResult.session)},
+        {fd_name(MappingSessionResult.project_task)},
+        -- Value
+        {fd_name(MappingSessionResult.result)}
+    ) (
+        SELECT
+            -- Ref
+            MS.{fd_name(MappingSession.id)},               -- mapping_session_id
+            PT.{fd_name(ProjectTask.id)},                  -- task_id
+            -- Value
+            RT.{fd_name(MappingSessionResultTemp.result)}  -- result [TODO: ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(RT.result), 3857), 4326)]
+        FROM {tb_name(MappingSessionResultTemp)} RT
+            -- Project
+            LEFT JOIN {tb_name(Project)} P ON
+                P.{fd_name(Project.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.project_firebase_id)}
+            -- Project Task Group
+            LEFT JOIN {tb_name(ProjectTaskGroup)} PTG ON
+                PTG.{fd_name(ProjectTaskGroup.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.group_firebase_id)} AND
+                PTG.{fd_name(ProjectTaskGroup.project)} = P.{fd_name(Project.id)}
+            -- Project Task
+            LEFT JOIN {tb_name(ProjectTask)} PT ON
+                PT.{fd_name(ProjectTask.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.task_firebase_id)} AND
+                PT.{fd_name(ProjectTask.task_group)} = PTG.{fd_name(ProjectTaskGroup.id)}
+            -- Contributor User
+            LEFT JOIN {tb_name(ContributorUser)} CU ON
+                CU.{fd_name(ContributorUser.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.contributor_user_firebase_id)}
+            -- Mapping Session
+            LEFT JOIN {tb_name(MappingSession)} MS ON
+                MS.{fd_name(MappingSession.project_task_group)} = PTG.{fd_name(ProjectTaskGroup.id)} AND
+                MS.{fd_name(MappingSession.contributor_user)} = CU.{fd_name(ContributorUser.id)}
+    )
+    ON CONFLICT (
+        {fd_name(MappingSessionResult.session)},
+        {fd_name(MappingSessionResult.project_task)}
+    )
+    DO NOTHING;
+"""  # noqa: E501
+
+
+SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_USER_GROUP = f"""
+    INSERT INTO {tb_name(MappingSessionUserGroup)} (
+         {fd_name(MappingSessionUserGroup.mapping_session)},
+         {fd_name(MappingSessionUserGroup.user_group)}
+    ) (
+        SELECT
+            MS.{fd_name(MappingSession.id)},                    -- mapping_session
+            UG.{fd_name(ContributorUserGroup.id)}               -- user_group
+        FROM {tb_name(MappingSessionUserGroupTemp)} UGRT
+            -- Project
+            LEFT JOIN {tb_name(Project)} P ON
+                P.{fd_name(Project.firebase_id)} = UGRT.{fd_name(MappingSessionUserGroupTemp.project_firebase_id)}
+            -- Project Task Group
+            LEFT JOIN {tb_name(ProjectTaskGroup)} PTG ON
+                PTG.{fd_name(ProjectTaskGroup.firebase_id)} = UGRT.{fd_name(MappingSessionUserGroupTemp.group_firebase_id)} AND
+                PTG.{fd_name(ProjectTaskGroup.project)} = P.{fd_name(Project.id)}
+            -- Contributor User
+            LEFT JOIN {tb_name(ContributorUser)} CU ON
+                CU.{fd_name(ContributorUser.firebase_id)} = UGRT.{fd_name(MappingSessionUserGroupTemp.contributor_user_firebase_id)}
+            -- Mapping Session
+            LEFT JOIN {tb_name(MappingSession)} MS ON
+                MS.{fd_name(MappingSession.project_task_group)} = PTG.{fd_name(ProjectTaskGroup.id)} AND
+                MS.{fd_name(MappingSession.contributor_user)} = CU.{fd_name(ContributorUser.id)}
+            -- Contributor User Group
+            LEFT JOIN {tb_name(ContributorUserGroup)} UG ON
+                UG.{fd_name(ContributorUserGroup.firebase_id)} = UGRT.{fd_name(MappingSessionUserGroupTemp.user_group_firebase_id)}
+    )
+    ON CONFLICT (
+         {fd_name(MappingSessionUserGroup.mapping_session)},
+         {fd_name(MappingSessionUserGroup.user_group)}
+    )
+    DO NOTHING;
+"""  # noqa: E501
+
+
+def transfer_results_from_temp_tables():
+    with transaction.atomic(), connection.cursor() as cursor:
+        logger.info("Transferring staging results to real tables")
+        logger.info("Creating mapping sessions")
+        cursor.execute(SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSIONS)
+        logger.info("Creating mapping sessions results")
+        cursor.execute(SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_RESULTS)
+        logger.info("Creating mapping sessions for contributor user groups")
+        cursor.execute(SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_USER_GROUP)
+        logger.info("Transferred staging results to real tables")
+
+        logger.info("Cleaning up staging results")
+        cursor.execute(f"TRUNCATE TABLE {tb_name(MappingSessionResultTemp)} RESTART IDENTITY;")
+        cursor.execute(f"TRUNCATE TABLE {tb_name(MappingSessionUserGroupTemp)} RESTART IDENTITY;")
+        logger.info("Cleared staging results")
+
+
+def results_to_temp_table(
+    bulk_create_manager: BulkCreateManager,
+    firebase_cleanup: FirebaseCleanup,
+    project: Project,
+    group_results: dict[str, typing.Any],
+    # result_type: str = "integer",
+):
+    """
+    - projects
+      - groups (group_results)
+        - users (Mapping session)
+          results
+            - tasks: value
+    """
+
+    logger.info("project %s: Start transfer results to staging area", project.firebase_id)
+    logger.info("project %s: Got %s groups", project.firebase_id, len(group_results.items()))
+
+    for group_firebase_id, users_results in group_results.items():
+        for contributor_user_firebase_id, mapping_session_data in users_results.items():
+            firebase_cleanup.add_mapping_session(
+                project_firebase_id=project.firebase_id,
+                group_firebase_id=group_firebase_id,
+                contributor_user_firebase_id=contributor_user_firebase_id,
+            )
+
+            # check if all attributes are set
+            # if not don't transfer the results for this group
+            if not results_complete(
+                mapping_session_data,
+                project.firebase_id,
+                group_firebase_id,
+                contributor_user_firebase_id,
+                required_attributes=["startTime", "endTime", "results"],
+            ):
+                continue
+
+            # Mapping session attributes
+            start_time = dateutil.parser.parse(mapping_session_data["startTime"])
+            end_time = dateutil.parser.parse(mapping_session_data["endTime"])
+            if start_time > end_time:
+                logger.error(
+                    "mapping_sessions: start time is greater then end time",
+                    extra=log_extra(
+                        {
+                            "start_time": start_time,
+                            "end_time": end_time,
+                        },
+                    ),
+                )
+                continue
+
+            app_version = mapping_session_data.get("appVersion", "")
+            client_type = MappingSessionClientTypeEnum.get_client_type(
+                mapping_session_data.get("clientType"),
+            )
+
+            session_results = mapping_session_data["results"]
+            if not session_results:
+                logger.error("mapping_sessions: results(task/value map) is empty")
+                continue
+
+            if type(session_results) is dict:
+                session_results_iterator = dict_iterator(session_results)
+            elif type(session_results) is list:
+                # TODO: optimize for performance?
+                # (make sure data from firebase is always a dict)
+                # if key is a integer firebase will return a list
+                # if first key (list index) is 5
+                # list indices 0-4 will have value None
+                session_results_iterator = list_iterator(session_results)
+            else:
+                logger.error(
+                    "mapping_sessions: invalid results(task/value map)",
+                    extra=log_extra(
+                        {
+                            "results": session_results,
+                        },
+                    ),
+                )
+                continue
+
+            # Collect results for each tasks
+            for task_firebase_id, result in session_results_iterator:
+                if result is None:
+                    # TODO: Do we treat it as 0?
+                    logger.error("mapping_sessions: results task value is None")
+                    continue
+
+                # This was used for DIGITIZATION
+                # if result_type == "geometry":
+                #     result = geojson.dumps(geojson.GeometryCollection(result))
+
+                bulk_create_manager.add(
+                    MappingSessionResultTemp(
+                        project_firebase_id=project.firebase_id,
+                        group_firebase_id=group_firebase_id,
+                        contributor_user_firebase_id=contributor_user_firebase_id,
+                        task_firebase_id=task_firebase_id,
+                        start_time=start_time,
+                        end_time=end_time,
+                        result=result,
+                        app_version=app_version,
+                        client_type=client_type,
+                    ),
+                )
+
+            # Tag this session to all user groups mentioned
+            for user_group_firebase_id, is_selected in mapping_session_data.get("userGroups", {}).items():
+                if not is_selected:
+                    continue
+                bulk_create_manager.add(
+                    MappingSessionUserGroupTemp(
+                        project_firebase_id=project.firebase_id,
+                        group_firebase_id=group_firebase_id,
+                        contributor_user_firebase_id=contributor_user_firebase_id,
+                        user_group_firebase_id=user_group_firebase_id,
+                    ),
+                )
+
+    logger.info("project %s: Copied data to temp tables", project.firebase_id)

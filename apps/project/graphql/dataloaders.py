@@ -16,7 +16,7 @@ def load_export_assets(export_type: AssetStatsEnum):
     def load_export_assets_(keys: list[int]) -> list["ProjectAssetType | None"]:
         qs = ProjectAsset.objects.filter(
             project__in=keys,
-            type=AssetTypeEnum.STATS,
+            type=AssetTypeEnum.EXPORT,
             export_type=export_type,
         )
 
