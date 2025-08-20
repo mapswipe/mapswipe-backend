@@ -49,7 +49,7 @@ class ProjectAssetExportTypeEnum(models.IntegerChoices):
         return "Unknown"
 
     @staticmethod
-    def get_meme_type(export_type: "ProjectAssetExportTypeEnum"):
+    def get_mimetype(export_type: "ProjectAssetExportTypeEnum"):
         if export_type == ProjectAssetExportTypeEnum.AGGREGATED_RESULTS:
             return AssetMimetypeEnum.GZIP
         if export_type == ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY:

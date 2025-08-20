@@ -31,16 +31,13 @@ class FirebaseCleanupAlreadyDoneException(Exception): ...
 
 class FirebaseCleanup:
     def __init__(self):
+        # NOTE: We need to set value to None to clear the value in firebase
         self._mapping_sessions: defaultdict[str, defaultdict[str, dict[str, None]]] = defaultdict(
             lambda: defaultdict(lambda: defaultdict(None)),
         )
+        # NOTE: We need to set value to None to clear the value in firebase
         self._root_project: dict[str, None] = {}
         self._done = False
-
-    def reset(self):
-        self._mapping_sessions: defaultdict[str, defaultdict[str, dict[str, None]]] = defaultdict(
-            lambda: defaultdict(lambda: defaultdict(None)),
-        )
 
     def _already_done_check(self):
         if self._done:
@@ -72,17 +69,26 @@ class FirebaseCleanup:
         self._root_project[project_firebase_id] = None
 
     def done(self):
-        logger.info("Cleanup up firebase results")
         if self._mapping_sessions:
+            logger.info("Cleanup up firebase results")
             # Trigger generate_project_exports for updated projects
             for project_firebase_id in self._mapping_sessions:
                 transaction.on_commit(
                     # XXX: we loose type check with s (signature)
                     generate_project_exports.s(project_firebase_id=project_firebase_id).delay,
                 )
+
             # clear keys from firebase
             Config.FIREBASE_HELPER.ref(Config.FirebaseKeys.results_projects()).update(self._mapping_sessions)
-        logger.info("Cleared firebase results")
+            logger.info("Cleared firebase results")
+
+        if self._root_project:
+            for project_firebase_id in self._root_project:
+                logger.warning("Cleanup up firebase results by project: %s", project_firebase_id)
+            # clear keys from firebase
+            Config.FIREBASE_HELPER.ref(Config.FirebaseKeys.results_projects()).update(self._root_project)
+            logger.info("Cleared firebase results by project")
+
         self._done = True
 
 
@@ -246,42 +252,21 @@ SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_USER_GROUP = f"""
 """  # noqa: E501
 
 
-def temp_results_to_real_table():
-    logger.info("Transferring staging results to real tables")
+def transfer_results_from_temp_tables():
     with transaction.atomic(), connection.cursor() as cursor:
+        logger.info("Transferring staging results to real tables")
         logger.info("Creating mapping sessions")
         cursor.execute(SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSIONS)
         logger.info("Creating mapping sessions results")
         cursor.execute(SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_RESULTS)
         logger.info("Creating mapping sessions for contributor user groups")
         cursor.execute(SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_USER_GROUP)
-    logger.info("Transferred staging results to real tables")
+        logger.info("Transferred staging results to real tables")
 
-
-def cleanup_temp_tables():
-    logger.info("Cleaning up staging results")
-    cleanup_keys_qs = (
-        MappingSessionResultTemp.objects.order_by()
-        .values_list(
-            "project_firebase_id",
-            "group_firebase_id",
-            "contributor_user_firebase_id",
-        )
-        .distinct()
-    )
-
-    firebase_results_clear_data: defaultdict[str, defaultdict[str, dict[str, None]]] = defaultdict(
-        lambda: defaultdict(lambda: defaultdict(None)),
-    )
-
-    for project_fid, group_fid, contributor_fid in cleanup_keys_qs:
-        firebase_results_clear_data[project_fid][group_fid][contributor_fid] = None
-
-    with transaction.atomic(), connection.cursor() as cursor:
+        logger.info("Cleaning up staging results")
         cursor.execute(f"TRUNCATE TABLE {tb_name(MappingSessionResultTemp)} RESTART IDENTITY;")
         cursor.execute(f"TRUNCATE TABLE {tb_name(MappingSessionUserGroupTemp)} RESTART IDENTITY;")
-    logger.info("Cleared staging results")
-    return firebase_results_clear_data
+        logger.info("Cleared staging results")
 
 
 def results_to_temp_table(

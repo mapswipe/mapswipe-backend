@@ -7,9 +7,8 @@ from main.logging import log_extra
 
 from .utils import (
     FirebaseCleanup,
-    cleanup_temp_tables,
     results_to_temp_table,
-    temp_results_to_real_table,
+    transfer_results_from_temp_tables,
 )
 
 logger = logging.getLogger(__name__)
@@ -83,8 +82,7 @@ def pull_results_from_firebase():
 
     bulk_create_manager.done()
 
-    temp_results_to_real_table()
-    cleanup_temp_tables()
+    transfer_results_from_temp_tables()
     firebase_cleanup.done()
 
     # TODO: Trigger slack notification workflow

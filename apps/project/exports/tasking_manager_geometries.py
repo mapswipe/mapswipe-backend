@@ -11,25 +11,32 @@ from osgeo import ogr
 from apps.project.models import Project
 from utils.geo.tile_functions import geometry_from_tile_coords
 
-from .utils.geojson import create_geojson_file, create_geojson_file_from_dict
+from .utils.geojson import ProjectData, YesResult, create_geojson_file, create_geojson_file_from_dict
 
 logger = logging.getLogger(__name__)
 
 
-def load_data(project: Project, gzipped_csv_file: Path) -> list:
+# TODO: Test if this works when export are done for two projects at the same time
+neighbour_list: list[list[int]]
+my_neighbourhood_size: int
+yes_results_dict: dict[str, YesResult]
+split_groups_list: list[dict[str, YesResult]]
+
+
+def load_data(project: Project, gzipped_csv_file: Path) -> list[ProjectData]:
     """
     This will load the aggregated results csv file into a list of dictionaries.
     For further steps we currently rely on task_x, task_y, task_z and yes_share and
     maybe_share and wkt
     """
 
-    def _get_row_value(
-        column_index_map: dict,
-        row: list,
+    def _get_row_value[T: int | float](
+        column_index_map: dict[str, int],
+        row: list[str],
         label: str,
         default: int = 0,
-        modifier: typing.Callable = int,
-    ):
+        modifier: typing.Callable[[int | float | str], T] = int,
+    ) -> T:
         """
         Get row value by using column name.
         """
@@ -38,10 +45,10 @@ def load_data(project: Project, gzipped_csv_file: Path) -> list:
         index = column_index_map[label]
         return modifier(row[index])
 
-    project_data = []
+    project_data: list[ProjectData] = []
     with gzip.open(gzipped_csv_file, mode="rt") as f:
         reader = csv.reader(f, delimiter=",")
-        column_index_map = {}
+        column_index_map: dict[str, int] = {}
 
         for i, row in enumerate(reader):
             if i == 0:
@@ -63,7 +70,7 @@ def load_data(project: Project, gzipped_csv_file: Path) -> list:
             project_data.append(
                 {
                     "id": task_id,
-                    "project_id": project.id,
+                    "project_id": project.firebase_id,
                     "task_x": task_x,
                     "task_y": task_y,
                     "task_z": task_z,
@@ -111,7 +118,7 @@ def load_data(project: Project, gzipped_csv_file: Path) -> list:
     return project_data
 
 
-def yes_maybe_condition_true(x: dict[str, typing.Any]) -> bool:
+def yes_maybe_condition_true(x: ProjectData) -> bool:
     """
     The yes maybe condition is true if 35% or
     2 (or more) out of 3 users
@@ -123,7 +130,7 @@ def yes_maybe_condition_true(x: dict[str, typing.Any]) -> bool:
     return x["yes_share"] + x["maybe_share"] > 0.35
 
 
-def filter_data(project_data: list) -> list:
+def filter_data(project_data: list[ProjectData]) -> list[ProjectData]:
     """
     Filter results that fulfil the yes_maybe_condition.
     """
@@ -132,7 +139,7 @@ def filter_data(project_data: list) -> list:
     return [x for x in project_data if yes_maybe_condition_true(x)]
 
 
-def check_list_sum(x, range_val):
+def check_list_sum(x: list[int], range_val: float | int):
     """
     This checks if a give tile belongs to the defined "star"-shaped neighbourhood
     """
@@ -141,14 +148,16 @@ def check_list_sum(x, range_val):
     return item_sum <= range_val
 
 
-def get_neighbour_list(neighbourhood_shape: str, neighbourhood_size: int) -> list:
+def get_neighbour_list(
+    neighbourhood_shape: typing.Literal["rectangle", "star"],
+    neighbourhood_size: int,
+) -> list[list[int]]:
     """
     Filters tiles that are neighbours.
     This is based on a given search radius (neighbourhood size) and search window shape
     (neighbourhood shape=.
     """
-
-    neighbour_list = []
+    neighbour_list: list[list[int]] = []
     range_val = int(neighbourhood_size / 2)
     for i in range(-range_val, range_val + 1):
         for j in range(-range_val, range_val + 1):
@@ -157,12 +166,14 @@ def get_neighbour_list(neighbourhood_shape: str, neighbourhood_size: int) -> lis
             else:
                 neighbour_list.append([i, j])
 
+    # FIXME: We are throwing away all the calculation done above
     if neighbourhood_shape == "star":
         neighbour_list = [x for x in neighbour_list if check_list_sum(x, range_val)]
 
     return neighbour_list
 
 
+# FIXME: This function mutates global variables
 def add_group_id_to_neighbours(task_x: int, task_y: int, task_z: int, group_id: int):
     """
     Add a group id to all other tiles that are in the neighbourhood of the given tile,
@@ -179,13 +190,13 @@ def add_group_id_to_neighbours(task_x: int, task_y: int, task_z: int, group_id: 
             yes_results_dict[new_task_id]["my_group_id"] = group_id
 
 
-def create_duplicates_dict() -> dict:
+def create_duplicates_dict() -> dict[int, set[int]]:
     """
     Check which tasks belong to multiple groups.
     This will be used as a later stage to put tasks into distinct groups.
     """
 
-    duplicated_groups = {}
+    duplicated_groups: dict[int, set[int]] = {}
     for task_id in yes_results_dict:
         my_group_id = yes_results_dict[task_id]["my_group_id"]
         # check for other results in the neighbourhood
@@ -212,7 +223,7 @@ def create_duplicates_dict() -> dict:
     return duplicated_groups
 
 
-def remove_duplicates(duplicated_groups: dict):
+def remove_duplicates(duplicated_groups: dict[int, set[int]]):
     """
     Remove groups ids for tasks which have more than one.
     This is to make sure that every task belongs to a single group only.
@@ -235,7 +246,7 @@ def remove_duplicates(duplicated_groups: dict):
                 yes_results_dict[task_id]["my_group_id"] = my_duplicated_group_id
 
 
-def split_groups(q):
+def split_groups(q: Queue[tuple[str, dict[str, YesResult], int]]):
     """
     This function will be executed using threading.
     First it checks if there are still processes pending in the queue.
@@ -308,23 +319,23 @@ def split_groups(q):
             if len(new_grouped_data[k]) < group_size:
                 # add this check to avoid large groups groups with few items
                 if x_width * y_width > 2 * (my_neighbourhood_size * my_neighbourhood_size):
-                    q.put([group_id, new_grouped_data[k], group_size])
+                    q.put((group_id, new_grouped_data[k], group_size))
                 else:
                     split_groups_list.append(new_grouped_data[k])
                     logger.debug('add "a" to split_groups_dict')
             else:
                 # add this group to a queue
-                q.put([group_id, new_grouped_data[k], group_size])
+                q.put((group_id, new_grouped_data[k], group_size))
 
         q.task_done()
 
 
 def create_hot_tm_tasks(
-    project_data: list,
+    project_data: list[ProjectData],
     group_size: int = 15,
-    neighbourhood_shape: str = "rectangle",
+    neighbourhood_shape: typing.Literal["rectangle", "star"] = "rectangle",
     neighbourhood_size: int = 5,
-) -> dict:
+) -> dict[int, dict[str, YesResult]]:
     """
     This functions creates a dictionary of tiles which will be forming a task in the HOT
     Tasking Manager.
@@ -341,14 +352,15 @@ def create_hot_tm_tasks(
     """
 
     # final groups dict will store the groups that are exported
-    final_groups_dict = {}
+    final_groups_dict: dict[int, dict[str, YesResult]] = {}
     highest_group_id = 0
 
     # create a dictionary with all results
-    global yes_results_dict  # noqa: PLW0603  # TODO: Fix THIS
+    global yes_results_dict  # noqa: PLW0603  # TODO: remove usage of global
+
     yes_results_dict = {}
     for result in project_data:
-        yes_results_dict[result["id"]] = result
+        yes_results_dict[result["id"]] = typing.cast("YesResult", result)
     logger.info(
         "created results dictionary. there are %s results.",
         len(yes_results_dict),
@@ -356,10 +368,10 @@ def create_hot_tm_tasks(
     if len(yes_results_dict) < 1:
         return final_groups_dict
 
-    global neighbour_list  # noqa: PLW0603  # TODO: Fix THIS
-    global my_neighbourhood_size  # noqa: PLW0603  # TODO: Fix THIS
+    global my_neighbourhood_size  # noqa: PLW0603  # TODO: remove usage of global
     my_neighbourhood_size = neighbourhood_size
 
+    global neighbour_list  # noqa: PLW0603  # TODO: remove usage of global
     neighbour_list = get_neighbour_list(neighbourhood_shape, neighbourhood_size)
     logger.info(
         "got neighbour list. neighbourhood_shape: %s, neighbourhood_size: %s",
@@ -367,7 +379,7 @@ def create_hot_tm_tasks(
         neighbourhood_size,
     )
 
-    global split_groups_list  # noqa: PLW0603  # TODO: Fix THIS
+    global split_groups_list  # noqa: PLW0603  # TODO: remove usage of global
     split_groups_list = []
 
     # test for neighbors and set groups id
@@ -401,7 +413,7 @@ def create_hot_tm_tasks(
 
     logger.info("removed all duplicated group ids in yes maybe results dict")
 
-    grouped_results_dict = {}
+    grouped_results_dict: dict[int, dict[str, YesResult]] = {}
     for task_id in yes_results_dict:
         group_id = yes_results_dict[task_id]["my_group_id"]
         try:
@@ -425,7 +437,7 @@ def create_hot_tm_tasks(
         else:
             group_data = _data
             # add this group to the queue
-            q.put([group_id, group_data, group_size])
+            q.put((group_id, group_data, group_size))
 
     logger.info("added groups to queue.")
 
@@ -448,14 +460,14 @@ def create_hot_tm_tasks(
     return final_groups_dict
 
 
-def dissolve_project_data(project_data):
+def dissolve_project_data(project_data_list: list[ProjectData]):
     """
     This functions uses the unionCascaded function to return a dissolved MultiPolygon
     geometry from several Single Part Polygon geometries.
     """
 
     multipolygon_geometry = ogr.Geometry(ogr.wkbMultiPolygon)
-    for item in project_data:
+    for item in project_data_list:
         polygon = ogr.CreateGeometryFromWkt(item["wkt"])
         multipolygon_geometry.AddGeometry(polygon)
 

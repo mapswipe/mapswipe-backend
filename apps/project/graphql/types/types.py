@@ -80,6 +80,7 @@ class ProjectExportAssetTypeMixin:
 
     @strawberry.field
     async def export_area_of_interest(self, info: Info, project: strawberry.Parent[Project]) -> ProjectAssetType | None:
+        # TODO(tnagorra): We need to get the area of interest from aoi input project asset
         return await info.context.dl.project.export.area_of_interest.load(project.pk)
 
     # Find/Compare

@@ -1,10 +1,32 @@
 import json
 import logging
+import typing
 from pathlib import Path
 
 from osgeo import ogr, osr
 
 logger = logging.getLogger(__name__)
+
+
+class ProjectData(typing.TypedDict):
+    id: str
+    project_id: str
+    task_x: int
+    task_y: int
+    task_z: int
+    no_count: int
+    yes_count: int
+    maybe_count: int
+    bad_imagery_count: int
+    no_share: float
+    yes_share: float
+    maybe_share: float
+    bad_imagery_share: float
+    wkt: str
+
+
+class YesResult(ProjectData):
+    my_group_id: int
 
 
 def delete_if_exists(filename: Path):
@@ -14,7 +36,7 @@ def delete_if_exists(filename: Path):
 
 
 def create_group_geom(
-    group_data,
+    group_data: dict[str, YesResult],
     shape: str = "bounding_box",
 ):
     """Create bounding box or convex hull of input task geometries."""
@@ -47,7 +69,7 @@ def create_group_geom(
 
 
 def create_geojson_file_from_dict(
-    final_groups_dict: dict,
+    final_groups_dict: dict[int, dict[str, YesResult]],
     outfile: Path,
 ):
     """Take output from generate stats and create TM geometries.
@@ -88,7 +110,10 @@ def create_geojson_file_from_dict(
             group_data = _data
             # create the final group geometry
             group_geom = create_group_geom(group_data, "bounding_box")
-            _data["group_geom"] = group_geom
+
+            # FIXME: Not sure why mutating _data
+            _data["group_geom"] = group_geom  # type: ignore[reportArgumentType]
+
             # init feature
 
             if group_geom.GetGeometryName() == "POLYGON":
@@ -147,7 +172,7 @@ def create_geojson_file_from_dict(
 
 
 def create_geojson_file(
-    geometries,
+    geometries: dict,
     outfile: Path,
 ):
     driver = ogr.GetDriverByName("GeoJSONSeq")

@@ -48,8 +48,8 @@ def generate_project_exports(
 ):
     if project_id is not None:
         project = Project.objects.get(pk=project_id)
-    elif project_firebase_id is None:
-        project = Project.objects.get(firebase_id=project_id)
+    elif project_firebase_id is not None:
+        project = Project.objects.get(firebase_id=project_firebase_id)
     else:
         logger.error("generate_project_exports: Both project_id and project_firebase_id are none")
         return None

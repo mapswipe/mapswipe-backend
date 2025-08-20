@@ -356,7 +356,7 @@ def create_project_assets(project: Project):
             type=AssetTypeEnum.EXPORT,
             export_type=export_type,
             file=content_file,
-            mimetype=ProjectAssetExportTypeEnum.get_meme_type(export_type),
+            mimetype=ProjectAssetExportTypeEnum.get_mimetype(export_type),
             file_size=content_file.size,
             created_by=project.created_by,
             modified_by=project.modified_by,
@@ -767,6 +767,7 @@ class Command(BaseCommand):
         self.handle_teams()
         self.handle_contributor_user_groups()
         self.handle_contributor_user_user_group_memberships()
+        # TODO(thenav56): We also need to migrate the area of interest as aoi input project asset
         # TODO: self.handle_contributor_user_user_group_memberships_logs()
         self.handle_project()
         self.handle_aggregated_dataset()

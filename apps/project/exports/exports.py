@@ -116,7 +116,11 @@ def _export_project_data(project: Project, tmp_directory: Path):
             tmp_mapping_results_aggregate_by_user_csv.name,
         )
     except MemoryError:
-        logger.error("failed to agg results by user id", extra=log_extra({"project_id": project.id}))
+        logger.error(
+            "failed to agg results by user id",
+            extra=log_extra({"project_id": project.id}),
+            exc_info=True,
+        )
 
     get_project_history(
         results_df=results_df,
@@ -130,7 +134,7 @@ def _export_project_data(project: Project, tmp_directory: Path):
         tmp_project_stats_by_date_csv.name,
     )
 
-    generate_hot_tm_geometries = project.project_type in [
+    generate_hot_tm_geometries = project.project_type_enum in [
         ProjectTypeEnum.COMPARE,
         ProjectTypeEnum.COMPLETENESS,
         ProjectTypeEnum.FIND,
@@ -160,7 +164,6 @@ def _export_project_data(project: Project, tmp_directory: Path):
             tmp_tasking_manager_yes_maybe_geojson,
         ),
         (ProjectAssetExportTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES, tmp_tasking_manager_hot_tm_geojson),
-        # AREA_OF_INTEREST,
     ]:
         if not file.is_file():
             continue
@@ -176,12 +179,13 @@ def _export_project_data(project: Project, tmp_directory: Path):
                     client_id=str(ULID()),  # NOTE: This shouldn't change
                     created_by=bot_user,
                     modified_by=bot_user,
-                    mimetype=ProjectAssetExportTypeEnum.get_meme_type(export_type),
+                    mimetype=ProjectAssetExportTypeEnum.get_mimetype(export_type),
                     file=django_file,
                     file_size=django_file.size,
                 ),
+                # the following values are used for update
                 defaults=dict(
-                    mimetype=ProjectAssetExportTypeEnum.get_meme_type(export_type),
+                    mimetype=ProjectAssetExportTypeEnum.get_mimetype(export_type),
                     modified_by=bot_user,
                     file=django_file,
                     file_size=django_file.size,
@@ -197,7 +201,11 @@ def export_project_data(project: Project):
     try:
         _export_project_data(project, new_temp_directory)
     except Exception:
-        logger.error("Unexpected error occurred during project export", extra=log_extra(dict(project=project.id)))
+        logger.error(
+            "Unexpected error occurred during project export",
+            extra=log_extra(dict(project=project.id)),
+            exc_info=True,
+        )
     # Local temporary files cleanup
     if new_temp_directory.exists() and new_temp_directory.is_dir():
         shutil.rmtree(new_temp_directory)

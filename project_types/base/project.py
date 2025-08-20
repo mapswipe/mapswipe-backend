@@ -195,8 +195,12 @@ class BaseProject[
             self.project.update_processing_status(Project.ProcessingStatus.COMPLETED, True)
             self.project.update_status(Project.Status.READY, True)
             return True
-        except ValidationException as ex:
-            logger.error(ex)
+        except ValidationException:
+            logger.warning(
+                "process_project failed: %s",
+                self.project.id,
+                exc_info=True,
+            )
             self.project.update_status(Project.Status.FAILED, True)
             return False
 
