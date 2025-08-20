@@ -96,7 +96,8 @@ def get_project_type_handler(project_type: ProjectTypeEnum) -> ProjectTypeHandle
 
 
 type TutorialTypeHandlers = type[
-    CompareTutorial | ValidateTutorial | FindTutorial | CompletenessTutorial | ValidateImageTutorial]
+    CompareTutorial | ValidateTutorial | FindTutorial | CompletenessTutorial | ValidateImageTutorial
+]
 
 
 @typing.overload
@@ -127,7 +128,6 @@ def get_tutorial_type_handler(
 def get_tutorial_type_handler(
     tutorial_type: typing.Literal[ProjectTypeEnum.VALIDATE_IMAGE],
 ) -> type[ValidateImageTutorial]: ...
-
 
 
 def get_tutorial_type_handler(tutorial_type: ProjectTypeEnum) -> TutorialTypeHandlers:

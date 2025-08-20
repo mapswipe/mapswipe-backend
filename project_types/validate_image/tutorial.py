@@ -16,6 +16,7 @@ class ValidateImageTutorialTaskProperty(BaseTutorialTaskProperty):
     height: int | None = None
     annotation: ObjectImageAnnotation | None = None
 
+
 class ValidateImageTutorial(
     base_tutorial.BaseTutorial[
         ValidateImageProjectProperty,

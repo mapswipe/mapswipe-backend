@@ -51,6 +51,8 @@ class RasterTileServerNormConfig(typing.TypedDict):
     raw_url: str
     api_key: str
     credits: str
+    min_zoom: int | None
+    max_zoom: int | None
 
 
 class RasterConfig:
@@ -65,6 +67,8 @@ class RasterConfig:
                     "raw_url": url.format(apiKey="{apiKey}"),
                     "api_key": api_key,
                     "credits": "© 2019 Microsoft Corporation, Earthstar Geographics SIO",
+                    "min_zoom": 0,
+                    "max_zoom": 21,
                 }
             case RasterTileServerNameEnum.MAPBOX:
                 api_key = settings.MAP_IMAGE_MAPBOX_API_KEY
@@ -74,6 +78,8 @@ class RasterConfig:
                     "raw_url": url.format(apiKey="{apiKey}"),
                     "api_key": api_key,
                     "credits": "© 2019 MapBox",
+                    "min_zoom": 0,
+                    "max_zoom": 21,
                 }
             case RasterTileServerNameEnum.MAXAR_PREMIUM:
                 api_key = settings.MAP_IMAGE_MAXAR_PREMIUM_API_KEY
@@ -88,6 +94,8 @@ class RasterConfig:
                     "raw_url": url.format(apiKey="{apiKey}"),
                     "api_key": api_key,
                     "credits": "© 2019 Maxar",
+                    "min_zoom": 0,
+                    "max_zoom": 21,
                 }
             case RasterTileServerNameEnum.MAXAR_STANDARD:
                 api_key = settings.MAP_IMAGE_MAXAR_STANDARD_API_KEY
@@ -102,6 +110,8 @@ class RasterConfig:
                     "raw_url": url.format(apiKey="{apiKey}"),
                     "api_key": api_key,
                     "credits": "© 2019 Maxar",
+                    "min_zoom": 0,
+                    "max_zoom": 21,
                 }
             case RasterTileServerNameEnum.ESRI:
                 url = "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -110,6 +120,8 @@ class RasterConfig:
                     "raw_url": url,
                     "api_key": "",
                     "credits": "© 2019 ESRI",
+                    "min_zoom": 0,
+                    "max_zoom": 21,
                 }
             case RasterTileServerNameEnum.ESRI_BETA:
                 url = "https://clarity.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -118,4 +130,6 @@ class RasterConfig:
                     "raw_url": url,
                     "api_key": "",
                     "credits": "© 2019 ESRI",
+                    "min_zoom": 0,
+                    "max_zoom": 21,
                 }

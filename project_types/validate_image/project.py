@@ -119,8 +119,8 @@ class ValidateImageProject(
 
         inputs: list[ValidImage] = []
         for image_asset in image_assets.iterator():
-            # FIXME(frozenhelium): inspect the case discrepency of objectImage
-            asset_specifics = ObjectImageAssetProperty(**image_asset.asset_type_specifics.get('objectImage'))
+            # FIXME(frozenhelium): inspect why it's `objectImage` and not `object_image`
+            asset_specifics = ObjectImageAssetProperty(**image_asset.asset_type_specifics.get("objectImage"))
 
             annotations = asset_specifics.annotations
             if annotations:

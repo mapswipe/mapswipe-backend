@@ -842,10 +842,10 @@ input ObjectImageAnnotationInput {
 
   """A positive int value"""
   imageId: Int!
-  categoryId: Int
-  iscrowd: Int
-  segmentation: [[Float!]!]
-  area: Float
+  categoryId: Int = null
+  iscrowd: Int = null
+  segmentation: [[Float!]!] = null
+  area: Float = null
   bbox: [Float!]!
 }
 
@@ -1467,6 +1467,8 @@ input ProjectRasterTileServerConfigInput {
 type ProjectRasterTileServerCustomConfig {
   url: String!
   credits: String!
+  minZoom: Int
+  maxZoom: Int
 }
 
 enum ProjectStatusEnum {
@@ -1808,6 +1810,8 @@ input RasterTileServerCommonConfigInput {
 input RasterTileServerCustomConfigInput {
   url: String!
   credits: String!
+  minZoom: Int = null
+  maxZoom: Int = null
 }
 
 enum RasterTileServerNameEnum {
@@ -1824,6 +1828,8 @@ type RasterTileServerType {
   type: RasterTileServerNameEnum!
   label: String!
   url: String!
+  minZoom: Int
+  maxZoom: Int
   credits: String!
 }
 

@@ -17,7 +17,7 @@ from apps.tutorial.models import (
 )
 from utils.graphql.types import CudInput
 
-import apps.project.graphql.inputs.asset_types # noqa: F401  # isort: skip # type: ignore[reportUnusedImport]
+import apps.project.graphql.inputs.asset_types  # noqa: F401  # isort: skip # type: ignore[reportUnusedImport]
 
 from .project_types.compare import CompareTutorialTaskPropertyInput
 from .project_types.completeness import CompletenessTutorialTaskPropertyInput
