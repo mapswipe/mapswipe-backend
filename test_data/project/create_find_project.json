@@ -1,0 +1,140 @@
+{
+    "create_project": {
+        "clientId": "01K339HAWZCTCBRVQMQFWRTHXX",
+        "topic": "Emergency Response - Flood 2025",
+        "region": "South Asia - Nepal",
+        "projectNumber": 1024,
+        "projectType": "FIND",
+        "lookFor": "temporary shelters",
+        "additionalInfoUrl": "https://reliefweb.int/disaster/fl-2025-000123-npl",
+        "description": "A project aimed at mapping key infrastructure and affected communities to support flood response operations in Nepal.",
+        "requestingOrganization":""
+    },
+    "update_project": {
+        "clientId": "01K339HAWZCTCBRVQMQFWRTHXX",
+        "additionalInfoUrl": "https://reliefweb.int/disaster/fl-2025-000123-npl",
+        "description": "A project aimed at mapping key infrastructure and affected communities to support flood response operations in Nepal.",
+        "verificationNumber": 10,
+        "lookFor": "temporary shelters",
+        "groupSize": 15,
+        "team":"",
+        "topic": "Emergency Response - Flood 2025",
+        "tutorial":"",
+        "maxTasksPerUser": 20,
+        "projectNumber": 1024,
+        "status": "MARKED_AS_READY",
+        "region": "South Asia - Nepal",
+        "requestingOrganization":"",
+        "image": "",
+        "projectTypeSpecifics": {
+            "find":{
+                "zoomLevel":18,
+                "tileServerProperty":{
+                    "name":"BING",
+                    "bing":{
+                        "credits":"© 2019 Microsoft Corporation, Earthstar Geographics SIO"
+                    }
+                },
+                "aoiGeometry":""
+            }
+        }
+    },
+    "update_processed_project":{
+      "clientId": "01K339HAWZCTCBRVQMQFWRTHXX",
+      "additionalInfoUrl": "https://reliefweb.int/disaster/fl-2025-000123-npl",
+      "description": "A project aimed at mapping key infrastructure and affected communities to support flood response operations in Nepal.",
+      "lookFor": "temporary shelters",
+      "image":"",
+      "tutorial":"",
+      "status":"PUBLISHED",
+      "projectNumber": 1024,
+      "region": "South Asia - Nepal",
+      "requestingOrganization":"",
+      "team":"",
+      "topic": "Emergency Response - Flood 2025"
+    },
+    "final_processed_project":{
+      "contributorCount":0,
+        "created":"2025-09-02T04:43:52.328353+00:00",
+        "createdBy":"1",
+        "groupMaxSize":15,
+        "groupSize":15,
+        "isFeatured":false,
+        "language":"en-us",
+        "lookFor":"temporary shelters",
+        "manualUrl":"https://reliefweb.int/disaster/fl-2025-000123-npl",
+        "maxTasksPerUser":20,
+        "name":"Emergency Response - Flood 2025 - South Asia - Nepal (1024) Organization 0",
+        "progress":0,
+        "projectDetails":"A project aimed at mapping key infrastructure and affected communities to support flood response operations in Nepal.",
+        "projectId":"01K44BT448J2Y63QG4S2ECS09E",
+        "projectNumber":1024,
+        "projectRegion":"South Asia - Nepal",
+        "projectTopic":"Emergency Response - Flood 2025",
+        "projectTopicKey":"emergency response - flood 2025 - south asia - nepal (1024) organization 0",
+        "projectType":1,
+        "requestingOrganisation":"Organization 0",
+        "requiredResults":1080,
+        "resultCount":0,
+        "status":"active",
+        "tileServer":{
+           "apiKey":"dummy-bing",
+           "credits":"© 2019 Microsoft Corporation, Earthstar Geographics SIO",
+           "name":"bing",
+           "url":"https://ecn.t0.tiles.virtualearth.net/tiles/a{quad_key}.jpeg?g=7505&token={apiKey}"
+        },
+        "tutorialId":"01K44BT471AJ38CS4RQN1YP2RP",
+        "verificationNumber":10,
+        "zoomLevel":18
+    },
+    "final_group_data":{
+       "g101":{
+          "finishedCount":0,
+          "groupId":"g101",
+          "numberOfTasks":30,
+          "progress":0,
+          "projectId":"01K44BXT1CZK0BMS1QP1VGGP5W",
+          "requiredCount":300,
+          "xMax":193202,
+          "xMin":193193,
+          "yMax":110090,
+          "yMin":110088
+       },
+       "g102":{
+          "finishedCount":0,
+          "groupId":"g102",
+          "numberOfTasks":36,
+          "progress":0,
+          "projectId":"01K44BXT1CZK0BMS1QP1VGGP5W",
+          "requiredCount":360,
+          "xMax":193202,
+          "xMin":193191,
+          "yMax":110093,
+          "yMin":110091
+       },
+       "g103":{
+          "finishedCount":0,
+          "groupId":"g103",
+          "numberOfTasks":30,
+          "progress":0,
+          "projectId":"01K44BXT1CZK0BMS1QP1VGGP5W",
+          "requiredCount":300,
+          "xMax":193201,
+          "xMin":193192,
+          "yMax":110096,
+          "yMin":110094
+       },
+       "g104":{
+          "finishedCount":0,
+          "groupId":"g104",
+          "numberOfTasks":12,
+          "progress":0,
+          "projectId":"01K44BXT1CZK0BMS1QP1VGGP5W",
+          "requiredCount":120,
+          "xMax":193200,
+          "xMin":193197,
+          "yMax":110099,
+          "yMin":110097
+       }
+    }
+}
