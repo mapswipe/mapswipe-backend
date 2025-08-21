@@ -28,15 +28,17 @@ type AppEnumCollection {
   ValidateObjectSourceTypeEnum: [AppEnumCollectionValidateObjectSourceTypeEnum!]!
   ValidateImageSourceTypeEnum: [AppEnumCollectionValidateImageSourceTypeEnum!]!
   OverlayLayerTypeEnum: [AppEnumCollectionOverlayLayerTypeEnum!]!
-  IconEnum: [AppEnumCollectionIconEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
   ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
   ProjectProcessingStatusEnum: [AppEnumCollectionProjectProcessingStatusEnum!]!
   ProjectAssetInputTypeEnum: [AppEnumCollectionProjectAssetInputTypeEnum!]!
+  ProjectAssetExportTypeEnum: [AppEnumCollectionProjectAssetExportTypeEnum!]!
+  IconEnum: [AppEnumCollectionIconEnum!]!
   AssetMimetypeEnum: [AppEnumCollectionAssetMimetypeEnum!]!
   AssetTypeEnum: [AppEnumCollectionAssetTypeEnum!]!
   TutorialStatusEnum: [AppEnumCollectionTutorialStatusEnum!]!
   TutorialInformationPageBlockTypeEnum: [AppEnumCollectionTutorialInformationPageBlockTypeEnum!]!
+  TutorialAssetInputTypeEnum: [AppEnumCollectionTutorialAssetInputTypeEnum!]!
   MappingSessionClientTypeEnum: [AppEnumCollectionMappingSessionClientTypeEnum!]!
   ContributorUserGroupMembershipLogActionEnum: [AppEnumCollectionContributorUserGroupMembershipLogActionEnum!]!
 }
@@ -71,6 +73,11 @@ type AppEnumCollectionOverlayLayerTypeEnum {
   label: String!
 }
 
+type AppEnumCollectionProjectAssetExportTypeEnum {
+  key: ProjectAssetExportTypeEnum!
+  label: String!
+}
+
 type AppEnumCollectionProjectAssetInputTypeEnum {
   key: ProjectAssetInputTypeEnum!
   label: String!
@@ -93,6 +100,11 @@ type AppEnumCollectionProjectTypeEnum {
 
 type AppEnumCollectionRasterTileServerNameEnum {
   key: RasterTileServerNameEnum!
+  label: String!
+}
+
+type AppEnumCollectionTutorialAssetInputTypeEnum {
+  key: TutorialAssetInputTypeEnum!
   label: String!
 }
 
@@ -1065,7 +1077,6 @@ input ProjectAssetCreateInput {
 
   """Provide link to the file associated with the asset"""
   externalUrl: String
-  mimetype: AssetMimetypeEnum!
 
   """The file associated with the asset"""
   file: Upload
@@ -1220,7 +1231,7 @@ type ProjectAssetType implements UserResourceTypeMixin {
 
   """The size of the file in bytes"""
   fileSize: Int!
-  mimetype: AssetMimetypeEnum!
+  mimetype: AssetMimetypeEnum
 
   """If this flag is enabled, this asset will be deleted in the future"""
   markedAsDeleted: Boolean!
@@ -1887,19 +1898,19 @@ input StrFilterLookup {
 }
 
 """
-TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, tutorial, file)
+TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, tutorial, input_type, file)
 """
 input TutorialAssetCreateInput {
   clientId: String!
-  mimetype: AssetMimetypeEnum!
 
   """The file associated with the asset"""
   file: Upload!
+  inputType: TutorialAssetInputTypeEnum!
   tutorial: ID!
 }
 
 """
-TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, tutorial, file)
+TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, tutorial, input_type, file)
 """
 input TutorialAssetFilter {
   id: IDBaseFilterLookup
@@ -1912,12 +1923,16 @@ input TutorialAssetFilter {
   DISTINCT: Boolean
 }
 
+enum TutorialAssetInputTypeEnum {
+  INFORMATION_BLOCK_IMAGE
+}
+
 input TutorialAssetOrder {
   id: Ordering
 }
 
 """
-TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, tutorial, file)
+TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, tutorial, input_type, file)
 """
 type TutorialAssetType implements UserResourceTypeMixin {
   clientId: String!
@@ -1929,7 +1944,7 @@ type TutorialAssetType implements UserResourceTypeMixin {
 
   """The size of the file in bytes"""
   fileSize: Int!
-  mimetype: AssetMimetypeEnum!
+  mimetype: AssetMimetypeEnum
 
   """If this flag is enabled, this asset will be deleted in the future"""
   markedAsDeleted: Boolean!
@@ -1937,6 +1952,7 @@ type TutorialAssetType implements UserResourceTypeMixin {
 
   """The file associated with the asset"""
   file: MapswipeDjangoFileType!
+  inputType: TutorialAssetInputTypeEnum
   tutorialId: ID!
 }
 

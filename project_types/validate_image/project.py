@@ -80,7 +80,6 @@ class ValidateImageProject(
             project_id=self.project.pk,
             type=AssetTypeEnum.INPUT,
             input_type=ProjectAssetInputTypeEnum.OBJECT_IMAGE,
-            # mimetype=AssetMimetypeEnum.GEOJSON,
             file__isnull=False,
         )
 
@@ -107,7 +106,6 @@ class ValidateImageProject(
             project_id=self.project.pk,
             type=AssetTypeEnum.INPUT,
             input_type=ProjectAssetInputTypeEnum.OBJECT_IMAGE,
-            # mimetype=AssetMimetypeEnum.GEOJSON,
             external_url__isnull=False,
         )
 

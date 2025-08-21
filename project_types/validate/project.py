@@ -172,7 +172,6 @@ class ValidateProject(
             id=self.project_type_specifics.object_source.aoi_geometry,
             type=AssetTypeEnum.INPUT,
             input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
-            mimetype=AssetMimetypeEnum.GEOJSON,
             project_id=self.project.pk,
         )
 

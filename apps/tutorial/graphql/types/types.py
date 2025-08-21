@@ -37,6 +37,7 @@ if typing.TYPE_CHECKING:
 class TutorialAssetType(UserResourceTypeMixin, CommonAssetTypeMixin):
     id: strawberry.ID
     file: strawberry.auto
+    input_type: strawberry.auto
     tutorial_id: strawberry.ID
 
 

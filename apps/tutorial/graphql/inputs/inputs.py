@@ -10,6 +10,7 @@ from apps.common.graphql.inputs import (
 from apps.tutorial.models import (
     Tutorial,
     TutorialAsset,
+    TutorialAssetInputTypeEnum,
     TutorialInformationPage,
     TutorialInformationPageBlock,
     TutorialScenarioPage,
@@ -144,8 +145,8 @@ class TutorialCreateInput(UserResourceCreateInputMixin):
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.input(TutorialAsset)
 class TutorialAssetCreateInput(UserResourceCreateInputMixin):
-    mimetype: strawberry.auto
     file: Upload
+    input_type: TutorialAssetInputTypeEnum
     tutorial: strawberry.ID
 
 

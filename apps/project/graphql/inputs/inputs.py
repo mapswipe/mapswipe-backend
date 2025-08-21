@@ -109,6 +109,5 @@ class ProjectAssetCreateInput(UserResourceCreateInputMixin):
     project: strawberry.ID
     input_type: ProjectAssetInputTypeEnum
     external_url: strawberry.auto
-    mimetype: strawberry.auto
     file: Upload | None = strawberry.UNSET
     asset_type_specifics: AssetTypeSpecificInput | None = strawberry.UNSET

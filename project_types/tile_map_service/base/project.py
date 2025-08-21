@@ -52,7 +52,6 @@ class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
                 id=self.aoi_geometry,
                 type=AssetTypeEnum.INPUT,
                 input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
-                mimetype=AssetMimetypeEnum.GEOJSON,
                 project_id=project_id,
             )
             .exists()

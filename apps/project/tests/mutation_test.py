@@ -8,7 +8,6 @@ from django.core.files.temp import NamedTemporaryFile
 from PIL import Image
 from ulid import ULID
 
-from apps.common.models import AssetMimetypeEnum
 from apps.contributor.factories import ContributorTeamFactory
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
@@ -699,7 +698,6 @@ class TestProjectMutation(TestCase):
         project_asset_data = {
             "clientId": str(ULID()),
             "project": str(latest_project.pk),
-            "mimetype": self.genum(AssetMimetypeEnum.GEOJSON),
         }
         content = self._create_project_aoi_asset(project_asset_data, assert_errors=True)
         resp_data = content["data"]["createProjectAsset"]
@@ -719,20 +717,11 @@ class TestProjectMutation(TestCase):
         project_asset_data = {
             "clientId": str(ULID()),
             "project": str(latest_project.pk),
-            "mimetype": self.genum(AssetMimetypeEnum.IMAGE_JPEG),
         }
         content = self._create_project_image_asset(project_asset_data, assert_errors=True)
         resp_data = content["data"]["createProjectAsset"]
         assert resp_data["errors"] is None, content
         image_asset = resp_data["result"]
-
-        # Change the mimetype
-        # Fails as mimetype mismatching
-        project_asset_data["clientId"] = str(ULID())
-        project_asset_data["mimetype"] = self.genum(AssetMimetypeEnum.IMAGE_PNG)
-        content = self._create_project_image_asset(project_asset_data, assert_errors=True)
-        resp_data = content["data"]["createProjectAsset"]
-        assert resp_data["errors"] is not None, content
 
         # Updating Project: with empty object as project type specifics
         project_data = {
@@ -1034,7 +1023,6 @@ class TestProjectTypeMutation(TestCase):
         # Creating AOI Project Asset
         project_asset_data = {
             "project": project_id,
-            "mimetype": self.genum(AssetMimetypeEnum.GEOJSON),
             "clientId": str(ULID()),
         }
         content = self._create_project_aoi_asset(project_asset_data, assert_errors=True)
@@ -1045,7 +1033,6 @@ class TestProjectTypeMutation(TestCase):
         # Creating Project Image Asset
         project_asset_data = {
             "project": project_id,
-            "mimetype": self.genum(AssetMimetypeEnum.IMAGE_JPEG),
             "clientId": str(ULID()),
         }
         content = self._create_project_image_asset(project_asset_data, assert_errors=True)

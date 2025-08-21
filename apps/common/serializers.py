@@ -216,28 +216,14 @@ class CommonAssetSerializer(serializers.ModelSerializer[CommonAsset]):
                 gettext("File mimetype is not supported: %s") % mimetype,
             )
 
-        provided_mimetype = attrs.get("mimetype")
         detected_mimetype = CommonAsset.Mimetype.get_mimetype_by_label(mimetype)
-
-        if not provided_mimetype:
-            provided_mimetype = detected_mimetype
-
-        # Geojson is a special case of JSON file. We will validate the geojson later
-        if provided_mimetype == CommonAsset.Mimetype.GEOJSON and detected_mimetype == CommonAsset.Mimetype.JSON:
-            detected_mimetype = CommonAsset.Mimetype.GEOJSON
-
-        if detected_mimetype != provided_mimetype:
-            raise serializers.ValidationError(
-                gettext("File mimetype does not match the provided mimetype: Expected %s, but got %s")
-                % (
-                    provided_mimetype,
-                    detected_mimetype,
-                ),
-            )
-        attrs["mimetype"] = provided_mimetype
+        attrs["mimetype"] = detected_mimetype
 
     @typing.override
     def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
+        # NOTE: User should only be able to create INPUT type assets
+        attrs["type"] = CommonAsset.Type.INPUT
+
         self._validate_type_and_external_url(attrs)
         self._validate_file_size(attrs)
         self._validate_file_mimetype(attrs)

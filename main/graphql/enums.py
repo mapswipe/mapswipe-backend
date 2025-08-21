@@ -3,7 +3,6 @@ import dataclasses
 import strawberry
 
 from apps.common import models as common_models
-from apps.common.models import IconEnum
 from apps.contributor import models as contributor_models
 from apps.mapping import models as mapping_models
 from apps.project import models as project_models
@@ -20,15 +19,17 @@ ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     ValidateObjectSourceTypeEnum,
     ValidateImageSourceTypeEnum,
     OverlayLayerTypeEnum,
-    IconEnum,
     project_models.ProjectTypeEnum,
     project_models.ProjectStatusEnum,
     project_models.ProjectProcessingStatusEnum,
     project_models.ProjectAssetInputTypeEnum,
+    project_models.ProjectAssetExportTypeEnum,
+    common_models.IconEnum,
     common_models.AssetMimetypeEnum,
     common_models.AssetTypeEnum,
     tutorial_models.TutorialStatusEnum,
     tutorial_models.TutorialInformationPageBlockTypeEnum,
+    tutorial_models.TutorialAssetInputTypeEnum,
     mapping_models.MappingSessionClientTypeEnum,
     contributor_models.ContributorUserGroupMembershipLogActionEnum,
 ]

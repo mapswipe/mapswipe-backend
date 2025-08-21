@@ -247,6 +247,8 @@ class CommonAsset(Model):
 
     mimetype = IntegerChoicesField(
         choices_enum=AssetMimetypeEnum,
+        null=True,
+        blank=True,
     )
 
     file_size = models.PositiveIntegerField(

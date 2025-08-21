@@ -1,12 +1,13 @@
 import typing
 
 import pydantic
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext
 from rest_framework import serializers
 
-from apps.common.models import FirebasePushStatusEnum
+from apps.common.models import AssetMimetypeEnum, FirebasePushStatusEnum
 from apps.common.serializers import CommonAssetSerializer, DrfContextType, UserResourceSerializer
 from apps.project.models import Project, ProjectTypeEnum
 from project_types.store import get_tutorial_task_property
@@ -16,6 +17,7 @@ from utils.graphql.drf import handle_pydantic_validation_error
 from .models import (
     Tutorial,
     TutorialAsset,
+    TutorialAssetInputTypeEnum,
     TutorialInformationPage,
     TutorialInformationPageBlock,
     TutorialScenarioPage,
@@ -448,13 +450,42 @@ class TutorialAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Tuto
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = TutorialAsset
         fields = (
-            "mimetype",
             "file",
+            "input_type",
             "tutorial",
+            "external_url",
         )
 
+    def _validate_information_block_image(
+        self,
+        attrs: dict[str, typing.Any],
+        mimetype: AssetMimetypeEnum | None,
+    ) -> None:
+        file = attrs.get("file")
+        if not file:
+            raise ValidationError("Required field file is not provided.")
+
+        if not mimetype or mimetype not in [
+            AssetMimetypeEnum.IMAGE_GIF,
+            AssetMimetypeEnum.IMAGE_JPEG,
+            AssetMimetypeEnum.IMAGE_PNG,
+        ]:
+            raise ValidationError("Mimetype is should either be a Jpeg, Png or Gif")
+
     @typing.override
-    def create(self, validated_data: dict[str, typing.Any]) -> TutorialAsset:
-        # NOTE: User should only be able to create INPUT type project assets
-        validated_data["type"] = TutorialAsset.Type.INPUT
-        return super().create(validated_data)
+    def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
+        attrs = super().validate(attrs)
+
+        input_type = attrs.get("input_type")
+        mimetype = attrs.get("mimetype")
+
+        input_type_enum = TutorialAssetInputTypeEnum(input_type)
+        mimetype_enum = AssetMimetypeEnum(mimetype) if mimetype else None
+
+        match input_type_enum:
+            case TutorialAssetInputTypeEnum.INFORMATION_BLOCK_IMAGE:
+                self._validate_information_block_image(attrs, mimetype_enum)
+            case _:
+                typing.assert_never(input_type_enum)
+
+        return attrs
