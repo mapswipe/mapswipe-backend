@@ -11,9 +11,19 @@ from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
+from django.db.models.fields import files
 from django.utils.translation import gettext
 from geojson_pydantic import FeatureCollection
 from ulid import ULID
+
+
+# NOTE: We are treating file with empty name as None as well
+def is_file_empty(file: files.FieldFile | None) -> typing.TypeIs[None]:
+    if not file:
+        return True
+    if not file.name:  # noqa: SIM103
+        return True
+    return False
 
 
 def validate_imagery_url(url: str, *, support_quad_key: bool | None = True):

@@ -22,6 +22,9 @@ from utils.graphql.drf import handle_pydantic_validation_error
 from .models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
 from .tasks import process_project_task, push_project_to_firebase
 
+if typing.TYPE_CHECKING:
+    from django.core.files.base import ContentFile
+
 VALID_PROJECT_STATUS_TRANSITIONS = set(
     [
         (Project.Status.DRAFT, Project.Status.MARKED_AS_READY),
@@ -371,7 +374,7 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         attrs: dict[str, typing.Any],
         mimetype: AssetMimetypeEnum | None,
     ) -> None:
-        file = attrs.get("file")
+        file: ContentFile[bytes] | None = attrs.get("file")
         if not file:
             raise ValidationError("Required field file is not provided.")
 
@@ -421,7 +424,7 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         attrs: dict[str, typing.Any],
         mimetype: AssetMimetypeEnum | None,
     ) -> None:
-        file = attrs.get("file")
+        file: ContentFile[bytes] | None = attrs.get("file")
         if not file:
             raise ValidationError("Required field file is not provided.")
 
@@ -437,7 +440,7 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         attrs: dict[str, typing.Any],
         mimetype: AssetMimetypeEnum | None,
     ) -> None:
-        file = attrs.get("file")
+        file: ContentFile[bytes] | None = attrs.get("file")
         if not file:
             return
 

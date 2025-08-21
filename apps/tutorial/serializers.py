@@ -25,6 +25,9 @@ from .models import (
 )
 from .tasks import push_tutorial_to_firebase
 
+if typing.TYPE_CHECKING:
+    from django.core.files.base import ContentFile
+
 
 class TutorialTaskSerializerContextType(DrfContextType):
     scenario: TutorialScenarioPage
@@ -461,7 +464,7 @@ class TutorialAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Tuto
         attrs: dict[str, typing.Any],
         mimetype: AssetMimetypeEnum | None,
     ) -> None:
-        file = attrs.get("file")
+        file: ContentFile[bytes] | None = attrs.get("file")
         if not file:
             raise ValidationError("Required field file is not provided.")
 
