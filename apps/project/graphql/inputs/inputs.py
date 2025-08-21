@@ -25,7 +25,7 @@ from .project_types.validate_image import ValidateImageProjectPropertyInput
 # Asset
 @strawberry.input(one_of=True)
 class AssetTypeSpecificInput:
-    objectImage: ObjectImageAssetPropertyInput | None = strawberry.UNSET
+    object_image: ObjectImageAssetPropertyInput | None = strawberry.UNSET
 
 
 # Organization
