@@ -36,6 +36,8 @@ class ProjectFilter:
 class ProjectAssetFilter:
     id: strawberry.auto
     type: strawberry.auto
+    input_type: strawberry.auto
+    export_type: strawberry.auto
     mimetype: strawberry.auto
     project_id: strawberry.auto
 

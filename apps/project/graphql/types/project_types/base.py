@@ -44,6 +44,8 @@ class RasterTileServerType:
     url: str
     # FIXME(tnagorra): We can implement min_zoom and max_zoom
     # after we update rendering of tiles in the app from images to maplibre
+    min_zoom: int | None
+    max_zoom: int | None
     credits: str
 
 

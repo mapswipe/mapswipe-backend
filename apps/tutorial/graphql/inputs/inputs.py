@@ -10,12 +10,15 @@ from apps.common.graphql.inputs import (
 from apps.tutorial.models import (
     Tutorial,
     TutorialAsset,
+    TutorialAssetInputTypeEnum,
     TutorialInformationPage,
     TutorialInformationPageBlock,
     TutorialScenarioPage,
     TutorialTask,
 )
 from utils.graphql.types import CudInput
+
+import apps.project.graphql.inputs.asset_types  # noqa: F401  # isort: skip # type: ignore[reportUnusedImport]
 
 from .project_types.compare import CompareTutorialTaskPropertyInput
 from .project_types.completeness import CompletenessTutorialTaskPropertyInput
@@ -142,8 +145,8 @@ class TutorialCreateInput(UserResourceCreateInputMixin):
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.input(TutorialAsset)
 class TutorialAssetCreateInput(UserResourceCreateInputMixin):
-    mimetype: strawberry.auto
     file: Upload
+    input_type: TutorialAssetInputTypeEnum
     tutorial: strawberry.ID
 
 

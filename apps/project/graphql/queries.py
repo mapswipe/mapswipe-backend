@@ -32,6 +32,8 @@ def get_tile_servers() -> RasterTileServersType:
             label=str(enum.label),
             url=config["url"],
             credits=config["credits"],
+            min_zoom=config["min_zoom"],
+            max_zoom=config["max_zoom"],
         )
 
     def _get_vector_tile_server_type(enum: VectorTileServerNameEnumWithoutCustom):

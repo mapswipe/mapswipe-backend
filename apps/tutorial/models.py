@@ -15,6 +15,16 @@ from apps.project.models import CommonAsset, Project
 from main.fields import OverwritableFileField
 
 
+class TutorialAssetInputTypeEnum(models.IntegerChoices):
+    INFORMATION_BLOCK_IMAGE = 100, "Image for information block"
+
+    @classmethod
+    def get_display(cls, value: typing.Self | int) -> str:
+        if value in cls:
+            return str(cls(value).label)
+        return "Unknown"
+
+
 class UploadHelper:
     @deprecated("This is kept because it's referenced in migrations")
     @staticmethod
@@ -90,10 +100,20 @@ class TutorialAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatib
         related_name="+",
     )
 
+    input_type = IntegerChoicesField(
+        choices_enum=TutorialAssetInputTypeEnum,
+        blank=True,
+        null=True,
+    )
+
     file = OverwritableFileField(
         upload_to=UploadHelper.tutorial_asset,
         help_text=gettext_lazy("The file associated with the asset"),
     )
+
+    @property
+    def input_type_enum(self):
+        return TutorialAssetInputTypeEnum(self.input_type)
 
     # Type hints
     tutorial_id: int

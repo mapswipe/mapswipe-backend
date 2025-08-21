@@ -3,13 +3,13 @@ import dataclasses
 import strawberry
 
 from apps.common import models as common_models
-from apps.common.models import IconEnum
 from apps.contributor import models as contributor_models
 from apps.mapping import models as mapping_models
 from apps.project import models as project_models
 from apps.tutorial import models as tutorial_models
 from project_types.tile_map_service.completeness.project import OverlayLayerTypeEnum
 from project_types.validate.project import ValidateObjectSourceTypeEnum
+from project_types.validate_image.project import ValidateImageSourceTypeEnum
 from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
 from utils.geo.vector_tile_server.config import VectorTileServerNameEnum
 
@@ -17,15 +17,19 @@ ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     RasterTileServerNameEnum,
     VectorTileServerNameEnum,
     ValidateObjectSourceTypeEnum,
+    ValidateImageSourceTypeEnum,
     OverlayLayerTypeEnum,
-    IconEnum,
     project_models.ProjectTypeEnum,
     project_models.ProjectStatusEnum,
     project_models.ProjectProcessingStatusEnum,
+    project_models.ProjectAssetInputTypeEnum,
+    project_models.ProjectAssetExportTypeEnum,
+    common_models.IconEnum,
     common_models.AssetMimetypeEnum,
     common_models.AssetTypeEnum,
     tutorial_models.TutorialStatusEnum,
     tutorial_models.TutorialInformationPageBlockTypeEnum,
+    tutorial_models.TutorialAssetInputTypeEnum,
     mapping_models.MappingSessionClientTypeEnum,
     contributor_models.ContributorUserGroupMembershipLogActionEnum,
 ]

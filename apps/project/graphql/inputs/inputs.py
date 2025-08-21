@@ -7,7 +7,9 @@ from apps.common.graphql.inputs import (
     UserResourceCreateInputMixin,
     UserResourceTopLevelUpdateInputMixin,
 )
-from apps.project.models import Organization, Project, ProjectAsset
+from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum
+
+from .asset_types import ObjectImageAssetPropertyInput
 
 # NOTE: We are importing base for side-effect
 # The tile server inputs are required by the following imports
@@ -18,6 +20,12 @@ from .project_types.completeness import CompletenessProjectPropertyInput
 from .project_types.find import FindProjectPropertyInput
 from .project_types.validate import ValidateProjectPropertyInput
 from .project_types.validate_image import ValidateImageProjectPropertyInput
+
+
+# Asset
+@strawberry.input(one_of=True)
+class AssetTypeSpecificInput:
+    object_image: ObjectImageAssetPropertyInput | None = strawberry.UNSET
 
 
 # Organization
@@ -98,6 +106,8 @@ class ProcessedProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
 # NOTE: Make sure this matches with the serializers ../serializers.py
 @strawberry_django.input(ProjectAsset)
 class ProjectAssetCreateInput(UserResourceCreateInputMixin):
-    mimetype: strawberry.auto
-    file: Upload
     project: strawberry.ID
+    input_type: ProjectAssetInputTypeEnum
+    external_url: strawberry.auto
+    file: Upload | None = strawberry.UNSET
+    asset_type_specifics: AssetTypeSpecificInput | None = strawberry.UNSET

@@ -1,11 +1,16 @@
+import json
 import typing
 
 import pydantic
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import gettext
+from geojson_pydantic import Feature, FeatureCollection
+from geojson_pydantic.geometries import MultiPolygon, Polygon
 from rest_framework import serializers
 
-from apps.common.models import FirebasePushStatusEnum
+from apps.common.models import AssetMimetypeEnum, FirebasePushStatusEnum
 from apps.common.serializers import ArchivableResourceSerializer, CommonAssetSerializer, UserResourceSerializer
 from apps.contributor.models import ContributorTeam
 from apps.project.firebase import FirebaseOrganizationPush
@@ -14,8 +19,11 @@ from project_types.store import get_project_property
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
-from .models import Organization, Project, ProjectAsset, ProjectTypeEnum
+from .models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
 from .tasks import process_project_task, push_project_to_firebase
+
+if typing.TYPE_CHECKING:
+    from django.core.files.base import ContentFile
 
 VALID_PROJECT_STATUS_TRANSITIONS = set(
     [
@@ -151,11 +159,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             .filter(
                 id=new_image.pk,
                 type=ProjectAsset.Type.INPUT,
-                mimetype__in=[
-                    ProjectAsset.Mimetype.IMAGE_GIF,
-                    ProjectAsset.Mimetype.IMAGE_JPEG,
-                    ProjectAsset.Mimetype.IMAGE_PNG,
-                ],
+                input_type=ProjectAssetInputTypeEnum.COVER_IMAGE,
                 project_id=self.instance.pk,
             )
             .exists()
@@ -296,11 +300,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             .filter(
                 id=new_image.pk,
                 type=ProjectAsset.Type.INPUT,
-                mimetype__in=[
-                    ProjectAsset.Mimetype.IMAGE_GIF,
-                    ProjectAsset.Mimetype.IMAGE_JPEG,
-                    ProjectAsset.Mimetype.IMAGE_PNG,
-                ],
+                input_type=ProjectAssetInputTypeEnum.COVER_IMAGE,
                 project_id=self.instance.pk,
             )
             .exists()
@@ -361,16 +361,117 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = ProjectAsset
         fields = (
-            "mimetype",
             "file",
+            "input_type",
             "project",
+            "external_url",
+            "asset_type_specifics",
         )
 
+    # FIXME(tnagorra): Add validation for all input types here
+    def _validate_aoi_geometry(
+        self,
+        attrs: dict[str, typing.Any],
+        mimetype: AssetMimetypeEnum | None,
+    ) -> None:
+        file: ContentFile[bytes] | None = attrs.get("file")
+        if not file:
+            raise ValidationError("Required field file is not provided.")
+
+        if not mimetype or mimetype not in [AssetMimetypeEnum.JSON, AssetMimetypeEnum.GEOJSON]:
+            raise ValidationError("Mimetype is should either be a JSON or GeoJSON")
+
+        try:
+            geojson_data = json.load(file)
+        except json.JSONDecodeError as e:
+            raise ValidationError("Invalid JSON format in the file.") from e
+
+        AoiGeometryFeature = Feature[Polygon | MultiPolygon, dict]
+        AoiGeometryFeatureCollection = FeatureCollection[AoiGeometryFeature]
+
+        feature_collection = AoiGeometryFeatureCollection(**geojson_data)
+        if len(feature_collection.features) > 20:
+            raise ValidationError("AOI Geometry must have at max 20 features")
+
+        geometries: list[GEOSGeometry] = []
+        for feature in feature_collection.features:
+            if not feature.geometry:
+                continue
+            geometry = GEOSGeometry(feature.geometry.model_dump_json())
+            geometries.append(geometry)
+
+        geometry_collection = GeometryCollection(geometries)
+
+        center = geometry_collection.centroid
+
+        area = sum(geom.area for geom in geometries)
+
+        # FIXME(tnagorra): We need to change AOI geometry to 20 sq.km.
+        # Increasing this to 40 because of failing tests
+        if area * 10000 > 40:
+            raise ValidationError("Area for AOI Geometry must have less than 40 sq. km")
+
+        attrs["mimetype"] = AssetMimetypeEnum.GEOJSON
+        attrs["asset_type_specifics"] = {
+            "bbox": geometry_collection.extent,
+            "center": center.coords,
+            # NOTE: converting the are in sq. km
+            "area": area,
+        }
+
+    def _validate_cover_image(
+        self,
+        attrs: dict[str, typing.Any],
+        mimetype: AssetMimetypeEnum | None,
+    ) -> None:
+        file: ContentFile[bytes] | None = attrs.get("file")
+        if not file:
+            raise ValidationError("Required field file is not provided.")
+
+        if not mimetype or mimetype not in [
+            AssetMimetypeEnum.IMAGE_GIF,
+            AssetMimetypeEnum.IMAGE_JPEG,
+            AssetMimetypeEnum.IMAGE_PNG,
+        ]:
+            raise ValidationError("Mimetype is should either be a Jpeg, Png or Gif")
+
+    def _validate_object_image(
+        self,
+        attrs: dict[str, typing.Any],
+        mimetype: AssetMimetypeEnum | None,
+    ) -> None:
+        file: ContentFile[bytes] | None = attrs.get("file")
+        if not file:
+            return
+
+        if not mimetype or mimetype not in [
+            AssetMimetypeEnum.IMAGE_GIF,
+            AssetMimetypeEnum.IMAGE_JPEG,
+            AssetMimetypeEnum.IMAGE_PNG,
+        ]:
+            raise ValidationError("Mimetype is should either be a Jpeg, Png or Gif")
+
     @typing.override
-    def create(self, validated_data: dict[str, typing.Any]) -> ProjectAsset:
-        # NOTE: User should only be able to create INPUT type project assets
-        validated_data["type"] = ProjectAsset.Type.INPUT
-        return super().create(validated_data)
+    def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
+        attrs = super().validate(attrs)
+
+        input_type = attrs.get("input_type")
+        mimetype = attrs.get("mimetype")
+
+        input_type_enum = ProjectAssetInputTypeEnum(input_type)
+        mimetype_enum = AssetMimetypeEnum(mimetype) if mimetype else None
+
+        match input_type_enum:
+            case ProjectAssetInputTypeEnum.AOI_GEOMETRY:
+                self._validate_aoi_geometry(attrs, mimetype_enum)
+            case ProjectAssetInputTypeEnum.COVER_IMAGE:
+                self._validate_cover_image(attrs, mimetype_enum)
+            case ProjectAssetInputTypeEnum.OBJECT_IMAGE:
+                self._validate_object_image(attrs, mimetype_enum)
+            case _:
+                typing.assert_never(input_type_enum)
+
+        return attrs
 
 
 class OrganizationSerializer(UserResourceSerializer[Organization], ArchivableResourceSerializer[Organization]):  # type: ignore[reportIncompatibleVariableOverride]

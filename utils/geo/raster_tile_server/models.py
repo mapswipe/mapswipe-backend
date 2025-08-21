@@ -11,6 +11,8 @@ from .config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNorm
 class RasterTileServerCustomConfig(BaseModel):
     url: custom_fields.PydanticRasterTileServerUrl
     credits: custom_fields.PydanticLongText
+    min_zoom: int | None = None
+    max_zoom: int | None = None
 
 
 class RasterTileServerCommonConfig(BaseModel):
@@ -36,6 +38,8 @@ class RasterTileServerConfig(BaseModel):
                 "raw_url": self.custom.url,
                 "api_key": "",
                 "credits": self.custom.credits,
+                "min_zoom": self.custom.min_zoom,
+                "max_zoom": self.custom.max_zoom,
             }
         return RasterConfig.get_config(self.name)
 

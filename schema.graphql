@@ -12,19 +12,33 @@ directive @isAuthenticated repeatable on FIELD_DEFINITION
 
 directive @oneOf on INPUT_OBJECT
 
+type AoiGeometryAssetPropertyType {
+  bbox: [Float!]!
+  center: [Float!]!
+
+  """A positive float value"""
+  area: Float!
+}
+
+union AoiGeometryAssetPropertyTypeObjectImageAssetPropertyType = AoiGeometryAssetPropertyType | ObjectImageAssetPropertyType
+
 type AppEnumCollection {
   RasterTileServerNameEnum: [AppEnumCollectionRasterTileServerNameEnum!]!
   VectorTileServerNameEnum: [AppEnumCollectionVectorTileServerNameEnum!]!
   ValidateObjectSourceTypeEnum: [AppEnumCollectionValidateObjectSourceTypeEnum!]!
+  ValidateImageSourceTypeEnum: [AppEnumCollectionValidateImageSourceTypeEnum!]!
   OverlayLayerTypeEnum: [AppEnumCollectionOverlayLayerTypeEnum!]!
-  IconEnum: [AppEnumCollectionIconEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
   ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
   ProjectProcessingStatusEnum: [AppEnumCollectionProjectProcessingStatusEnum!]!
+  ProjectAssetInputTypeEnum: [AppEnumCollectionProjectAssetInputTypeEnum!]!
+  ProjectAssetExportTypeEnum: [AppEnumCollectionProjectAssetExportTypeEnum!]!
+  IconEnum: [AppEnumCollectionIconEnum!]!
   AssetMimetypeEnum: [AppEnumCollectionAssetMimetypeEnum!]!
   AssetTypeEnum: [AppEnumCollectionAssetTypeEnum!]!
   TutorialStatusEnum: [AppEnumCollectionTutorialStatusEnum!]!
   TutorialInformationPageBlockTypeEnum: [AppEnumCollectionTutorialInformationPageBlockTypeEnum!]!
+  TutorialAssetInputTypeEnum: [AppEnumCollectionTutorialAssetInputTypeEnum!]!
   MappingSessionClientTypeEnum: [AppEnumCollectionMappingSessionClientTypeEnum!]!
   ContributorUserGroupMembershipLogActionEnum: [AppEnumCollectionContributorUserGroupMembershipLogActionEnum!]!
 }
@@ -59,6 +73,16 @@ type AppEnumCollectionOverlayLayerTypeEnum {
   label: String!
 }
 
+type AppEnumCollectionProjectAssetExportTypeEnum {
+  key: ProjectAssetExportTypeEnum!
+  label: String!
+}
+
+type AppEnumCollectionProjectAssetInputTypeEnum {
+  key: ProjectAssetInputTypeEnum!
+  label: String!
+}
+
 type AppEnumCollectionProjectProcessingStatusEnum {
   key: ProjectProcessingStatusEnum!
   label: String!
@@ -79,6 +103,11 @@ type AppEnumCollectionRasterTileServerNameEnum {
   label: String!
 }
 
+type AppEnumCollectionTutorialAssetInputTypeEnum {
+  key: TutorialAssetInputTypeEnum!
+  label: String!
+}
+
 type AppEnumCollectionTutorialInformationPageBlockTypeEnum {
   key: TutorialInformationPageBlockTypeEnum!
   label: String!
@@ -86,6 +115,11 @@ type AppEnumCollectionTutorialInformationPageBlockTypeEnum {
 
 type AppEnumCollectionTutorialStatusEnum {
   key: TutorialStatusEnum!
+  label: String!
+}
+
+type AppEnumCollectionValidateImageSourceTypeEnum {
+  key: ValidateImageSourceTypeEnum!
   label: String!
 }
 
@@ -212,6 +246,10 @@ input AssetTypeEnumFilterLookup {
   Case-insensitive regular expression match. Filter will be skipped on `null` value
   """
   iRegex: AssetTypeEnum
+}
+
+input AssetTypeSpecificInput @oneOf {
+  objectImage: ObjectImageAssetPropertyInput
 }
 
 input BoolBaseFilterLookup {
@@ -810,6 +848,58 @@ type Mutation {
   updateContributorUserGroup(data: ContributorUserGroupUpdateInput!, pk: ID!): UpdateContributorUserGroupPayload! @isAuthenticated
 }
 
+input ObjectImageAnnotationInput {
+  id: String!
+  imageId: String!
+  categoryId: String = null
+  iscrowd: Int = null
+  segmentation: [[Float!]!] = null
+  area: Float = null
+  bbox: [Float!]!
+}
+
+type ObjectImageAnnotationType {
+  id: String!
+  imageId: String!
+  categoryId: String
+  iscrowd: Int
+  segmentation: [[Float!]!]
+  area: Float
+  bbox: [Float!]!
+}
+
+input ObjectImageAssetPropertyInput {
+  image: ObjectImageInput!
+  annotations: [ObjectImageAnnotationInput!] = null
+}
+
+type ObjectImageAssetPropertyType {
+  image: ObjectImageType!
+  annotations: [ObjectImageAnnotationType!]
+}
+
+input ObjectImageInput {
+  id: String!
+  fileName: String!
+  license: Int = null
+  cocoUrl: String = null
+  flickrUrl: String = null
+  width: Int = null
+  height: Int = null
+  dateCaptured: DateTime = null
+}
+
+type ObjectImageType {
+  id: String!
+  fileName: String!
+  license: Int
+  cocoUrl: String
+  flickrUrl: String
+  width: Int
+  height: Int
+  dateCaptured: DateTime
+}
+
 type OffsetPaginationInfo {
   offset: Int!
   limit: Int
@@ -970,15 +1060,19 @@ input ProcessedProjectUpdateInput {
 }
 
 """
-ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, export_type, project, file)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, export_type, input_type, project, file, asset_type_specifics)
 """
 input ProjectAssetCreateInput {
   clientId: String!
-  mimetype: AssetMimetypeEnum!
+  project: ID!
+  inputType: ProjectAssetInputTypeEnum!
+
+  """Provide link to the file associated with the asset"""
+  externalUrl: String
 
   """The file associated with the asset"""
-  file: Upload!
-  project: ID!
+  file: Upload
+  assetTypeSpecifics: AssetTypeSpecificInput
 }
 
 enum ProjectAssetExportTypeEnum {
@@ -994,12 +1088,62 @@ enum ProjectAssetExportTypeEnum {
   MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES
 }
 
+input ProjectAssetExportTypeEnumFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ProjectAssetExportTypeEnum
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ProjectAssetExportTypeEnum!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: ProjectAssetExportTypeEnum
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: ProjectAssetExportTypeEnum
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: ProjectAssetExportTypeEnum
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: ProjectAssetExportTypeEnum
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: ProjectAssetExportTypeEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: ProjectAssetExportTypeEnum
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: ProjectAssetExportTypeEnum
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: ProjectAssetExportTypeEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: ProjectAssetExportTypeEnum
+}
+
 """
-ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, export_type, project, file)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, export_type, input_type, project, file, asset_type_specifics)
 """
 input ProjectAssetFilter {
   id: IDBaseFilterLookup
   type: AssetTypeEnumFilterLookup
+  inputType: ProjectAssetInputTypeEnumFilterLookup
+  exportType: ProjectAssetExportTypeEnumFilterLookup
   mimetype: AssetMimetypeEnumFilterLookup
   projectId: IDBaseFilterLookup
   AND: ProjectAssetFilter
@@ -1008,12 +1152,66 @@ input ProjectAssetFilter {
   DISTINCT: Boolean
 }
 
+enum ProjectAssetInputTypeEnum {
+  AOI_GEOMETRY
+  OBJECT_IMAGE
+  COVER_IMAGE
+}
+
+input ProjectAssetInputTypeEnumFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ProjectAssetInputTypeEnum
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ProjectAssetInputTypeEnum!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: ProjectAssetInputTypeEnum
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: ProjectAssetInputTypeEnum
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: ProjectAssetInputTypeEnum
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: ProjectAssetInputTypeEnum
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: ProjectAssetInputTypeEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: ProjectAssetInputTypeEnum
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: ProjectAssetInputTypeEnum
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: ProjectAssetInputTypeEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: ProjectAssetInputTypeEnum
+}
+
 input ProjectAssetOrder {
   id: Ordering
 }
 
 """
-ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, export_type, project, file)
+ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, export_type, input_type, project, file, asset_type_specifics)
 """
 type ProjectAssetType implements UserResourceTypeMixin {
   clientId: String!
@@ -1025,18 +1223,21 @@ type ProjectAssetType implements UserResourceTypeMixin {
 
   """The size of the file in bytes"""
   fileSize: Int!
-  mimetype: AssetMimetypeEnum!
+  mimetype: AssetMimetypeEnum
 
-  """
-  If this flag is enabled, this project asset will be deleted in the future
-  """
+  """If this flag is enabled, this asset will be deleted in the future"""
   markedAsDeleted: Boolean!
   id: ID!
 
   """The file associated with the asset"""
-  file: MapswipeDjangoFileType!
+  file: MapswipeDjangoFileType
   exportType: ProjectAssetExportTypeEnum
+  inputType: ProjectAssetInputTypeEnum
+
+  """Provide link to the file associated with the asset"""
+  externalUrl: String
   projectId: ID!
+  assetTypeSpecifics: AoiGeometryAssetPropertyTypeObjectImageAssetPropertyType
 }
 
 type ProjectAssetTypeMutationResponseType {
@@ -1269,6 +1470,8 @@ input ProjectRasterTileServerConfigInput {
 type ProjectRasterTileServerCustomConfig {
   url: String!
   credits: String!
+  minZoom: Int
+  maxZoom: Int
 }
 
 enum ProjectStatusEnum {
@@ -1610,6 +1813,8 @@ input RasterTileServerCommonConfigInput {
 input RasterTileServerCustomConfigInput {
   url: String!
   credits: String!
+  minZoom: Int = null
+  maxZoom: Int = null
 }
 
 enum RasterTileServerNameEnum {
@@ -1626,6 +1831,8 @@ type RasterTileServerType {
   type: RasterTileServerNameEnum!
   label: String!
   url: String!
+  minZoom: Int
+  maxZoom: Int
   credits: String!
 }
 
@@ -1683,19 +1890,19 @@ input StrFilterLookup {
 }
 
 """
-TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, tutorial, file)
+TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, tutorial, input_type, file)
 """
 input TutorialAssetCreateInput {
   clientId: String!
-  mimetype: AssetMimetypeEnum!
 
   """The file associated with the asset"""
   file: Upload!
+  inputType: TutorialAssetInputTypeEnum!
   tutorial: ID!
 }
 
 """
-TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, tutorial, file)
+TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, tutorial, input_type, file)
 """
 input TutorialAssetFilter {
   id: IDBaseFilterLookup
@@ -1708,12 +1915,16 @@ input TutorialAssetFilter {
   DISTINCT: Boolean
 }
 
+enum TutorialAssetInputTypeEnum {
+  INFORMATION_BLOCK_IMAGE
+}
+
 input TutorialAssetOrder {
   id: Ordering
 }
 
 """
-TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, tutorial, file)
+TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, tutorial, input_type, file)
 """
 type TutorialAssetType implements UserResourceTypeMixin {
   clientId: String!
@@ -1725,16 +1936,15 @@ type TutorialAssetType implements UserResourceTypeMixin {
 
   """The size of the file in bytes"""
   fileSize: Int!
-  mimetype: AssetMimetypeEnum!
+  mimetype: AssetMimetypeEnum
 
-  """
-  If this flag is enabled, this project asset will be deleted in the future
-  """
+  """If this flag is enabled, this asset will be deleted in the future"""
   markedAsDeleted: Boolean!
   id: ID!
 
   """The file associated with the asset"""
   file: MapswipeDjangoFileType!
+  inputType: TutorialAssetInputTypeEnum
   tutorialId: ID!
 }
 
@@ -2174,21 +2384,34 @@ type UserTypeOffsetPaginated {
 }
 
 input ValidateImageProjectPropertyInput {
-  annotationsFile: String = null
+  sourceType: ValidateImageSourceTypeEnum!
   customOptions: [CustomOptionInput!] = null
 }
 
 type ValidateImageProjectPropertyType {
-  annotationsFile: String
+  sourceType: ValidateImageSourceTypeEnum!
   customOptions: [ProjectCustomOption!]
 }
 
+enum ValidateImageSourceTypeEnum {
+  DIRECT_IMAGES
+  DATASET_FILE
+}
+
 input ValidateImageTutorialTaskPropertyInput {
-  question: String!
+  url: String!
+  fileName: String!
+  width: Int = null
+  height: Int = null
+  annotation: ObjectImageAnnotationInput = null
 }
 
 type ValidateImageTutorialTaskPropertyType {
-  question: String!
+  url: String!
+  fileName: String!
+  width: Int
+  height: Int
+  annotation: ObjectImageAnnotationType
 }
 
 type ValidateObjectSourceConfig {

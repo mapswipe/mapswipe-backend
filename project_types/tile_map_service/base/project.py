@@ -20,6 +20,7 @@ from apps.common.models import (
 from apps.project.models import (
     Project,
     ProjectAsset,
+    ProjectAssetInputTypeEnum,
     ProjectTask,
     ProjectTaskGroup,
 )
@@ -50,7 +51,7 @@ class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
             .filter(
                 id=self.aoi_geometry,
                 type=AssetTypeEnum.INPUT,
-                mimetype=AssetMimetypeEnum.GEOJSON,
+                input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
                 project_id=project_id,
             )
             .exists()
@@ -110,6 +111,7 @@ class TileMapServiceBaseProject[
                 "type": "Feature",
                 "geometry": geojson,
                 "properties": {
+                    # FIXME(tnagorra): revisit if we need firebase_id
                     "group_id": task.task_group_id,
                     "task_id": task.pk,
                     "tile_x": task_specifics.tile_x,
@@ -121,6 +123,7 @@ class TileMapServiceBaseProject[
         feature_collection = {
             "type": "FeatureCollection",
             "metadata": {
+                # FIXME(tnagorra): revisit if we need firebase_id
                 "project_id": self.project.pk,
             },
             "features": [get_feature(task) for task in tasks_qs],
@@ -205,6 +208,7 @@ class TileMapServiceBaseProject[
             )
             # Create new tasks for this group
             total_tasks = self.create_tasks(new_group, raw_group)
+            # FIXME(tnagorra): This is not correct
             logger.info("Created %s tasks for group: %s", total_tasks, new_group.pk)
 
     @typing.override
@@ -215,6 +219,7 @@ class TileMapServiceBaseProject[
         aoi_asset = ProjectAsset.usable_objects().get(
             id=self.project_type_specifics.aoi_geometry,
             type=AssetTypeEnum.INPUT,
+            input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
             mimetype=AssetMimetypeEnum.GEOJSON,
             project_id=self.project.pk,
         )

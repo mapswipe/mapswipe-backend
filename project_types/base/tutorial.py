@@ -11,6 +11,7 @@ from pyfirebase_mapswipe import utils as firebase_utils
 from ulid import ULID
 
 from apps.common.models import FirebasePushStatusEnum, IconEnum
+from apps.common.utils import get_absolute_uri
 from apps.tutorial.models import (
     Tutorial,
     TutorialAsset,
@@ -127,6 +128,7 @@ class BaseTutorial[
         grouped_tasks_dict: dict[int, list[dict[str, typing.Any]] | str] = {
             group_key: fb_tasks,
         }
+
         if self.compress_tasks_on_firebase():
             self._save_tasks_as_json(grouped_tasks_dict)
             grouped_tasks_dict = {group_key: compress_tasks(fb_tasks)}
@@ -186,7 +188,7 @@ class BaseTutorial[
                             blockNumber=block.block_number,
                             blockType=TutorialInformationPageBlockTypeEnum(block.block_type).to_firebase(),
                             textDescription=block.text,
-                            image=block.image.file.url if block.image else None,
+                            image=get_absolute_uri(block.image.file if block.image else None),
                         )
                         for block in informationPage.blocks.all()
                     ],
@@ -267,7 +269,7 @@ class BaseTutorial[
                             blockNumber=block.block_number,
                             blockType=TutorialInformationPageBlockTypeEnum(block.block_type).to_firebase(),
                             textDescription=block.text,
-                            image=block.image.file.url if block.image else None,
+                            image=get_absolute_uri(block.image.file if block.image else None),
                         )
                         for block in informationPage.blocks.all()
                     ],

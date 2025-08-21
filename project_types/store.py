@@ -11,7 +11,7 @@ from .tile_map_service.find.tutorial import FindTutorial, FindTutorialTaskProper
 from .validate.project import ValidateProject, ValidateProjectProperty
 from .validate.tutorial import ValidateTutorial, ValidateTutorialTaskProperty
 from .validate_image.project import ValidateImageProject, ValidateImageProjectProperty
-from .validate_image.tutorial import ValidateImageTutorialTaskProperty
+from .validate_image.tutorial import ValidateImageTutorial, ValidateImageTutorialTaskProperty
 
 
 def get_tutorial_task_property(project_type: ProjectTypeEnum | None):
@@ -95,7 +95,9 @@ def get_project_type_handler(project_type: ProjectTypeEnum) -> ProjectTypeHandle
             return ValidateImageProject
 
 
-type TutorialTypeHandlers = type[CompareTutorial | ValidateTutorial | FindTutorial | CompletenessTutorial]
+type TutorialTypeHandlers = type[
+    CompareTutorial | ValidateTutorial | FindTutorial | CompletenessTutorial | ValidateImageTutorial
+]
 
 
 @typing.overload
@@ -122,11 +124,10 @@ def get_tutorial_type_handler(
 ) -> type[CompletenessTutorial]: ...
 
 
-# FIXME(tnagorra): Handle validate_image
 @typing.overload
 def get_tutorial_type_handler(
     tutorial_type: typing.Literal[ProjectTypeEnum.VALIDATE_IMAGE],
-) -> type[typing.Any]: ...
+) -> type[ValidateImageTutorial]: ...
 
 
 def get_tutorial_type_handler(tutorial_type: ProjectTypeEnum) -> TutorialTypeHandlers:
@@ -140,4 +141,4 @@ def get_tutorial_type_handler(tutorial_type: ProjectTypeEnum) -> TutorialTypeHan
         case ProjectTypeEnum.COMPLETENESS:
             return CompletenessTutorial
         case ProjectTypeEnum.VALIDATE_IMAGE:
-            raise Exception("Validate Image tutorial is not yet supported")
+            return ValidateImageTutorial
