@@ -11,6 +11,7 @@ from pyfirebase_mapswipe import utils as firebase_utils
 from ulid import ULID
 
 from apps.common.models import FirebasePushStatusEnum, IconEnum
+from apps.common.utils import get_absolute_uri
 from apps.tutorial.models import (
     Tutorial,
     TutorialAsset,
@@ -187,7 +188,7 @@ class BaseTutorial[
                             blockNumber=block.block_number,
                             blockType=TutorialInformationPageBlockTypeEnum(block.block_type).to_firebase(),
                             textDescription=block.text,
-                            image=block.image.file.url if block.image else None,
+                            image=get_absolute_uri(block.image.file if block.image else None),
                         )
                         for block in informationPage.blocks.all()
                     ],
@@ -268,7 +269,7 @@ class BaseTutorial[
                             blockNumber=block.block_number,
                             blockType=TutorialInformationPageBlockTypeEnum(block.block_type).to_firebase(),
                             textDescription=block.text,
-                            image=block.image.file.url if block.image else None,
+                            image=get_absolute_uri(block.image.file if block.image else None),
                         )
                         for block in informationPage.blocks.all()
                     ],

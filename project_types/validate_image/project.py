@@ -7,6 +7,7 @@ from pyfirebase_mapswipe import models as firebase_models
 from apps.common.models import (
     AssetTypeEnum,
 )
+from apps.common.utils import get_absolute_uri
 from apps.project.models import (
     Project,
     ProjectAsset,
@@ -92,7 +93,7 @@ class ValidateImageProject(
         inputs: list[ValidImage] = []
         for image_asset in image_assets.iterator():
             valid_image: ValidImage = {
-                "url": image_asset.file.url,
+                "url": get_absolute_uri(image_asset.file),
                 "file_name": image_asset.file.name,
                 "width": None,
                 "height": None,

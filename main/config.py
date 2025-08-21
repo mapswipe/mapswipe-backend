@@ -18,6 +18,8 @@ class Config:
     BASE_DIR = typing.cast("Path", settings.BASE_DIR)
     TEMP_DIR = typing.cast("Path", settings.TEMP_DIR)
 
+    MEDIA_STORAGE_DOMAIN = typing.cast("URLParseResult", settings.MEDIA_STORAGE_DOMAIN)
+
     # Misc
     STORAGE_OVERWRITE_KEY = typing.cast("str", settings.STORAGE_OVERWRITE_KEY)
 

@@ -28,6 +28,7 @@ env = environ.Env(
     ENABLE_STRAWBERRY_GRAPHIQL=(bool, False),
     # Domain configs
     APP_DOMAIN=str,  # Eg: https://api.example.org
+    MEDIA_STORAGE_DOMAIN=(str, None),
     FRONTEND_DOMAIN=str,  # Eg: https://web.example.org
     SESSION_COOKIE_DOMAIN=str,  # .example.com
     CSRF_COOKIE_DOMAIN=str,  # .example.com
@@ -120,6 +121,7 @@ GIT_HELPER = GitHelper(BASE_DIR)
 
 APP_LOG_LEVEL = env("APP_LOG_LEVEL")
 APP_DOMAIN = env.url("APP_DOMAIN")
+MEDIA_STORAGE_DOMAIN = env.url("MEDIA_STORAGE_DOMAIN") or APP_DOMAIN
 FRONTEND_DOMAIN = env.url("FRONTEND_DOMAIN")
 APP_ENVIRONMENT = env("APP_ENVIRONMENT").upper()
 APP_TYPE = env("APP_TYPE").upper()

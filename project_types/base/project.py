@@ -15,6 +15,7 @@ from pyfirebase_mapswipe import utils as firebase_utils
 from ulid import ULID
 
 from apps.common.models import FirebasePushStatusEnum
+from apps.common.utils import get_absolute_uri
 from apps.project.models import (
     Project,
     ProjectAsset,
@@ -337,7 +338,7 @@ class BaseProject[
             created=self.project.created_at,
             # FIXME: What to use for fallback?
             createdBy=self.project.created_by.firebase_id or str(self.project.created_by_id),
-            image=self.project.image.file.url if self.project.image else None,
+            image=get_absolute_uri(self.project.image.file if self.project.image else None),
             isFeatured=self.project.is_featured,
             lookFor=self.project.look_for,
             manualUrl=self.project.additional_info_url,
@@ -406,7 +407,7 @@ class BaseProject[
         project_ref.update(
             value=firebase_utils.serialize(
                 firebase_models.FbProjectUpdateInput(
-                    image=self.project.image.file.url if self.project.image else None,
+                    image=get_absolute_uri(self.project.image.file if self.project.image else None),
                     isFeatured=self.project.is_featured,
                     lookFor=self.project.look_for,
                     name=self.project.generate_name(),

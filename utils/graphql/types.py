@@ -4,7 +4,6 @@ from typing import NewType
 
 import strawberry
 import strawberry_django
-from django.core.files.storage import FileSystemStorage, default_storage
 from django.db import models
 from django.db.models.fields import files
 from strawberry.scalars import JSON
@@ -65,10 +64,9 @@ class MapswipeDjangoFileType:
         info: Info,
         file: strawberry.Parent[files.FieldFile],
     ) -> str:
-        # TODO: Use cache if using S3 URL with signature
-        if isinstance(default_storage, FileSystemStorage):
-            return info.context.request.build_absolute_uri(file.url)
-        return file.url
+        from apps.common.utils import get_absolute_uri
+
+        return get_absolute_uri(file)
 
 
 field_type_map.update(
