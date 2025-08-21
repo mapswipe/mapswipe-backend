@@ -849,12 +849,9 @@ type Mutation {
 }
 
 input ObjectImageAnnotationInput {
-  """A positive int value"""
-  id: Int!
-
-  """A positive int value"""
-  imageId: Int!
-  categoryId: Int = null
+  id: String!
+  imageId: String!
+  categoryId: String = null
   iscrowd: Int = null
   segmentation: [[Float!]!] = null
   area: Float = null
@@ -862,12 +859,9 @@ input ObjectImageAnnotationInput {
 }
 
 type ObjectImageAnnotationType {
-  """A positive int value"""
-  id: Int!
-
-  """A positive int value"""
-  imageId: Int!
-  categoryId: Int
+  id: String!
+  imageId: String!
+  categoryId: String
   iscrowd: Int
   segmentation: [[Float!]!]
   area: Float
@@ -885,8 +879,7 @@ type ObjectImageAssetPropertyType {
 }
 
 input ObjectImageInput {
-  """A positive int value"""
-  id: Int!
+  id: String!
   fileName: String!
   license: Int = null
   cocoUrl: String = null
@@ -897,8 +890,7 @@ input ObjectImageInput {
 }
 
 type ObjectImageType {
-  """A positive int value"""
-  id: Int!
+  id: String!
   fileName: String!
   license: Int
   cocoUrl: String
