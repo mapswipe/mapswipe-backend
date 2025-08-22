@@ -1,7 +1,5 @@
 import typing
 
-from django.db import transaction
-
 from apps.common.serializers import ArchivableResourceSerializer, UserResourceSerializer
 from apps.contributor.firebase import FirebaseContributorUserGroup
 
@@ -23,11 +21,11 @@ class ContributorUserGroupSerializer(
     @typing.override
     def create(self, validated_data: dict[str, typing.Any]) -> ContributorUserGroup:
         user_group = super().create(validated_data)
-        transaction.on_commit(lambda: FirebaseContributorUserGroup(user_group.id).push())
+        FirebaseContributorUserGroup(user_group).trigger()
         return user_group
 
     @typing.override
     def update(self, instance: ContributorUserGroup, validated_data: dict[typing.Any, typing.Any]):
         user_group = super().update(instance, validated_data)
-        transaction.on_commit(lambda: FirebaseContributorUserGroup(user_group.id).push())
+        FirebaseContributorUserGroup(user_group).trigger()
         return user_group

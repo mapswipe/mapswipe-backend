@@ -9,6 +9,7 @@ from pyfirebase_mapswipe import extended_models as firebase_extended_models
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
 
+from apps.common.models import FirebasePushStatusEnum
 from apps.contributor.factories import ContributorTeamFactory, ContributorUserFactory
 from apps.contributor.models import ContributorTeam, ContributorUser
 from apps.user.factories import UserFactory
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def push_team_to_firebase(team: ContributorTeam):
+    team.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
     fb_reference = Config.FIREBASE_HELPER.ref(
         Config.FirebaseKeys.contributor_team(team.firebase_id),
     )
@@ -29,9 +31,11 @@ def push_team_to_firebase(team: ContributorTeam):
     fb_reference.set(
         value=firebase_utils.serialize(contributor_team_data),
     )
+    team.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
 
 
 def push_team_member_to_firebase(member: ContributorUser):
+    member.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
     fb_reference = Config.FIREBASE_HELPER.ref(
         Config.FirebaseKeys.contributor_user(member.firebase_id),
     )
@@ -46,6 +50,7 @@ def push_team_member_to_firebase(member: ContributorUser):
     fb_reference.set(
         value=firebase_utils.serialize(team_member_data),
     )
+    member.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
 
 
 class Command(BaseCommand):
