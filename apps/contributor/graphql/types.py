@@ -7,6 +7,7 @@ from strawberry_django.pagination import OffsetPaginated
 from apps.common.graphql.types import ArchivableResourceTypeMixin, UserResourceTypeMixin
 from apps.community_dashboard.models import AggregatedUserGroupStatData, AggregatedUserStatData
 from apps.contributor.models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
+from main.config import Config
 
 
 # TODO(thenav56): Test N+1
@@ -65,6 +66,10 @@ class ContributorUserType:
         annotate=generate_aggregated_user_stat_data_annotate(models.Sum("total_time")),
     )
 
+    @strawberry_django.field(only=["firebase_id"])
+    def community_dashboard_url(self, contributor_user: strawberry.Parent[ContributorUser]) -> str:
+        return Config.CommunityDashboardKeys.contributor_user(contributor_user.firebase_id)
+
 
 @strawberry_django.type(ContributorUserGroup)
 class ContributorUserGroupType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
@@ -87,6 +92,10 @@ class ContributorUserGroupType(UserResourceTypeMixin, ArchivableResourceTypeMixi
             0,
         ),
     )
+
+    @strawberry_django.field(only=["firebase_id"])
+    def community_dashboard_url(self, contributor_user_group: strawberry.Parent[ContributorUserGroup]) -> str:
+        return Config.CommunityDashboardKeys.contributor_user_group(contributor_user_group.firebase_id)
 
     # TODO: Make this a generic module
     # TODO: Add order and filters

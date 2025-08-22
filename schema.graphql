@@ -542,6 +542,7 @@ type ContributorUserGroupType implements UserResourceTypeMixin {
   name: String!
   description: String!
   membersCount: Int!
+  communityDashboardUrl: String!
   userMemberships(pagination: OffsetPaginationInput): ContributorUserGroupMembershipTypeOffsetPaginated!
 }
 
@@ -616,6 +617,7 @@ type ContributorUserType {
   totalMappingProjects: Int!
   totalSwipes: Int!
   totalSwipeTime: Int!
+  communityDashboardUrl: String!
 }
 
 type ContributorUserTypeOffsetPaginated {

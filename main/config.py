@@ -23,6 +23,10 @@ class Config:
     # Misc
     STORAGE_OVERWRITE_KEY = typing.cast("str", settings.STORAGE_OVERWRITE_KEY)
 
+    # Client domains
+    MANAGER_DASHBOARD_DOMAIN = typing.cast("URLParseResult", settings.MANAGER_DASHBOARD_DOMAIN)
+    COMMUNITY_DASHBOARD_DOMAIN = typing.cast("URLParseResult", settings.COMMUNITY_DASHBOARD_DOMAIN)
+
     # NOTE: We get AOI for validate from HOT tasking manager
     HOT_TASKING_MANAGER_PROJECT_API_LINK = "https://tasking-manager-production-api.hotosm.org/api/v2/"
 
@@ -46,6 +50,15 @@ class Config:
     EXISTING_SYSTEM_POSTGRES_KEY = typing.cast("str", settings.EXISTING_SYSTEM_POSTGRES_KEY)
     EXISTING_SYSTEM_API = typing.cast("URLParseResult", getattr(settings, "EXISTING_SYSTEM_API", None))
     EXISTING_SYSTEM_API_INSECURE = typing.cast("bool", getattr(settings, "EXISTING_SYSTEM_API_INSECURE", False))
+
+    class CommunityDashboardKeys:
+        @staticmethod
+        def contributor_user(firebae_id: str):
+            return f"{Config.COMMUNITY_DASHBOARD_DOMAIN.geturl()}/user/{firebae_id}"
+
+        @staticmethod
+        def contributor_user_group(firebase_id: str):
+            return f"{Config.COMMUNITY_DASHBOARD_DOMAIN.geturl()}/user-group/{firebase_id}"
 
     class FirebaseKeys:
         @staticmethod
