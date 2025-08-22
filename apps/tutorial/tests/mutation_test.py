@@ -182,7 +182,7 @@ class Mutation:
                 message
               }
             }
-            ... on TutorialStatusTypeMutationResponseType {
+            ... on TutorialTypeMutationResponseType {
               errors
               ok
               result {

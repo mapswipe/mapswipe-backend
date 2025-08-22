@@ -1540,20 +1540,6 @@ input ProjectStatusEnumFilterLookup {
 """
 Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
-type ProjectStatusType {
-  id: ID!
-  status: ProjectStatusEnum!
-}
-
-type ProjectStatusTypeMutationResponseType {
-  ok: Boolean!
-  errors: CustomErrorType
-  result: ProjectStatusType
-}
-
-"""
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
-"""
 input ProjectStatusUpdateInput {
   clientId: String!
   status: ProjectStatusEnum
@@ -2244,20 +2230,6 @@ input TutorialStatusEnumFilterLookup {
 """
 Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
 """
-type TutorialStatusType {
-  id: ID!
-  status: TutorialStatusEnum!
-}
-
-type TutorialStatusTypeMutationResponseType {
-  ok: Boolean!
-  errors: CustomErrorType
-  result: TutorialStatusType
-}
-
-"""
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
-"""
 input TutorialStatusUpdateInput {
   clientId: String!
   status: TutorialStatusEnum
@@ -2367,11 +2339,11 @@ union UpdateProcessedProjectPayload = ProjectTypeMutationResponseType | Operatio
 
 union UpdateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
 
-union UpdateProjectStatusPayload = ProjectStatusTypeMutationResponseType | OperationInfo
+union UpdateProjectStatusPayload = ProjectTypeMutationResponseType | OperationInfo
 
 union UpdateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
 
-union UpdateTutorialStatusPayload = TutorialStatusTypeMutationResponseType | OperationInfo
+union UpdateTutorialStatusPayload = TutorialTypeMutationResponseType | OperationInfo
 
 scalar Upload
 

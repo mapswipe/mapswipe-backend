@@ -145,9 +145,3 @@ class TutorialType(UserResourceTypeMixin):
     # The tests are failing randomly.
     scenarios: list[TutorialScenarioPageType]
     information_pages: list[TutorialInformationPageType]
-
-
-@strawberry_django.type(Tutorial)
-class TutorialStatusType:
-    id: strawberry.ID
-    status: strawberry.auto

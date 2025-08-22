@@ -29,12 +29,6 @@ from .project_types.validate import ValidateProjectPropertyType
 from .project_types.validate_image import ValidateImageProjectPropertyType
 
 
-@strawberry_django.type(Project)
-class ProjectStatusType:
-    id: strawberry.ID
-    status: strawberry.auto
-
-
 # Organization
 @strawberry_django.type(Organization)
 class OrganizationType(UserResourceTypeMixin, ArchivableResourceTypeMixin):

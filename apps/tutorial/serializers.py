@@ -332,29 +332,9 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
         model = Tutorial
         fields = (
             "name",
-            "status",
             "information_pages",
             "scenarios",
         )
-
-    def validate_status(self, new_status: Tutorial.Status | int) -> Tutorial.Status:
-        assert self.instance is not None, "Tutorial does not exist."
-
-        if not isinstance(new_status, Tutorial.Status):
-            new_status = Tutorial.Status(new_status)
-
-        if (
-            self.instance.status_enum != new_status
-            and (self.instance.status_enum, new_status) not in VALID_TUTORIAL_STATUS_TRANSITIONS
-        ):
-            raise serializers.ValidationError(
-                gettext("Tutorial status cannot be changed from %s to %s")
-                % (
-                    self.instance.status_enum.label,
-                    new_status.label,
-                ),
-            )
-        return new_status
 
     @typing.override
     def create(self, validated_data: dict[typing.Any, typing.Any]):
@@ -395,7 +375,6 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
         validated_data.pop("scenarios", None)
         validated_data.pop("information_pages", None)
 
-        old_status_enum = instance.status_enum
         updated_tutorial = super().update(instance, validated_data)
 
         scenario_qs = TutorialScenarioPage.objects.filter(
@@ -436,14 +415,6 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
             )
             information_page_serializer.is_valid(raise_exception=True)
             information_page_serializer.save()
-
-        if (
-            old_status_enum != Tutorial.Status.PUBLISHED and updated_tutorial.status_enum == Tutorial.Status.PUBLISHED
-        ) or old_status_enum == Tutorial.Status.PUBLISHED:
-            updated_tutorial.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
-
-            # FIXME: We can call this on batch later as well or handle error scenario
-            transaction.on_commit(lambda: push_tutorial_to_firebase.delay(updated_tutorial.pk))
 
         return updated_tutorial
 
@@ -524,11 +495,11 @@ class TutorialStatusUpdateSerializer(UserResourceSerializer[Tutorial]):
     def update(self, instance: Tutorial, validated_data: dict[typing.Any, typing.Any]):
         old_status_enum = instance.status_enum
         updated_tutorial = super().update(instance, validated_data)
+
         if (
             old_status_enum != Tutorial.Status.PUBLISHED and updated_tutorial.status_enum == Tutorial.Status.PUBLISHED
         ) or old_status_enum == Tutorial.Status.PUBLISHED:
             updated_tutorial.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
-
             # FIXME: We can call this on batch later as well or handle error scenario
             transaction.on_commit(lambda: push_tutorial_to_firebase.delay(updated_tutorial.pk))
 

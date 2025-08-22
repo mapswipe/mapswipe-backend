@@ -24,7 +24,7 @@ from .inputs.inputs import (
     ProjectStatusUpdateInput,
     ProjectUpdateInput,
 )
-from .types.types import OrganizationType, ProjectAssetType, ProjectStatusType, ProjectType
+from .types.types import OrganizationType, ProjectAssetType, ProjectType
 
 
 @strawberry.type
@@ -87,6 +87,6 @@ class Mutation:
         info: Info,
         data: ProjectStatusUpdateInput,
         pk: strawberry.ID,
-    ) -> MutationResponseType[ProjectStatusType]:
+    ) -> MutationResponseType[ProjectType]:
         project = await Project.objects.aget(pk=pk)
         return await ModelMutation(ProjectStatusUpdateSerializer).handle_update_mutation(data, info, project)

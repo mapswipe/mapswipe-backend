@@ -21,7 +21,7 @@ from utils.graphql.mutations import ModelMutation
 from utils.graphql.types import CudInput, MutationResponseType
 
 from .inputs.inputs import TutorialAssetCreateInput, TutorialCreateInput, TutorialStatusUpdateInput, TutorialUpdateInput
-from .types.types import TutorialAssetType, TutorialStatusType, TutorialType
+from .types.types import TutorialAssetType, TutorialType
 
 
 @strawberry.type
@@ -96,6 +96,6 @@ class Mutation:
         info: Info,
         data: TutorialStatusUpdateInput,
         pk: strawberry.ID,
-    ) -> MutationResponseType[TutorialStatusType]:
+    ) -> MutationResponseType[TutorialType]:
         tutorial = await Tutorial.objects.aget(pk=pk)
         return await ModelMutation(TutorialStatusUpdateSerializer).handle_update_mutation(data, info, tutorial)

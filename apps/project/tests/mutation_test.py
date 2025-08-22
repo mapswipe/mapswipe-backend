@@ -302,7 +302,7 @@ class Mutation:
                 message
               }
             }
-            ... on ProjectStatusTypeMutationResponseType {
+            ... on ProjectTypeMutationResponseType {
               errors
               ok
               result {

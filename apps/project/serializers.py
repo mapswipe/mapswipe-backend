@@ -198,7 +198,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
     def validate(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
 
-        if self.instance.status_enum != Project.Status.DRAFT and self.instance.status_enum != Project.Status.FAILED:
+        if self.instance.status_enum not in [Project.Status.DRAFT, Project.Status.FAILED]:
             raise serializers.ValidationError(gettext("Cannot update project with status %s") % self.instance.status)
 
         self._validate_project_type_specifics(attrs)
@@ -272,6 +272,8 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             raise serializers.ValidationError(
                 {"tutorial": gettext("Tutorial project type does not match the project type.")},
             )
+
+        # FIXME(tnagorra): We should also check if the parameters are the same. eg. zoomLevel, ...
 
     @typing.override
     def validate(self, attrs: dict[str, typing.Any]):
@@ -440,13 +442,13 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
                 ),
             )
 
-        if new_status == Project.Status.PUBLISHED and not self.instance.tutorial:
-            raise serializers.ValidationError(
-                {"tutorial": gettext("Tutorial is required before publishing a project.")},
-            )
         if new_status == Project.Status.MARKED_AS_READY and not self.instance.project_type_specifics:
             raise serializers.ValidationError(
                 gettext("project_type_specifics is required when project status is %s") % (new_status.label),
+            )
+        if new_status == Project.Status.PUBLISHED and not self.instance.tutorial:
+            raise serializers.ValidationError(
+                {"tutorial": gettext("Tutorial is required before publishing a project.")},
             )
 
         return new_status
@@ -461,12 +463,10 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
             and updated_project.status_enum == Project.Status.MARKED_AS_READY
         ):
             transaction.on_commit(lambda: process_project_task.delay(updated_project.pk))
-
-        if (
+        elif (
             old_status_enum != Project.Status.PUBLISHED and updated_project.status_enum == Project.Status.PUBLISHED
         ) or old_status_enum == Project.Status.PUBLISHED:
             updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
-
             # FIXME: We can call this on batch later as well or handle error scenario
             transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
 
