@@ -88,7 +88,7 @@ class BaseProject[
 
     def __init__(self, project: Project):
         self.project = project
-        self.project_type_specifics = self.project_property_class(**project.project_type_specifics)
+        self.project_type_specifics = self.project_property_class.model_validate(project.project_type_specifics)
 
         self.firebase_helper = Config.FIREBASE_HELPER
 

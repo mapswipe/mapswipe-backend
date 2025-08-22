@@ -39,7 +39,7 @@ def pull_users_from_firebase():
                 user = typing.cast("dict[str, typing.Any] | None", user_ref.get())
                 if not user:
                     raise LookupError(f"User with key {user_id} not found")
-                user_obj = firebase_ext_models.FbUser(**user)
+                user_obj = firebase_ext_models.FbUser.model_validate(user)
             except ValidationError:
                 errored_users_count += 1
                 logger.warning("Validation failed for user from firebase: %s", user_id)

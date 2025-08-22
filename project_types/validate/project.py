@@ -131,7 +131,7 @@ class ValidateProject(
     def _process_polygons(self, geojson_data: dict[str, Any]) -> list[ValidFeature]:
         """We only want polygon and multipolygon features"""
         try:
-            fc = FeatureCollection(**geojson_data)
+            fc = FeatureCollection.model_validate(geojson_data)
         except ValidationError as e:
             raise ValueError("Invalid GeoJSON FeatureCollection") from e
 
@@ -145,7 +145,7 @@ class ValidateProject(
     def _get_object_geometry_from_ohsome(self, geojson: Any):
         # FIXME(frozenhelium): add appropriate typing for geojson
         # FIXME(tnagorra): Check if object spreading works with nested object and validation
-        feature_collection = FeatureCollection(**geojson)
+        feature_collection = FeatureCollection.model_validate(geojson)
         ohsome_request = {
             "endpoint": "elements/geometry",
             "filter": self.project_type_specifics.object_source.ohsome_filter,

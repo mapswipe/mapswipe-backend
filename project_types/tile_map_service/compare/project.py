@@ -41,9 +41,7 @@ class CompareProject(
 
     @typing.override
     def get_task_specifics_for_firebase(self, task: ProjectTask) -> firebase_models.FbMappingTaskCompareCreateOnlyInput:
-        task_specifics = self.project_task_property_class(
-            **task.project_type_specifics,
-        )
+        task_specifics = self.project_task_property_class.model_validate(task.project_type_specifics)
         tsp = self.project_type_specifics.tile_server_property
         tsp_b = self.project_type_specifics.tile_server_b_property
 

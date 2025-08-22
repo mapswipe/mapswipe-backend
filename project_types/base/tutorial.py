@@ -42,7 +42,9 @@ class BaseTutorial[
 
     def __init__(self, tutorial: Tutorial):
         self.tutorial = tutorial
-        self.project_type_specifics = self.project_property_class(**self.tutorial.project.project_type_specifics)
+        self.project_type_specifics = self.project_property_class.model_validate(
+            self.tutorial.project.project_type_specifics,
+        )
 
         self.firebase_helper = Config.FIREBASE_HELPER
 

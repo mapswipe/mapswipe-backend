@@ -118,7 +118,7 @@ class ValidateImageProject(
 
         inputs: list[ValidImage] = []
         for image_asset in image_assets.iterator():
-            asset_specifics = ObjectImageAssetProperty(**image_asset.asset_type_specifics.get("object_image"))
+            asset_specifics = ObjectImageAssetProperty.model_validate(image_asset.asset_type_specifics.get("object_image"))
 
             annotations = asset_specifics.annotations
             if annotations:
@@ -215,9 +215,7 @@ class ValidateImageProject(
 
     @typing.override
     def get_task_specifics_for_firebase(self, task):
-        task_specifics = self.project_task_property_class(
-            **task.project_type_specifics,
-        )
+        task_specifics = self.project_task_property_class.model_validate(task.project_type_specifics)
         return firebase_models.FbMappingTaskValidateImageCreateOnlyInput(
             taskId=task.firebase_id,
             url=task_specifics.url,

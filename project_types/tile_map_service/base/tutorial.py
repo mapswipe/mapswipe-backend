@@ -40,9 +40,7 @@ class TileMapServiceBaseTutorial[
         task: TutorialTask,
         index: int,
     ) -> firebase_models.FbTileMapServiceTutorialTask:
-        task_specifics = self.tutorial_task_property_class(
-            **task.project_type_specifics,
-        )
+        task_specifics = self.tutorial_task_property_class.model_validate(task.project_type_specifics)
 
         # FIXME(tnagorra): Add validation that scenario_page_number should start from 1
 
