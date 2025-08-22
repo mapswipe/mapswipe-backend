@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from djangoql.admin import DjangoQLSearchMixin
 
-from apps.common.admin import ArchivableResourceAdmin, FirebaseResourceAdmin
+from apps.common.admin import ArchivableResourceAdmin, FirebaseResourceAdmin, ReadOnlyAdmin
 
 from .firebase import FirebaseContributorTeam, FirebaseContributorUser
 from .models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
@@ -45,12 +45,17 @@ class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
 
 
 @admin.register(ContributorUserGroup)
-class ContributorUserGroupAdmin(DjangoQLSearchMixin, ArchivableResourceAdmin, FirebaseResourceAdmin):
+class ContributorUserGroupAdmin(DjangoQLSearchMixin, ArchivableResourceAdmin, FirebaseResourceAdmin, ReadOnlyAdmin):
     pass
 
 
 @admin.register(ContributorTeam)
-class ContributorTeamAdmin(ArchivableResourceAdmin, DjangoQLSearchMixin, FirebaseResourceAdmin, admin.ModelAdmin):
+class ContributorTeamAdmin(
+    ArchivableResourceAdmin,
+    DjangoQLSearchMixin,
+    FirebaseResourceAdmin,
+    admin.ModelAdmin,
+):
     list_display = (
         "name",
         "is_archived",
@@ -71,7 +76,7 @@ class ContributorTeamAdmin(ArchivableResourceAdmin, DjangoQLSearchMixin, Firebas
 
 
 @admin.register(ContributorUserGroupMembership)
-class ContributorUserGroupMembershipAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+class ContributorUserGroupMembershipAdmin(DjangoQLSearchMixin, ReadOnlyAdmin, admin.ModelAdmin):
     list_display = (
         "user",
         "user_group",
