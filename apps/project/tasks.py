@@ -186,6 +186,10 @@ class SlackMessage:
         blocks = [
                 {
                     "type": "header",
+        return {
+            "text": "Project Progress",
+            "blocks": blocks,
+        }
                     "text": {
                         "type": "plain_text",
                         "text": "ALMOST THERE! PROJECT REACHED {progress} :hourglass_flowing_sand:",
