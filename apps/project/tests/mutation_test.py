@@ -1608,7 +1608,7 @@ class TestProjectTypeMutation(TestCase):
                             },
                         ],
                     },
-                    "mapilaryImageFilters": {
+                    "mapillaryImageFilters": {
                         "isPano": True,
                         "creatorId": None,
                         "organizationId": None,
