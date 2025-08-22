@@ -110,14 +110,14 @@ class TestTutorialFilterQuery(TestCase):
         self.force_login(self.user)
         content = self._query(
             filters={
-                "name": {"iContains": "Tutorial"},
+                "name": "Tutorial",
             },
         )
         assert content["data"]["tutorials"]["totalCount"] == 3
 
         content = self._query(
             filters={
-                "name": {"exact": self.tutorial1.name},
+                "name": self.tutorial1.name,
             },
         )
         assert content["data"]["tutorials"]["totalCount"] == 1

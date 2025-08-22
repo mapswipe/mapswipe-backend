@@ -1339,9 +1339,9 @@ input ProjectFilter {
   OR: ProjectFilter
   NOT: ProjectFilter
   DISTINCT: Boolean
-  name: String
   topic: String
   region: String
+  name: String
 }
 
 input ProjectOrder {
@@ -1982,7 +1982,6 @@ Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id
 """
 input TutorialFilter {
   id: IDBaseFilterLookup
-  name: StrFilterLookup
   status: TutorialStatusEnumFilterLookup
 
   """Project this tutorial is referring to."""
@@ -1991,6 +1990,7 @@ input TutorialFilter {
   OR: TutorialFilter
   NOT: TutorialFilter
   DISTINCT: Boolean
+  name: String
 }
 
 """

@@ -19,8 +19,10 @@ class ContributorUserGroupFilter:
     id: strawberry.auto
     is_archived: strawberry.auto
 
+    name = unaccented_filter("name")
+
     @staticmethod
-    def filter_by_user(
+    def _filter_by_user(
         user_field: str,
         queryset: models.QuerySet[ContributorUserGroup],
         value: str,
@@ -43,11 +45,7 @@ class ContributorUserGroupFilter:
         value: strawberry.ID,
         prefix: str,
     ) -> tuple[models.QuerySet[ContributorUserGroup], models.Q]:
-        return self.filter_by_user("user__firebase_id", queryset, value)
-
-    @unaccented_filter("name")
-    def name(self):
-        pass
+        return self._filter_by_user("user__firebase_id", queryset, value)
 
 
 @strawberry_django.filters.filter(ContributorUserGroupMembership, lookups=True)
@@ -61,6 +59,4 @@ class ContributorTeamFilter:
     id: strawberry.auto
     is_archived: strawberry.auto
 
-    @unaccented_filter("name")
-    def name(self):
-        pass
+    name = unaccented_filter("name")

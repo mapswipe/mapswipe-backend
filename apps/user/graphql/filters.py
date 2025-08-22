@@ -9,6 +9,4 @@ from apps.user.models import User
 class UserFilter:
     id: strawberry.auto
 
-    @unaccented_filter("display_name")
-    def display_name(self):
-        pass
+    display_name = unaccented_filter("display_name")
