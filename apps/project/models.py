@@ -260,6 +260,13 @@ class Project(UserResource, FirebasePushResource):
         blank=True,
     )  # NOTE: project_details before
 
+    # NOTE: Describe the mission of the project.
+    project_instruction = models.TextField(
+        help_text=gettext_lazy(
+            "Provide mission statement.",
+        ),
+    )
+
     # NOTE: JPG and PNG should be supported.
     image = models.ForeignKey["ProjectAsset | None", "ProjectAsset | None"](
         "project.ProjectAsset",

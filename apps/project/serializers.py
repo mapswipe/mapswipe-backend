@@ -52,6 +52,7 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
             "project_number",
             "requesting_organization",
             "look_for",
+            "project_instruction",
             "additional_info_url",
             "description",
             "image",
@@ -68,6 +69,23 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
             raise serializers.ValidationError(gettext("Cannot use archived team on a project."))
         return team
 
+    @typing.override
+    def validate(self, attrs: dict[str, typing.Any]):
+        look_for = attrs.get("look_for")
+        project_instruction = attrs.get("project_instruction")
+
+        if not look_for and not project_instruction:
+            raise serializers.ValidationError(
+                gettext("Either look_for or project_instruction should be provided."),
+            )
+
+        if look_for and project_instruction:
+            raise serializers.ValidationError(
+                gettext("Only one of look_for or project_instruction should be provided."),
+            )
+
+        return super().validate(attrs)
+
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class ProjectUpdateSerializer(UserResourceSerializer[Project]):
@@ -80,6 +98,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             "project_number",
             "requesting_organization",
             "look_for",
+            "project_instruction",
             "additional_info_url",
             "description",
             "image",
@@ -199,6 +218,19 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         if self.instance.status_enum not in [Project.Status.DRAFT, Project.Status.FAILED]:
             raise serializers.ValidationError(gettext("Cannot update project with status %s") % self.instance.status)
 
+        look_for = attrs.get("look_for") or self.instance.look_for
+        project_instruction = attrs.get("project_instruction") or self.instance.project_instruction
+
+        if not look_for and not project_instruction:
+            raise serializers.ValidationError(
+                gettext("Either look_for or project_instruction should be provided."),
+            )
+
+        if look_for and project_instruction:
+            raise serializers.ValidationError(
+                gettext("Only one of look_for or project_instruction should be provided."),
+            )
+
         self._validate_project_type_specifics(attrs)
         return super().validate(attrs)
 
@@ -213,6 +245,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             "region",
             "project_number",
             "look_for",
+            "project_instruction",
             "additional_info_url",
             "description",
             "image",
@@ -274,6 +307,19 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
         if self.instance.status_enum != Project.Status.READY:
             raise serializers.ValidationError(gettext("Cannot update project with status %s") % self.instance.status)
+
+        look_for = attrs.get("look_for") or self.instance.look_for
+        project_instruction = attrs.get("project_instruction") or self.instance.project_instruction
+
+        if not look_for and not project_instruction:
+            raise serializers.ValidationError(
+                gettext("Either look_for or project_instruction should be provided."),
+            )
+
+        if look_for and project_instruction:
+            raise serializers.ValidationError(
+                gettext("Only one of look_for or project_instruction should be provided."),
+            )
 
         return super().validate(attrs)
 
