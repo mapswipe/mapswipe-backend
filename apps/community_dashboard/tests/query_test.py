@@ -551,7 +551,7 @@ class TestCommunityDashboardQuery(TestCase):
 
             contributorUserGroups(
                 filters: {
-                  firebaseId: $firebaseId,
+                  userFirebaseId: $firebaseId,
                 },
                 pagination: $pagination,
                 order: {id: ASC},

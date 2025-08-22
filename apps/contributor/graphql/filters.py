@@ -39,7 +39,7 @@ class ContributorUserGroupFilter:
         )
 
     @strawberry_django.filter_field
-    def firebase_id(
+    def user_firebase_id(
         self,
         queryset: models.QuerySet[ContributorUserGroup],
         value: strawberry.ID,

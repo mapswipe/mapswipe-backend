@@ -439,8 +439,8 @@ input ContributorUserGroupFilter {
   OR: ContributorUserGroupFilter
   NOT: ContributorUserGroupFilter
   DISTINCT: Boolean
-  firebaseId: ID
   name: String
+  userFirebaseId: ID
 }
 
 type ContributorUserGroupFilteredStats implements ContributorUserUserGroupBaseFilterStatsQuery {
