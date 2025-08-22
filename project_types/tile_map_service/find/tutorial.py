@@ -29,9 +29,7 @@ class FindTutorial(
     def get_task_specifics_for_firebase(self, task: TutorialTask, index: int):
         tsp = self.project_type_specifics.tile_server_property
 
-        task_specifics = self.tutorial_task_property_class(
-            **task.project_type_specifics,
-        )
+        task_specifics = self.tutorial_task_property_class.model_validate(task.project_type_specifics)
 
         resp = super().get_task_specifics_for_firebase(task, index)
 

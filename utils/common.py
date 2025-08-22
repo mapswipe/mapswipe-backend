@@ -149,7 +149,7 @@ def validate_geojson_file(file: ContentFile) -> None:
     except json.JSONDecodeError as e:
         raise ValidationError("Invalid JSON format in the file.") from e
 
-    feature_collection = FeatureCollection(**geojson_data)
+    feature_collection = FeatureCollection.model_validate(geojson_data)
 
     if not feature_collection.features:
         raise ValidationError("GeoJSON 'features' list cannot be empty.")

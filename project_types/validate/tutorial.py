@@ -41,9 +41,7 @@ class ValidateTutorial(
 
     @typing.override
     def get_task_specifics_for_firebase(self, task: TutorialTask, index: int):
-        task_specifics = self.tutorial_task_property_class(
-            **task.project_type_specifics,
-        )
+        task_specifics = self.tutorial_task_property_class.model_validate(task.project_type_specifics)
 
         geojson = json.loads(task_specifics.object_geometry)
         geometry_ogr = ogr.CreateGeometryFromJson(task_specifics.object_geometry)

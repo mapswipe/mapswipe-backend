@@ -389,7 +389,7 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         AoiGeometryFeature = Feature[Polygon | MultiPolygon, dict]
         AoiGeometryFeatureCollection = FeatureCollection[AoiGeometryFeature]
 
-        feature_collection = AoiGeometryFeatureCollection(**geojson_data)
+        feature_collection = AoiGeometryFeatureCollection.model_validate(geojson_data)
         if len(feature_collection.features) > 20:
             raise ValidationError("AOI Geometry must have at max 20 features")
 

@@ -103,9 +103,7 @@ class TileMapServiceBaseProject[
             geom = GEOSGeometry(task.geometry)
             geojson = json.loads(geom.geojson)
 
-            task_specifics = self.project_task_property_class(
-                **task.project_type_specifics,
-            )
+            task_specifics = self.project_task_property_class.model_validate(task.project_type_specifics)
 
             return {
                 "type": "Feature",
@@ -261,9 +259,7 @@ class TileMapServiceBaseProject[
         self,
         group: ProjectTaskGroup,
     ) -> firebase_models.FbMappingGroupTileMapServiceCreateOnlyInput:
-        task_group_specifics = self.project_task_group_property_class(
-            **group.project_type_specifics,
-        )
+        task_group_specifics = self.project_task_group_property_class.model_validate(group.project_type_specifics)
         return firebase_models.FbMappingGroupTileMapServiceCreateOnlyInput(
             groupId=group.firebase_id,
             xMax=task_group_specifics.x_max,
