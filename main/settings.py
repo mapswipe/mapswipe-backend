@@ -2,6 +2,7 @@
 import os
 import socket
 import sys
+import typing
 from pathlib import Path
 from urllib.parse import ParseResult
 from urllib.parse import urlparse as _urlparse
@@ -17,7 +18,17 @@ from utils.git import GitHelper
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-def urlparse(value: str) -> ParseResult:
+@typing.overload
+def urlparse(value: None) -> None: ...
+
+
+@typing.overload
+def urlparse(value: str) -> ParseResult: ...
+
+
+def urlparse(value) -> ParseResult:
+    if not value:
+        return None
     return _urlparse(value.strip("/"))
 
 
