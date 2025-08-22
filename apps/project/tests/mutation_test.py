@@ -11,6 +11,7 @@ from ulid import ULID
 from apps.contributor.factories import ContributorTeamFactory
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
+    Organization,
     Project,
     ProjectAssetInputTypeEnum,
     ProjectStatusEnum,
@@ -22,6 +23,7 @@ from apps.project.tasks import process_project_task
 from apps.tutorial.factories import TutorialFactory
 from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
+from main.config import Config
 from main.tests import TestCase
 from project_types.tile_map_service.compare import project as compare_project
 from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
@@ -389,12 +391,13 @@ class TestOrganizationMutation(TestCase):
         }
 
         # Creating Organization: Without authentication
-        content = self.query_check(
-            self.Mutation.CREATE_ORGANIZATION,
-            variables={
-                "data": organization_data,
-            },
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            content = self.query_check(
+                self.Mutation.CREATE_ORGANIZATION,
+                variables={
+                    "data": organization_data,
+                },
+            )
         assert content["data"]["createOrganization"]["messages"] == [
             {
                 "code": None,
@@ -406,50 +409,64 @@ class TestOrganizationMutation(TestCase):
 
         # Creating Organization: With authentication
         self.force_login(self.user)
-        content = self.query_check(
-            self.Mutation.CREATE_ORGANIZATION,
-            variables={
-                "data": organization_data,
-            },
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            content = self.query_check(
+                self.Mutation.CREATE_ORGANIZATION,
+                variables={
+                    "data": organization_data,
+                },
+            )
         resp_data = content["data"]["createOrganization"]
         assert resp_data["errors"] is None, content
 
+        organization = Organization.objects.get(id=resp_data["result"]["id"])
+        ref = self.firebase_helper.ref(Config.FirebaseKeys.organization(organization.firebase_id))
+        fb_organization: typing.Any = ref.get()
+        assert fb_organization is not None
+
         # Updating Organization
-        content = self.query_check(
-            self.Mutation.UPDATE_ORGANIZATION,
-            variables={
-                "data": {
-                    "name": "Org Updated",
-                    "clientId": resp_data["result"]["clientId"],
-                    "description": "Update description",
-                    "abbreviation": "OU",
+        with self.captureOnCommitCallbacks(execute=True):
+            content = self.query_check(
+                self.Mutation.UPDATE_ORGANIZATION,
+                variables={
+                    "data": {
+                        "name": "Org Updated",
+                        "clientId": resp_data["result"]["clientId"],
+                        "description": "Update description",
+                        "abbreviation": "OU",
+                    },
+                    "pk": resp_data["result"]["id"],
                 },
-                "pk": resp_data["result"]["id"],
-            },
-        )
+            )
         resp_data = content["data"]["updateOrganization"]
         assert resp_data["errors"] is None, content
+        fb_organization = ref.get()
+        assert fb_organization is not None
+        assert fb_organization.get("name") == "Org Updated"
 
         # Archive Organization
-        content = self.query_check(
-            self.Mutation.UPDATE_ORGANIZATION,
-            variables={
-                "data": {
-                    "name": "Archive Org",
-                    "clientId": resp_data["result"]["clientId"],
-                    "description": "Update description",
-                    "abbreviation": "AO",
-                    "isArchived": True,
+        with self.captureOnCommitCallbacks(execute=True):
+            content = self.query_check(
+                self.Mutation.UPDATE_ORGANIZATION,
+                variables={
+                    "data": {
+                        "name": "Archive Org",
+                        "clientId": resp_data["result"]["clientId"],
+                        "description": "Update description",
+                        "abbreviation": "AO",
+                        "isArchived": True,
+                    },
+                    "pk": resp_data["result"]["id"],
                 },
-                "pk": resp_data["result"]["id"],
-            },
-        )
+            )
         resp_data = content["data"]["updateOrganization"]
         assert resp_data["errors"] is None, content
         assert resp_data["result"]["isArchived"]
         assert resp_data["result"]["description"] == "Update description"
         assert resp_data["result"]["abbreviation"] == "AO"
+
+        fb_organization = ref.get()
+        assert fb_organization.get("isArchived")
 
 
 class TestProjectMutation(TestCase):
@@ -906,6 +923,12 @@ class TestProjectMutation(TestCase):
         content = self._update_project_status_mutation(str(latest_project.pk), project_data)
         assert content["data"]["updateProjectStatus"]["errors"] is None
         latest_project.refresh_from_db()
+
+        project_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.project(latest_project.firebase_id),
+        )
+        fb_project: typing.Any = project_ref.get()
+        assert fb_project is not None
 
         # Archiving tutorial
         # Test Pass as archiving tutorial does not affect project on published projects
@@ -1364,6 +1387,12 @@ class TestProjectTypeMutation(TestCase):
         resp_data = content["data"]["updateProcessedProject"]
         assert resp_data["errors"] is None, content
         assert resp_data["result"]["tutorialId"] == str(self.compare_tutorial.id)
+        # project is not sync to firebase
+        project_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.project(latest_project.firebase_id),
+        )
+        fb_project: typing.Any = project_ref.get()
+        assert fb_project is None
 
         # Updating Processed Project:
         # Publishing project
@@ -1378,3 +1407,7 @@ class TestProjectTypeMutation(TestCase):
 
         latest_project.refresh_from_db()
         assert latest_project.processing_status == Project.ProcessingStatus.COMPLETED
+
+        # project is sync to firebase after publish
+        fb_project: typing.Any = project_ref.get()
+        assert fb_project is not None

@@ -14,8 +14,10 @@ from apps.tutorial.models import (
 )
 from apps.tutorial.serializers import VALID_TUTORIAL_STATUS_TRANSITIONS
 from apps.user.factories import UserFactory
+from main.config import Config
 from main.tests import TestCase
 from utils.common import format_object_keys, to_camel_case
+from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -208,6 +210,18 @@ class TestTutorialMutation(TestCase):
 
         # FIXME: Add more project details here
         cls.organization = OrganizationFactory.create(**cls.user_resource_kwargs)
+
+        cls.project_type_specifics = {
+            "zoom_level": 15,
+            "aoi_geometry": "1",
+            "tile_server_property": {
+                "name": RasterTileServerNameEnum.CUSTOM.value,
+                "custom": {
+                    "credits": "My Map",
+                    "url": "https://hi-there/{x}/{y}/{z}",
+                },
+            },
+        }
         cls.project = ProjectFactory.create(
             **cls.user_resource_kwargs,
             project_type=ProjectTypeEnum.FIND,
@@ -218,7 +232,7 @@ class TestTutorialMutation(TestCase):
             look_for="",
             additional_info_url="https://hi-there/about.html",
             description="The new **project** from hi-there.",
-            project_type_specifics=None,
+            project_type_specifics=cls.project_type_specifics,
         )
 
     def _create_tutorial_mutation(self, tutorial_data: dict, **kwargs):
@@ -597,7 +611,9 @@ class TestTutorialMutation(TestCase):
 
         # Updating Tutorial: With Authentication
         self.force_login(self.user)
-        content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
+        with self.captureOnCommitCallbacks(execute=True):
+            content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
+
         resp_data = content["data"]["updateTutorial"]
         assert resp_data["errors"] is None, content
 
@@ -658,6 +674,13 @@ class TestTutorialMutation(TestCase):
                 ],
             ),
         ), content
+
+        latest_tutorial.refresh_from_db()
+        tutorial_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.tutorial(latest_tutorial.firebase_id),
+        )
+        fb_tutorial: typing.Any = tutorial_ref.get()
+        assert fb_tutorial is not None
 
         # Updating Tutorial: Check for deletions?
         tutorial_data = {
