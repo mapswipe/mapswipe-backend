@@ -21,9 +21,9 @@ class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
 
     def __init__(
         self,
-        obj_id: int,
+        obj: T,
     ):
-        self.obj_id = obj_id
+        self.obj = obj
 
     @classmethod
     def _inheritance_checks(cls):
@@ -56,17 +56,19 @@ class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
     @abc.abstractmethod
     def get_firebase_path(self, firebase_id: str, model: type[T]) -> str: ...
 
-    def push(self) -> None:
-        model_obj = self.model_class.objects.get(id=self.obj_id)
+    def trigger(self) -> None:
+        model_obj = self.obj
+        model_obj.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+        self._push(model_obj)
 
-        # FIXME(tnagorra): The following fails because set firebase_push_status is not set on create/update
-        # if model_obj.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
-        #     logger.warning(
-        #         "Firebase push error: push is not required for %s",
-        #         model_obj._meta.label,
-        #         extra={"id": model_obj.pk},
-        #     )
-        #     return
+    def _push(self, model_obj: T) -> None:
+        if model_obj.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
+            logger.warning(
+                "Firebase push error: push is not required for %s",
+                model_obj._meta.label,
+                extra={"id": model_obj.pk},
+            )
+            return
 
         model_obj.update_firebase_push_status(FirebasePushStatusEnum.PROCESSING)
 

@@ -1,13 +1,11 @@
 import typing
 
 from django.contrib import admin
-from django.db import transaction
 from django.urls import reverse
 from django.utils.html import format_html
 from djangoql.admin import DjangoQLSearchMixin
 
 from apps.common.admin import ArchivableResourceAdmin, FirebaseResourceAdmin
-from apps.common.models import FirebasePushStatusEnum
 
 from .firebase import FirebaseContributorTeam, FirebaseContributorUser
 from .models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
@@ -43,8 +41,7 @@ class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     @typing.override
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
-        obj.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
-        transaction.on_commit(lambda: FirebaseContributorUser(obj.id).push())
+        FirebaseContributorUser(obj).trigger()
 
 
 @admin.register(ContributorUserGroup)
@@ -66,8 +63,7 @@ class ContributorTeamAdmin(ArchivableResourceAdmin, DjangoQLSearchMixin, Firebas
     @typing.override
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
-        obj.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
-        transaction.on_commit(lambda: FirebaseContributorTeam(obj.id).push())
+        FirebaseContributorTeam(obj).trigger()
 
     def view_team_members(self, obj):
         url = reverse("admin:contributor_contributoruser_changelist") + f"?team__id__exact={obj.id}"

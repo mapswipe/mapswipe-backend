@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def push_team_to_firebase(team: ContributorTeam):
+    team.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
     fb_reference = Config.FIREBASE_HELPER.ref(
         Config.FirebaseKeys.contributor_team(team.firebase_id),
     )
@@ -30,9 +31,11 @@ def push_team_to_firebase(team: ContributorTeam):
     fb_reference.set(
         value=firebase_utils.serialize(contributor_team_data),
     )
+    team.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
 
 
 def push_team_member_to_firebase(member: ContributorUser):
+    member.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
     fb_reference = Config.FIREBASE_HELPER.ref(
         Config.FirebaseKeys.contributor_user(member.firebase_id),
     )
@@ -47,6 +50,7 @@ def push_team_member_to_firebase(member: ContributorUser):
     fb_reference.set(
         value=firebase_utils.serialize(team_member_data),
     )
+    member.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
 
 
 class Command(BaseCommand):
@@ -66,7 +70,6 @@ class Command(BaseCommand):
         )
         team_a, team_b = ContributorTeamFactory.create_batch(2, **user_resources)
         for team in [team_a, team_b]:
-            team.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
             push_team_to_firebase(team)
 
         team_a_members = ContributorUserFactory.create_batch(5, team=team_a, firebase_last_pushed=timezone.now())
@@ -74,7 +77,6 @@ class Command(BaseCommand):
         no_team_members = ContributorUserFactory.create_batch(5, firebase_last_pushed=timezone.now())
         for team_members in [team_a_members, team_b_members, no_team_members]:
             for member in team_members:
-                member.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
                 push_team_member_to_firebase(member)
 
         logger.info("Contributor users created successfully")

@@ -482,13 +482,11 @@ class OrganizationSerializer(UserResourceSerializer[Organization], ArchivableRes
     @typing.override
     def create(self, validated_data: dict[str, typing.Any]) -> Organization:
         organization = super().create(validated_data)
-        organization.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
-        transaction.on_commit(lambda: FirebaseOrganizationPush(organization.pk).push())
+        FirebaseOrganizationPush(organization).trigger()
         return organization
 
     @typing.override
     def update(self, instance: Organization, validated_data: dict[typing.Any, typing.Any]):
         organization = super().update(instance, validated_data)
-        organization.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
-        transaction.on_commit(lambda: FirebaseOrganizationPush(organization.pk).push())
+        FirebaseOrganizationPush(organization).trigger()
         return organization
