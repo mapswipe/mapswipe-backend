@@ -1,11 +1,10 @@
 import typing
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from apps.project.models import Project
-from apps.project.tasks import mapswipe_send_message
+from apps.project.tasks import send_message_for_progress
 from utils.common import get_absolute_file_url
-
 
 class Command(BaseCommand):
     help = "Test sending a Slack progress message for a given project"
@@ -25,19 +24,16 @@ class Command(BaseCommand):
 
         try:
             project = Project.objects.get(id=project_id)
-            project_name = project.generate_name()
-            progress = project.progress
-            if project.image:
-                cover_image_url = get_absolute_file_url(project.image.file)
-            else:
-                cover_image_url = "https://pbs.twimg.com/profile_images/625633822235693056/lNGUneLX_400x400.jpg"
-
         except Project.DoesNotExist:
-            self.stderr.write(self.style.ERROR(f"Project with id={project_id} does not exist"))
-            return
-
-        if progress >= 90:
-            mapswipe_send_message.delay(project_name=project_name, progress=progress, cover_image=cover_image_url)
-            self.stdout.write(self.style.SUCCESS("Slack message sent successfully"))
+            raise CommandError(f"Project with id={project_id} does not exist")
+        
+        project_name = project.generate_name()
+        progress = project.progress
+        if project.image:
+            cover_image_url = get_absolute_file_url(project.image.file)
         else:
-            self.stdout.write(self.style.ERROR(f"Project has not reached 90% completion(Progress:{progress})"))
+            cover_image_url = "https://pbs.twimg.com/profile_images/625633822235693056/lNGUneLX_400x400.jpg"
+
+        send_message_for_progress.delay(project_name=project_name, progress=progress, cover_image=cover_image_url)
+        self.stdout.write(self.style.SUCCESS("Slack message sent successfully"))
+     

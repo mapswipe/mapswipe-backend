@@ -179,15 +179,30 @@ class SlackMessage:
                 },
             ]
             return {
-                "text": text,  # Required fallback
+                "text": text,
                 "blocks": blocks,
             }
+        text = "Project Progress"
+        blocks = [
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "ALMOST THERE! PROJECT REACHED {progress} :hourglass_flowing_sand:",
+                    },
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "The project is almost at completion!",
+                    },
+                }]
 
-        return {"text": "", "blocks": []}
 
 
 @shared_task
-def mapswipe_send_message(project_name: str, progress: int, cover_image: str):
+def send_message_for_progress(project_name: str, progress: int, cover_image: str):
     logger.info("Sending slack message")
     mapslack = MapswipeSlack()
     message = SlackMessage.get_message_for_project_progress(
