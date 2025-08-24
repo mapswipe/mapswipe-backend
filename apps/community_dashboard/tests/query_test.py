@@ -27,6 +27,9 @@ from project_types.base.project import BaseProject as BaseProjectHandler
 class FakeBaseProjectHandler(typing.NamedTuple):
     project: Project
 
+    def get_max_time_spend_percentile(self) -> float:
+        return 11.2  # NOTE: value for COMPARE project_type
+
 
 # TODO(thenav56): Validate data accuracy
 

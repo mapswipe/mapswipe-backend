@@ -354,6 +354,10 @@ class ValidateProject(
         self.project.project_type_specific_output = asset
         self.project.save(update_fields=("project_type_specific_output",))
 
+    @typing.override
+    def get_max_time_spend_percentile(self) -> float:
+        return 6.1
+
     # FIREBASE
 
     @typing.override

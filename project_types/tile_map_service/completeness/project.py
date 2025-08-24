@@ -102,6 +102,10 @@ class CompletenessProject(
             assert project.project_type == ProjectTypeEnum.COMPLETENESS, f"{type(self)} is defined for COMPLETENESS"
 
     @typing.override
+    def get_max_time_spend_percentile(self) -> float:
+        return 1.4
+
+    @typing.override
     def get_project_specifics_for_firebase(self):
         tsp = self.project_type_specifics.tile_server_property
         tsp_overlay = self.project_type_specifics.overlay_tile_server_property

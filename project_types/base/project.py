@@ -22,7 +22,6 @@ from apps.project.models import (
     ProjectStatusEnum,
     ProjectTask,
     ProjectTaskGroup,
-    ProjectTypeEnum,
 )
 from main.bulk_managers import FirebaseBulkManager
 from main.config import Config
@@ -33,34 +32,6 @@ logger = logging.getLogger(__name__)
 
 
 class InvalidProjectPushException(Exception): ...
-
-
-# FIXME(tnagorra): We should define these in each project type class
-def get_max_time_spend_percentile(project_type: ProjectTypeEnum) -> float:
-    """
-    Factor calculated by @Hagellach37
-    For defining the threshold for outliers using `95_percent`
-
-    |project_type|median|95_percent|avg|
-    |------------|------|----------|---|
-    |1|00:00:00.208768|00:00:01.398161|00:00:28.951521|
-    |2|00:00:01.330297|00:00:06.076814|00:00:03.481192|
-    |3|00:00:02.092967|00:00:11.271081|00:00:06.045881|
-    """
-    match project_type:
-        case ProjectTypeEnum.FIND:
-            return 1.4
-        case ProjectTypeEnum.COMPLETENESS:
-            return 1.4
-        case ProjectTypeEnum.COMPARE:
-            return 11.2
-        case ProjectTypeEnum.VALIDATE:
-            return 6.1
-        case ProjectTypeEnum.VALIDATE_IMAGE:
-            # FIXME(tnagorra): We need to update this value once the feature is deployed
-            return 6.1
-        # case ProjectTypeEnum.STREET:
-        #     return 65
 
 
 class BaseProjectProperty(BaseModel, ABC): ...
@@ -137,9 +108,7 @@ class BaseProject[
         # NOTE: After number_of_tasks is calculated
         project_task_groups_qs.update(
             required_count=models.F("number_of_tasks") * self.project.verification_number,
-            time_spent_max_allowed=(
-                models.F("number_of_tasks") * get_max_time_spend_percentile(self.project.project_type_enum)
-            ),
+            time_spent_max_allowed=(models.F("number_of_tasks") * self.get_max_time_spend_percentile()),
         )
 
         self.project.required_results = (
@@ -148,6 +117,20 @@ class BaseProject[
             .aggregate(required_results=models.Sum("required_count"))
         )["required_results"]
         self.project.save(update_fields=(["required_results"]))
+
+    @abstractmethod
+    def get_max_time_spend_percentile(self) -> float:
+        """
+        Factor calculated by @Hagellach37
+        For defining the threshold for outliers using `95_percent`
+
+        |project_type|median|95_percent|avg|
+        |------------|------|----------|---|
+        |1|00:00:00.208768|00:00:01.398161|00:00:28.951521|
+        |2|00:00:01.330297|00:00:06.076814|00:00:03.481192|
+        |3|00:00:02.092967|00:00:11.271081|00:00:06.045881|
+        """
+        ...
 
     @abstractmethod
     def post_create_groups(self): ...
