@@ -1,3 +1,6 @@
 [submodule "firebase"]
 	path = firebase
 	url = git@github.com:mapswipe/mapswipe-firebase.git
+[submodule "assets"]
+	path = assets
+	url = https://github.com/mapswipe/mapswipe-assets
