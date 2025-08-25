@@ -207,7 +207,7 @@ class CommonAssetSerializer(serializers.ModelSerializer[CommonAsset]):
             return
 
         file_content.seek(0)
-        file_head = file_content.read(2048)
+        file_head = file_content.read(4096)
         file_content.seek(0)
 
         mimetype = magic.from_buffer(file_head, mime=True)
