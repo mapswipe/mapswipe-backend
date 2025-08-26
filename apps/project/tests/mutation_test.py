@@ -732,7 +732,7 @@ class TestProjectMutation(TestCase):
             "clientId": str(ULID()),
             "project": str(latest_project.pk),
         }
-        content = self._create_project_aoi_asset(project_asset_data, assert_errors=True)
+        content = self._create_project_aoi_asset(project_asset_data)
         resp_data = content["data"]["createProjectAsset"]
         assert resp_data["errors"] is None, content
         aoi_geometry_asset = resp_data["result"]
@@ -751,7 +751,7 @@ class TestProjectMutation(TestCase):
             "clientId": str(ULID()),
             "project": str(latest_project.pk),
         }
-        content = self._create_project_image_asset(project_asset_data, assert_errors=True)
+        content = self._create_project_image_asset(project_asset_data)
         resp_data = content["data"]["createProjectAsset"]
         assert resp_data["errors"] is None, content
         image_asset = resp_data["result"]
@@ -1083,7 +1083,7 @@ class TestProjectTypeMutation(TestCase):
             "project": project_id,
             "clientId": str(ULID()),
         }
-        content = self._create_project_aoi_asset(project_asset_data, assert_errors=True)
+        content = self._create_project_aoi_asset(project_asset_data)
         resp_data = content["data"]["createProjectAsset"]
         assert resp_data["errors"] is None, content
         aoi_geometry_asset = resp_data["result"]
@@ -1093,7 +1093,7 @@ class TestProjectTypeMutation(TestCase):
             "project": project_id,
             "clientId": str(ULID()),
         }
-        content = self._create_project_image_asset(project_asset_data, assert_errors=True)
+        content = self._create_project_image_asset(project_asset_data)
         resp_data = content["data"]["createProjectAsset"]
         assert resp_data["errors"] is None, content
         image_asset = resp_data["result"]
@@ -1352,7 +1352,7 @@ class TestProjectTypeMutation(TestCase):
             "clientId": project_client_id,
             "status": self.genum(Project.Status.PUBLISHED),
         }
-        content = self._update_project_status_mutation(project_id, project_data, assert_errors=True)
+        content = self._update_project_status_mutation(project_id, project_data)
 
         # Updating Processed Project:
         # Attaching tutorial
