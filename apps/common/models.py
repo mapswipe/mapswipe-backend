@@ -187,6 +187,8 @@ class AssetMimetypeEnum(models.IntegerChoices):
 
     CSV = 400, "text/csv"
 
+    PLAINTEXT = 500, "text/plain"
+
     @classmethod
     def get_display(cls, value: typing.Self | int) -> str:
         if value in cls:

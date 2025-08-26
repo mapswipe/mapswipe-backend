@@ -305,8 +305,8 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         if not file:
             raise ValidationError("Required field file is not provided.")
 
-        if not mimetype or mimetype not in [AssetMimetypeEnum.JSON, AssetMimetypeEnum.GEOJSON]:
-            raise ValidationError("Mimetype is should either be a JSON or GeoJSON")
+        if not mimetype or mimetype not in [AssetMimetypeEnum.JSON, AssetMimetypeEnum.GEOJSON, AssetMimetypeEnum.PLAINTEXT]:
+            raise ValidationError("Mimetype is should either be a Text, JSON or GeoJSON")
 
         try:
             geojson_data = json.load(file)

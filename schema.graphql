@@ -143,6 +143,7 @@ enum AssetMimetypeEnum {
   IMAGE_GIF
   GZIP
   CSV
+  PLAINTEXT
 }
 
 input AssetMimetypeEnumFilterLookup {
