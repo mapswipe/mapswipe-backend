@@ -842,10 +842,12 @@ type Mutation {
   createProjectAsset(data: ProjectAssetCreateInput!): CreateProjectAssetPayload! @isAuthenticated
   createOrganization(data: OrganizationCreateInput!): CreateOrganizationPayload! @isAuthenticated
   updateOrganization(data: OrganizationUpdateInput!, pk: ID!): UpdateOrganizationPayload! @isAuthenticated
+  updateProjectStatus(data: ProjectStatusUpdateInput!, pk: ID!): UpdateProjectStatusPayload! @isAuthenticated
   deleteTutorial: DeleteTutorialPayload! @isAuthenticated
   createTutorial(data: TutorialCreateInput!): CreateTutorialPayload! @isAuthenticated
   updateTutorial(data: TutorialUpdateInput!, pk: ID!): UpdateTutorialPayload! @isAuthenticated
   createTutorialAsset(data: TutorialAssetCreateInput!): CreateTutorialAssetPayload! @isAuthenticated
+  updateTutorialStatus(data: TutorialStatusUpdateInput!, pk: ID!): UpdateTutorialStatusPayload! @isAuthenticated
   createContributorUserGroup(data: ContributorUserGroupCreateInput!): CreateContributorUserGroupPayload! @isAuthenticated
   updateContributorUserGroup(data: ContributorUserGroupUpdateInput!, pk: ID!): UpdateContributorUserGroupPayload! @isAuthenticated
 }
@@ -1538,6 +1540,14 @@ input ProjectStatusEnumFilterLookup {
 """
 Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
+input ProjectStatusUpdateInput {
+  clientId: String!
+  status: ProjectStatusEnum
+}
+
+"""
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
+"""
 type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin {
   clientId: String!
   createdAt: DateTime!
@@ -1734,7 +1744,6 @@ input ProjectUpdateInput {
 
   """How many tasks each user is allowed to work on for this project"""
   maxTasksPerUser: Int
-  status: ProjectStatusEnum
 
   """Tutorial used for this project."""
   tutorial: ID
@@ -2219,6 +2228,14 @@ input TutorialStatusEnumFilterLookup {
 }
 
 """
+Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
+"""
+input TutorialStatusUpdateInput {
+  clientId: String!
+  status: TutorialStatusEnum
+}
+
+"""
 TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
 """
 input TutorialTaskCreateInput {
@@ -2310,7 +2327,6 @@ Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id
 input TutorialUpdateInput {
   clientId: String!
   name: String
-  status: TutorialStatusEnum
   scenarios: [TutorialScenarioPageInput!]
   informationPages: [TutorialInformationPageInput!]
 }
@@ -2323,7 +2339,11 @@ union UpdateProcessedProjectPayload = ProjectTypeMutationResponseType | Operatio
 
 union UpdateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
 
+union UpdateProjectStatusPayload = ProjectTypeMutationResponseType | OperationInfo
+
 union UpdateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
+
+union UpdateTutorialStatusPayload = TutorialTypeMutationResponseType | OperationInfo
 
 scalar Upload
 

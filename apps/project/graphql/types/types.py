@@ -20,6 +20,8 @@ from .asset_types import AoiGeometryAssetPropertyType, ObjectImageAssetPropertyT
 # NOTE: We are importing base for side-effect
 # The tile server types are required by the following imports
 from .project_types import base  # noqa: F401  # isort: skip # type: ignore[reportUnusedImport]
+
+
 from .project_types.compare import CompareProjectPropertyType
 from .project_types.completeness import CompletenessProjectPropertyType
 from .project_types.find import FindProjectPropertyType

@@ -290,6 +290,29 @@ class Mutation:
           }
         }
     """
+    UPDATE_PROJECT_STATUS = """
+        mutation UpdateProjectStatus($pk: ID!, $data: ProjectStatusUpdateInput!) {
+          updateProjectStatus(pk: $pk, data: $data) {
+            ... on OperationInfo {
+              __typename
+              messages {
+                code
+                field
+                kind
+                message
+              }
+            }
+            ... on ProjectTypeMutationResponseType {
+              errors
+              ok
+              result {
+                id
+                status
+              }
+            }
+          }
+        }
+    """
 
 
 class TestOrganizationMutation(TestCase):
@@ -490,6 +513,16 @@ class TestProjectMutation(TestCase):
                 **kwargs,
             )
 
+    def _update_project_status_mutation(self, pk: str, project_data: dict, **kwargs):
+        with self.captureOnCommitCallbacks(execute=True):
+            return update_project_query(
+                query_check_func=self.query_check,
+                query=Mutation.UPDATE_PROJECT_STATUS,
+                pk=pk,
+                project_data=project_data,
+                **kwargs,
+            )
+
     def test_project_create(self):
         project_data = {
             "clientId": str(ULID()),
@@ -682,13 +715,13 @@ class TestProjectMutation(TestCase):
             "clientId": proj.client_id,
             "status": self.genum(Project.Status.MARKED_AS_READY),
         }
-        content = self._update_project_mutation(str(latest_project.pk), project_data)
-        assert content["data"]["updateProject"]["errors"] == [
+        content = self._update_project_status_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProjectStatus"]["errors"] == [
             {
                 "array_errors": None,
                 "client_id": latest_project.client_id,
-                "field": "projectTypeSpecifics",
-                "messages": "Configuration not provided for Find",
+                "field": "status",
+                "messages": "project_type_specifics is required when project status is Marked as Ready",
                 "object_errors": None,
                 "pydantic_errors": None,
             },
@@ -699,7 +732,7 @@ class TestProjectMutation(TestCase):
             "clientId": str(ULID()),
             "project": str(latest_project.pk),
         }
-        content = self._create_project_aoi_asset(project_asset_data, assert_errors=True)
+        content = self._create_project_aoi_asset(project_asset_data)
         resp_data = content["data"]["createProjectAsset"]
         assert resp_data["errors"] is None, content
         aoi_geometry_asset = resp_data["result"]
@@ -718,7 +751,7 @@ class TestProjectMutation(TestCase):
             "clientId": str(ULID()),
             "project": str(latest_project.pk),
         }
-        content = self._create_project_image_asset(project_asset_data, assert_errors=True)
+        content = self._create_project_image_asset(project_asset_data)
         resp_data = content["data"]["createProjectAsset"]
         assert resp_data["errors"] is None, content
         image_asset = resp_data["result"]
@@ -814,8 +847,8 @@ class TestProjectMutation(TestCase):
             "clientId": proj.client_id,
             "status": self.genum(Project.Status.MARKED_AS_READY),
         }
-        content = self._update_project_mutation(str(latest_project.pk), project_data)
-        assert content["data"]["updateProject"]["errors"] is None
+        content = self._update_project_status_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProjectStatus"]["errors"] is None
 
         mock_requests.assert_called_once()
         mock_requests.assert_has_calls([call(latest_project.pk)])
@@ -843,29 +876,44 @@ class TestProjectMutation(TestCase):
             project=latest_project,
             status=Tutorial.Status.ARCHIVED,
         )
+
         project_data = {
             "clientId": proj.client_id,
-            "status": self.genum(Project.Status.PUBLISHED),
             "tutorial": self.gID(archived_tutorial.pk),
         }
         content = self._update_project_mutation(str(latest_project.pk), project_data)
         assert content["data"]["updateProject"]["errors"] is not None
 
-        # Unarchiving Tutorial
-        archived_tutorial.status = Tutorial.Status.PUBLISHED
-        archived_tutorial.save(update_fields=["status"])
-
+        # Publish a project
+        # set unarchived tutorial to project before publishing a project
+        tutorial = TutorialFactory.create(
+            **self.user_resource_kwargs,
+            project=latest_project,
+            status=Tutorial.Status.PUBLISHED,
+        )
+        project_data = {
+            "clientId": proj.client_id,
+            "tutorial": tutorial.id,
+        }
         content = self._update_processed_project_mutation(str(latest_project.pk), project_data)
         assert content["data"]["updateProcessedProject"]["errors"] is None, content
-
-        # Archiving tutorial
-        # Test Pass as archiving tutorial does not affect project on published projects
-        archived_tutorial.status = Tutorial.Status.ARCHIVED
-        archived_tutorial.save(update_fields=["status"])
+        latest_project.refresh_from_db()
 
         project_data = {
             "clientId": proj.client_id,
-            "tutorial": self.gID(archived_tutorial.pk),
+            "status": self.genum(Project.Status.PUBLISHED),
+        }
+        content = self._update_project_status_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProjectStatus"]["errors"] is None
+        latest_project.refresh_from_db()
+
+        # Archiving tutorial
+        # Test Pass as archiving tutorial does not affect project on published projects
+        tutorial.status = Tutorial.Status.ARCHIVED
+        tutorial.save(update_fields=["status"])
+        project_data = {
+            "clientId": proj.client_id,
+            "tutorial": self.gID(tutorial.pk),
         }
         content = self._update_processed_project_mutation(str(latest_project.pk), project_data)
         assert content["data"]["updateProcessedProject"]["errors"] is None, content
@@ -875,9 +923,9 @@ class TestProjectMutation(TestCase):
             "clientId": proj.client_id,
             "status": self.genum(ProjectStatusEnum.ARCHIVED),
         }
-        content = self._update_processed_project_mutation(str(latest_project.pk), project_data)
-        assert content["data"]["updateProcessedProject"]["errors"] is None, content
-        assert content["data"]["updateProcessedProject"]["result"]["status"] == self.genum(ProjectStatusEnum.ARCHIVED)
+        content = self._update_project_status_mutation(str(latest_project.pk), project_data)
+        assert content["data"]["updateProjectStatus"]["errors"] is None, content
+        assert content["data"]["updateProjectStatus"]["result"]["status"] == self.genum(ProjectStatusEnum.ARCHIVED)
 
         # Updating project with archived team
         # fails as team is archived
@@ -994,6 +1042,16 @@ class TestProjectTypeMutation(TestCase):
                 **kwargs,
             )
 
+    def _update_project_status_mutation(self, pk: str, project_data: dict, **kwargs):
+        with self.captureOnCommitCallbacks(execute=True):
+            return update_project_query(
+                query_check_func=self.query_check,
+                query=Mutation.UPDATE_PROJECT_STATUS,
+                pk=pk,
+                project_data=project_data,
+                **kwargs,
+            )
+
     def _update_processed_project_mutation(self, pk: str, project_data: dict, **kwargs):
         with self.captureOnCommitCallbacks(execute=True):
             return update_project_query(
@@ -1025,7 +1083,7 @@ class TestProjectTypeMutation(TestCase):
             "project": project_id,
             "clientId": str(ULID()),
         }
-        content = self._create_project_aoi_asset(project_asset_data, assert_errors=True)
+        content = self._create_project_aoi_asset(project_asset_data)
         resp_data = content["data"]["createProjectAsset"]
         assert resp_data["errors"] is None, content
         aoi_geometry_asset = resp_data["result"]
@@ -1035,7 +1093,7 @@ class TestProjectTypeMutation(TestCase):
             "project": project_id,
             "clientId": str(ULID()),
         }
-        content = self._create_project_image_asset(project_asset_data, assert_errors=True)
+        content = self._create_project_image_asset(project_asset_data)
         resp_data = content["data"]["createProjectAsset"]
         assert resp_data["errors"] is None, content
         image_asset = resp_data["result"]
@@ -1146,11 +1204,12 @@ class TestProjectTypeMutation(TestCase):
             "clientId": project_client_id,
             "status": self.genum(Project.Status.MARKED_AS_READY),
         }
-        content = self._update_project_mutation(project_id, project_data)
-        resp_data = content["data"]["updateProject"]
+        content = self._update_project_status_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProjectStatus"]
         assert resp_data["errors"] is None, content
         assert resp_data["result"]["status"] == self.genum(Project.Status.MARKED_AS_READY)
-        assert resp_data["result"]["processingStatus"] is None
+        latest_project.refresh_from_db()
+        assert latest_project.processing_status is None
 
         mock_requests.assert_called_once()
         mock_requests.assert_has_calls([call(int(project_id))])
@@ -1293,9 +1352,7 @@ class TestProjectTypeMutation(TestCase):
             "clientId": project_client_id,
             "status": self.genum(Project.Status.PUBLISHED),
         }
-        content = self._update_processed_project_mutation(project_id, project_data)
-        resp_data = content["data"]["updateProcessedProject"]
-        assert resp_data["errors"] is not None, content
+        content = self._update_project_status_mutation(project_id, project_data)
 
         # Updating Processed Project:
         # Attaching tutorial
@@ -1314,8 +1371,10 @@ class TestProjectTypeMutation(TestCase):
             "clientId": project_client_id,
             "status": self.genum(Project.Status.PUBLISHED),
         }
-        content = self._update_processed_project_mutation(project_id, project_data)
-        resp_data = content["data"]["updateProcessedProject"]
+        content = self._update_project_status_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProjectStatus"]
         assert resp_data["errors"] is None, content
         assert resp_data["result"]["status"] == self.genum(Project.Status.PUBLISHED)
-        assert resp_data["result"]["processingStatus"] == self.genum(Project.ProcessingStatus.COMPLETED)
+
+        latest_project.refresh_from_db()
+        assert latest_project.processing_status == Project.ProcessingStatus.COMPLETED

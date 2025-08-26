@@ -57,7 +57,10 @@ class MutationCustomErrorType:
     def __getitem__(self, key: str):
         key = to_snake_case(key)
         if key in ("object_errors", "array_errors") and getattr(self, key):
-            return [dict(each) for each in getattr(self, key)]
+            # TODO(thenav56): Confirm if using str() is enough
+            if key == "object_errors":
+                return {each_key: str(each_data) for each_key, each_data in getattr(self, key).items()}
+            return [str(each) for each in getattr(self, key)]
         return getattr(self, key)
 
 

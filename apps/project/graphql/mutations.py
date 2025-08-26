@@ -8,6 +8,7 @@ from apps.project.serializers import (
     ProcessedProjectSerializer,
     ProjectAssetSerializer,
     ProjectCreateSerializer,
+    ProjectStatusUpdateSerializer,
     ProjectUpdateSerializer,
 )
 from main.graphql.context import Info
@@ -20,6 +21,7 @@ from .inputs.inputs import (
     ProcessedProjectUpdateInput,
     ProjectAssetCreateInput,
     ProjectCreateInput,
+    ProjectStatusUpdateInput,
     ProjectUpdateInput,
 )
 from .types.types import OrganizationType, ProjectAssetType, ProjectType
@@ -78,3 +80,13 @@ class Mutation:
     ) -> MutationResponseType[OrganizationType]:
         organization = await Organization.objects.aget(pk=pk)
         return await ModelMutation(OrganizationSerializer).handle_update_mutation(data, info, organization)
+
+    @strawberry_django.mutation(extensions=[IsAuthenticated()])
+    async def update_project_status(
+        self,
+        info: Info,
+        data: ProjectStatusUpdateInput,
+        pk: strawberry.ID,
+    ) -> MutationResponseType[ProjectType]:
+        project = await Project.objects.aget(pk=pk)
+        return await ModelMutation(ProjectStatusUpdateSerializer).handle_update_mutation(data, info, project)
