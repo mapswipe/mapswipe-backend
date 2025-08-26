@@ -61,6 +61,7 @@ class TestCase(BaseTestCase):
         # Clear firebase data
         logger.info("Clearing firebase database")
         self.clear_firebase_data()
+        self.firebase_helper = Config.FIREBASE_HELPER
 
         super().setUp()
 
