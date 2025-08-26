@@ -10,7 +10,7 @@ from django.db import models
 from geojson_pydantic import Feature, FeatureCollection
 from geojson_pydantic.geometries import MultiPolygon, Polygon
 from osgeo import ogr
-from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
+from pydantic import BaseModel, ValidationError, field_validator, model_validator
 from pyfirebase_mapswipe import models as firebase_models
 from ulid import ULID
 
@@ -30,6 +30,7 @@ from main.config import Config
 from project_types.base import project as base_project
 from project_types.tile_map_service.base.project import create_json_dump
 from project_types.validate.api_calls import ohsome
+from utils import fields as custom_fields
 from utils.common import Grouping, to_groups
 from utils.custom_options.models import CustomOption
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
@@ -57,15 +58,10 @@ class ValidateObjectSourceTypeEnum(models.TextChoices):
 
 class ValidateObjectSourceConfig(BaseModel):
     source_type: ValidateObjectSourceTypeEnum
-
-    tasking_manager_project_id: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")] | None = None
-
-    aoi_geometry: typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")] | None = None
-    ohsome_filter: typing.Annotated[str, Field(strict=True, max_length=1000)] | None = None
-
-    # FIXME(tnagorra): Add URL validation?
-    # TODO(tnagorra): Check max length
-    object_geojson_url: typing.Annotated[str, Field(strict=True, max_length=1000)] | None = None
+    tasking_manager_project_id: custom_fields.PydanticId | None = None
+    aoi_geometry: custom_fields.PydanticId | None = None
+    ohsome_filter: custom_fields.PydanticLongText | None = None
+    object_geojson_url: custom_fields.PydanticUrl | None = None
 
     @field_validator("source_type", mode="before")
     def ensure_source_type_enum(cls, value: str | ValidateObjectSourceTypeEnum | None):
