@@ -837,7 +837,7 @@ class Command(BaseCommand):
         memray = None
 
         with contextlib.suppress(ImportError):
-            import memray  # pyright: ignore[reportMissingImports]
+            import memray  # type: ignore[reportMissingImports]
 
         memray_enable = options.get("memray_enable")
 

@@ -105,7 +105,7 @@ class ArchivableResourceSerializer[ModelType: ArchivableResource, ContextType: D
             if "archived_by" in model_fields:
                 validated_data["archived_by"] = request.user
             if "archived_at" in model_fields:
-                validated_data["archived_at"] = timezone.now()  # type: ignore[reportAttributeAccessIssue]
+                validated_data["archived_at"] = timezone.now()
 
         elif not validated_data.get("is_archived") and instance.is_archived:
             if "archived_by" in model_fields:

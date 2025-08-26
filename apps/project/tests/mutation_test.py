@@ -72,7 +72,7 @@ def create_project_aoi_asset_query(
     **kwargs,
 ) -> dict:
     with (
-        Path(BASE_DIR / "data/ring-road.geojson").open() as geo_file,
+        Path(BASE_DIR / "data/ring-road.geojson").open(encoding="utf-8") as geo_file,
     ):
         return query_check_func(
             query,
@@ -1222,11 +1222,11 @@ class TestProjectTypeMutation(TestCase):
         assert content["errors"] == [
             {
                 "locations": [{"column": 42, "line": 2}],
-                "message": "Variable '$data' got invalid value {} at 'data.projectTypeSpecifics.find.tileServerProperty'; Field 'name' of required type 'RasterTileServerNameEnum!' was not provided.",
+                "message": "Variable '$data' got invalid value {} at 'data.projectTypeSpecifics.find.tileServerProperty'; Field 'name' of required type 'RasterTileServerNameEnum!' was not provided.",  # noqa: E501
             },
             {
                 "locations": [{"column": 42, "line": 2}],
-                "message": "Variable '$data' got invalid value {'aoiGeometry': '%s', 'zoomLevel': 15, 'tileServerProperty': {}, 'tileServerBProperty': {'name': 'CUSTOM', 'custom': {...}}} at 'data.projectTypeSpecifics.find'; Field 'tileServerBProperty' is not defined by type 'FindProjectPropertyInput'. Did you mean 'tileServerProperty'?"
+                "message": "Variable '$data' got invalid value {'aoiGeometry': '%s', 'zoomLevel': 15, 'tileServerProperty': {}, 'tileServerBProperty': {'name': 'CUSTOM', 'custom': {...}}} at 'data.projectTypeSpecifics.find'; Field 'tileServerBProperty' is not defined by type 'FindProjectPropertyInput'. Did you mean 'tileServerProperty'?"  # noqa: E501, UP031
                 % aoi_geometry_asset["id"],
             },
         ]
@@ -1248,7 +1248,7 @@ class TestProjectTypeMutation(TestCase):
         assert content["errors"] == [
             {
                 "locations": [{"column": 42, "line": 2}],
-                "message": "Variable '$data' got invalid value {'aoiGeometry': '%s', 'zoomLevel': 15, 'tileServerProperty': {'name': 'CUSTOM', 'custom': {...}}} at 'data.projectTypeSpecifics.compare'; Field 'tileServerBProperty' of required type 'ProjectRasterTileServerConfigInput!' was not provided."
+                "message": "Variable '$data' got invalid value {'aoiGeometry': '%s', 'zoomLevel': 15, 'tileServerProperty': {'name': 'CUSTOM', 'custom': {...}}} at 'data.projectTypeSpecifics.compare'; Field 'tileServerBProperty' of required type 'ProjectRasterTileServerConfigInput!' was not provided."  # noqa: E501, UP031
                 % aoi_geometry_asset["id"],
             },
         ]
@@ -1274,7 +1274,7 @@ class TestProjectTypeMutation(TestCase):
                 "array_errors": None,
                 "client_id": project_data["clientId"],
                 "field": "nonFieldErrors",
-                "messages": "The imagery url 'https://hi-there' must contain {x}, {y} (or {-y}) and {z} or the {quad_key} placeholders.",
+                "messages": "The imagery url 'https://hi-there' must contain {x}, {y} (or {-y}) and {z} or the {quad_key} placeholders.",  # noqa: E501
                 "object_errors": None,
                 "pydantic_errors": None,
             },
@@ -1301,7 +1301,7 @@ class TestProjectTypeMutation(TestCase):
                 "array_errors": None,
                 "client_id": project_client_id,
                 "field": "nonFieldErrors",
-                "messages": "The imagery url 'https://hi-there/{{x}}/{{y}}/{{z}}' must contain {x}, {y} (or {-y}) and {z} or the {quad_key} placeholders.",
+                "messages": "The imagery url 'https://hi-there/{{x}}/{{y}}/{{z}}' must contain {x}, {y} (or {-y}) and {z} or the {quad_key} placeholders.",  # noqa: E501
                 "object_errors": None,
                 "pydantic_errors": None,
             },

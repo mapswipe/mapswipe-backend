@@ -35,7 +35,7 @@ class ContributorUserGroupFactory(DjangoModelFactory):
 
 
 class ContributorUserGroupMembershipFactory(DjangoModelFactory):
-    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+    class Meta:
         model = ContributorUserGroupMembership
 
     # NOTE: We can't set default=True in the model because this attribute must be explicitly specified during creation.

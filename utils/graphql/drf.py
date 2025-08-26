@@ -96,7 +96,7 @@ def _serializer_error_to_error_types(
                     array_errors=None,
                     messages=None,
                     # NOTE: Error from handle_pydantic_validation_error
-                    pydantic_errors=value,  # type: ignore[reportGeneralTypeIssues]
+                    pydantic_errors=value,
                 ),
             )
             continue
@@ -105,7 +105,7 @@ def _serializer_error_to_error_types(
                 MutationCustomErrorType(
                     client_id=node_client_id,
                     field=to_camel_case(field),
-                    object_errors=value,  # type: ignore[reportGeneralTypeIssues]
+                    object_errors=value,
                     array_errors=None,
                     messages=None,
                 ),
@@ -150,7 +150,7 @@ def _serializer_error_to_error_types(
                     array_errors.append(
                         ArrayNestedErrorType(
                             client_id=array_client_id,
-                            object_errors=_serializer_error_to_error_types(array_item, initial_data[field][pos]),  # type: ignore[reportArgumentType]
+                            object_errors=_serializer_error_to_error_types(array_item, initial_data[field][pos]),
                             messages=None,
                         ),
                     )

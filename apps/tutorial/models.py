@@ -68,20 +68,20 @@ class Tutorial(UserResource, FirebasePushResource):  # type: ignore[reportIncomp
     Status = TutorialStatusEnum
 
     # FIXME(tnagorra): We might need to rename this field
-    project: Project = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    project = models.ForeignKey[Project, Project](
         Project,
         on_delete=models.PROTECT,
         related_name="+",
         help_text=gettext_lazy("Project this tutorial is referring to."),
     )
 
-    name = models.CharField(max_length=255)
+    name = models.CharField[str, str](max_length=255)
     status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=TutorialStatusEnum,
         default=TutorialStatusEnum.DRAFT,
     )
 
-    firebase_id = models.CharField(max_length=40, unique=True, default=generate_tutorial_firebase_id)
+    firebase_id = models.CharField[str, str](max_length=40, unique=True, default=generate_tutorial_firebase_id)
 
     # Type hints
     project_id: int
@@ -94,13 +94,13 @@ class Tutorial(UserResource, FirebasePushResource):  # type: ignore[reportIncomp
 
 
 class TutorialAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibleVariableOverride]
-    tutorial: Tutorial = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    tutorial = models.ForeignKey[Tutorial, Tutorial](
         Tutorial,
         on_delete=models.CASCADE,
         related_name="+",
     )
 
-    input_type = IntegerChoicesField(
+    input_type: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=TutorialAssetInputTypeEnum,
         blank=True,
         null=True,
@@ -120,25 +120,25 @@ class TutorialAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatib
 
 
 class TutorialScenarioPage(UserResource):
-    tutorial: Tutorial = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    tutorial = models.ForeignKey[Tutorial, Tutorial](
         Tutorial,
         on_delete=models.CASCADE,
         related_name="scenarios",
     )
 
-    scenario_page_number = models.PositiveSmallIntegerField()
+    scenario_page_number = models.PositiveSmallIntegerField[int, int]()
 
-    instructions_description = models.CharField(max_length=255)
-    instructions_icon = IntegerChoicesField(choices_enum=IconEnum)
-    instructions_title = models.CharField(max_length=255)
+    instructions_description = models.CharField[str, str](max_length=255)
+    instructions_icon: int = IntegerChoicesField(choices_enum=IconEnum)  # type: ignore[reportAssignmentType]
+    instructions_title = models.CharField[str, str](max_length=255)
 
-    hint_description = models.CharField(max_length=255, null=True, blank=True)
-    hint_icon = IntegerChoicesField(choices_enum=IconEnum, null=True, blank=True)
-    hint_title = models.CharField(max_length=255, null=True, blank=True)
+    hint_description = models.CharField[str | None, str | None](max_length=255, null=True, blank=True)
+    hint_icon: int | None = IntegerChoicesField(choices_enum=IconEnum, null=True, blank=True)  # type: ignore[reportAssignmentType]
+    hint_title = models.CharField[str | None, str | None](max_length=255, null=True, blank=True)
 
-    success_description = models.CharField(max_length=255, null=True, blank=True)
-    success_icon = IntegerChoicesField(choices_enum=IconEnum, null=True, blank=True)
-    success_title = models.CharField(max_length=255, null=True, blank=True)
+    success_description = models.CharField[str | None, str | None](max_length=255, null=True, blank=True)
+    success_icon: int | None = IntegerChoicesField(choices_enum=IconEnum, null=True, blank=True)  # type: ignore[reportAssignmentType]
+    success_title = models.CharField[str | None, str | None](max_length=255, null=True, blank=True)
 
     # Type hints
     tutorial_id: int
@@ -171,17 +171,14 @@ class TutorialScenarioPage(UserResource):
 
 
 class TutorialTask(UserResource):
-    scenario: TutorialScenarioPage = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    scenario = models.ForeignKey[TutorialScenarioPage, TutorialScenarioPage](
         TutorialScenarioPage,
         on_delete=models.CASCADE,
         related_name="tasks",
     )
 
-    # FIXME(tnagorra): attach project?
+    reference = models.PositiveSmallIntegerField[int, int]()
 
-    reference = models.PositiveSmallIntegerField()
-
-    # FIXME(tnagorra): Do we need to save project_type here as well?
     project_type_specifics = models.JSONField()
 
     # Type hints
@@ -193,13 +190,13 @@ class TutorialTask(UserResource):
 
 
 class TutorialInformationPage(UserResource):
-    tutorial: Tutorial = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    tutorial = models.ForeignKey[Tutorial, Tutorial](
         Tutorial,
         on_delete=models.CASCADE,
         related_name="information_pages",
     )
-    title = models.CharField(max_length=255)
-    page_number = models.PositiveSmallIntegerField()
+    title = models.CharField[str, str](max_length=255)
+    page_number = models.PositiveSmallIntegerField[int, int]()
 
     # Type hints
     tutorial_id: int
@@ -230,17 +227,17 @@ class TutorialInformationPageBlockTypeEnum(models.IntegerChoices):
 class TutorialInformationPageBlock(UserResource):
     Type = TutorialInformationPageBlockTypeEnum
 
-    page: TutorialInformationPage = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    page = models.ForeignKey[TutorialInformationPage, TutorialInformationPage](
         TutorialInformationPage,
         on_delete=models.CASCADE,
         related_name="blocks",
     )
 
-    block_number = models.PositiveSmallIntegerField()
-    block_type = IntegerChoicesField(choices_enum=TutorialInformationPageBlockTypeEnum)
+    block_number = models.PositiveSmallIntegerField[int, int]()
+    block_type: int | None = IntegerChoicesField(choices_enum=TutorialInformationPageBlockTypeEnum)  # type: ignore[reportAssignmentType]
     # NOTE: Previously was text_description
-    text = models.TextField(null=True, blank=True)
-    image: "TutorialAsset | None" = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    text = models.TextField[str | None, str | None](null=True, blank=True)
+    image = models.ForeignKey["TutorialAsset | None", "TutorialAsset | None"](
         "tutorial.TutorialAsset",
         related_name="+",
         blank=True,

@@ -1,5 +1,6 @@
 # pyright: reportUninitializedInstanceVariable=false
 # pyright: reportIncompatibleVariableOverride=false
+import datetime
 import typing
 
 from django.contrib.gis.db import models as gis_models
@@ -12,10 +13,10 @@ from main.db import Model
 
 
 class User(Model):
-    user_id = models.CharField(primary_key=True, max_length=999)
-    username = models.CharField(max_length=999, blank=True, null=True)
-    created = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    user_id = models.CharField[str, str](primary_key=True, max_length=999)
+    username = models.CharField[str | None, str | None](max_length=999, blank=True, null=True)
+    created = models.DateTimeField[datetime.datetime, datetime.datetime]()
+    updated_at = models.DateTimeField[datetime.datetime, datetime.datetime]()
 
     class Meta:
         managed = False
@@ -27,14 +28,14 @@ class User(Model):
 
 
 class UserGroup(Model):
-    user_group_id = models.CharField(primary_key=True, max_length=999)
-    name = models.CharField(max_length=999, null=True)
-    description = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(blank=True, null=True)
-    created_by = models.ForeignKey(User, models.DO_NOTHING, related_name="+")
-    archived_at = models.DateTimeField(blank=True, null=True)
-    archived_by = models.ForeignKey(User, models.DO_NOTHING, related_name="+")
-    is_archived = models.BooleanField(blank=True, null=True)
+    user_group_id = models.CharField[str, str](primary_key=True, max_length=999)
+    name = models.CharField[str | None, str | None](max_length=999, null=True)
+    description = models.TextField[str | None, str | None](blank=True, null=True)
+    created_at = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](blank=True, null=True)
+    created_by = models.ForeignKey[User, User](User, models.DO_NOTHING, related_name="+")
+    archived_at = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](blank=True, null=True)
+    archived_by = models.ForeignKey[User, User](User, models.DO_NOTHING, related_name="+")
+    is_archived = models.BooleanField[bool | None, bool | None](blank=True, null=True)
 
     # type hints
     created_by_id: str
@@ -54,9 +55,9 @@ class UserGroup(Model):
 
 class UserGroupUserMembership(Model):
     pk = models.CompositePrimaryKey("user_group", "user")
-    user_group = models.ForeignKey(UserGroup, models.DO_NOTHING, related_name="+")
-    user = models.ForeignKey(User, models.DO_NOTHING, related_name="+")
-    is_active = models.BooleanField(default=True)
+    user_group = models.ForeignKey[UserGroup, UserGroup](UserGroup, models.DO_NOTHING, related_name="+")
+    user = models.ForeignKey[User, User](User, models.DO_NOTHING, related_name="+")
+    is_active = models.BooleanField[bool, bool](default=True)
 
     # Django derived fields from ForeignKey
     user_id: str
@@ -82,24 +83,24 @@ class Project(Model):
         DIGITIZATION = 6, "Digitization"
         STREET = 7, "Street"
 
-    project_id = models.CharField(primary_key=True, max_length=999)
-    created = models.DateTimeField(blank=True, null=True)
-    created_by = models.CharField(max_length=999, blank=True, null=True)
+    project_id = models.CharField[str, str](primary_key=True, max_length=999)
+    created = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](blank=True, null=True)
+    created_by = models.CharField[str | None, str | None](max_length=999, blank=True, null=True)
     geom = gis_models.GeometryField(blank=True, null=True)
-    image = models.CharField(max_length=999, blank=True, null=True)
-    is_featured = models.BooleanField(blank=True, null=True)
-    look_for = models.CharField(max_length=999, blank=True, null=True)
-    name = models.CharField(max_length=999, blank=True, null=True)
-    progress = models.IntegerField(blank=True, null=True)
-    project_details = models.CharField(max_length=999, blank=True, null=True)
-    project_type = models.IntegerField(choices=Type.choices, blank=True, null=True)
-    required_results = models.IntegerField(blank=True, null=True)
-    result_count = models.IntegerField(blank=True, null=True)
-    status = models.CharField(max_length=999, blank=True, null=True)
-    verification_number = models.IntegerField(blank=True, null=True)
+    image = models.CharField[str | None, str | None](max_length=999, blank=True, null=True)
+    is_featured = models.BooleanField[bool | None, bool | None](blank=True, null=True)
+    look_for = models.CharField[str | None, str | None](max_length=999, blank=True, null=True)
+    name = models.CharField[str | None, str | None](max_length=999, blank=True, null=True)
+    progress = models.IntegerField[int | None, int | None](blank=True, null=True)
+    project_details = models.CharField[str | None, str | None](max_length=999, blank=True, null=True)
+    project_type = models.IntegerField[int | None, int | None](choices=Type.choices, blank=True, null=True)
+    required_results = models.IntegerField[int | None, int | None](blank=True, null=True)
+    result_count = models.IntegerField[int | None, int | None](blank=True, null=True)
+    status = models.CharField[str | None, str | None](max_length=999, blank=True, null=True)
+    verification_number = models.IntegerField[int | None, int | None](blank=True, null=True)
     # Database uses JSON instead of JSONB (not supported by django)
-    project_type_specifics = models.TextField(blank=True, null=True)
-    organization_name = models.CharField(max_length=1000, null=True, blank=True)
+    project_type_specifics = models.TextField[str | None, str | None](blank=True, null=True)
+    organization_name = models.CharField[str | None, str | None](max_length=1000, null=True, blank=True)
 
     # type hints
     created_by_id: int
@@ -115,17 +116,17 @@ class Project(Model):
 
 class Group(Model):
     pk = models.CompositePrimaryKey("project_id", "group_id")
-    group_id = models.CharField(max_length=999)
-    project = models.ForeignKey("Project", models.DO_NOTHING, related_name="+")
-    number_of_tasks = models.IntegerField(blank=True, null=True)
-    finished_count = models.IntegerField(blank=True, null=True)
-    required_count = models.IntegerField(blank=True, null=True)
-    progress = models.IntegerField(blank=True, null=True)
+    group_id = models.CharField[str, str](max_length=999)
+    project = models.ForeignKey["Project", "Project"]("Project", models.DO_NOTHING, related_name="+")
+    number_of_tasks = models.IntegerField[int | None, int | None](blank=True, null=True)
+    finished_count = models.IntegerField[int | None, int | None](blank=True, null=True)
+    required_count = models.IntegerField[int | None, int | None](blank=True, null=True)
+    progress = models.IntegerField[int | None, int | None](blank=True, null=True)
     # Database uses JSON instead of JSONB (not supported by django)
-    project_type_specifics = models.TextField(blank=True, null=True, default=None)
+    project_type_specifics = models.TextField[str | None, str | None](blank=True, null=True, default=None)
     # Used by aggreagated module
-    total_area = models.FloatField(blank=True, null=True, default=None)
-    time_spent_max_allowed = models.FloatField(blank=True, null=True, default=None)
+    total_area = models.FloatField[float | None, float | None](blank=True, null=True, default=None)
+    time_spent_max_allowed = models.FloatField[float | None, float | None](blank=True, null=True, default=None)
 
     # Django derived fields from ForeignKey
     project_id: str
@@ -143,12 +144,12 @@ class Group(Model):
 class Task(Model):
     # NOTE: Primary Key: project_id, group_id, tasks_id
     pk = models.CompositePrimaryKey("project_id", "group_id", "task_id")
-    project = models.ForeignKey(Project, models.DO_NOTHING, related_name="+")
-    group_id = models.CharField(max_length=999)
-    task_id = models.CharField(max_length=999)
+    project = models.ForeignKey[Project, Project](Project, models.DO_NOTHING, related_name="+")
+    group_id = models.CharField[str, str](max_length=999)
+    task_id = models.CharField[str, str](max_length=999)
     geom = gis_models.GeometryField(blank=True, null=True)
     # Database uses JSON instead of JSONB (not supported by django)
-    project_type_specifics = models.TextField(blank=True, null=True)
+    project_type_specifics = models.TextField[str | None, str | None](blank=True, null=True)
 
     # Django derived fields from ForeignKey
     project_id: str
@@ -170,14 +171,14 @@ class Task(Model):
 class Result(Model):
     # NOTE: Primary Key: project_id, group_id, tasks_id, user_id
     pk = models.CompositePrimaryKey("project_id", "group_id", "task_id", "user_id")
-    project = models.ForeignKey(Project, models.DO_NOTHING, related_name="+")
-    group_id = models.CharField(max_length=999)
-    task_id = models.CharField(max_length=999)
-    user = models.ForeignKey(User, models.DO_NOTHING, related_name="+")
-    timestamp = models.DateTimeField(blank=True, null=True)
-    start_time = models.DateTimeField(blank=True, null=True)
-    end_time = models.DateTimeField(blank=True, null=True)
-    result = models.SmallIntegerField(blank=True, null=True)
+    project = models.ForeignKey[Project, Project](Project, models.DO_NOTHING, related_name="+")
+    group_id = models.CharField[str, str](max_length=999)
+    task_id = models.CharField[str, str](max_length=999)
+    user = models.ForeignKey[User, User](User, models.DO_NOTHING, related_name="+")
+    timestamp = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](blank=True, null=True)
+    start_time = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](blank=True, null=True)
+    end_time = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](blank=True, null=True)
+    result = models.SmallIntegerField[int | None, int | None](blank=True, null=True)
 
     # Django derived fields from ForeignKey
     project_id: str
@@ -210,10 +211,10 @@ class Result(Model):
 
 class UserGroupResult(Model):
     pk = models.CompositePrimaryKey("project_id", "group_id", "user_id", "user_group")
-    project = models.ForeignKey(Project, on_delete=models.DO_NOTHING, related_name="+")
-    group_id = models.CharField(max_length=999)
-    user = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="+")
-    user_group = models.ForeignKey(UserGroup, on_delete=models.DO_NOTHING, related_name="+")
+    project = models.ForeignKey[Project, Project](Project, on_delete=models.DO_NOTHING, related_name="+")
+    group_id = models.CharField[str, str](max_length=999)
+    user = models.ForeignKey[User, User](User, on_delete=models.DO_NOTHING, related_name="+")
+    user_group = models.ForeignKey[UserGroup, UserGroup](UserGroup, on_delete=models.DO_NOTHING, related_name="+")
 
     # Django derived fields from ForeignKey
     project_id: str
@@ -240,16 +241,16 @@ class UserGroupResult(Model):
 # New Mapping sessions tables
 class MappingSession(Model):
     # This should be primary key instead
-    mapping_session_id = models.BigAutoField(primary_key=True)
+    mapping_session_id = models.BigAutoField[int, int](primary_key=True)
     # NOTE: Primary Key: project_id, group_id, tasks_id, user_id
-    project = models.ForeignKey(Project, models.DO_NOTHING, related_name="+")
-    group_id = models.CharField(max_length=999)
-    user = models.ForeignKey(User, models.DO_NOTHING, related_name="+")
-    start_time = models.DateTimeField(blank=True, null=True)
-    end_time = models.DateTimeField(blank=True, null=True)
-    items_count = models.SmallIntegerField(null=False, default=0)
-    app_version = models.CharField(max_length=999)
-    client_type = models.CharField(max_length=999)
+    project = models.ForeignKey[Project, Project](Project, models.DO_NOTHING, related_name="+")
+    group_id = models.CharField[str, str](max_length=999)
+    user = models.ForeignKey[User, User](User, models.DO_NOTHING, related_name="+")
+    start_time = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](blank=True, null=True)
+    end_time = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](blank=True, null=True)
+    items_count = models.SmallIntegerField[int, int](null=False, default=0)
+    app_version = models.CharField[str, str](max_length=999)
+    client_type = models.CharField[str, str](max_length=999)
 
     class Meta:
         managed = False
@@ -259,9 +260,9 @@ class MappingSession(Model):
 
 class MappingSessionResult(Model):
     pk = models.CompositePrimaryKey("mapping_session", "task_id")
-    mapping_session = models.ForeignKey(MappingSession, on_delete=models.DO_NOTHING)
-    task_id = models.CharField(max_length=999)
-    result = models.SmallIntegerField(blank=True, null=True)
+    mapping_session = models.ForeignKey[MappingSession, MappingSession](MappingSession, on_delete=models.DO_NOTHING)
+    task_id = models.CharField[str, str](max_length=999)
+    result = models.SmallIntegerField[int | None, int | None](blank=True, null=True)
 
     class Meta:
         managed = False
@@ -271,8 +272,8 @@ class MappingSessionResult(Model):
 
 class MappingSessionUserGroup(Model):
     pk = models.CompositePrimaryKey("mapping_session", "user_group")
-    mapping_session = models.ForeignKey(MappingSession, on_delete=models.DO_NOTHING)
-    user_group = models.ForeignKey(UserGroup, on_delete=models.DO_NOTHING, related_name="+")
+    mapping_session = models.ForeignKey[MappingSession, MappingSession](MappingSession, on_delete=models.DO_NOTHING)
+    user_group = models.ForeignKey[UserGroup, UserGroup](UserGroup, on_delete=models.DO_NOTHING, related_name="+")
 
     class Meta:
         managed = False
@@ -291,9 +292,9 @@ class AggregatedTracking(Model):
     """
     value: represents the date before which data is copied to aggregated tables.
     """
-    type = models.IntegerField(choices=Type.choices, unique=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    value = models.CharField(max_length=225, null=True)
+    type = models.IntegerField[int, int](choices=Type.choices, unique=True)
+    updated_at = models.DateTimeField[datetime.datetime, datetime.datetime](auto_now=True)
+    value = models.CharField[str, str](max_length=225, null=True)
 
     class Meta:
         managed = False
@@ -302,14 +303,14 @@ class AggregatedTracking(Model):
 
 class AggregatedUserStatData(Model):
     # Ref Fields
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="+")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="+")
-    timestamp_date = models.DateField()
+    project = models.ForeignKey[Project, Project](Project, on_delete=models.CASCADE, related_name="+")
+    user = models.ForeignKey[User, User](User, on_delete=models.CASCADE, related_name="+")
+    timestamp_date = models.DateField[datetime.datetime, datetime.datetime]()
     # Aggregated Fields
-    total_time = models.IntegerField()  # seconds
-    task_count = models.IntegerField()  # Number of tasks
-    swipes = models.IntegerField()  # Number of swipes
-    area_swiped = models.FloatField()  # sqkm
+    total_time = models.IntegerField[int, int]()  # seconds
+    task_count = models.IntegerField[int, int]()  # Number of tasks
+    swipes = models.IntegerField[int, int]()  # Number of swipes
+    area_swiped = models.FloatField[float, float]()  # sqkm
 
     # Type hints
     user_id: str
@@ -327,19 +328,19 @@ class AggregatedUserStatData(Model):
 
 class AggregatedUserGroupStatData(Model):
     # Ref Fields
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="+")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="+")
-    user_group = models.ForeignKey(
+    project = models.ForeignKey[Project, Project](Project, on_delete=models.CASCADE, related_name="+")
+    user = models.ForeignKey[User, User](User, on_delete=models.CASCADE, related_name="+")
+    user_group = models.ForeignKey[UserGroup, UserGroup](
         UserGroup,
         on_delete=models.CASCADE,
         related_name="+",
     )
-    timestamp_date = models.DateField()
+    timestamp_date = models.DateField[datetime.datetime, datetime.datetime]()
     # Aggregated Fields
-    total_time = models.IntegerField()  # seconds
-    task_count = models.FloatField()  # Number of tasks
-    swipes = models.FloatField()  # Number of swipes
-    area_swiped = models.FloatField()
+    total_time = models.IntegerField[int, int]()  # seconds
+    task_count = models.FloatField[float, float]()  # Number of tasks
+    swipes = models.FloatField[float, float]()  # Number of swipes
+    area_swiped = models.FloatField[float, float]()
 
     # Type hints
     user_id: str

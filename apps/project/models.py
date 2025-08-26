@@ -25,7 +25,7 @@ from main.fields import OverwritableFileField
 from utils.fields import validate_percentage
 
 if typing.TYPE_CHECKING:
-    from apps.tutorial.models import Tutorial
+    from apps.tutorial.models import Tutorial  # noqa: F401
 
 
 class ProjectAssetInputTypeEnum(models.IntegerChoices):
@@ -198,12 +198,12 @@ class UploadHelper:
 
 
 class Organization(UserResource, ArchivableResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
-    name = models.CharField(max_length=255)
-    description = models.TextField(null=True, blank=True)
-    abbreviation = models.CharField(max_length=50, null=True, blank=True)
+    name = models.CharField[str, str](max_length=255)
+    description = models.TextField[str | None, str | None](null=True, blank=True)
+    abbreviation = models.CharField[str, str](max_length=50, null=True, blank=True)
     # TODO(Rup-Narayan-Rajbanshi): Add icon?
 
-    unique_name = models.GeneratedField(  # type: ignore[reportAttributeAccessIssue]
+    unique_name = models.GeneratedField(
         expression=Lower("name"),
         output_field=models.CharField(),
         db_persist=True,
@@ -215,7 +215,7 @@ class Organization(UserResource, ArchivableResource, FirebasePushResource):  # t
         return self.name
 
 
-class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
+class Project(UserResource, FirebasePushResource):
     Type = ProjectTypeEnum
     Status = ProjectStatusEnum
     ProcessingStatus = ProjectProcessingStatusEnum
@@ -224,7 +224,7 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
         choices_enum=ProjectTypeEnum,
     )
 
-    requesting_organization: Organization = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    requesting_organization = models.ForeignKey[Organization, Organization](
         Organization,
         on_delete=models.PROTECT,
         related_name="+",
@@ -235,18 +235,18 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
     # TODO(tnagorra): Do we add uniqueness on project topic?
 
     # Generate in manager dashboard based on topic, region, project number, requesting org
-    topic = models.CharField(max_length=255)
-    region = models.CharField(max_length=255)
-    project_number = models.PositiveIntegerField()
+    topic = models.CharField[str, str](max_length=255)
+    region = models.CharField[str, str](max_length=255)
+    project_number = models.PositiveIntegerField[int, int]()
 
     # TODO(tnagorra): Max length is 25 in manager dashboard.
     # TODO(frozenhelium): We should discuss if we need this field.
-    look_for = models.CharField(
+    look_for = models.CharField[str, str](
         max_length=255,
         help_text=gettext_lazy("What should the users look for (e.g. buildings, cars, trees)"),
     )
 
-    additional_info_url = models.CharField(
+    additional_info_url = models.CharField[str | None, str | None](
         null=True,
         blank=True,
         help_text=gettext_lazy("Provide an optional link to a resource with additional information on the project"),
@@ -255,13 +255,13 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
     # TODO(tnagorra): Max length is 10000 in manager dashboard.
     # TODO(tnagorra): This should be required.
     # NOTE: Markdown syntax is supported.
-    description = models.TextField(
+    description = models.TextField[str | None, str | None](
         null=True,
         blank=True,
     )  # NOTE: project_details before
 
     # NOTE: JPG and PNG should be supported.
-    image: "ProjectAsset | None" = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    image = models.ForeignKey["ProjectAsset | None", "ProjectAsset | None"](
         "project.ProjectAsset",
         related_name="+",
         blank=True,
@@ -271,7 +271,7 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
 
     # FIXME(tnagorra): We might need to rename this field
     # NOTE: The tutorial should align with what we are looking for.
-    tutorial: "Tutorial" = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    tutorial = models.ForeignKey["Tutorial | None", "Tutorial | None"](
         "tutorial.Tutorial",
         null=True,  # NOTE: Validation makes sure active project have tutorial attached
         blank=True,
@@ -281,13 +281,13 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
     )  # NOTE: tutorial_id before
 
     # TODO(tnagorra): This should be an integer from 3 to 10000
-    verification_number = models.PositiveSmallIntegerField(
+    verification_number = models.PositiveSmallIntegerField[int, int](
         help_text=gettext_lazy("How many people do you want to see every tile before you consider it finished?"),
         default=3,
     )
 
     # TODO(tnagorra): This should be an integer from 10 to 25
-    group_size = models.PositiveSmallIntegerField(
+    group_size = models.PositiveSmallIntegerField[int, int](
         help_text=gettext_lazy(
             "How big should a mapping session be? Group size refers to the number of tasks per mapping session.",
         ),
@@ -296,7 +296,7 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
 
     # TODO(tnagorra): This should be an integer from 10 to 250
     # TODO(tnagorra): Empty indicates that no limit is set. But, this field is required in manager dashboard.
-    max_tasks_per_user = models.PositiveSmallIntegerField(
+    max_tasks_per_user = models.PositiveSmallIntegerField[int, int](
         help_text=gettext_lazy("How many tasks each user is allowed to work on for this project"),
         null=True,
         blank=True,
@@ -308,7 +308,7 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
     project_type_specifics = models.JSONField(blank=True, null=True)
 
     # FIXME(tnagorra): Do we need to reference this to project table?
-    project_type_specific_output: "ProjectAsset | None" = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    project_type_specific_output = models.ForeignKey["ProjectAsset | None", "ProjectAsset | None"](
         "project.ProjectAsset",
         related_name="+",
         blank=True,
@@ -320,12 +320,12 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
 
     # STATUS
 
-    is_featured = models.BooleanField(default=False)
+    is_featured = models.BooleanField[bool, bool](default=False)
     status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=ProjectStatusEnum,
         default=ProjectStatusEnum.DRAFT,
     )
-    processing_status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+    processing_status: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=ProjectProcessingStatusEnum,
         null=True,
         blank=True,
@@ -334,7 +334,7 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
     # TEAM
 
     # NOTE: If any team is attached to the project, then project should only visible to the team members.
-    team: ContributorTeam | None = models.OneToOneField(  # type: ignore[reportAssignmentType]
+    team = models.OneToOneField[ContributorTeam | None, ContributorTeam | None](
         ContributorTeam,
         on_delete=models.SET_NULL,
         null=True,
@@ -355,9 +355,9 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
 
     # CALCULATED FIELDS
 
-    progress = models.PositiveSmallIntegerField(default=0, validators=[validate_percentage])
-    required_results = models.IntegerField(default=0)
-    result_count = models.IntegerField(default=0)  # NOTE: All project have 0 in production database
+    progress = models.PositiveSmallIntegerField[int, int](default=0, validators=[validate_percentage])
+    required_results = models.IntegerField[int, int](default=0)
+    result_count = models.IntegerField[int, int](default=0)  # NOTE: All project have 0 in production database
 
     # Type hints
     requesting_organization_id: int
@@ -448,18 +448,18 @@ class Project(UserResource, FirebasePushResource):  # type: ignore[reportIncompa
 class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibleVariableOverride]
     # TODO(thenav56): add validation
     # Type specific nested types
-    export_type = IntegerChoicesField(
+    export_type: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=ProjectAssetExportTypeEnum,
         blank=True,
         null=True,
     )
-    input_type = IntegerChoicesField(
+    input_type: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=ProjectAssetInputTypeEnum,
         blank=True,
         null=True,
     )
 
-    project: Project = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    project = models.ForeignKey[Project, Project](
         Project,
         on_delete=models.CASCADE,
         related_name="+",
@@ -484,19 +484,19 @@ class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibl
 
 
 class ProjectTaskGroup(FirebasePushResource):
-    firebase_id = models.CharField(max_length=30)
+    firebase_id = models.CharField[str, str](max_length=30)
 
-    project: Project = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    project: Project = models.ForeignKey[Project, Project](  # type: ignore[reportAssignmentType]
         Project,
         on_delete=models.CASCADE,
         related_name="+",
     )
 
-    number_of_tasks = models.IntegerField()
-    required_count = models.IntegerField()
+    number_of_tasks = models.IntegerField[int, int]()
+    required_count = models.IntegerField[int, int]()
 
-    finished_count = models.IntegerField(default=0)
-    progress = models.PositiveSmallIntegerField(default=0, validators=[validate_percentage])
+    finished_count = models.IntegerField[int, int](default=0)
+    progress = models.PositiveSmallIntegerField[int, int](default=0, validators=[validate_percentage])
 
     # TODO(thenav56): Currently this field collects any data not stored by another fields, pulled from firebase.
     # Also, used in SQL queries
@@ -504,8 +504,8 @@ class ProjectTaskGroup(FirebasePushResource):
     project_type_specifics = models.JSONField()
 
     # NOTE: Used by Community Dashboard
-    total_area = models.FloatField(null=True, default=None)
-    time_spent_max_allowed = models.FloatField(null=True, default=None)
+    total_area = models.FloatField[float | None, float | None](null=True, default=None)
+    time_spent_max_allowed = models.FloatField[float | None, float | None](null=True, default=None)
 
     # Type hints
     id: int
@@ -523,10 +523,9 @@ class ProjectTaskGroup(FirebasePushResource):
 
 
 class ProjectTask(FirebasePushResource):
-    # TODO(tnagorra): We need to change the uniqueness constraint
-    firebase_id = models.CharField(max_length=30, null=True, blank=True)
+    firebase_id = models.CharField[str, str](max_length=30)
 
-    task_group: ProjectTaskGroup = models.ForeignKey(  # type: ignore[reportAssignmentType]
+    task_group: ProjectTaskGroup = models.ForeignKey[ProjectTaskGroup, ProjectTaskGroup](  # type: ignore[reportAssignmentType]
         ProjectTaskGroup,
         on_delete=models.CASCADE,
         related_name="+",

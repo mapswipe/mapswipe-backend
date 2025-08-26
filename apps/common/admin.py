@@ -26,7 +26,7 @@ class ReadOnlyMixin:
 class UserResourceAdmin(admin.ModelAdmin):
     @typing.override
     def get_readonly_fields(self, *args, **kwargs):
-        readonly_fields = super().get_readonly_fields(*args, **kwargs)  # type: ignore[reportAttributeAccessIssue]
+        readonly_fields = super().get_readonly_fields(*args, **kwargs)
         return [
             # To maintain order
             *dict.fromkeys(
@@ -45,7 +45,7 @@ class UserResourceAdmin(admin.ModelAdmin):
         if not change:
             obj.created_by = request.user
         obj.modified_by = request.user
-        super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
+        super().save_model(request, obj, form, change)
 
     @typing.override
     def save_formset(self, request, form, formset, change) -> None:
@@ -71,7 +71,7 @@ class UserResourceAdmin(admin.ModelAdmin):
 class ArchivableResourceAdmin(UserResourceAdmin, admin.ModelAdmin):
     @typing.override
     def get_readonly_fields(self, *args, **kwargs):
-        readonly_fields = super().get_readonly_fields(*args, **kwargs)  # type: ignore[reportAttributeAccessIssue]
+        readonly_fields = super().get_readonly_fields(*args, **kwargs)
         return [
             *dict.fromkeys(
                 [
@@ -93,13 +93,13 @@ class ArchivableResourceAdmin(UserResourceAdmin, admin.ModelAdmin):
         else:
             obj.archived_by = None
             obj.archived_at = None
-        super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
+        super().save_model(request, obj, form, change)
 
 
 class FirebaseResourceAdmin(UserResourceAdmin, admin.ModelAdmin):
     @typing.override
     def get_readonly_fields(self, *args, **kwargs):
-        readonly_fields = super().get_readonly_fields(*args, **kwargs)  # type: ignore[reportAttributeAccessIssue]
+        readonly_fields = super().get_readonly_fields(*args, **kwargs)
         return [
             *dict.fromkeys(
                 [

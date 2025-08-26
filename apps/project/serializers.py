@@ -396,7 +396,7 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         return attrs
 
 
-class OrganizationSerializer(UserResourceSerializer[Organization], ArchivableResourceSerializer[Organization]):  # type: ignore[reportIncompatibleVariableOverride]
+class OrganizationSerializer(UserResourceSerializer[Organization], ArchivableResourceSerializer[Organization]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Organization
         fields = ("name", "description", "abbreviation")
@@ -456,7 +456,7 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
         return attrs
 
     @typing.override
-    def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:  # type: ignore[reportIncompatibleMethodOverride]
+    def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:
         old_status_enum = instance.status_enum
         updated_project = super().update(instance, validated_data)
 
