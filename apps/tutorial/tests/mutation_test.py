@@ -236,30 +236,33 @@ class TestTutorialMutation(TestCase):
         )
 
     def _create_tutorial_mutation(self, tutorial_data: dict, **kwargs):
-        return self.query_check(
-            query=Mutation.CREATE_TUTORIAL,
-            variables={
-                "data": tutorial_data,
-            },
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.query_check(
+                query=Mutation.CREATE_TUTORIAL,
+                variables={
+                    "data": tutorial_data,
+                },
+            )
 
     def _update_tutorial_mutation(self, pk: str, tutorial_data: dict, **kwargs):
-        return self.query_check(
-            query=Mutation.UPDATE_TUTORIAL,
-            variables={
-                "data": tutorial_data,
-                "pk": pk,
-            },
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.query_check(
+                query=Mutation.UPDATE_TUTORIAL,
+                variables={
+                    "data": tutorial_data,
+                    "pk": pk,
+                },
+            )
 
     def _update_tutorial_status_mutation(self, pk: str, tutorial_data: dict, **kwargs):
-        return self.query_check(
-            query=Mutation.UPDATE_TUTORIAL_STATUS,
-            variables={
-                "data": tutorial_data,
-                "pk": pk,
-            },
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.query_check(
+                query=Mutation.UPDATE_TUTORIAL_STATUS,
+                variables={
+                    "data": tutorial_data,
+                    "pk": pk,
+                },
+            )
 
     def test_tutorial_create(self):
         tutorial_data = {
@@ -675,13 +678,6 @@ class TestTutorialMutation(TestCase):
             ),
         ), content
 
-        latest_tutorial.refresh_from_db()
-        tutorial_ref = self.firebase_helper.ref(
-            Config.FirebaseKeys.tutorial(latest_tutorial.firebase_id),
-        )
-        fb_tutorial: typing.Any = tutorial_ref.get()
-        assert fb_tutorial is not None
-
         # Updating Tutorial: Check for deletions?
         tutorial_data = {
             "clientId": latest_tutorial.client_id,
@@ -703,6 +699,22 @@ class TestTutorialMutation(TestCase):
         assert latest_tutorial.scenarios.count() > 0
         assert latest_tutorial.information_pages.count() == information_pages_count
         assert latest_tutorial.scenarios.count() == scenarios_count
+
+        # Publishing tutorial:
+        data = {
+            "clientId": latest_tutorial.client_id,
+            "status": self.genum(TutorialStatusEnum.PUBLISHED),
+        }
+        response = self._update_tutorial_status_mutation(str(latest_tutorial.pk), data)
+
+        resp_data = response["data"]["updateTutorialStatus"]
+        assert resp_data["errors"] is None, response
+
+        tutorial_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.tutorial(latest_tutorial.firebase_id),
+        )
+        fb_tutorial: typing.Any = tutorial_ref.get()
+        assert fb_tutorial is not None
 
     def test_tutorial_state_transitions(self):
         # Create a draft tutorial

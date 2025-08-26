@@ -483,32 +483,35 @@ class TestProjectMutation(TestCase):
         cls.organization = OrganizationFactory.create(**cls.user_resource_kwargs)
 
     def _create_project_aoi_asset(self, project_asset_data: dict, **kwargs):
-        return create_project_aoi_asset_query(
-            query_check_func=self.query_check,
-            query=Mutation.CREATE_PROJECT_ASSET,
-            project_asset_data={
-                **project_asset_data,
-                "inputType": self.genum(ProjectAssetInputTypeEnum.AOI_GEOMETRY),
-            },
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            return create_project_aoi_asset_query(
+                query_check_func=self.query_check,
+                query=Mutation.CREATE_PROJECT_ASSET,
+                project_asset_data={
+                    **project_asset_data,
+                    "inputType": self.genum(ProjectAssetInputTypeEnum.AOI_GEOMETRY),
+                },
+            )
 
     def _create_project_image_asset(self, project_asset_data: dict, **kwargs):
-        return create_project_image_asset_query(
-            query_check_func=self.query_check,
-            query=Mutation.CREATE_PROJECT_ASSET,
-            project_asset_data={
-                **project_asset_data,
-                "inputType": self.genum(ProjectAssetInputTypeEnum.COVER_IMAGE),
-            },
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            return create_project_image_asset_query(
+                query_check_func=self.query_check,
+                query=Mutation.CREATE_PROJECT_ASSET,
+                project_asset_data={
+                    **project_asset_data,
+                    "inputType": self.genum(ProjectAssetInputTypeEnum.COVER_IMAGE),
+                },
+            )
 
     def _create_project_mutation(self, project_data: dict, **kwargs):
-        return self.query_check(
-            query=Mutation.CREATE_PROJECT,
-            variables={
-                "data": project_data,
-            },
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.query_check(
+                query=Mutation.CREATE_PROJECT,
+                variables={
+                    "data": project_data,
+                },
+            )
 
     def _update_project_mutation(self, pk: str, project_data: dict, **kwargs):
         with self.captureOnCommitCallbacks(execute=True):
@@ -1027,24 +1030,26 @@ class TestProjectTypeMutation(TestCase):
         cls.tile_server_property_internal = cls.tile_server_property
 
     def _create_project_aoi_asset(self, project_asset_data: dict, **kwargs):
-        return create_project_aoi_asset_query(
-            query_check_func=self.query_check,
-            query=Mutation.CREATE_PROJECT_ASSET,
-            project_asset_data={
-                **project_asset_data,
-                "inputType": self.genum(ProjectAssetInputTypeEnum.AOI_GEOMETRY),
-            },
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            return create_project_aoi_asset_query(
+                query_check_func=self.query_check,
+                query=Mutation.CREATE_PROJECT_ASSET,
+                project_asset_data={
+                    **project_asset_data,
+                    "inputType": self.genum(ProjectAssetInputTypeEnum.AOI_GEOMETRY),
+                },
+            )
 
     def _create_project_image_asset(self, project_asset_data: dict, **kwargs):
-        return create_project_image_asset_query(
-            query_check_func=self.query_check,
-            query=Mutation.CREATE_PROJECT_ASSET,
-            project_asset_data={
-                **project_asset_data,
-                "inputType": self.genum(ProjectAssetInputTypeEnum.COVER_IMAGE),
-            },
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            return create_project_image_asset_query(
+                query_check_func=self.query_check,
+                query=Mutation.CREATE_PROJECT_ASSET,
+                project_asset_data={
+                    **project_asset_data,
+                    "inputType": self.genum(ProjectAssetInputTypeEnum.COVER_IMAGE),
+                },
+            )
 
     def _create_project_mutation(self, project_data: dict, **kwargs):
         with self.captureOnCommitCallbacks(execute=True):
