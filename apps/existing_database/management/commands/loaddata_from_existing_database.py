@@ -207,7 +207,10 @@ def generate_django_content_file_from_url(
 
 
 # TODO: This is a partial solution, doesn't cover all cases
-def parse_project_name(name: str) -> tuple[str, str, int] | None:
+def parse_project_name(name: str | None) -> tuple[str, str, int] | None:
+    if not name:
+        return None
+
     def sanitize_name(name: str) -> str:
         return " ".join(name.replace("\n", " ").strip().split())
 
@@ -254,6 +257,8 @@ def create_project(
     bot_user: User,
 ):
     try:
+        assert existing_project.project_type is not None, "Project type should be defined"
+        assert existing_project.organization_name, "Organization name should be defined"
         project_metadata = dict(
             topic=topic,
             region=region,
@@ -314,6 +319,9 @@ def get_api_url_by_project_export_type(export_type: ProjectAssetExportTypeEnum, 
 
 
 def create_project_assets(project: Project):
+    # NOTE: old_id must be defined when loading data from existing database
+    assert project.old_id is not None, "Project old id must be defined"
+
     common_export_types = [
         # Common
         ProjectAssetExportTypeEnum.AGGREGATED_RESULTS,
@@ -472,7 +480,7 @@ class Command(BaseCommand):
                     old_id=existing_cug.user_group_id,
                     firebase_id=existing_cug.user_group_id,
                     name=existing_cug.name,
-                    description=existing_cug.description.strip(),
+                    description=existing_cug.description.strip() if existing_cug.description else "",
                     created_at=parse_datetime(existing_cug.created_at),
                     archived_at=parse_datetime(existing_cug.archived_at, empty_fallback=None),
                     created_by_id=get_user_by_contributor_user_firebase_id(

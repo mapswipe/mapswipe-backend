@@ -167,7 +167,7 @@ class TutorialScenarioPage(UserResource):
 
     @typing.override
     def __str__(self):
-        return self.scenario_page_number
+        return str(self.scenario_page_number)
 
 
 class TutorialTask(UserResource):

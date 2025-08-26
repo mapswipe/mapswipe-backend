@@ -118,6 +118,9 @@ class ValidateImageProject(
 
         inputs: list[ValidImage] = []
         for image_asset in image_assets.iterator():
+            # NOTE: We can assert this because we are filtering by external_url__is_null=False
+            assert image_asset.external_url is not None, "External URL is required"
+
             asset_specifics = ObjectImageAssetProperty.model_validate(image_asset.asset_type_specifics.get("object_image"))
 
             annotations = asset_specifics.annotations
