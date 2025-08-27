@@ -64,6 +64,8 @@ def generate_project_exports(
     project_type_handler = get_project_type_handler(project.project_type_enum)(project)
     project_type_handler.generate_exports()
     return True
+
+
 class SlackMessage:
     @classmethod
     def get_message_for_project_progress(
@@ -184,25 +186,26 @@ class SlackMessage:
             }
         text = "Project Progress"
         blocks = [
-                {
-                    "type": "header",
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": f"ALMOST THERE! PROJECT REACHED {progress}% :hourglass_flowing_sand:",
+                },
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "Just a little more effort and this project will be complete",
+                },
+            },
+        ]
+
         return {
-            "text": "Project Progress",
+            "text": text,
             "blocks": blocks,
         }
-                    "text": {
-                        "type": "plain_text",
-                        "text": "ALMOST THERE! PROJECT REACHED {progress} :hourglass_flowing_sand:",
-                    },
-                },
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "The project is almost at completion!",
-                    },
-                }]
-
 
 
 @shared_task

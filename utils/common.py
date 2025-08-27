@@ -223,6 +223,8 @@ def to_groups[T](features: list[T], group_size: int, start_index: int = 100):
         groups[group_id_string]["features"].append(feature)
 
     return groups
+
+
 def get_absolute_file_url(image_file: FieldFile) -> str:
     url = image_file.url
     if isinstance(default_storage, FileSystemStorage):

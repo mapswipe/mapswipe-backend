@@ -6,6 +6,7 @@ from apps.project.models import Project
 from apps.project.tasks import send_message_for_progress
 from utils.common import get_absolute_file_url
 
+
 class Command(BaseCommand):
     help = "Test sending a Slack progress message for a given project"
 
@@ -24,9 +25,9 @@ class Command(BaseCommand):
 
         try:
             project = Project.objects.get(id=project_id)
-        except Project.DoesNotExist:
-            raise CommandError(f"Project with id={project_id} does not exist")
-        
+        except Project.DoesNotExist as err:
+            raise CommandError(f"Project with id={project_id} does not exist") from err
+
         project_name = project.generate_name()
         progress = project.progress
         if project.image:
@@ -36,4 +37,3 @@ class Command(BaseCommand):
 
         send_message_for_progress.delay(project_name=project_name, progress=progress, cover_image=cover_image_url)
         self.stdout.write(self.style.SUCCESS("Slack message sent successfully"))
-     
