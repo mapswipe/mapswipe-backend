@@ -82,7 +82,7 @@ def pull_results_from_firebase():
 
     bulk_create_manager.done()
 
-    transfer_results_from_temp_tables()
+    transfer_results_from_temp_tables(firebase_cleanup)
     firebase_cleanup.done()
 
     # TODO: Trigger slack notification workflow
