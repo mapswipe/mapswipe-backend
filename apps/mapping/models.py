@@ -117,9 +117,9 @@ class MappingSessionResultTemp(models.Model):
     # Internal reference fields (Firebase id transformed to internal ids)
     # NOTE: why BigIntegerField, check settings.py DEFAULT_AUTO_FIELD
     # NOTE: If we use ForeignKey here, then we get pending state issue with TRUNCATE
-    group_id = models.BigIntegerField(blank=True, null=True)
-    task_id = models.BigIntegerField(blank=True, null=True)
-    contributor_user_id = models.BigIntegerField(blank=True, null=True)
+    group_id = models.BigIntegerField[int | None, int | None](blank=True, null=True)
+    task_id = models.BigIntegerField[int | None, int | None](blank=True, null=True)
+    contributor_user_id = models.BigIntegerField[int | None, int | None](blank=True, null=True)
 
     # Mapping metadata
     start_time = models.DateTimeField[datetime.datetime, datetime.datetime]()
@@ -129,7 +129,7 @@ class MappingSessionResultTemp(models.Model):
     client_type: int = IntegerChoicesField(choices_enum=MappingSessionClientTypeEnum)  # type: ignore[reportAssignmentType]
 
     # Misc
-    is_firebase_mapping_valid = models.BooleanField(blank=True, null=True)
+    is_firebase_mapping_valid = models.BooleanField[bool | None, bool | None](blank=True, null=True)
 
     # Typing hints
     id: int
