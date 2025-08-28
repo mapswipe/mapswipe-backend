@@ -176,6 +176,7 @@ exclude = [
     "**/snap_test_*.py",
     ".venv/",
     "**/migrations/*.py",
+    "./firebase/functions",
 ]
 typeCheckingMode = "standard"
 analyzeUnannotatedFunctions = true
