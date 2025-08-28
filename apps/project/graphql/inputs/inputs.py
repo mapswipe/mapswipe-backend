@@ -62,6 +62,7 @@ class ProjectCreateInput(UserResourceCreateInputMixin):
     project_type: strawberry.auto
     requesting_organization: strawberry.ID
     look_for: strawberry.auto
+    project_instruction: str
     additional_info_url: strawberry.auto
     description: strawberry.auto
     team: strawberry.ID | None = strawberry.UNSET
@@ -74,6 +75,7 @@ class ProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
     region: strawberry.auto
     project_number: strawberry.auto
     look_for: strawberry.auto
+    project_instruction: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
     verification_number: strawberry.auto
@@ -93,6 +95,7 @@ class ProcessedProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
     region: strawberry.auto
     project_number: strawberry.auto
     look_for: strawberry.auto
+    project_instruction: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
     status: strawberry.auto

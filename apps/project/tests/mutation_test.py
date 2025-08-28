@@ -180,6 +180,7 @@ class Mutation:
                 region
                 projectNumber
                 lookFor
+                projectInstruction
                 additionalInfoUrl
                 description
                 verificationNumber
@@ -227,6 +228,7 @@ class Mutation:
                 region
                 projectNumber
                 lookFor
+                projectInstruction
                 additionalInfoUrl
                 description
                 verificationNumber
@@ -274,6 +276,7 @@ class Mutation:
                 region
                 projectNumber
                 lookFor
+                projectInstruction
                 additionalInfoUrl
                 description
                 verificationNumber
@@ -551,7 +554,7 @@ class TestProjectMutation(TestCase):
             "region": "Test Region",
             "projectNumber": 1,
             "requestingOrganization": self.organization.pk,
-            "lookFor": "Buildings",
+            "projectInstruction": "Buildings",
             "additionalInfoUrl": "https://hi-there/about.html",
             "description": "The new **project** from hi-there.",
         }
@@ -623,7 +626,8 @@ class TestProjectMutation(TestCase):
                 topic=latest_project.topic,
                 region=latest_project.region,
                 projectNumber=latest_project.project_number,
-                lookFor=latest_project.look_for,
+                projectInstruction=latest_project.project_instruction,
+                lookFor=None,
                 additionalInfoUrl=latest_project.additional_info_url,
                 description=latest_project.description,
                 verificationNumber=3,
@@ -676,7 +680,7 @@ class TestProjectMutation(TestCase):
             region="Test Region",
             project_number=1,
             requesting_organization=self.organization,
-            look_for="Buildings",
+            project_instruction="Buildings",
             additional_info_url="https://hi-there/about.html",
             description="The new **project** from hi-there.",
             project_type_specifics=None,
@@ -684,7 +688,7 @@ class TestProjectMutation(TestCase):
 
         project_data = {
             "requestingOrganization": self.organization.pk,
-            "lookFor": "Buildings and Houses",
+            "projectInstruction": "Buildings and Houses",
             "additionalInfoUrl": "https://hi-there/about.html?code=1",
             "description": "The new updated **project** from hi-there.",
             "verificationNumber": 2,
@@ -726,7 +730,8 @@ class TestProjectMutation(TestCase):
                 topic=latest_project.topic,
                 region=latest_project.region,
                 projectNumber=latest_project.project_number,
-                lookFor=latest_project.look_for,
+                projectInstruction=latest_project.project_instruction,
+                lookFor=None,
                 additionalInfoUrl=latest_project.additional_info_url,
                 description=latest_project.description,
                 verificationNumber=latest_project.verification_number,
@@ -1071,7 +1076,7 @@ class TestProjectTypeMutation(TestCase):
             "region": "Test Region",
             "projectNumber": 1,
             "requestingOrganization": cls.organization.pk,
-            "lookFor": "Buildings",
+            "projectInstruction": "Buildings",
         }
 
         cls.tile_server_property = {

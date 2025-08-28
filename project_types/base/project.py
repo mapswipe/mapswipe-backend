@@ -321,6 +321,7 @@ class BaseProject[
             image=get_absolute_uri(self.project.image.file if self.project.image else None),
             isFeatured=self.project.is_featured,
             lookFor=self.project.look_for,
+            projectInstruction=self.project.project_instruction,
             manualUrl=self.project.additional_info_url,
             maxTasksPerUser=self.project.max_tasks_per_user,
             groupMaxSize=self.project.group_size,  # this is zero
@@ -391,6 +392,7 @@ class BaseProject[
                     image=get_absolute_uri(self.project.image.file if self.project.image else None),
                     isFeatured=self.project.is_featured,
                     lookFor=self.project.look_for,
+                    projectInstruction=self.project.project_instruction,
                     name=self.project.generate_name(),
                     projectNumber=self.project.project_number,
                     projectRegion=self.project.region,

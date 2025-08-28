@@ -133,6 +133,7 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin):
     region: strawberry.auto
     project_number: strawberry.auto
     look_for: strawberry.auto
+    project_instruction: strawberry.auto
     additional_info_url: strawberry.auto
     description: strawberry.auto
     image: ProjectAssetType | None

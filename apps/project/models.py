@@ -241,7 +241,9 @@ class Project(UserResource, FirebasePushResource):
 
     # TODO(tnagorra): Max length is 25 in manager dashboard.
     # TODO(frozenhelium): We should discuss if we need this field.
-    look_for = models.CharField[str, str](
+    look_for = models.CharField[str | None, str | None](
+        null=True,
+        blank=True,
         max_length=255,
         help_text=gettext_lazy("What should the users look for (e.g. buildings, cars, trees)"),
     )
@@ -259,6 +261,14 @@ class Project(UserResource, FirebasePushResource):
         null=True,
         blank=True,
     )  # NOTE: project_details before
+
+    project_instruction = models.TextField[str | None, str | None](
+        null=True,
+        blank=True,
+        help_text=gettext_lazy(
+            "Provide project instruction",
+        ),
+    )
 
     # NOTE: JPG and PNG should be supported.
     image = models.ForeignKey["ProjectAsset | None", "ProjectAsset | None"](

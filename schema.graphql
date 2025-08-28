@@ -1035,7 +1035,7 @@ enum OverlayLayerTypeEnum {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, project_instruction, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProcessedProjectUpdateInput {
   """
@@ -1048,6 +1048,9 @@ input ProcessedProjectUpdateInput {
 
   """What should the users look for (e.g. buildings, cars, trees)"""
   lookFor: String
+
+  """Provide project instruction"""
+  projectInstruction: String
   projectNumber: Int
   region: String
 
@@ -1259,7 +1262,7 @@ type ProjectAssetTypeOffsetPaginated {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, project_instruction, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProjectCreateInput {
   """
@@ -1270,7 +1273,10 @@ input ProjectCreateInput {
   description: String
 
   """What should the users look for (e.g. buildings, cars, trees)"""
-  lookFor: String!
+  lookFor: String
+
+  """Provide project instruction"""
+  projectInstruction: String!
   projectNumber: Int!
   projectType: ProjectTypeEnum!
   region: String!
@@ -1317,7 +1323,7 @@ interface ProjectExportAssetTypeMixin {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, project_instruction, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProjectFilter {
   AND: ProjectFilter
@@ -1531,7 +1537,7 @@ input ProjectStatusEnumFilterLookup {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, project_instruction, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProjectStatusUpdateInput {
   clientId: String!
@@ -1539,7 +1545,7 @@ input ProjectStatusUpdateInput {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, project_instruction, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin {
   """
@@ -1575,7 +1581,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   isPrivate: Boolean!
 
   """What should the users look for (e.g. buildings, cars, trees)"""
-  lookFor: String!
+  lookFor: String
 
   """How many tasks each user is allowed to work on for this project"""
   maxTasksPerUser: Int
@@ -1588,6 +1594,9 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   name: String!
   processingStatus: ProjectProcessingStatusEnum
   progress: Int!
+
+  """Provide project instruction"""
+  projectInstruction: String
   projectNumber: Int!
   projectType: ProjectTypeEnum!
   projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyType
@@ -1707,7 +1716,7 @@ type ProjectTypeSwipeStatsType {
 }
 
 """
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
+Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, project_instruction, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProjectUpdateInput {
   """
@@ -1728,6 +1737,9 @@ input ProjectUpdateInput {
 
   """How many tasks each user is allowed to work on for this project"""
   maxTasksPerUser: Int
+
+  """Provide project instruction"""
+  projectInstruction: String
   projectNumber: Int
   projectTypeSpecifics: ProjectTypeSpecificInput
   region: String

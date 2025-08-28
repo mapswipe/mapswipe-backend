@@ -40,7 +40,7 @@ class ProjectFactory(DjangoModelFactory):
     project_type = Project.Type.FIND
     project_type_specifics = None
 
-    look_for = "Buildings and Roads"
+    project_instruction = "Buildings and Roads"
     description = "We want to identify buildings and roads"
 
     centroid = Point(1, 2)

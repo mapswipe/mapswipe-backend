@@ -52,6 +52,7 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
             "project_number",
             "requesting_organization",
             "look_for",
+            "project_instruction",
             "additional_info_url",
             "description",
             "image",
@@ -80,6 +81,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             "project_number",
             "requesting_organization",
             "look_for",
+            "project_instruction",
             "additional_info_url",
             "description",
             "image",
@@ -138,6 +140,16 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             raise serializers.ValidationError(gettext("ProjectAsset is invalid or does not exist."))
 
         return new_image
+
+    def _validate_project_instruction(self, attrs: dict[str, typing.Any]):
+        assert self.instance is not None
+        project_instruction = attrs.get("project_instruction") or self.instance.project_instruction
+        if not project_instruction:
+            raise serializers.ValidationError(
+                {
+                    "project_instruction": gettext("Project instruction is required."),
+                },
+            )
 
     def _validate_project_type_specifics(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
@@ -199,6 +211,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         if self.instance.status_enum not in [Project.Status.DRAFT, Project.Status.FAILED]:
             raise serializers.ValidationError(gettext("Cannot update project with status %s") % self.instance.status)
 
+        self._validate_project_instruction(attrs)
         self._validate_project_type_specifics(attrs)
         return super().validate(attrs)
 
@@ -213,6 +226,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             "region",
             "project_number",
             "look_for",
+            "project_instruction",
             "additional_info_url",
             "description",
             "image",
@@ -268,12 +282,24 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
         return new_image
 
+    def _validate_project_instruction(self, attrs: dict[str, typing.Any]):
+        assert self.instance is not None
+        project_instruction = attrs.get("project_instruction") or self.instance.project_instruction
+        if not project_instruction:
+            raise serializers.ValidationError(
+                {
+                    "project_instruction": gettext("Project instruction is required."),
+                },
+            )
+
     @typing.override
     def validate(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
 
         if self.instance.status_enum != Project.Status.READY:
             raise serializers.ValidationError(gettext("Cannot update project with status %s") % self.instance.status)
+
+        self._validate_project_instruction(attrs)
 
         return super().validate(attrs)
 
@@ -446,6 +472,10 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
         new_status = attrs.get("status")
         if not isinstance(new_status, Project.Status):
             new_status = Project.Status(new_status)
+
+        # NOTE: This check should technically never be called.
+        if not self.instance.project_instruction:
+            raise serializers.ValidationError(gettext("Project instruction is required."))
 
         if new_status == Project.Status.MARKED_AS_READY and not self.instance.project_type_specifics:
             raise serializers.ValidationError(
