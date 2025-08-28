@@ -2,8 +2,9 @@ import argparse
 import typing
 
 from django.core.management.base import BaseCommand, CommandParser
-from strawberry.printer import print_schema
+from strawberry.printer import printer as sp
 
+import utils.graphql.monkey_patches_printer  # noqa: F401 # type: ignore[reportUnusedImport]
 from main.graphql.schema import schema
 
 
@@ -21,6 +22,6 @@ class Command(BaseCommand):
     @typing.override
     def handle(self, *args: typing.Any, **options: typing.Any):
         file = options["out"]
-        file.write(print_schema(schema))
+        file.write(sp.print_schema(schema))
         file.close()
         self.stdout.write(self.style.SUCCESS(f"{file.name} file generated"))

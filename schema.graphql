@@ -13,34 +13,33 @@ directive @isAuthenticated repeatable on FIELD_DEFINITION
 directive @oneOf on INPUT_OBJECT
 
 type AoiGeometryAssetPropertyType {
-  bbox: [Float!]!
-  center: [Float!]!
-
   """A positive float value"""
   area: Float!
+  bbox: [Float!]!
+  center: [Float!]!
 }
 
 union AoiGeometryAssetPropertyTypeObjectImageAssetPropertyType = AoiGeometryAssetPropertyType | ObjectImageAssetPropertyType
 
 type AppEnumCollection {
-  RasterTileServerNameEnum: [AppEnumCollectionRasterTileServerNameEnum!]!
-  VectorTileServerNameEnum: [AppEnumCollectionVectorTileServerNameEnum!]!
-  ValidateObjectSourceTypeEnum: [AppEnumCollectionValidateObjectSourceTypeEnum!]!
-  ValidateImageSourceTypeEnum: [AppEnumCollectionValidateImageSourceTypeEnum!]!
-  OverlayLayerTypeEnum: [AppEnumCollectionOverlayLayerTypeEnum!]!
-  ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
-  ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
-  ProjectProcessingStatusEnum: [AppEnumCollectionProjectProcessingStatusEnum!]!
-  ProjectAssetInputTypeEnum: [AppEnumCollectionProjectAssetInputTypeEnum!]!
-  ProjectAssetExportTypeEnum: [AppEnumCollectionProjectAssetExportTypeEnum!]!
-  IconEnum: [AppEnumCollectionIconEnum!]!
   AssetMimetypeEnum: [AppEnumCollectionAssetMimetypeEnum!]!
   AssetTypeEnum: [AppEnumCollectionAssetTypeEnum!]!
-  TutorialStatusEnum: [AppEnumCollectionTutorialStatusEnum!]!
-  TutorialInformationPageBlockTypeEnum: [AppEnumCollectionTutorialInformationPageBlockTypeEnum!]!
-  TutorialAssetInputTypeEnum: [AppEnumCollectionTutorialAssetInputTypeEnum!]!
-  MappingSessionClientTypeEnum: [AppEnumCollectionMappingSessionClientTypeEnum!]!
   ContributorUserGroupMembershipLogActionEnum: [AppEnumCollectionContributorUserGroupMembershipLogActionEnum!]!
+  IconEnum: [AppEnumCollectionIconEnum!]!
+  MappingSessionClientTypeEnum: [AppEnumCollectionMappingSessionClientTypeEnum!]!
+  OverlayLayerTypeEnum: [AppEnumCollectionOverlayLayerTypeEnum!]!
+  ProjectAssetExportTypeEnum: [AppEnumCollectionProjectAssetExportTypeEnum!]!
+  ProjectAssetInputTypeEnum: [AppEnumCollectionProjectAssetInputTypeEnum!]!
+  ProjectProcessingStatusEnum: [AppEnumCollectionProjectProcessingStatusEnum!]!
+  ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
+  ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
+  RasterTileServerNameEnum: [AppEnumCollectionRasterTileServerNameEnum!]!
+  TutorialAssetInputTypeEnum: [AppEnumCollectionTutorialAssetInputTypeEnum!]!
+  TutorialInformationPageBlockTypeEnum: [AppEnumCollectionTutorialInformationPageBlockTypeEnum!]!
+  TutorialStatusEnum: [AppEnumCollectionTutorialStatusEnum!]!
+  ValidateImageSourceTypeEnum: [AppEnumCollectionValidateImageSourceTypeEnum!]!
+  ValidateObjectSourceTypeEnum: [AppEnumCollectionValidateObjectSourceTypeEnum!]!
+  VectorTileServerNameEnum: [AppEnumCollectionVectorTileServerNameEnum!]!
 }
 
 type AppEnumCollectionAssetMimetypeEnum {
@@ -136,117 +135,117 @@ type AppEnumCollectionVectorTileServerNameEnum {
 scalar AreaSqKm
 
 enum AssetMimetypeEnum {
+  CSV
   GEOJSON
-  JSON
+  GZIP
+  IMAGE_GIF
   IMAGE_JPEG
   IMAGE_PNG
-  IMAGE_GIF
-  GZIP
-  CSV
+  JSON
   PLAINTEXT
 }
 
 input AssetMimetypeEnumFilterLookup {
-  """Exact match. Filter will be skipped on `null` value"""
-  exact: AssetMimetypeEnum
-
-  """Assignment test. Filter will be skipped on `null` value"""
-  isNull: Boolean
-
-  """
-  Exact match of items in a given list. Filter will be skipped on `null` value
-  """
-  inList: [AssetMimetypeEnum!]
-
-  """Case-insensitive exact match. Filter will be skipped on `null` value"""
-  iExact: AssetMimetypeEnum
-
   """
   Case-sensitive containment test. Filter will be skipped on `null` value
   """
   contains: AssetMimetypeEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: AssetMimetypeEnum
+
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: AssetMimetypeEnum
 
   """
   Case-insensitive containment test. Filter will be skipped on `null` value
   """
   iContains: AssetMimetypeEnum
 
-  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
-  startsWith: AssetMimetypeEnum
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: AssetMimetypeEnum
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: AssetMimetypeEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: AssetMimetypeEnum
 
   """Case-insensitive starts-with. Filter will be skipped on `null` value"""
   iStartsWith: AssetMimetypeEnum
 
-  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
-  endsWith: AssetMimetypeEnum
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [AssetMimetypeEnum!]
 
-  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
-  iEndsWith: AssetMimetypeEnum
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
 
   """
   Case-sensitive regular expression match. Filter will be skipped on `null` value
   """
   regex: AssetMimetypeEnum
 
-  """
-  Case-insensitive regular expression match. Filter will be skipped on `null` value
-  """
-  iRegex: AssetMimetypeEnum
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: AssetMimetypeEnum
 }
 
 enum AssetTypeEnum {
+  DEBUG
+  EXPORT
   INPUT
   OUTPUT
-  EXPORT
-  DEBUG
 }
 
 input AssetTypeEnumFilterLookup {
-  """Exact match. Filter will be skipped on `null` value"""
-  exact: AssetTypeEnum
-
-  """Assignment test. Filter will be skipped on `null` value"""
-  isNull: Boolean
-
-  """
-  Exact match of items in a given list. Filter will be skipped on `null` value
-  """
-  inList: [AssetTypeEnum!]
-
-  """Case-insensitive exact match. Filter will be skipped on `null` value"""
-  iExact: AssetTypeEnum
-
   """
   Case-sensitive containment test. Filter will be skipped on `null` value
   """
   contains: AssetTypeEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: AssetTypeEnum
+
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: AssetTypeEnum
 
   """
   Case-insensitive containment test. Filter will be skipped on `null` value
   """
   iContains: AssetTypeEnum
 
-  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
-  startsWith: AssetTypeEnum
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: AssetTypeEnum
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: AssetTypeEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: AssetTypeEnum
 
   """Case-insensitive starts-with. Filter will be skipped on `null` value"""
   iStartsWith: AssetTypeEnum
 
-  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
-  endsWith: AssetTypeEnum
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [AssetTypeEnum!]
 
-  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
-  iEndsWith: AssetTypeEnum
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
 
   """
   Case-sensitive regular expression match. Filter will be skipped on `null` value
   """
   regex: AssetTypeEnum
 
-  """
-  Case-insensitive regular expression match. Filter will be skipped on `null` value
-  """
-  iRegex: AssetTypeEnum
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: AssetTypeEnum
 }
 
 input AssetTypeSpecificInput @oneOf {
@@ -257,45 +256,45 @@ input BoolBaseFilterLookup {
   """Exact match. Filter will be skipped on `null` value"""
   exact: Boolean
 
-  """Assignment test. Filter will be skipped on `null` value"""
-  isNull: Boolean
-
   """
   Exact match of items in a given list. Filter will be skipped on `null` value
   """
   inList: [Boolean!]
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
 }
 
 type CommunityFilteredStats {
-  swipeTimeByDate: [ContributorTimeStatType!]!
   areaSwipedByProjectType: [ProjectTypeAreaStatsType!]!
-  swipeByProjectType: [ProjectTypeSwipeStatsType!]!
   swipeByOrganizationName: [OrganizationSwipeStatsType!]!
   swipeByProjectGeo: [MapContributionStatsType!]!
+  swipeByProjectType: [ProjectTypeSwipeStatsType!]!
+  swipeTimeByDate: [ContributorTimeStatType!]!
 }
 
 type CommunityStatsType {
   id: ID!
-  totalSwipes: Int!
   totalContributors: Int!
+  totalSwipes: Int!
   totalUserGroups: Int!
 }
 
 input CompareProjectPropertyInput {
-  zoomLevel: Int!
-  tileServerProperty: ProjectRasterTileServerConfigInput!
   aoiGeometry: String!
   tileServerBProperty: ProjectRasterTileServerConfigInput!
+  tileServerProperty: ProjectRasterTileServerConfigInput!
+  zoomLevel: Int!
 }
 
 type CompareProjectPropertyType {
-  zoomLevel: Int!
-  tileServerProperty: ProjectRasterTileServerConfig!
   aoiGeometry: String!
   tileServerBProperty: ProjectRasterTileServerConfig!
+  tileServerProperty: ProjectRasterTileServerConfig!
+  zoomLevel: Int!
 }
 
-union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyType = CompareProjectPropertyType | FindProjectPropertyType | ValidateProjectPropertyType | ValidateImageProjectPropertyType | CompletenessProjectPropertyType
+union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyType = CompareProjectPropertyType | CompletenessProjectPropertyType | FindProjectPropertyType | ValidateImageProjectPropertyType | ValidateProjectPropertyType
 
 input CompareTutorialTaskPropertyInput {
   tileX: Int!
@@ -309,20 +308,20 @@ type CompareTutorialTaskPropertyType {
   tileZ: Int!
 }
 
-union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType = CompareTutorialTaskPropertyType | FindTutorialTaskPropertyType | ValidateTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType
+union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType = CompareTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | FindTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | ValidateTutorialTaskPropertyType
 
 input CompletenessProjectPropertyInput {
-  zoomLevel: Int!
-  tileServerProperty: ProjectRasterTileServerConfigInput!
   aoiGeometry: String!
   overlayTileServerProperty: ProjectOverlayTileServerConfigInput!
+  tileServerProperty: ProjectRasterTileServerConfigInput!
+  zoomLevel: Int!
 }
 
 type CompletenessProjectPropertyType {
-  zoomLevel: Int!
-  tileServerProperty: ProjectRasterTileServerConfig!
   aoiGeometry: String!
   overlayTileServerProperty: ProjectOverlayTileServerConfig!
+  tileServerProperty: ProjectRasterTileServerConfig!
+  zoomLevel: Int!
 }
 
 input CompletenessTutorialTaskPropertyInput {
@@ -346,12 +345,12 @@ type ContributorSwipeStatType {
 ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, token)
 """
 input ContributorTeamFilter {
+  AND: ContributorTeamFilter
+  DISTINCT: Boolean
+  NOT: ContributorTeamFilter
+  OR: ContributorTeamFilter
   id: IDBaseFilterLookup
   isArchived: BoolBaseFilterLookup
-  AND: ContributorTeamFilter
-  OR: ContributorTeamFilter
-  NOT: ContributorTeamFilter
-  DISTINCT: Boolean
   name: String
 }
 
@@ -364,28 +363,28 @@ input ContributorTeamOrder {
 ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, token)
 """
 type ContributorTeamType implements UserResourceTypeMixin {
-  clientId: String!
-  createdAt: DateTime!
-  modifiedAt: DateTime!
-  createdBy: UserType!
-  modifiedBy: UserType!
-  isArchived: Boolean!
   archivedAt: DateTime
   archivedBy: UserType
+  clientId: String!
+  createdAt: DateTime!
+  createdBy: UserType!
   id: ID!
-  name: String!
-  membersCount: Int!
+  isArchived: Boolean!
   members(pagination: OffsetPaginationInput): ContributorUserTypeOffsetPaginated!
+  membersCount: Int!
+  modifiedAt: DateTime!
+  modifiedBy: UserType!
+  name: String!
 }
 
 type ContributorTeamTypeOffsetPaginated {
   pageInfo: OffsetPaginationInfo!
 
-  """Total count of existing results."""
-  totalCount: Int!
-
   """List of paginated results."""
   results: [ContributorTeamType!]!
+
+  """Total count of existing results."""
+  totalCount: Int!
 }
 
 type ContributorTimeStatType {
@@ -399,26 +398,26 @@ type ContributorTimeStatType {
 ContributorUser(id, old_id, firebase_push_status, firebase_last_pushed, team, username, firebase_id, created_at, modified_at)
 """
 input ContributorUserFilter {
-  id: IDBaseFilterLookup
+  AND: ContributorUserFilter
+  DISTINCT: Boolean
+  NOT: ContributorUserFilter
+  OR: ContributorUserFilter
 
   """Firebase User ID (External)"""
   firebaseId: StrFilterLookup
-  username: StrFilterLookup
+  id: IDBaseFilterLookup
   teamId: IDBaseFilterLookup
-  AND: ContributorUserFilter
-  OR: ContributorUserFilter
-  NOT: ContributorUserFilter
-  DISTINCT: Boolean
+  username: StrFilterLookup
 }
 
 type ContributorUserFilteredStats implements ContributorUserUserGroupBaseFilterStatsQuery {
-  swipeByDate: [ContributorSwipeStatType!]!
-  swipeTimeByDate: [ContributorTimeStatType!]!
   areaSwipedByProjectType: [ProjectTypeAreaStatsType!]!
-  swipeByProjectType: [ProjectTypeSwipeStatsType!]!
+  id: ID!
+  swipeByDate: [ContributorSwipeStatType!]!
   swipeByOrganizationName: [OrganizationSwipeStatsType!]!
   swipeByProjectGeo: [MapContributionStatsType!]!
-  id: ID!
+  swipeByProjectType: [ProjectTypeSwipeStatsType!]!
+  swipeTimeByDate: [ContributorTimeStatType!]!
 }
 
 """
@@ -426,50 +425,50 @@ ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modifie
 """
 input ContributorUserGroupCreateInput {
   clientId: String!
-  name: String!
   description: String!
+  name: String!
 }
 
 """
 ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description)
 """
 input ContributorUserGroupFilter {
+  AND: ContributorUserGroupFilter
+  DISTINCT: Boolean
+  NOT: ContributorUserGroupFilter
+  OR: ContributorUserGroupFilter
   id: IDBaseFilterLookup
   isArchived: BoolBaseFilterLookup
-  AND: ContributorUserGroupFilter
-  OR: ContributorUserGroupFilter
-  NOT: ContributorUserGroupFilter
-  DISTINCT: Boolean
   name: String
   userFirebaseId: ID
 }
 
 type ContributorUserGroupFilteredStats implements ContributorUserUserGroupBaseFilterStatsQuery {
-  swipeByDate: [ContributorSwipeStatType!]!
-  swipeTimeByDate: [ContributorTimeStatType!]!
   areaSwipedByProjectType: [ProjectTypeAreaStatsType!]!
-  swipeByProjectType: [ProjectTypeSwipeStatsType!]!
+  swipeByDate: [ContributorSwipeStatType!]!
   swipeByOrganizationName: [OrganizationSwipeStatsType!]!
   swipeByProjectGeo: [MapContributionStatsType!]!
+  swipeByProjectType: [ProjectTypeSwipeStatsType!]!
+  swipeTimeByDate: [ContributorTimeStatType!]!
 }
 
 type ContributorUserGroupLatestStatsType {
-  totalSwipes: Int!
+  totalContributors: Int!
+  totalMappingProjects: Int!
 
   """total swipe time (seconds)"""
   totalSwipeTime: Int!
-  totalMappingProjects: Int!
-  totalContributors: Int!
+  totalSwipes: Int!
 }
 
 """ContributorUserGroupMembership(id, user_group, user, is_active)"""
 input ContributorUserGroupMembershipFilter {
+  AND: ContributorUserGroupMembershipFilter
+  DISTINCT: Boolean
+  NOT: ContributorUserGroupMembershipFilter
+  OR: ContributorUserGroupMembershipFilter
   id: IDBaseFilterLookup
   userGroupId: IDBaseFilterLookup
-  AND: ContributorUserGroupMembershipFilter
-  OR: ContributorUserGroupMembershipFilter
-  NOT: ContributorUserGroupMembershipFilter
-  DISTINCT: Boolean
 }
 
 enum ContributorUserGroupMembershipLogActionEnum {
@@ -484,22 +483,22 @@ input ContributorUserGroupMembershipOrder {
 """ContributorUserGroupMembership(id, user_group, user, is_active)"""
 type ContributorUserGroupMembershipType {
   id: ID!
-  userId: ID!
   isActive: Boolean!
-  user: ContributorUserType!
   totalMappingProjects: Int!
-  totalSwipes: Int!
   totalSwipeTime: Int!
+  totalSwipes: Int!
+  user: ContributorUserType!
+  userId: ID!
 }
 
 type ContributorUserGroupMembershipTypeOffsetPaginated {
   pageInfo: OffsetPaginationInfo!
 
-  """Total count of existing results."""
-  totalCount: Int!
-
   """List of paginated results."""
   results: [ContributorUserGroupMembershipType!]!
+
+  """Total count of existing results."""
+  totalCount: Int!
 }
 
 input ContributorUserGroupOrder {
@@ -508,59 +507,59 @@ input ContributorUserGroupOrder {
 }
 
 type ContributorUserGroupStats {
+  filteredStats(dateRange: DateRangeInput = null): ContributorUserGroupFilteredStats!
   id: ID!
   stats: ContributorUserGroupStatsType!
 
   """Stats from last 30 days"""
   statsLatest: ContributorUserGroupLatestStatsType!
-  filteredStats(dateRange: DateRangeInput = null): ContributorUserGroupFilteredStats!
 }
 
 type ContributorUserGroupStatsType {
-  totalSwipes: Int!
+  totalAreaSwiped: AreaSqKm!
+  totalContributors: Int!
+  totalMappingProjects: Int!
+  totalOrganization: Int!
 
   """total swipe time (seconds)"""
   totalSwipeTime: Int!
-  totalMappingProjects: Int!
-  totalContributors: Int!
-  totalAreaSwiped: AreaSqKm!
-  totalOrganization: Int!
+  totalSwipes: Int!
 }
 
 """
 ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description)
 """
 type ContributorUserGroupType implements UserResourceTypeMixin {
-  clientId: String!
-  createdAt: DateTime!
-  modifiedAt: DateTime!
-  createdBy: UserType!
-  modifiedBy: UserType!
-  isArchived: Boolean!
   archivedAt: DateTime
   archivedBy: UserType
-  id: ID!
-  name: String!
-  description: String!
-  membersCount: Int!
+  clientId: String!
   communityDashboardUrl: String!
+  createdAt: DateTime!
+  createdBy: UserType!
+  description: String!
+  id: ID!
+  isArchived: Boolean!
+  membersCount: Int!
+  modifiedAt: DateTime!
+  modifiedBy: UserType!
+  name: String!
   userMemberships(pagination: OffsetPaginationInput): ContributorUserGroupMembershipTypeOffsetPaginated!
 }
 
 type ContributorUserGroupTypeMutationResponseType {
-  ok: Boolean!
   errors: CustomErrorType
+  ok: Boolean!
   result: ContributorUserGroupType
 }
 
 type ContributorUserGroupTypeOffsetPaginated {
   pageInfo: OffsetPaginationInfo!
 
-  """Total count of existing results."""
-  totalCount: Int!
-
   """List of paginated results."""
   results: [ContributorUserGroupType!]!
+
+  """Total count of existing results."""
+  totalCount: Int!
 }
 
 """
@@ -568,16 +567,15 @@ ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modifie
 """
 input ContributorUserGroupUpdateInput {
   clientId: String!
-  name: String
   description: String
   isArchived: Boolean
+  name: String
 }
 
 type ContributorUserLatestStatsType {
-  totalSwipes: Int!
-
   """total swipe time (seconds)"""
   totalSwipeTime: Int!
+  totalSwipes: Int!
   totalUserGroups: Int!
 }
 
@@ -587,102 +585,102 @@ input ContributorUserOrder {
 }
 
 type ContributorUserStatType {
-  totalSwipes: Int!
+  totalAreaSwiped: AreaSqKm!
+  totalMappingProjects: Int!
+  totalOrganization: Int!
 
   """total swipe time (seconds)"""
   totalSwipeTime: Int!
-  totalMappingProjects: Int!
-  totalAreaSwiped: AreaSqKm!
-  totalOrganization: Int!
+  totalSwipes: Int!
 }
 
 type ContributorUserStats {
+  filteredStats(dateRange: DateRangeInput = null): ContributorUserFilteredStats!
   id: ID!
   stats: ContributorUserStatType!
 
   """Stats from last 30 days"""
   statsLatest: ContributorUserLatestStatsType!
-  filteredStats(dateRange: DateRangeInput = null): ContributorUserFilteredStats!
 }
 
 """
 ContributorUser(id, old_id, firebase_push_status, firebase_last_pushed, team, username, firebase_id, created_at, modified_at)
 """
 type ContributorUserType {
-  id: ID!
+  communityDashboardUrl: String!
+  createdAt: DateTime
 
   """Firebase User ID (External)"""
   firebaseId: ID!
-  username: String!
-  createdAt: DateTime
+  id: ID!
   totalMappingProjects: Int!
-  totalSwipes: Int!
   totalSwipeTime: Int!
-  communityDashboardUrl: String!
+  totalSwipes: Int!
+  username: String!
 }
 
 type ContributorUserTypeOffsetPaginated {
   pageInfo: OffsetPaginationInfo!
 
-  """Total count of existing results."""
-  totalCount: Int!
-
   """List of paginated results."""
   results: [ContributorUserType!]!
+
+  """Total count of existing results."""
+  totalCount: Int!
 }
 
 interface ContributorUserUserGroupBaseFilterStatsQuery {
-  swipeByDate: [ContributorSwipeStatType!]!
-  swipeTimeByDate: [ContributorTimeStatType!]!
   areaSwipedByProjectType: [ProjectTypeAreaStatsType!]!
-  swipeByProjectType: [ProjectTypeSwipeStatsType!]!
+  swipeByDate: [ContributorSwipeStatType!]!
   swipeByOrganizationName: [OrganizationSwipeStatsType!]!
   swipeByProjectGeo: [MapContributionStatsType!]!
+  swipeByProjectType: [ProjectTypeSwipeStatsType!]!
+  swipeTimeByDate: [ContributorTimeStatType!]!
 }
 
 union CreateContributorUserGroupPayload = ContributorUserGroupTypeMutationResponseType | OperationInfo
 
-union CreateOrganizationPayload = OrganizationTypeMutationResponseType | OperationInfo
+union CreateOrganizationPayload = OperationInfo | OrganizationTypeMutationResponseType
 
-union CreateProjectAssetPayload = ProjectAssetTypeMutationResponseType | OperationInfo
+union CreateProjectAssetPayload = OperationInfo | ProjectAssetTypeMutationResponseType
 
-union CreateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
+union CreateProjectPayload = OperationInfo | ProjectTypeMutationResponseType
 
-union CreateTutorialAssetPayload = TutorialAssetTypeMutationResponseType | OperationInfo
+union CreateTutorialAssetPayload = OperationInfo | TutorialAssetTypeMutationResponseType
 
-union CreateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
+union CreateTutorialPayload = OperationInfo | TutorialTypeMutationResponseType
 
 """A generic type to return error messages"""
 scalar CustomErrorType
 
 input CustomOptionInput {
   clientId: String!
-
-  """A positive int value"""
-  value: Int!
-  title: String!
   description: String!
   icon: IconEnum!
 
   """A valid hex color string like '#fff' or '#ffffff'"""
   iconColor: String!
   subOptions: [CustomSubOptionInput!]
+  title: String!
+
+  """A positive int value"""
+  value: Int!
 }
 
 type CustomOptionType {
-  title: String!
-  icon: IconEnum!
-  value: Int!
   description: String!
+  icon: IconEnum!
   iconColor: String!
+  title: String!
+  value: Int!
 }
 
 input CustomSubOptionInput {
   clientId: String!
+  description: String!
 
   """A positive int value"""
   value: Int!
-  description: String!
 }
 
 """Date (isoformat)"""
@@ -700,24 +698,24 @@ input DeleteInput {
   id: ID!
 }
 
-union DeleteProjectPayload = ProjectType | OperationInfo
+union DeleteProjectPayload = OperationInfo | ProjectType
 
-union DeleteTutorialPayload = TutorialType | OperationInfo
+union DeleteTutorialPayload = OperationInfo | TutorialType
 
 input DjangoModelFilterInput {
   id: ID!
 }
 
 input FindProjectPropertyInput {
-  zoomLevel: Int!
-  tileServerProperty: ProjectRasterTileServerConfigInput!
   aoiGeometry: String!
+  tileServerProperty: ProjectRasterTileServerConfigInput!
+  zoomLevel: Int!
 }
 
 type FindProjectPropertyType {
-  zoomLevel: Int!
-  tileServerProperty: ProjectRasterTileServerConfig!
   aoiGeometry: String!
+  tileServerProperty: ProjectRasterTileServerConfig!
+  zoomLevel: Int!
 }
 
 input FindTutorialTaskPropertyInput {
@@ -738,13 +736,13 @@ input IDBaseFilterLookup {
   """Exact match. Filter will be skipped on `null` value"""
   exact: ID
 
-  """Assignment test. Filter will be skipped on `null` value"""
-  isNull: Boolean
-
   """
   Exact match of items in a given list. Filter will be skipped on `null` value
   """
   inList: [ID!]
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
 }
 
 enum IconEnum {
@@ -752,11 +750,12 @@ enum IconEnum {
   ALERT_OUTLINE
   BAN_OUTLINE
   CHECK
-  CLOSE_OUTLINE
   CHECKMARK_OUTLINE
+  CLOSE_OUTLINE
   EGG_OUTLINE
   ELLIPSE_OUTLINE
   FLAG_OUTLINE
+  GENERAL_TAP
   HAND_LEFT_OUTLINE
   HAND_RIGHT_OUTLINE
   HAPPY_OUTLINE
@@ -771,35 +770,34 @@ enum IconEnum {
   SHAPES_OUTLINE
   SQUARE_OUTLINE
   STAR_OUTLINE
-  THUMBS_DOWN_OUTLINE
-  THUMBS_UP_OUTLINE
-  TRIANGLE_OUTLINE
-  WARNING_OUTLINE
-  GENERAL_TAP
+  SWIPE_LEFT
   TAP
   TAP_1
   TAP_2
   TAP_3
-  SWIPE_LEFT
+  THUMBS_DOWN_OUTLINE
+  THUMBS_UP_OUTLINE
+  TRIANGLE_OUTLINE
+  WARNING_OUTLINE
 }
 
 input IntComparisonFilterLookup {
   """Exact match. Filter will be skipped on `null` value"""
   exact: Int
 
-  """Assignment test. Filter will be skipped on `null` value"""
-  isNull: Boolean
+  """Greater than. Filter will be skipped on `null` value"""
+  gt: Int
+
+  """Greater than or equal to. Filter will be skipped on `null` value"""
+  gte: Int
 
   """
   Exact match of items in a given list. Filter will be skipped on `null` value
   """
   inList: [Int!]
 
-  """Greater than. Filter will be skipped on `null` value"""
-  gt: Int
-
-  """Greater than or equal to. Filter will be skipped on `null` value"""
-  gte: Int
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
 
   """Less than. Filter will be skipped on `null` value"""
   lt: Int
@@ -812,8 +810,8 @@ input IntComparisonFilterLookup {
 }
 
 input IntRangeLookup {
-  start: Int = null
   end: Int = null
+  start: Int = null
 }
 
 type MapContributionStatsType {
@@ -822,9 +820,9 @@ type MapContributionStatsType {
 }
 
 enum MappingSessionClientTypeEnum {
-  UNKNOWN
   MOBILE_ANDROID
   MOBILE_IOS
+  UNKNOWN
   WEB
 }
 
@@ -834,85 +832,85 @@ type MapswipeDjangoFileType {
 }
 
 type Mutation {
+  createContributorUserGroup(data: ContributorUserGroupCreateInput!): CreateContributorUserGroupPayload! @isAuthenticated
+  createOrganization(data: OrganizationCreateInput!): CreateOrganizationPayload! @isAuthenticated
+  createProject(data: ProjectCreateInput!): CreateProjectPayload! @isAuthenticated
+  createProjectAsset(data: ProjectAssetCreateInput!): CreateProjectAssetPayload! @isAuthenticated
+  createTutorial(data: TutorialCreateInput!): CreateTutorialPayload! @isAuthenticated
+  createTutorialAsset(data: TutorialAssetCreateInput!): CreateTutorialAssetPayload! @isAuthenticated
+  deleteProject: DeleteProjectPayload! @isAuthenticated
+  deleteTutorial: DeleteTutorialPayload! @isAuthenticated
   login(username: String!, password: String!): UserMeType!
   logout: Boolean!
-  deleteProject: DeleteProjectPayload! @isAuthenticated
-  createProject(data: ProjectCreateInput!): CreateProjectPayload! @isAuthenticated
-  updateProject(data: ProjectUpdateInput!, pk: ID!): UpdateProjectPayload! @isAuthenticated
-  updateProcessedProject(data: ProcessedProjectUpdateInput!, pk: ID!): UpdateProcessedProjectPayload! @isAuthenticated
-  createProjectAsset(data: ProjectAssetCreateInput!): CreateProjectAssetPayload! @isAuthenticated
-  createOrganization(data: OrganizationCreateInput!): CreateOrganizationPayload! @isAuthenticated
-  updateOrganization(data: OrganizationUpdateInput!, pk: ID!): UpdateOrganizationPayload! @isAuthenticated
-  updateProjectStatus(data: ProjectStatusUpdateInput!, pk: ID!): UpdateProjectStatusPayload! @isAuthenticated
-  deleteTutorial: DeleteTutorialPayload! @isAuthenticated
-  createTutorial(data: TutorialCreateInput!): CreateTutorialPayload! @isAuthenticated
-  updateTutorial(data: TutorialUpdateInput!, pk: ID!): UpdateTutorialPayload! @isAuthenticated
-  createTutorialAsset(data: TutorialAssetCreateInput!): CreateTutorialAssetPayload! @isAuthenticated
-  updateTutorialStatus(data: TutorialStatusUpdateInput!, pk: ID!): UpdateTutorialStatusPayload! @isAuthenticated
-  createContributorUserGroup(data: ContributorUserGroupCreateInput!): CreateContributorUserGroupPayload! @isAuthenticated
   updateContributorUserGroup(data: ContributorUserGroupUpdateInput!, pk: ID!): UpdateContributorUserGroupPayload! @isAuthenticated
+  updateOrganization(data: OrganizationUpdateInput!, pk: ID!): UpdateOrganizationPayload! @isAuthenticated
+  updateProcessedProject(data: ProcessedProjectUpdateInput!, pk: ID!): UpdateProcessedProjectPayload! @isAuthenticated
+  updateProject(data: ProjectUpdateInput!, pk: ID!): UpdateProjectPayload! @isAuthenticated
+  updateProjectStatus(data: ProjectStatusUpdateInput!, pk: ID!): UpdateProjectStatusPayload! @isAuthenticated
+  updateTutorial(data: TutorialUpdateInput!, pk: ID!): UpdateTutorialPayload! @isAuthenticated
+  updateTutorialStatus(data: TutorialStatusUpdateInput!, pk: ID!): UpdateTutorialStatusPayload! @isAuthenticated
 }
 
 input ObjectImageAnnotationInput {
-  id: String!
-  imageId: String!
-  categoryId: String = null
-  iscrowd: Int = null
-  segmentation: [[Float!]!] = null
   area: Float = null
   bbox: [Float!]!
+  categoryId: String = null
+  id: String!
+  imageId: String!
+  iscrowd: Int = null
+  segmentation: [[Float!]!] = null
 }
 
 type ObjectImageAnnotationType {
-  id: String!
-  imageId: String!
-  categoryId: String
-  iscrowd: Int
-  segmentation: [[Float!]!]
   area: Float
   bbox: [Float!]!
+  categoryId: String
+  id: String!
+  imageId: String!
+  iscrowd: Int
+  segmentation: [[Float!]!]
 }
 
 input ObjectImageAssetPropertyInput {
-  image: ObjectImageInput!
   annotations: [ObjectImageAnnotationInput!] = null
+  image: ObjectImageInput!
 }
 
 type ObjectImageAssetPropertyType {
-  image: ObjectImageType!
   annotations: [ObjectImageAnnotationType!]
+  image: ObjectImageType!
 }
 
 input ObjectImageInput {
-  id: String!
-  fileName: String!
-  license: Int = null
   cocoUrl: String = null
-  flickrUrl: String = null
-  width: Int = null
-  height: Int = null
   dateCaptured: DateTime = null
+  fileName: String!
+  flickrUrl: String = null
+  height: Int = null
+  id: String!
+  license: Int = null
+  width: Int = null
 }
 
 type ObjectImageType {
-  id: String!
-  fileName: String!
-  license: Int
   cocoUrl: String
-  flickrUrl: String
-  width: Int
-  height: Int
   dateCaptured: DateTime
+  fileName: String!
+  flickrUrl: String
+  height: Int
+  id: String!
+  license: Int
+  width: Int
 }
 
 type OffsetPaginationInfo {
-  offset: Int!
   limit: Int
+  offset: Int!
 }
 
 input OffsetPaginationInput {
-  offset: Int! = 0
   limit: Int
+  offset: Int! = 0
 }
 
 type OperationInfo {
@@ -921,27 +919,27 @@ type OperationInfo {
 }
 
 type OperationMessage {
-  """The kind of this message."""
-  kind: OperationMessageKind!
-
-  """The error message."""
-  message: String!
+  """The error code, or `null` if no error code was set."""
+  code: String
 
   """
   The field that caused the error, or `null` if it isn't associated with any particular field.
   """
   field: String
 
-  """The error code, or `null` if no error code was set."""
-  code: String
+  """The kind of this message."""
+  kind: OperationMessageKind!
+
+  """The error message."""
+  message: String!
 }
 
 enum OperationMessageKind {
-  INFO
-  WARNING
   ERROR
+  INFO
   PERMISSION
   VALIDATION
+  WARNING
 }
 
 enum Ordering {
@@ -957,22 +955,22 @@ enum Ordering {
 Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description, abbreviation, unique_name)
 """
 input OrganizationCreateInput {
-  clientId: String!
-  name: String!
-  description: String
   abbreviation: String
+  clientId: String!
+  description: String
+  name: String!
 }
 
 """
 Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description, abbreviation, unique_name)
 """
 input OrganizationFilter {
+  AND: OrganizationFilter
+  DISTINCT: Boolean
+  NOT: OrganizationFilter
+  OR: OrganizationFilter
   id: IDBaseFilterLookup
   isArchived: BoolBaseFilterLookup
-  AND: OrganizationFilter
-  OR: OrganizationFilter
-  NOT: OrganizationFilter
-  DISTINCT: Boolean
   name: String
 }
 
@@ -990,225 +988,224 @@ type OrganizationSwipeStatsType {
 Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description, abbreviation, unique_name)
 """
 type OrganizationType implements UserResourceTypeMixin {
-  clientId: String!
-  createdAt: DateTime!
-  modifiedAt: DateTime!
-  createdBy: UserType!
-  modifiedBy: UserType!
-  isArchived: Boolean!
+  abbreviation: String
   archivedAt: DateTime
   archivedBy: UserType
-  id: ID!
-  name: String!
+  clientId: String!
+  createdAt: DateTime!
+  createdBy: UserType!
   description: String
-  abbreviation: String
+  id: ID!
+  isArchived: Boolean!
+  modifiedAt: DateTime!
+  modifiedBy: UserType!
+  name: String!
 }
 
 type OrganizationTypeMutationResponseType {
-  ok: Boolean!
   errors: CustomErrorType
+  ok: Boolean!
   result: OrganizationType
 }
 
 type OrganizationTypeOffsetPaginated {
   pageInfo: OffsetPaginationInfo!
 
-  """Total count of existing results."""
-  totalCount: Int!
-
   """List of paginated results."""
   results: [OrganizationType!]!
+
+  """Total count of existing results."""
+  totalCount: Int!
 }
 
 """
 Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description, abbreviation, unique_name)
 """
 input OrganizationUpdateInput {
+  abbreviation: String
   clientId: String!
+  description: String
   isArchived: Boolean
   name: String
-  description: String
-  abbreviation: String
 }
 
 enum OverlayLayerTypeEnum {
-  VECTOR_TILE
   RASTER_TILE
+  VECTOR_TILE
 }
 
 """
 Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProcessedProjectUpdateInput {
-  clientId: String!
-  topic: String
-  region: String
-  projectNumber: Int
-
-  """What should the users look for (e.g. buildings, cars, trees)"""
-  lookFor: String
-
   """
   Provide an optional link to a resource with additional information on the project
   """
   additionalInfoUrl: String
+  clientId: String!
   description: String
-  status: ProjectStatusEnum
+  image: ID
 
-  """Tutorial used for this project."""
-  tutorial: ID
+  """What should the users look for (e.g. buildings, cars, trees)"""
+  lookFor: String
+  projectNumber: Int
+  region: String
 
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: ID
-  image: ID
+  status: ProjectStatusEnum
   team: ID
+  topic: String
+
+  """Tutorial used for this project."""
+  tutorial: ID
 }
 
 """
 ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, export_type, input_type, project, file, asset_type_specifics)
 """
 input ProjectAssetCreateInput {
+  assetTypeSpecifics: AssetTypeSpecificInput
   clientId: String!
-  project: ID!
-  inputType: ProjectAssetInputTypeEnum!
 
   """Provide link to the file associated with the asset"""
   externalUrl: String
 
   """The file associated with the asset"""
   file: Upload
-  assetTypeSpecifics: AssetTypeSpecificInput
+  inputType: ProjectAssetInputTypeEnum!
+  project: ID!
 }
 
 enum ProjectAssetExportTypeEnum {
   AGGREGATED_RESULTS
   AGGREGATED_RESULTS_WITH_GEOMETRY
+  AREA_OF_INTEREST
   GROUPS
   HISTORY
+  HOT_TASKING_MANAGER_GEOMETRIES
+  MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES
   RESULTS
   TASKS
   USERS
-  AREA_OF_INTEREST
-  HOT_TASKING_MANAGER_GEOMETRIES
-  MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES
 }
 
 input ProjectAssetExportTypeEnumFilterLookup {
-  """Exact match. Filter will be skipped on `null` value"""
-  exact: ProjectAssetExportTypeEnum
-
-  """Assignment test. Filter will be skipped on `null` value"""
-  isNull: Boolean
-
-  """
-  Exact match of items in a given list. Filter will be skipped on `null` value
-  """
-  inList: [ProjectAssetExportTypeEnum!]
-
-  """Case-insensitive exact match. Filter will be skipped on `null` value"""
-  iExact: ProjectAssetExportTypeEnum
-
   """
   Case-sensitive containment test. Filter will be skipped on `null` value
   """
   contains: ProjectAssetExportTypeEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: ProjectAssetExportTypeEnum
+
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ProjectAssetExportTypeEnum
 
   """
   Case-insensitive containment test. Filter will be skipped on `null` value
   """
   iContains: ProjectAssetExportTypeEnum
 
-  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
-  startsWith: ProjectAssetExportTypeEnum
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: ProjectAssetExportTypeEnum
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: ProjectAssetExportTypeEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: ProjectAssetExportTypeEnum
 
   """Case-insensitive starts-with. Filter will be skipped on `null` value"""
   iStartsWith: ProjectAssetExportTypeEnum
 
-  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
-  endsWith: ProjectAssetExportTypeEnum
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ProjectAssetExportTypeEnum!]
 
-  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
-  iEndsWith: ProjectAssetExportTypeEnum
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
 
   """
   Case-sensitive regular expression match. Filter will be skipped on `null` value
   """
   regex: ProjectAssetExportTypeEnum
 
-  """
-  Case-insensitive regular expression match. Filter will be skipped on `null` value
-  """
-  iRegex: ProjectAssetExportTypeEnum
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: ProjectAssetExportTypeEnum
 }
 
 """
 ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, export_type, input_type, project, file, asset_type_specifics)
 """
 input ProjectAssetFilter {
-  id: IDBaseFilterLookup
-  type: AssetTypeEnumFilterLookup
-  inputType: ProjectAssetInputTypeEnumFilterLookup
+  AND: ProjectAssetFilter
+  DISTINCT: Boolean
+  NOT: ProjectAssetFilter
+  OR: ProjectAssetFilter
   exportType: ProjectAssetExportTypeEnumFilterLookup
+  id: IDBaseFilterLookup
+  inputType: ProjectAssetInputTypeEnumFilterLookup
   mimetype: AssetMimetypeEnumFilterLookup
   projectId: IDBaseFilterLookup
-  AND: ProjectAssetFilter
-  OR: ProjectAssetFilter
-  NOT: ProjectAssetFilter
-  DISTINCT: Boolean
+  type: AssetTypeEnumFilterLookup
 }
 
 enum ProjectAssetInputTypeEnum {
   AOI_GEOMETRY
-  OBJECT_IMAGE
   COVER_IMAGE
+  OBJECT_IMAGE
 }
 
 input ProjectAssetInputTypeEnumFilterLookup {
-  """Exact match. Filter will be skipped on `null` value"""
-  exact: ProjectAssetInputTypeEnum
-
-  """Assignment test. Filter will be skipped on `null` value"""
-  isNull: Boolean
-
-  """
-  Exact match of items in a given list. Filter will be skipped on `null` value
-  """
-  inList: [ProjectAssetInputTypeEnum!]
-
-  """Case-insensitive exact match. Filter will be skipped on `null` value"""
-  iExact: ProjectAssetInputTypeEnum
-
   """
   Case-sensitive containment test. Filter will be skipped on `null` value
   """
   contains: ProjectAssetInputTypeEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: ProjectAssetInputTypeEnum
+
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ProjectAssetInputTypeEnum
 
   """
   Case-insensitive containment test. Filter will be skipped on `null` value
   """
   iContains: ProjectAssetInputTypeEnum
 
-  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
-  startsWith: ProjectAssetInputTypeEnum
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: ProjectAssetInputTypeEnum
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: ProjectAssetInputTypeEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: ProjectAssetInputTypeEnum
 
   """Case-insensitive starts-with. Filter will be skipped on `null` value"""
   iStartsWith: ProjectAssetInputTypeEnum
 
-  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
-  endsWith: ProjectAssetInputTypeEnum
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ProjectAssetInputTypeEnum!]
 
-  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
-  iEndsWith: ProjectAssetInputTypeEnum
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
 
   """
   Case-sensitive regular expression match. Filter will be skipped on `null` value
   """
   regex: ProjectAssetInputTypeEnum
 
-  """
-  Case-insensitive regular expression match. Filter will be skipped on `null` value
-  """
-  iRegex: ProjectAssetInputTypeEnum
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: ProjectAssetInputTypeEnum
 }
 
 input ProjectAssetOrder {
@@ -1219,168 +1216,172 @@ input ProjectAssetOrder {
 ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, export_type, input_type, project, file, asset_type_specifics)
 """
 type ProjectAssetType implements UserResourceTypeMixin {
+  assetTypeSpecifics: AoiGeometryAssetPropertyTypeObjectImageAssetPropertyType
   clientId: String!
   createdAt: DateTime!
-  modifiedAt: DateTime!
   createdBy: UserType!
-  modifiedBy: UserType!
-  type: AssetTypeEnum!
-
-  """The size of the file in bytes"""
-  fileSize: Int!
-  mimetype: AssetMimetypeEnum
-
-  """If this flag is enabled, this asset will be deleted in the future"""
-  markedAsDeleted: Boolean!
-  id: ID!
-
-  """The file associated with the asset"""
-  file: MapswipeDjangoFileType
   exportType: ProjectAssetExportTypeEnum
-  inputType: ProjectAssetInputTypeEnum
 
   """Provide link to the file associated with the asset"""
   externalUrl: String
+
+  """The file associated with the asset"""
+  file: MapswipeDjangoFileType
+
+  """The size of the file in bytes"""
+  fileSize: Int!
+  id: ID!
+  inputType: ProjectAssetInputTypeEnum
+
+  """If this flag is enabled, this asset will be deleted in the future"""
+  markedAsDeleted: Boolean!
+  mimetype: AssetMimetypeEnum
+  modifiedAt: DateTime!
+  modifiedBy: UserType!
   projectId: ID!
-  assetTypeSpecifics: AoiGeometryAssetPropertyTypeObjectImageAssetPropertyType
+  type: AssetTypeEnum!
 }
 
 type ProjectAssetTypeMutationResponseType {
-  ok: Boolean!
   errors: CustomErrorType
+  ok: Boolean!
   result: ProjectAssetType
 }
 
 type ProjectAssetTypeOffsetPaginated {
   pageInfo: OffsetPaginationInfo!
 
-  """Total count of existing results."""
-  totalCount: Int!
-
   """List of paginated results."""
   results: [ProjectAssetType!]!
+
+  """Total count of existing results."""
+  totalCount: Int!
 }
 
 """
 Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProjectCreateInput {
-  clientId: String!
-  topic: String!
-  region: String!
-  projectNumber: Int!
-  projectType: ProjectTypeEnum!
-
-  """Which group, institution or community is requesting this project?"""
-  requestingOrganization: ID!
-
-  """What should the users look for (e.g. buildings, cars, trees)"""
-  lookFor: String!
-
   """
   Provide an optional link to a resource with additional information on the project
   """
   additionalInfoUrl: String
+  clientId: String!
   description: String
+
+  """What should the users look for (e.g. buildings, cars, trees)"""
+  lookFor: String!
+  projectNumber: Int!
+  projectType: ProjectTypeEnum!
+  region: String!
+
+  """Which group, institution or community is requesting this project?"""
+  requestingOrganization: ID!
   team: ID
+  topic: String!
 }
 
 type ProjectCustomOption {
   clientId: String!
-
-  """A positive int value"""
-  value: Int!
-  title: String!
   description: String!
   icon: IconEnum!
 
   """A valid hex color string like '#fff' or '#ffffff'"""
   iconColor: String!
   subOptions: [ProjectCustomSubOption!]
+  title: String!
+
+  """A positive int value"""
+  value: Int!
 }
 
 type ProjectCustomSubOption {
   clientId: String!
+  description: String!
 
   """A positive int value"""
   value: Int!
-  description: String!
 }
 
 interface ProjectExportAssetTypeMixin {
   exportAggregatedResults: ProjectAssetType
   exportAggregatedResultsWithGeometry: ProjectAssetType
+  exportAreaOfInterest: ProjectAssetType
   exportGroups: ProjectAssetType
   exportHistory: ProjectAssetType
+  exportHotTaskingManagerGeometries: ProjectAssetType
+  exportModerateToHighAgreementYesMaybeGeometries: ProjectAssetType
   exportResults: ProjectAssetType
   exportTasks: ProjectAssetType
   exportUsers: ProjectAssetType
-  exportAreaOfInterest: ProjectAssetType
-  exportHotTaskingManagerGeometries: ProjectAssetType
-  exportModerateToHighAgreementYesMaybeGeometries: ProjectAssetType
 }
 
 """
 Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProjectFilter {
+  AND: ProjectFilter
+  DISTINCT: Boolean
+  NOT: ProjectFilter
+  OR: ProjectFilter
   id: IDBaseFilterLookup
-  projectNumber: IntComparisonFilterLookup
-  projectType: ProjectTypeEnumFilterLookup
-
-  """Which group, institution or community is requesting this project?"""
-  requestingOrganizationId: IDBaseFilterLookup
   isFeatured: BoolBaseFilterLookup
-  status: ProjectStatusEnumFilterLookup
-  team: DjangoModelFilterInput
 
   """
   If the project is private, then it is only visible to the team members.
   """
   isPrivate: BoolBaseFilterLookup
-  AND: ProjectFilter
-  OR: ProjectFilter
-  NOT: ProjectFilter
-  DISTINCT: Boolean
-  topic: String
-  region: String
   name: String
+  projectNumber: IntComparisonFilterLookup
+  projectType: ProjectTypeEnumFilterLookup
+  region: String
+
+  """Which group, institution or community is requesting this project?"""
+  requestingOrganizationId: IDBaseFilterLookup
+  status: ProjectStatusEnumFilterLookup
+  team: DjangoModelFilterInput
+  topic: String
 }
 
 input ProjectOrder {
   id: Ordering
-  topic: Ordering
   name: Ordering
+  topic: Ordering
 }
 
 type ProjectOverlayRasterTileServerConfig {
-  tileServer: ProjectRasterTileServerConfig!
-
   """A valid opacity like 0.2 or 1.0"""
   opacity: Float!
+  tileServer: ProjectRasterTileServerConfig!
 }
 
 input ProjectOverlayRasterTileServerConfigInput {
-  tileServer: ProjectRasterTileServerConfigInput!
-
   """A valid opacity like 0.2 or 1.0"""
   opacity: Float!
+  tileServer: ProjectRasterTileServerConfigInput!
 }
 
 type ProjectOverlayTileServerConfig {
-  type: OverlayLayerTypeEnum!
   raster: ProjectOverlayRasterTileServerConfig
+  type: OverlayLayerTypeEnum!
   vector: ProjectOverlayVectorTileServerConfig
 }
 
 input ProjectOverlayTileServerConfigInput {
-  type: OverlayLayerTypeEnum!
   raster: ProjectOverlayRasterTileServerConfigInput = null
+  type: OverlayLayerTypeEnum!
   vector: ProjectOverlayVectorTileServerConfigInput = null
 }
 
 type ProjectOverlayVectorTileServerConfig {
-  tileServer: ProjectVectorTileServerConfig!
+  """A valid hex color string like '#fff' or '#ffffff'"""
+  circleColor: String!
+
+  """A valid opacity like 0.2 or 1.0"""
+  circleOpacity: Float!
+
+  """A positive float value"""
+  circleRadius: Float!
 
   """A valid hex color string like '#fff' or '#ffffff'"""
   fillColor: String!
@@ -1390,26 +1391,25 @@ type ProjectOverlayVectorTileServerConfig {
 
   """A valid hex color string like '#fff' or '#ffffff'"""
   lineColor: String!
+  lineDasharray: [Int!]!
 
   """A valid opacity like 0.2 or 1.0"""
   lineOpacity: Float!
 
   """A positive float value"""
   lineWidth: Float!
-  lineDasharray: [Int!]!
-
-  """A valid hex color string like '#fff' or '#ffffff'"""
-  circleColor: String!
-
-  """A valid opacity like 0.2 or 1.0"""
-  circleOpacity: Float!
-
-  """A positive float value"""
-  circleRadius: Float!
+  tileServer: ProjectVectorTileServerConfig!
 }
 
 input ProjectOverlayVectorTileServerConfigInput {
-  tileServer: ProjectVectorTileServerConfigInput!
+  """A valid hex color string like '#fff' or '#ffffff'"""
+  circleColor: String!
+
+  """A valid opacity like 0.2 or 1.0"""
+  circleOpacity: Float!
+
+  """A positive float value"""
+  circleRadius: Float!
 
   """A valid hex color string like '#fff' or '#ffffff'"""
   fillColor: String!
@@ -1419,31 +1419,23 @@ input ProjectOverlayVectorTileServerConfigInput {
 
   """A valid hex color string like '#fff' or '#ffffff'"""
   lineColor: String!
+  lineDasharray: [Int!]!
 
   """A valid opacity like 0.2 or 1.0"""
   lineOpacity: Float!
 
   """A positive float value"""
   lineWidth: Float!
-  lineDasharray: [Int!]!
-
-  """A valid hex color string like '#fff' or '#ffffff'"""
-  circleColor: String!
-
-  """A valid opacity like 0.2 or 1.0"""
-  circleOpacity: Float!
-
-  """A positive float value"""
-  circleRadius: Float!
+  tileServer: ProjectVectorTileServerConfigInput!
 }
 
 enum ProjectProcessingStatusEnum {
+  ANALYZING_GROUPS_AND_TASK
+  COMPLETED
+  GENERATING_GROUPS_AND_TASKS
+  GENERATING_TASKS_GEOJSON
   PREPARING
   VALIDATING_GEOMETRY
-  GENERATING_GROUPS_AND_TASKS
-  ANALYZING_GROUPS_AND_TASK
-  GENERATING_TASKS_GEOJSON
-  COMPLETED
 }
 
 type ProjectRasterTileServerCommonConfig {
@@ -1451,91 +1443,91 @@ type ProjectRasterTileServerCommonConfig {
 }
 
 type ProjectRasterTileServerConfig {
-  name: RasterTileServerNameEnum!
-  custom: ProjectRasterTileServerCustomConfig
   bing: ProjectRasterTileServerCommonConfig
-  mapbox: ProjectRasterTileServerCommonConfig
-  maxarStandard: ProjectRasterTileServerCommonConfig
-  maxarPremium: ProjectRasterTileServerCommonConfig
+  custom: ProjectRasterTileServerCustomConfig
   esri: ProjectRasterTileServerCommonConfig
   esriBeta: ProjectRasterTileServerCommonConfig
+  mapbox: ProjectRasterTileServerCommonConfig
+  maxarPremium: ProjectRasterTileServerCommonConfig
+  maxarStandard: ProjectRasterTileServerCommonConfig
+  name: RasterTileServerNameEnum!
 }
 
 input ProjectRasterTileServerConfigInput {
-  name: RasterTileServerNameEnum!
-  custom: RasterTileServerCustomConfigInput = null
   bing: RasterTileServerCommonConfigInput = null
-  mapbox: RasterTileServerCommonConfigInput = null
-  maxarStandard: RasterTileServerCommonConfigInput = null
-  maxarPremium: RasterTileServerCommonConfigInput = null
+  custom: RasterTileServerCustomConfigInput = null
   esri: RasterTileServerCommonConfigInput = null
   esriBeta: RasterTileServerCommonConfigInput = null
+  mapbox: RasterTileServerCommonConfigInput = null
+  maxarPremium: RasterTileServerCommonConfigInput = null
+  maxarStandard: RasterTileServerCommonConfigInput = null
+  name: RasterTileServerNameEnum!
 }
 
 type ProjectRasterTileServerCustomConfig {
-  url: String!
   credits: String!
-  minZoom: Int
   maxZoom: Int
+  minZoom: Int
+  url: String!
 }
 
 enum ProjectStatusEnum {
-  DRAFT
-  MARKED_AS_READY
-  FAILED
-  READY
-  PUBLISHED
-  PAUSED
   ARCHIVED
   DISCARDED
+  DRAFT
+  FAILED
+  MARKED_AS_READY
+  PAUSED
+  PUBLISHED
+  READY
 }
 
 input ProjectStatusEnumFilterLookup {
-  """Exact match. Filter will be skipped on `null` value"""
-  exact: ProjectStatusEnum
-
-  """Assignment test. Filter will be skipped on `null` value"""
-  isNull: Boolean
-
-  """
-  Exact match of items in a given list. Filter will be skipped on `null` value
-  """
-  inList: [ProjectStatusEnum!]
-
-  """Case-insensitive exact match. Filter will be skipped on `null` value"""
-  iExact: ProjectStatusEnum
-
   """
   Case-sensitive containment test. Filter will be skipped on `null` value
   """
   contains: ProjectStatusEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: ProjectStatusEnum
+
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ProjectStatusEnum
 
   """
   Case-insensitive containment test. Filter will be skipped on `null` value
   """
   iContains: ProjectStatusEnum
 
-  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
-  startsWith: ProjectStatusEnum
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: ProjectStatusEnum
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: ProjectStatusEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: ProjectStatusEnum
 
   """Case-insensitive starts-with. Filter will be skipped on `null` value"""
   iStartsWith: ProjectStatusEnum
 
-  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
-  endsWith: ProjectStatusEnum
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ProjectStatusEnum!]
 
-  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
-  iEndsWith: ProjectStatusEnum
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
 
   """
   Case-sensitive regular expression match. Filter will be skipped on `null` value
   """
   regex: ProjectStatusEnum
 
-  """
-  Case-insensitive regular expression match. Filter will be skipped on `null` value
-  """
-  iRegex: ProjectStatusEnum
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: ProjectStatusEnum
 }
 
 """
@@ -1550,42 +1542,65 @@ input ProjectStatusUpdateInput {
 Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin {
-  clientId: String!
-  createdAt: DateTime!
-  modifiedAt: DateTime!
-  createdBy: UserType!
-  modifiedBy: UserType!
-  exportAggregatedResults: ProjectAssetType
-  exportAggregatedResultsWithGeometry: ProjectAssetType
-  exportGroups: ProjectAssetType
-  exportHistory: ProjectAssetType
-  exportResults: ProjectAssetType
-  exportTasks: ProjectAssetType
-  exportUsers: ProjectAssetType
-  exportAreaOfInterest: ProjectAssetType
-  exportHotTaskingManagerGeometries: ProjectAssetType
-  exportModerateToHighAgreementYesMaybeGeometries: ProjectAssetType
-  id: ID!
-  projectType: ProjectTypeEnum!
-
-  """Which group, institution or community is requesting this project?"""
-  requestingOrganizationId: ID!
-
-  """Which group, institution or community is requesting this project?"""
-  requestingOrganization: OrganizationType!
-  topic: String!
-  region: String!
-  projectNumber: Int!
-
-  """What should the users look for (e.g. buildings, cars, trees)"""
-  lookFor: String!
-
   """
   Provide an optional link to a resource with additional information on the project
   """
   additionalInfoUrl: String
+  clientId: String!
+  createdAt: DateTime!
+  createdBy: UserType!
   description: String
+  exportAggregatedResults: ProjectAssetType
+  exportAggregatedResultsWithGeometry: ProjectAssetType
+  exportAreaOfInterest: ProjectAssetType
+  exportGroups: ProjectAssetType
+  exportHistory: ProjectAssetType
+  exportHotTaskingManagerGeometries: ProjectAssetType
+  exportModerateToHighAgreementYesMaybeGeometries: ProjectAssetType
+  exportResults: ProjectAssetType
+  exportTasks: ProjectAssetType
+  exportUsers: ProjectAssetType
+
+  """
+  How big should a mapping session be? Group size refers to the number of tasks per mapping session.
+  """
+  groupSize: Int!
+  id: ID!
   image: ProjectAssetType
+  isFeatured: Boolean!
+
+  """
+  If the project is private, then it is only visible to the team members.
+  """
+  isPrivate: Boolean!
+
+  """What should the users look for (e.g. buildings, cars, trees)"""
+  lookFor: String!
+
+  """How many tasks each user is allowed to work on for this project"""
+  maxTasksPerUser: Int
+  modifiedAt: DateTime!
+  modifiedBy: UserType!
+
+  """
+  Project name generated from topic, region, project number, and requesting organization name.
+  """
+  name: String!
+  processingStatus: ProjectProcessingStatusEnum
+  progress: Int!
+  projectNumber: Int!
+  projectType: ProjectTypeEnum!
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyType
+  region: String!
+
+  """Which group, institution or community is requesting this project?"""
+  requestingOrganization: OrganizationType!
+
+  """Which group, institution or community is requesting this project?"""
+  requestingOrganizationId: ID!
+  status: ProjectStatusEnum!
+  team: ContributorTeamType
+  topic: String!
 
   """Tutorial used for this project."""
   tutorial: TutorialType
@@ -1597,225 +1612,200 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   How many people do you want to see every tile before you consider it finished?
   """
   verificationNumber: Int!
-
-  """
-  How big should a mapping session be? Group size refers to the number of tasks per mapping session.
-  """
-  groupSize: Int!
-
-  """How many tasks each user is allowed to work on for this project"""
-  maxTasksPerUser: Int
-  isFeatured: Boolean!
-  status: ProjectStatusEnum!
-  processingStatus: ProjectProcessingStatusEnum
-  progress: Int!
-  team: ContributorTeamType
-
-  """
-  If the project is private, then it is only visible to the team members.
-  """
-  isPrivate: Boolean!
-
-  """
-  Project name generated from topic, region, project number, and requesting organization name.
-  """
-  name: String!
-  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyType
 }
 
 type ProjectTypeAreaStatsType {
   projectType: ProjectTypeEnum!
-  totalArea: AreaSqKm!
   projectTypeDisplay: String!
+  totalArea: AreaSqKm!
 }
 
 enum ProjectTypeEnum {
+  COMPARE
+  COMPLETENESS
   FIND
   VALIDATE
   VALIDATE_IMAGE
-  COMPARE
-  COMPLETENESS
 }
 
 input ProjectTypeEnumFilterLookup {
-  """Exact match. Filter will be skipped on `null` value"""
-  exact: ProjectTypeEnum
-
-  """Assignment test. Filter will be skipped on `null` value"""
-  isNull: Boolean
-
-  """
-  Exact match of items in a given list. Filter will be skipped on `null` value
-  """
-  inList: [ProjectTypeEnum!]
-
-  """Case-insensitive exact match. Filter will be skipped on `null` value"""
-  iExact: ProjectTypeEnum
-
   """
   Case-sensitive containment test. Filter will be skipped on `null` value
   """
   contains: ProjectTypeEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: ProjectTypeEnum
+
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ProjectTypeEnum
 
   """
   Case-insensitive containment test. Filter will be skipped on `null` value
   """
   iContains: ProjectTypeEnum
 
-  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
-  startsWith: ProjectTypeEnum
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: ProjectTypeEnum
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: ProjectTypeEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: ProjectTypeEnum
 
   """Case-insensitive starts-with. Filter will be skipped on `null` value"""
   iStartsWith: ProjectTypeEnum
 
-  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
-  endsWith: ProjectTypeEnum
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ProjectTypeEnum!]
 
-  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
-  iEndsWith: ProjectTypeEnum
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
 
   """
   Case-sensitive regular expression match. Filter will be skipped on `null` value
   """
   regex: ProjectTypeEnum
 
-  """
-  Case-insensitive regular expression match. Filter will be skipped on `null` value
-  """
-  iRegex: ProjectTypeEnum
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: ProjectTypeEnum
 }
 
 type ProjectTypeMutationResponseType {
-  ok: Boolean!
   errors: CustomErrorType
+  ok: Boolean!
   result: ProjectType
 }
 
 type ProjectTypeOffsetPaginated {
   pageInfo: OffsetPaginationInfo!
 
-  """Total count of existing results."""
-  totalCount: Int!
-
   """List of paginated results."""
   results: [ProjectType!]!
+
+  """Total count of existing results."""
+  totalCount: Int!
 }
 
 input ProjectTypeSpecificInput @oneOf {
   compare: CompareProjectPropertyInput
-  find: FindProjectPropertyInput
   completeness: CompletenessProjectPropertyInput
+  find: FindProjectPropertyInput
   validate: ValidateProjectPropertyInput
   validateImage: ValidateImageProjectPropertyInput
 }
 
 type ProjectTypeSwipeStatsType {
   projectType: ProjectTypeEnum!
-  totalSwipes: Int!
   projectTypeDisplay: String!
+  totalSwipes: Int!
 }
 
 """
 Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
 """
 input ProjectUpdateInput {
-  clientId: String!
-  topic: String
-  region: String
-  projectNumber: Int
-
-  """What should the users look for (e.g. buildings, cars, trees)"""
-  lookFor: String
-
   """
   Provide an optional link to a resource with additional information on the project
   """
   additionalInfoUrl: String
+  clientId: String!
   description: String
-
-  """
-  How many people do you want to see every tile before you consider it finished?
-  """
-  verificationNumber: Int
 
   """
   How big should a mapping session be? Group size refers to the number of tasks per mapping session.
   """
   groupSize: Int
+  image: ID
+
+  """What should the users look for (e.g. buildings, cars, trees)"""
+  lookFor: String
 
   """How many tasks each user is allowed to work on for this project"""
   maxTasksPerUser: Int
+  projectNumber: Int
+  projectTypeSpecifics: ProjectTypeSpecificInput
+  region: String
+
+  """Which group, institution or community is requesting this project?"""
+  requestingOrganization: ID
+  team: ID
+  topic: String
 
   """Tutorial used for this project."""
   tutorial: ID
 
-  """Which group, institution or community is requesting this project?"""
-  requestingOrganization: ID
-  image: ID
-  projectTypeSpecifics: ProjectTypeSpecificInput
-  team: ID
+  """
+  How many people do you want to see every tile before you consider it finished?
+  """
+  verificationNumber: Int
 }
 
 type ProjectVectorTileServerCommonConfig {
-  sourceLayer: String!
   credits: String!
+  sourceLayer: String!
 }
 
 type ProjectVectorTileServerConfig {
-  name: VectorTileServerNameEnum!
   custom: ProjectVectorTileServerCustomConfig
-  openStreetMap: ProjectVectorTileServerCommonConfig
+  name: VectorTileServerNameEnum!
   openFreeMap: ProjectVectorTileServerCommonConfig
+  openStreetMap: ProjectVectorTileServerCommonConfig
   versatiles: ProjectVectorTileServerCommonConfig
 }
 
 input ProjectVectorTileServerConfigInput {
-  name: VectorTileServerNameEnum!
   custom: VectorTileServerCustomConfigInput = null
-  openStreetMap: VectorTileServerCommonConfigInput = null
+  name: VectorTileServerNameEnum!
   openFreeMap: VectorTileServerCommonConfigInput = null
+  openStreetMap: VectorTileServerCommonConfigInput = null
   versatiles: VectorTileServerCommonConfigInput = null
 }
 
 type ProjectVectorTileServerCustomConfig {
-  url: String!
-  sourceLayer: String!
   credits: String!
-  minZoom: Int!
   maxZoom: Int!
+  minZoom: Int!
+  sourceLayer: String!
+  url: String!
 }
 
 type Query {
-  me: UserMeType
-  users(filters: UserFilter, order: UserOrder, pagination: OffsetPaginationInput): UserTypeOffsetPaginated! @isAuthenticated
-  tileServers: RasterTileServersType! @isAuthenticated
-  project(id: ID!): ProjectType! @isAuthenticated
-  projectAsset(id: ID!): ProjectAssetType! @isAuthenticated
-  projectAssets(pagination: OffsetPaginationInput, filters: ProjectAssetFilter, order: ProjectAssetOrder): ProjectAssetTypeOffsetPaginated! @isAuthenticated
-  organization(id: ID!): OrganizationType! @isAuthenticated
-  defaultCustomOptions(projectType: ProjectTypeEnum!): [CustomOptionType!]! @isAuthenticated
-  organizations(includeAll: Boolean! = false, filters: OrganizationFilter, order: OrganizationOrder, pagination: OffsetPaginationInput): OrganizationTypeOffsetPaginated! @isAuthenticated
-  projects(includeAll: Boolean! = false, filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated! @isAuthenticated
-  tutorial(id: ID!): TutorialType! @isAuthenticated
-  tutorialAsset(id: ID!): TutorialAssetType! @isAuthenticated
-  tutorialAssets(pagination: OffsetPaginationInput, filters: TutorialAssetFilter, order: TutorialAssetOrder): TutorialAssetTypeOffsetPaginated! @isAuthenticated
-  tutorials(includeAll: Boolean! = false, filters: TutorialFilter, order: TutorialOrder, pagination: OffsetPaginationInput): TutorialTypeOffsetPaginated! @isAuthenticated
-  contributorUsers(pagination: OffsetPaginationInput, filters: ContributorUserFilter, order: ContributorUserOrder): ContributorUserTypeOffsetPaginated!
-  contributorUser(id: ID!): ContributorUserType!
-  contributorUserGroup(id: ID!): ContributorUserGroupType!
-  contributorTeam(id: ID!): ContributorTeamType!
-  contributorUserByFirebaseId(firebaseId: ID!): ContributorUserType!
-  contributorUserGroups(includeAll: Boolean! = false, filters: ContributorUserGroupFilter, order: ContributorUserGroupOrder, pagination: OffsetPaginationInput): ContributorUserGroupTypeOffsetPaginated!
-  contributorUserGroupMembers(includeAll: Boolean! = false, filters: ContributorUserGroupMembershipFilter, order: ContributorUserGroupMembershipOrder, pagination: OffsetPaginationInput): ContributorUserGroupMembershipTypeOffsetPaginated!
-  contributorTeams(includeAll: Boolean! = false, filters: ContributorTeamFilter, order: ContributorTeamOrder, pagination: OffsetPaginationInput): ContributorTeamTypeOffsetPaginated! @isAuthenticated
+  communityFilteredStats(dateRange: DateRangeInput = null): CommunityFilteredStats!
   communityStats: CommunityStatsType!
 
   "\nStats from last 30 days\n"
   communityStatsLatest: CommunityStatsType!
-  communityFilteredStats(dateRange: DateRangeInput = null): CommunityFilteredStats!
-  communityUserStats(firebaseId: ID!): ContributorUserStats!
   communityUserGroupStats(userGroupId: ID!): ContributorUserGroupStats!
+  communityUserStats(firebaseId: ID!): ContributorUserStats!
+  contributorTeam(id: ID!): ContributorTeamType!
+  contributorTeams(includeAll: Boolean! = false, filters: ContributorTeamFilter, order: ContributorTeamOrder, pagination: OffsetPaginationInput): ContributorTeamTypeOffsetPaginated! @isAuthenticated
+  contributorUser(id: ID!): ContributorUserType!
+  contributorUserByFirebaseId(firebaseId: ID!): ContributorUserType!
+  contributorUserGroup(id: ID!): ContributorUserGroupType!
+  contributorUserGroupMembers(includeAll: Boolean! = false, filters: ContributorUserGroupMembershipFilter, order: ContributorUserGroupMembershipOrder, pagination: OffsetPaginationInput): ContributorUserGroupMembershipTypeOffsetPaginated!
+  contributorUserGroups(includeAll: Boolean! = false, filters: ContributorUserGroupFilter, order: ContributorUserGroupOrder, pagination: OffsetPaginationInput): ContributorUserGroupTypeOffsetPaginated!
+  contributorUsers(pagination: OffsetPaginationInput, filters: ContributorUserFilter, order: ContributorUserOrder): ContributorUserTypeOffsetPaginated!
+  defaultCustomOptions(projectType: ProjectTypeEnum!): [CustomOptionType!]! @isAuthenticated
   enums: AppEnumCollection!
+  me: UserMeType
+  organization(id: ID!): OrganizationType! @isAuthenticated
+  organizations(includeAll: Boolean! = false, filters: OrganizationFilter, order: OrganizationOrder, pagination: OffsetPaginationInput): OrganizationTypeOffsetPaginated! @isAuthenticated
+  project(id: ID!): ProjectType! @isAuthenticated
+  projectAsset(id: ID!): ProjectAssetType! @isAuthenticated
+  projectAssets(pagination: OffsetPaginationInput, filters: ProjectAssetFilter, order: ProjectAssetOrder): ProjectAssetTypeOffsetPaginated! @isAuthenticated
+  projects(includeAll: Boolean! = false, filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated! @isAuthenticated
+  tileServers: RasterTileServersType! @isAuthenticated
+  tutorial(id: ID!): TutorialType! @isAuthenticated
+  tutorialAsset(id: ID!): TutorialAssetType! @isAuthenticated
+  tutorialAssets(pagination: OffsetPaginationInput, filters: TutorialAssetFilter, order: TutorialAssetOrder): TutorialAssetTypeOffsetPaginated! @isAuthenticated
+  tutorials(includeAll: Boolean! = false, filters: TutorialFilter, order: TutorialOrder, pagination: OffsetPaginationInput): TutorialTypeOffsetPaginated! @isAuthenticated
+  users(filters: UserFilter, order: UserOrder, pagination: OffsetPaginationInput): UserTypeOffsetPaginated! @isAuthenticated
 }
 
 input RasterTileServerCommonConfigInput {
@@ -1823,82 +1813,82 @@ input RasterTileServerCommonConfigInput {
 }
 
 input RasterTileServerCustomConfigInput {
-  url: String!
   credits: String!
-  minZoom: Int = null
   maxZoom: Int = null
+  minZoom: Int = null
+  url: String!
 }
 
 enum RasterTileServerNameEnum {
-  CUSTOM
   BING
-  MAPBOX
-  MAXAR_STANDARD
-  MAXAR_PREMIUM
+  CUSTOM
   ESRI
   ESRI_BETA
+  MAPBOX
+  MAXAR_PREMIUM
+  MAXAR_STANDARD
 }
 
 type RasterTileServerType {
-  type: RasterTileServerNameEnum!
-  label: String!
-  url: String!
-  minZoom: Int
-  maxZoom: Int
   credits: String!
+  label: String!
+  maxZoom: Int
+  minZoom: Int
+  type: RasterTileServerNameEnum!
+  url: String!
 }
 
 type RasterTileServersType {
-  vector: [VectorTileServerType!]!
   raster: [RasterTileServerType!]!
+  vector: [VectorTileServerType!]!
 }
 
 input StrFilterLookup {
-  """Exact match. Filter will be skipped on `null` value"""
-  exact: String
-
-  """Assignment test. Filter will be skipped on `null` value"""
-  isNull: Boolean
-
-  """
-  Exact match of items in a given list. Filter will be skipped on `null` value
-  """
-  inList: [String!]
-
-  """Case-insensitive exact match. Filter will be skipped on `null` value"""
-  iExact: String
-
   """
   Case-sensitive containment test. Filter will be skipped on `null` value
   """
   contains: String
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: String
+
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: String
 
   """
   Case-insensitive containment test. Filter will be skipped on `null` value
   """
   iContains: String
 
-  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
-  startsWith: String
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: String
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: String
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: String
 
   """Case-insensitive starts-with. Filter will be skipped on `null` value"""
   iStartsWith: String
 
-  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
-  endsWith: String
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [String!]
 
-  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
-  iEndsWith: String
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
 
   """
   Case-sensitive regular expression match. Filter will be skipped on `null` value
   """
   regex: String
 
-  """
-  Case-insensitive regular expression match. Filter will be skipped on `null` value
-  """
-  iRegex: String
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: String
 }
 
 """
@@ -1917,14 +1907,14 @@ input TutorialAssetCreateInput {
 TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, tutorial, input_type, file)
 """
 input TutorialAssetFilter {
+  AND: TutorialAssetFilter
+  DISTINCT: Boolean
+  NOT: TutorialAssetFilter
+  OR: TutorialAssetFilter
   id: IDBaseFilterLookup
-  type: AssetTypeEnumFilterLookup
   mimetype: AssetMimetypeEnumFilterLookup
   tutorialId: IDBaseFilterLookup
-  AND: TutorialAssetFilter
-  OR: TutorialAssetFilter
-  NOT: TutorialAssetFilter
-  DISTINCT: Boolean
+  type: AssetTypeEnumFilterLookup
 }
 
 enum TutorialAssetInputTypeEnum {
@@ -1941,39 +1931,39 @@ TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, t
 type TutorialAssetType implements UserResourceTypeMixin {
   clientId: String!
   createdAt: DateTime!
-  modifiedAt: DateTime!
   createdBy: UserType!
-  modifiedBy: UserType!
-  type: AssetTypeEnum!
-
-  """The size of the file in bytes"""
-  fileSize: Int!
-  mimetype: AssetMimetypeEnum
-
-  """If this flag is enabled, this asset will be deleted in the future"""
-  markedAsDeleted: Boolean!
-  id: ID!
 
   """The file associated with the asset"""
   file: MapswipeDjangoFileType!
+
+  """The size of the file in bytes"""
+  fileSize: Int!
+  id: ID!
   inputType: TutorialAssetInputTypeEnum
+
+  """If this flag is enabled, this asset will be deleted in the future"""
+  markedAsDeleted: Boolean!
+  mimetype: AssetMimetypeEnum
+  modifiedAt: DateTime!
+  modifiedBy: UserType!
   tutorialId: ID!
+  type: AssetTypeEnum!
 }
 
 type TutorialAssetTypeMutationResponseType {
-  ok: Boolean!
   errors: CustomErrorType
+  ok: Boolean!
   result: TutorialAssetType
 }
 
 type TutorialAssetTypeOffsetPaginated {
   pageInfo: OffsetPaginationInfo!
 
-  """Total count of existing results."""
-  totalCount: Int!
-
   """List of paginated results."""
   results: [TutorialAssetType!]!
+
+  """Total count of existing results."""
+  totalCount: Int!
 }
 
 """
@@ -1981,121 +1971,121 @@ Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id
 """
 input TutorialCreateInput {
   clientId: String!
+  name: String!
 
   """Project this tutorial is referring to."""
   project: ID!
-  name: String!
 }
 
 """
 Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
 """
 input TutorialFilter {
+  AND: TutorialFilter
+  DISTINCT: Boolean
+  NOT: TutorialFilter
+  OR: TutorialFilter
   id: IDBaseFilterLookup
-  status: TutorialStatusEnumFilterLookup
+  name: String
 
   """Project this tutorial is referring to."""
   project: ProjectFilter
-  AND: TutorialFilter
-  OR: TutorialFilter
-  NOT: TutorialFilter
-  DISTINCT: Boolean
-  name: String
+  status: TutorialStatusEnumFilterLookup
 }
 
 """
 TutorialInformationPageBlock(id, client_id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
 """
 input TutorialInformationPageBlockCreateInput {
-  clientId: String!
   blockNumber: Int!
   blockType: TutorialInformationPageBlockTypeEnum!
-  text: String
+  clientId: String!
   image: ID
+  text: String
 }
 
 input TutorialInformationPageBlockInput {
   create: TutorialInformationPageBlockCreateInput
-  update: TutorialInformationPageBlockUpdateInput
   delete: DeleteInput
+  update: TutorialInformationPageBlockUpdateInput
 }
 
 """
 TutorialInformationPageBlock(id, client_id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
 """
 type TutorialInformationPageBlockType implements UserResourceTypeMixin {
-  clientId: String!
-  createdAt: DateTime!
-  modifiedAt: DateTime!
-  createdBy: UserType!
-  modifiedBy: UserType!
-  id: ID!
-  pageId: ID!
   blockNumber: Int!
   blockType: TutorialInformationPageBlockTypeEnum!
-  text: String
-  imageId: ID
+  clientId: String!
+  createdAt: DateTime!
+  createdBy: UserType!
+  id: ID!
   image: TutorialAssetType
+  imageId: ID
+  modifiedAt: DateTime!
+  modifiedBy: UserType!
+  pageId: ID!
+  text: String
 }
 
 enum TutorialInformationPageBlockTypeEnum {
-  TEXT
   IMAGE
+  TEXT
 }
 
 """
 TutorialInformationPageBlock(id, client_id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
 """
 input TutorialInformationPageBlockUpdateInput {
-  id: ID!
-  clientId: String!
   blockNumber: Int
   blockType: TutorialInformationPageBlockTypeEnum
-  text: String
+  clientId: String!
+  id: ID!
   image: ID
+  text: String
 }
 
 """
 TutorialInformationPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
 """
 input TutorialInformationPageCreateInput {
-  clientId: String!
-  title: String!
-  pageNumber: Int!
   blocks: [TutorialInformationPageBlockCreateInput!]!
+  clientId: String!
+  pageNumber: Int!
+  title: String!
 }
 
 input TutorialInformationPageInput {
   create: TutorialInformationPageCreateInput
-  update: TutorialInformationPageUpdateInput
   delete: DeleteInput
+  update: TutorialInformationPageUpdateInput
 }
 
 """
 TutorialInformationPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
 """
 type TutorialInformationPageType implements UserResourceTypeMixin {
+  blocks: [TutorialInformationPageBlockType!]!
   clientId: String!
   createdAt: DateTime!
-  modifiedAt: DateTime!
   createdBy: UserType!
-  modifiedBy: UserType!
   id: ID!
-  tutorialId: ID!
-  title: String!
+  modifiedAt: DateTime!
+  modifiedBy: UserType!
   pageNumber: Int!
-  blocks: [TutorialInformationPageBlockType!]!
+  title: String!
+  tutorialId: ID!
 }
 
 """
 TutorialInformationPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
 """
 input TutorialInformationPageUpdateInput {
-  id: ID!
-  clientId: String!
-  title: String
-  pageNumber: Int
   blocks: [TutorialInformationPageBlockInput!]
+  clientId: String!
+  id: ID!
+  pageNumber: Int
+  title: String
 }
 
 input TutorialOrder {
@@ -2108,13 +2098,13 @@ TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modifie
 """
 input TutorialScenarioPageCreateInput {
   clientId: String!
-  scenarioPageNumber: Int!
-  instructionsDescription: String!
-  instructionsIcon: IconEnum!
-  instructionsTitle: String!
   hintDescription: String
   hintIcon: IconEnum
   hintTitle: String
+  instructionsDescription: String!
+  instructionsIcon: IconEnum!
+  instructionsTitle: String!
+  scenarioPageNumber: Int!
   successDescription: String
   successIcon: IconEnum
   successTitle: String
@@ -2126,8 +2116,8 @@ TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, sc
 """
 input TutorialScenarioPageInput {
   create: TutorialScenarioPageCreateInput
-  update: TutorialScenarioPageUpdateInput
   delete: DeleteInput
+  update: TutorialScenarioPageUpdateInput
 }
 
 """
@@ -2136,37 +2126,37 @@ TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modifie
 type TutorialScenarioPageType implements UserResourceTypeMixin {
   clientId: String!
   createdAt: DateTime!
-  modifiedAt: DateTime!
   createdBy: UserType!
-  modifiedBy: UserType!
-  id: ID!
-  tutorialId: ID!
-  scenarioPageNumber: Int!
-  instructionsDescription: String!
-  instructionsIcon: IconEnum!
-  instructionsTitle: String!
   hintDescription: String
   hintIcon: IconEnum
   hintTitle: String
+  id: ID!
+  instructionsDescription: String!
+  instructionsIcon: IconEnum!
+  instructionsTitle: String!
+  modifiedAt: DateTime!
+  modifiedBy: UserType!
+  scenarioPageNumber: Int!
   successDescription: String
   successIcon: IconEnum
   successTitle: String
   tasks: [TutorialTaskType!]!
+  tutorialId: ID!
 }
 
 """
 TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_page_number, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
 """
 input TutorialScenarioPageUpdateInput {
-  id: ID!
   clientId: String!
-  scenarioPageNumber: Int
-  instructionsDescription: String
-  instructionsIcon: IconEnum
-  instructionsTitle: String
   hintDescription: String
   hintIcon: IconEnum
   hintTitle: String
+  id: ID!
+  instructionsDescription: String
+  instructionsIcon: IconEnum
+  instructionsTitle: String
+  scenarioPageNumber: Int
   successDescription: String
   successIcon: IconEnum
   successTitle: String
@@ -2174,58 +2164,58 @@ input TutorialScenarioPageUpdateInput {
 }
 
 enum TutorialStatusEnum {
-  DRAFT
-  PUBLISHED
   ARCHIVED
   DISCARDED
+  DRAFT
+  PUBLISHED
 }
 
 input TutorialStatusEnumFilterLookup {
-  """Exact match. Filter will be skipped on `null` value"""
-  exact: TutorialStatusEnum
-
-  """Assignment test. Filter will be skipped on `null` value"""
-  isNull: Boolean
-
-  """
-  Exact match of items in a given list. Filter will be skipped on `null` value
-  """
-  inList: [TutorialStatusEnum!]
-
-  """Case-insensitive exact match. Filter will be skipped on `null` value"""
-  iExact: TutorialStatusEnum
-
   """
   Case-sensitive containment test. Filter will be skipped on `null` value
   """
   contains: TutorialStatusEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: TutorialStatusEnum
+
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: TutorialStatusEnum
 
   """
   Case-insensitive containment test. Filter will be skipped on `null` value
   """
   iContains: TutorialStatusEnum
 
-  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
-  startsWith: TutorialStatusEnum
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: TutorialStatusEnum
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: TutorialStatusEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: TutorialStatusEnum
 
   """Case-insensitive starts-with. Filter will be skipped on `null` value"""
   iStartsWith: TutorialStatusEnum
 
-  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
-  endsWith: TutorialStatusEnum
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [TutorialStatusEnum!]
 
-  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
-  iEndsWith: TutorialStatusEnum
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
 
   """
   Case-sensitive regular expression match. Filter will be skipped on `null` value
   """
   regex: TutorialStatusEnum
 
-  """
-  Case-insensitive regular expression match. Filter will be skipped on `null` value
-  """
-  iRegex: TutorialStatusEnum
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: TutorialStatusEnum
 }
 
 """
@@ -2241,22 +2231,22 @@ TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, sc
 """
 input TutorialTaskCreateInput {
   clientId: String!
-  reference: Int!
   projectTypeSpecifics: TutorialTaskProjectTypeSpecificInput!
+  reference: Int!
 }
 
 input TutorialTaskInput {
   create: TutorialTaskCreateInput
-  update: TutorialTaskUpdateInput
   delete: DeleteInput
+  update: TutorialTaskUpdateInput
 }
 
 input TutorialTaskProjectTypeSpecificInput @oneOf {
   compare: CompareTutorialTaskPropertyInput
+  completeness: CompletenessTutorialTaskPropertyInput
   find: FindTutorialTaskPropertyInput
   validate: ValidateTutorialTaskPropertyInput
   validateImage: ValidateImageTutorialTaskPropertyInput
-  completeness: CompletenessTutorialTaskPropertyInput
 }
 
 """
@@ -2265,23 +2255,23 @@ TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, sc
 type TutorialTaskType implements UserResourceTypeMixin {
   clientId: String!
   createdAt: DateTime!
-  modifiedAt: DateTime!
   createdBy: UserType!
-  modifiedBy: UserType!
   id: ID!
-  scenarioId: ID!
-  reference: Int!
+  modifiedAt: DateTime!
+  modifiedBy: UserType!
   projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType
+  reference: Int!
+  scenarioId: ID!
 }
 
 """
 TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
 """
 input TutorialTaskUpdateInput {
-  id: ID!
   clientId: String!
-  reference: Int
+  id: ID!
   projectTypeSpecifics: TutorialTaskProjectTypeSpecificInput!
+  reference: Int
 }
 
 """
@@ -2290,10 +2280,11 @@ Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id
 type TutorialType implements UserResourceTypeMixin {
   clientId: String!
   createdAt: DateTime!
-  modifiedAt: DateTime!
   createdBy: UserType!
-  modifiedBy: UserType!
   id: ID!
+  informationPages: [TutorialInformationPageType!]!
+  modifiedAt: DateTime!
+  modifiedBy: UserType!
   name: String!
 
   """Project this tutorial is referring to."""
@@ -2301,25 +2292,24 @@ type TutorialType implements UserResourceTypeMixin {
 
   """Project this tutorial is referring to."""
   projectId: ID!
-  status: TutorialStatusEnum!
   scenarios: [TutorialScenarioPageType!]!
-  informationPages: [TutorialInformationPageType!]!
+  status: TutorialStatusEnum!
 }
 
 type TutorialTypeMutationResponseType {
-  ok: Boolean!
   errors: CustomErrorType
+  ok: Boolean!
   result: TutorialType
 }
 
 type TutorialTypeOffsetPaginated {
   pageInfo: OffsetPaginationInfo!
 
-  """Total count of existing results."""
-  totalCount: Int!
-
   """List of paginated results."""
   results: [TutorialType!]!
+
+  """Total count of existing results."""
+  totalCount: Int!
 }
 
 """
@@ -2327,24 +2317,24 @@ Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id
 """
 input TutorialUpdateInput {
   clientId: String!
+  informationPages: [TutorialInformationPageInput!]
   name: String
   scenarios: [TutorialScenarioPageInput!]
-  informationPages: [TutorialInformationPageInput!]
 }
 
 union UpdateContributorUserGroupPayload = ContributorUserGroupTypeMutationResponseType | OperationInfo
 
-union UpdateOrganizationPayload = OrganizationTypeMutationResponseType | OperationInfo
+union UpdateOrganizationPayload = OperationInfo | OrganizationTypeMutationResponseType
 
-union UpdateProcessedProjectPayload = ProjectTypeMutationResponseType | OperationInfo
+union UpdateProcessedProjectPayload = OperationInfo | ProjectTypeMutationResponseType
 
-union UpdateProjectPayload = ProjectTypeMutationResponseType | OperationInfo
+union UpdateProjectPayload = OperationInfo | ProjectTypeMutationResponseType
 
-union UpdateProjectStatusPayload = ProjectTypeMutationResponseType | OperationInfo
+union UpdateProjectStatusPayload = OperationInfo | ProjectTypeMutationResponseType
 
-union UpdateTutorialPayload = TutorialTypeMutationResponseType | OperationInfo
+union UpdateTutorialPayload = OperationInfo | TutorialTypeMutationResponseType
 
-union UpdateTutorialStatusPayload = TutorialTypeMutationResponseType | OperationInfo
+union UpdateTutorialStatusPayload = OperationInfo | TutorialTypeMutationResponseType
 
 scalar Upload
 
@@ -2352,36 +2342,36 @@ scalar Upload
 User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, contributor_user)
 """
 input UserFilter {
-  id: IDBaseFilterLookup
   AND: UserFilter
-  OR: UserFilter
-  NOT: UserFilter
   DISTINCT: Boolean
+  NOT: UserFilter
+  OR: UserFilter
   displayName: String
+  id: IDBaseFilterLookup
 }
 
 """
 User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, contributor_user)
 """
 type UserMeType {
-  id: ID!
-  firstName: String!
-  lastName: String!
-  displayName: String!
   anonymizeEmail: String!
+  displayName: String!
   email: String!
+  firstName: String!
+  id: ID!
+  lastName: String!
 }
 
 input UserOrder {
-  id: Ordering
   displayName: Ordering
+  id: Ordering
 }
 
 interface UserResourceTypeMixin {
   clientId: String!
   createdAt: DateTime!
-  modifiedAt: DateTime!
   createdBy: UserType!
+  modifiedAt: DateTime!
   modifiedBy: UserType!
 }
 
@@ -2389,68 +2379,68 @@ interface UserResourceTypeMixin {
 User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, contributor_user)
 """
 type UserType {
-  id: ID!
-  firstName: String!
-  lastName: String!
-  displayName: String!
   anonymizeEmail: String!
+  displayName: String!
+  firstName: String!
+  id: ID!
+  lastName: String!
 }
 
 type UserTypeOffsetPaginated {
   pageInfo: OffsetPaginationInfo!
 
-  """Total count of existing results."""
-  totalCount: Int!
-
   """List of paginated results."""
   results: [UserType!]!
+
+  """Total count of existing results."""
+  totalCount: Int!
 }
 
 input ValidateImageProjectPropertyInput {
-  sourceType: ValidateImageSourceTypeEnum!
   customOptions: [CustomOptionInput!] = null
+  sourceType: ValidateImageSourceTypeEnum!
 }
 
 type ValidateImageProjectPropertyType {
-  sourceType: ValidateImageSourceTypeEnum!
   customOptions: [ProjectCustomOption!]
+  sourceType: ValidateImageSourceTypeEnum!
 }
 
 enum ValidateImageSourceTypeEnum {
-  DIRECT_IMAGES
   DATASET_FILE
+  DIRECT_IMAGES
 }
 
 input ValidateImageTutorialTaskPropertyInput {
-  url: String!
-  fileName: String!
-  width: Int = null
-  height: Int = null
   annotation: ObjectImageAnnotationInput = null
+  fileName: String!
+  height: Int = null
+  url: String!
+  width: Int = null
 }
 
 type ValidateImageTutorialTaskPropertyType {
-  url: String!
-  fileName: String!
-  width: Int
-  height: Int
   annotation: ObjectImageAnnotationType
+  fileName: String!
+  height: Int
+  url: String!
+  width: Int
 }
 
 type ValidateObjectSourceConfig {
+  aoiGeometry: String
+  objectGeojsonUrl: String
+  ohsomeFilter: String
   sourceType: ValidateObjectSourceTypeEnum!
   taskingManagerProjectId: String
-  aoiGeometry: String
-  ohsomeFilter: String
-  objectGeojsonUrl: String
 }
 
 input ValidateObjectSourceConfigInput {
+  aoiGeometry: String = null
+  objectGeojsonUrl: String = null
+  ohsomeFilter: String = null
   sourceType: ValidateObjectSourceTypeEnum!
   taskingManagerProjectId: String = null
-  aoiGeometry: String = null
-  ohsomeFilter: String = null
-  objectGeojsonUrl: String = null
 }
 
 enum ValidateObjectSourceTypeEnum {
@@ -2460,15 +2450,15 @@ enum ValidateObjectSourceTypeEnum {
 }
 
 input ValidateProjectPropertyInput {
-  tileServerProperty: ProjectRasterTileServerConfigInput!
-  objectSource: ValidateObjectSourceConfigInput!
   customOptions: [CustomOptionInput!] = null
+  objectSource: ValidateObjectSourceConfigInput!
+  tileServerProperty: ProjectRasterTileServerConfigInput!
 }
 
 type ValidateProjectPropertyType {
-  tileServerProperty: ProjectRasterTileServerConfig!
-  objectSource: ValidateObjectSourceConfig!
   customOptions: [ProjectCustomOption!]
+  objectSource: ValidateObjectSourceConfig!
+  tileServerProperty: ProjectRasterTileServerConfig!
 }
 
 input ValidateTutorialTaskPropertyInput {
@@ -2482,31 +2472,31 @@ type ValidateTutorialTaskPropertyType {
 }
 
 input VectorTileServerCommonConfigInput {
-  sourceLayer: String!
   credits: String!
+  sourceLayer: String!
 }
 
 input VectorTileServerCustomConfigInput {
-  url: String!
-  sourceLayer: String!
   credits: String!
-  minZoom: Int!
   maxZoom: Int!
+  minZoom: Int!
+  sourceLayer: String!
+  url: String!
 }
 
 enum VectorTileServerNameEnum {
   CUSTOM
-  OPEN_STREET_MAP
   OPEN_FREE_MAP
+  OPEN_STREET_MAP
   VERSATILES
 }
 
 type VectorTileServerType {
-  type: VectorTileServerNameEnum!
-  label: String!
-  url: String!
-  layers: [String!]!
-  minZoom: Int
-  maxZoom: Int
   credits: String!
+  label: String!
+  layers: [String!]!
+  maxZoom: Int
+  minZoom: Int
+  type: VectorTileServerNameEnum!
+  url: String!
 }
