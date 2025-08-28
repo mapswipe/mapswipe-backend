@@ -50,6 +50,15 @@ SCHEDULES: dict[str, CronJob] = {
         task="apps.common.tasks.clear_expired_django_sessions",
         schedule=crontab(minute="1", hour="1", day_of_week="1"),
     ),
+    "pull_users_from_firebase": CronJob(
+        task="apps.contributor.tasks.pull_users_from_firebase",
+        schedule=crontab(minute="*/1"),  # Every 1 minutes
+        sentry_config=CronJobSentryConfig(
+            failure_issue_threshold=10,
+            checkin_margin=2,
+            max_runtime=2,
+        ),
+    ),
     "pull_mapping_session_from_firebase": CronJob(
         task="apps.mapping.tasks.pull_mapping_session_from_firebase",
         schedule=crontab(minute="*/2"),  # Every 2 minutes

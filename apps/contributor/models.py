@@ -1,4 +1,5 @@
 # pyright: reportUninitializedInstanceVariable=false
+import datetime
 import typing
 import uuid
 
@@ -12,7 +13,7 @@ from apps.common.models import ArchivableResource, FirebasePushResource, UserRes
 
 # NOTE: Users are created from Apps (Web/Mobile)
 class ContributorUser(FirebasePushResource):
-    team: "ContributorTeam | None" = models.ForeignKey(  # type: ignore[reportIncompatibleVariableOverride]
+    team = models.ForeignKey["ContributorTeam | None", "ContributorTeam | None"](
         "ContributorTeam",
         on_delete=models.SET_NULL,
         null=True,
@@ -21,14 +22,14 @@ class ContributorUser(FirebasePushResource):
     )
 
     # NOTE: From firebase
-    username = models.CharField(max_length=255)
-    firebase_id = models.CharField(
+    username = models.CharField[str, str](max_length=255)
+    firebase_id = models.CharField[str, str](
         max_length=30,
         unique=True,
         help_text="Firebase User ID (External)",
     )
-    created_at = models.DateTimeField(null=True)
-    modified_at = models.DateTimeField(null=True)
+    created_at = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](null=True)
+    modified_at = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](null=True)
 
     # Type hints
     id: int
@@ -47,8 +48,8 @@ class ContributorUser(FirebasePushResource):
 
 
 class ContributorUserGroup(ArchivableResource, UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
-    name = models.CharField(max_length=255)
-    description = models.TextField()
+    name = models.CharField[str, str](max_length=255)
+    description = models.TextField[str, str]()
 
     @typing.override
     def __str__(self):
@@ -57,9 +58,12 @@ class ContributorUserGroup(ArchivableResource, UserResource, FirebasePushResourc
 
 # NOTE: Extend FirebasePullResource later if necessary
 class ContributorUserGroupMembership(models.Model):
-    user_group: ContributorUserGroup = models.ForeignKey(ContributorUserGroup, on_delete=models.CASCADE)  # type: ignore[reportIncompatibleVariableOverride]
-    user: ContributorUser = models.ForeignKey(ContributorUser, on_delete=models.CASCADE)  # type: ignore[reportIncompatibleVariableOverride]
-    is_active = models.BooleanField()
+    user_group = models.ForeignKey[ContributorUserGroup, ContributorUserGroup](
+        ContributorUserGroup,
+        on_delete=models.CASCADE,
+    )
+    user = models.ForeignKey[ContributorUser, ContributorUser](ContributorUser, on_delete=models.CASCADE)
+    is_active = models.BooleanField[bool, bool]()
 
     # Type hints
     user_group_id: int
@@ -84,10 +88,13 @@ class ContributorUserGroupMembershipLogActionEnum(models.IntegerChoices):
 class ContributorUserGroupMembershipLog(models.Model):
     ACTION = ContributorUserGroupMembershipLogActionEnum
 
-    membership: ContributorUserGroupMembership = models.ForeignKey(ContributorUserGroupMembership, on_delete=models.CASCADE)  # type: ignore[reportIncompatibleVariableOverride]
+    membership = models.ForeignKey[ContributorUserGroupMembership, ContributorUserGroupMembership](
+        ContributorUserGroupMembership,
+        on_delete=models.CASCADE,
+    )
     # Sync with firebase
-    action = IntegerChoicesField(choices_enum=ContributorUserGroupMembershipLogActionEnum)
-    date = models.DateTimeField()
+    action: int = IntegerChoicesField(choices_enum=ContributorUserGroupMembershipLogActionEnum)  # type: ignore[reportAssignmentType]
+    date = models.DateTimeField[datetime.date, datetime.date]()
 
     # Type hints
     membership_id: int
@@ -99,7 +106,7 @@ class ContributorUserGroupMembershipLog(models.Model):
 
 # TEAM
 class ContributorTeam(ArchivableResource, UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
-    name = models.CharField(max_length=255)
+    name = models.CharField[str, str](max_length=255)
     token = models.UUIDField(default=uuid.uuid4, unique=True)
 
     @typing.override

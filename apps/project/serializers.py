@@ -43,11 +43,6 @@ VALID_PROJECT_STATUS_TRANSITIONS = set(
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class ProjectCreateSerializer(UserResourceSerializer[Project]):
-    requesting_organization = serializers.PrimaryKeyRelatedField(
-        queryset=Organization.objects.filter(is_archived=False),
-        required=True,
-    )
-
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
@@ -63,21 +58,19 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
             "team",
         )
 
+    def validate_requesting_organization(self, requesting_organization: Organization | None) -> Organization | None:
+        if requesting_organization and requesting_organization.is_archived:
+            raise serializers.ValidationError(gettext("Cannot use archived organization on a project."))
+        return requesting_organization
+
     def validate_team(self, team: ContributorTeam | None) -> ContributorTeam | None:
         if team and team.is_archived:
-            raise serializers.ValidationError(
-                gettext("Cannot use archived team on a project."),
-            )
+            raise serializers.ValidationError(gettext("Cannot use archived team on a project."))
         return team
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class ProjectUpdateSerializer(UserResourceSerializer[Project]):
-    requesting_organization = serializers.PrimaryKeyRelatedField(
-        queryset=Organization.objects.filter(is_archived=False),
-        required=True,
-    )
-
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
@@ -98,26 +91,31 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             "team",
         )
 
+    def validate_requesting_organization(self, requesting_organization: Organization | None) -> Organization | None:
+        assert self.instance is not None
+        current_org = self.instance.requesting_organization
+        if requesting_organization and requesting_organization != current_org and requesting_organization.is_archived:
+            raise serializers.ValidationError(gettext("Cannot use archived organization on a project."))
+        return requesting_organization
+
     def validate_team(self, team: ContributorTeam | None) -> ContributorTeam | None:
-        if team and team.is_archived:
-            raise serializers.ValidationError(
-                gettext("Cannot use archived team on a project."),
-            )
+        assert self.instance is not None
+        current_team = self.instance.team
+        if team and team != current_team and team.is_archived:
+            raise serializers.ValidationError(gettext("Cannot use archived team on a project."))
         return team
 
     def validate_tutorial(self, tutorial: Tutorial | None) -> Tutorial | None:
         assert self.instance is not None
         current_tutorial = self.instance.tutorial
-
         if tutorial and tutorial != current_tutorial and tutorial.status_enum == Tutorial.Status.ARCHIVED:
-            raise serializers.ValidationError(gettext("Cannot assign archived tutorial to the project."))
+            raise serializers.ValidationError(gettext("Cannot use archived tutorial on a project."))
 
-        # FIXME(susilnem): Check if we should use project_type or project_type_enum
         # NOTE: If tutorial is provided, project attached to the tutorial should match the current project type
-        if tutorial and tutorial.project and tutorial.project.project_type != self.instance.project_type:
-            raise serializers.ValidationError(
-                {"tutorial": gettext("Tutorial project type does not match the project type.")},
-            )
+        if tutorial and tutorial.project and tutorial.project.project_type_enum != self.instance.project_type_enum:
+            raise serializers.ValidationError("Tutorial project type does not match the project type.")
+
+        # FIXME(tnagorra): We should also check if the parameters are the same. eg. zoomLevel, ...
         return tutorial
 
     def validate_image(self, new_image: ProjectAsset | None):
@@ -207,11 +205,6 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class ProcessedProjectSerializer(UserResourceSerializer[Project]):
-    requesting_organization = serializers.PrimaryKeyRelatedField(
-        queryset=Organization.objects.filter(is_archived=False),
-        required=True,
-    )
-
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
@@ -227,12 +220,32 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             "team",
         )
 
+    def validate_requesting_organization(self, requesting_organization: Organization | None) -> Organization | None:
+        assert self.instance is not None
+        current_org = self.instance.requesting_organization
+        if requesting_organization and requesting_organization != current_org and requesting_organization.is_archived:
+            raise serializers.ValidationError(gettext("Cannot use archived organization on a project."))
+        return requesting_organization
+
     def validate_team(self, team: ContributorTeam | None) -> ContributorTeam | None:
-        if team and team.is_archived:
-            raise serializers.ValidationError(
-                gettext("Cannot use archived team on a project."),
-            )
+        assert self.instance is not None
+        current_team = self.instance.team
+        if team and team != current_team and team.is_archived:
+            raise serializers.ValidationError(gettext("Cannot use archived team on a project."))
         return team
+
+    def validate_tutorial(self, tutorial: Tutorial | None) -> Tutorial | None:
+        assert self.instance is not None
+        current_tutorial = self.instance.tutorial
+        if tutorial and tutorial != current_tutorial and tutorial.status_enum == Tutorial.Status.ARCHIVED:
+            raise serializers.ValidationError(gettext("Cannot use archived tutorial on a project."))
+
+        # NOTE: If tutorial is provided, project attached to the tutorial should match the current project type
+        if tutorial and tutorial.project and tutorial.project.project_type_enum != self.instance.project_type_enum:
+            raise serializers.ValidationError(gettext("Tutorial project type does not match the project type."))
+
+        # FIXME(tnagorra): We should also check if the parameters are the same. eg. zoomLevel, ...
+        return tutorial
 
     def validate_image(self, new_image: ProjectAsset | None):
         assert self.instance is not None
@@ -255,31 +268,13 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
         return new_image
 
-    # FIXME(susilnem): Can we instead use field level validation?
-    def _validate_tutorial(self, attrs: dict[str, typing.Any]):
-        assert self.instance is not None
-        new_tutorial = attrs.get("tutorial")
-        current_tutorial = self.instance.tutorial
-        tutorial = new_tutorial or current_tutorial
-
-        # FIXME(susilnem): Check if we should use new_tutorial.status or new_status.status_enum
-        if new_tutorial and new_tutorial != current_tutorial and new_tutorial.status_enum == Tutorial.Status.ARCHIVED:
-            raise serializers.ValidationError(gettext("Cannot assign archived tutorial to the project."))
-
-        # FIXME(susilnem): Check if we should use project_type or project_type_enum
-        # NOTE: If tutorial is provided, project attached to the tutorial should match the current project type
-        if tutorial and tutorial.project and tutorial.project.project_type != self.instance.project_type:
-            raise serializers.ValidationError(
-                {"tutorial": gettext("Tutorial project type does not match the project type.")},
-            )
-
-        # FIXME(tnagorra): We should also check if the parameters are the same. eg. zoomLevel, ...
-
     @typing.override
     def validate(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
 
-        self._validate_tutorial(attrs)
+        if self.instance.status_enum != Project.Status.READY:
+            raise serializers.ValidationError(gettext("Cannot update project with status %s") % self.instance.status)
+
         return super().validate(attrs)
 
 
@@ -401,7 +396,7 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         return attrs
 
 
-class OrganizationSerializer(UserResourceSerializer[Organization], ArchivableResourceSerializer[Organization]):  # type: ignore[reportIncompatibleVariableOverride]
+class OrganizationSerializer(UserResourceSerializer[Organization], ArchivableResourceSerializer[Organization]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Organization
         fields = ("name", "description", "abbreviation")
@@ -442,19 +437,26 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
                 ),
             )
 
+        return new_status
+
+    @typing.override
+    def validate(self, attrs: dict[str, typing.Any]):
+        assert self.instance is not None
+
+        new_status = attrs.get("status")
+        if not isinstance(new_status, Project.Status):
+            new_status = Project.Status(new_status)
+
         if new_status == Project.Status.MARKED_AS_READY and not self.instance.project_type_specifics:
             raise serializers.ValidationError(
                 gettext("project_type_specifics is required when project status is %s") % (new_status.label),
             )
         if new_status == Project.Status.PUBLISHED and not self.instance.tutorial:
-            raise serializers.ValidationError(
-                {"tutorial": gettext("Tutorial is required before publishing a project.")},
-            )
-
-        return new_status
+            raise serializers.ValidationError(gettext("Tutorial is required before publishing a project."))
+        return attrs
 
     @typing.override
-    def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:  # type: ignore[reportIncompatibleMethodOverride]
+    def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:
         old_status_enum = instance.status_enum
         updated_project = super().update(instance, validated_data)
 

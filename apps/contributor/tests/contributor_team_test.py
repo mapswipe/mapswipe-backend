@@ -44,7 +44,7 @@ class TestContributorTeam(TestCase):
         self.force_login(request.user)
         self.contributor_user.delete()
         self.contributor_team.is_archived = True
-        self.admin.save_model(request, self.contributor_team, form=None, change=True)  # type: ignore[reportArgumentType]
+        self.admin.save_model(request, self.contributor_team, form=None, change=True)
         assert self.contributor_team.is_archived is True
         assert self.contributor_team.archived_by == self.user
 

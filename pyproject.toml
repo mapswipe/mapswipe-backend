@@ -176,6 +176,7 @@ exclude = [
     "**/snap_test_*.py",
     ".venv/",
     "**/migrations/*.py",
+    "./firebase/functions",
 ]
 typeCheckingMode = "standard"
 analyzeUnannotatedFunctions = true
@@ -189,7 +190,7 @@ reportDeprecated = "information"
 reportDuplicateImport = "warning"
 reportImplicitOverride = "error"
 reportImplicitStringConcatenation = "none"
-reportImportCycles = "warning"
+reportImportCycles = "none"
 reportInconsistentConstructor = "warning"
 reportMatchNotExhaustive = "warning"
 reportMissingImports = "error"
@@ -209,6 +210,7 @@ reportUnnecessaryCast = "warning"
 reportUnnecessaryComparison = "warning"
 reportUnnecessaryContains = "warning"
 reportUnnecessaryIsInstance = "warning"
+reportUnnecessaryTypeIgnoreComment = "error"
 reportUntypedBaseClass = "warning"
 reportUntypedClassDecorator = "warning"
 reportUntypedFunctionDecorator = "warning"

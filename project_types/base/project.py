@@ -120,7 +120,6 @@ class BaseProject[
         self.project.update_processing_status(Project.ProcessingStatus.ANALYZING_GROUPS_AND_TASK, True)
 
         project_task_groups_qs = ProjectTaskGroup.objects.filter(project_id=self.project.pk)
-
         project_task_groups_qs.update(
             number_of_tasks=models.Subquery(
                 ProjectTask.objects.filter(task_group_id=models.OuterRef("id"))
@@ -135,7 +134,6 @@ class BaseProject[
                 .values("total_task_group_area")[:1],
             ),
         )
-
         # NOTE: After number_of_tasks is calculated
         project_task_groups_qs.update(
             required_count=models.F("number_of_tasks") * self.project.verification_number,
@@ -147,9 +145,8 @@ class BaseProject[
         self.project.required_results = (
             ProjectTaskGroup.objects.filter(project_id=self.project.pk)
             .values("project_id")
-            .annotate(required_results=models.Sum("required_count"))
-            .values("required_results")[:1]
-        )
+            .aggregate(required_results=models.Sum("required_count"))
+        )["required_results"]
         self.project.save(update_fields=(["required_results"]))
 
     @abstractmethod
@@ -378,6 +375,7 @@ class BaseProject[
 
     def update_project_on_firebase(self, project_ref: FbReference, fb_project: firebase_ext_models.FbProject):
         assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
+        assert self.project.tutorial is not None, "Tutorial is required before project can be pushed to firebase"
 
         # NOTE: We need to add this validation so that "FINISHED" is not overridden
         status = fb_project.status

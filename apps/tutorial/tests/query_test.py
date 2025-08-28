@@ -158,7 +158,7 @@ class TestTutorialQuery(TestCase):
                         "id": self.gID(self.tutorial.pk),
                         "clientId": to_camel_case(self.tutorial.client_id),
                         "name": self.tutorial.name,
-                        "status": self.tutorial.status.name,  # type: ignore[union-attr]
+                        "status": self.tutorial.status.name,
                         "projectId": self.gID(self.tutorial.project_id),
                         "scenarios": [
                             {
@@ -166,13 +166,13 @@ class TestTutorialQuery(TestCase):
                                 "clientId": to_camel_case(self.scenario.client_id),
                                 "scenarioPageNumber": self.scenario.scenario_page_number,
                                 "instructionsDescription": self.scenario.instructions_description,
-                                "instructionsIcon": self.scenario.instructions_icon.name,  # type: ignore[union-attr]
+                                "instructionsIcon": self.scenario.instructions_icon.name,
                                 "instructionsTitle": self.scenario.instructions_title,
                                 "hintDescription": self.scenario.hint_description,
-                                "hintIcon": self.scenario.hint_icon.name,  # type: ignore[union-attr]
+                                "hintIcon": self.scenario.hint_icon.name,
                                 "hintTitle": self.scenario.hint_title,
                                 "successDescription": self.scenario.success_description,
-                                "successIcon": self.scenario.success_icon.name,  # type: ignore[union-attr]
+                                "successIcon": self.scenario.success_icon.name,
                                 "successTitle": self.scenario.success_title,
                                 "tasks": [
                                     {
@@ -193,7 +193,7 @@ class TestTutorialQuery(TestCase):
                                     {
                                         "id": self.gID(self.block.pk),
                                         "clientId": to_camel_case(self.block.client_id),
-                                        "blockType": self.block.block_type.name,  # type: ignore[union-attr]
+                                        "blockType": self.block.block_type.name,
                                         "blockNumber": self.block.block_number,
                                         "text": self.block.text,
                                     },

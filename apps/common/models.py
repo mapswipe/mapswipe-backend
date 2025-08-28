@@ -1,4 +1,5 @@
 # pyright: reportUninitializedInstanceVariable=false
+import datetime
 import typing
 
 from django.db import models
@@ -8,9 +9,11 @@ from django_choices_field import IntegerChoicesField
 from django_stubs_ext.db.models import TypedModelMeta
 from ulid import ULID
 
-from apps.user.models import User
 from main.db import Model
 from utils.common import validate_ulid
+
+if typing.TYPE_CHECKING:
+    from apps.user.models import User  # noqa: F401, RUF100, TC004
 
 
 class FirebasePushStatusEnum(models.IntegerChoices):
@@ -28,23 +31,22 @@ class UploadHelper:
 
 # -- Abstracts
 class UserResource(Model):
-    # FIXME(tnagorra): Should users be able to edit this?
-    client_id = models.CharField(
+    client_id = models.CharField[str, str](
         null=False,
         blank=False,
         unique=True,
         max_length=26,
         validators=[validate_ulid],
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True)
-    created_by: User = models.ForeignKey(  # type: ignore[reportIncompatibleVariableOverride]
-        User,
+    created_at = models.DateTimeField[datetime.datetime, datetime.datetime](auto_now_add=True)
+    modified_at = models.DateTimeField[datetime.datetime, datetime.datetime](auto_now=True)
+    created_by = models.ForeignKey["User", "User"](
+        "user.User",
         related_name="%(class)s_created",
         on_delete=models.PROTECT,
     )
-    modified_by: User = models.ForeignKey(  # type: ignore[reportIncompatibleVariableOverride]
-        User,
+    modified_by = models.ForeignKey["User", "User"](
+        "user.User",
         related_name="%(class)s_modified",
         on_delete=models.PROTECT,
     )
@@ -64,10 +66,10 @@ class UserResource(Model):
 
 
 class ArchivableResource(Model):
-    is_archived = models.BooleanField(default=False)
-    archived_at = models.DateTimeField(null=True, blank=True)
-    archived_by: User = models.ForeignKey(  # type: ignore[reportIncompatibleVariableOverride]
-        User,
+    is_archived = models.BooleanField[bool, bool](default=False)
+    archived_at = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](null=True, blank=True)
+    archived_by = models.ForeignKey["User", "User"](
+        "user.User",
         related_name="+",
         on_delete=models.SET_NULL,
         blank=True,
@@ -122,16 +124,16 @@ class IconEnum(models.IntegerChoices):
 
 class FirebasePushResource(Model):
     # NOTE: We should not directly use old_id. This is ID reference to old system
-    old_id = models.CharField(max_length=30, db_index=True, null=True, blank=True)
+    old_id = models.CharField[str | None, str | None](max_length=30, db_index=True, null=True, blank=True)
 
-    firebase_id = models.CharField(max_length=30, unique=True, default=ULID)
+    firebase_id = models.CharField[str, str](max_length=30, unique=True, default=ULID)
 
     firebase_push_status: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=FirebasePushStatusEnum,
         null=True,
         blank=True,
     )
-    firebase_last_pushed = models.DateTimeField(
+    firebase_last_pushed = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](
         null=True,
         blank=True,
         help_text=gettext_lazy("The latest time when resource was pushed to firebase"),
@@ -163,9 +165,9 @@ class FirebasePushResource(Model):
 
 
 class FirebasePullResource(Model):
-    firebase_id = models.CharField(max_length=30, unique=True)
+    firebase_id = models.CharField[str, str](max_length=30, unique=True)
 
-    firebase_last_pulled = models.DateTimeField(
+    firebase_last_pulled = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](
         null=True,
         blank=True,
         help_text=gettext_lazy("The latest time when resource was pulled from firebase"),
@@ -241,21 +243,21 @@ class CommonAsset(Model):
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # MB
     Type = AssetTypeEnum
 
-    type = IntegerChoicesField(
+    type: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=AssetTypeEnum,
     )
 
-    mimetype = IntegerChoicesField(
+    mimetype: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=AssetMimetypeEnum,
         null=True,
         blank=True,
     )
 
-    file_size = models.PositiveIntegerField(
+    file_size = models.PositiveIntegerField[int, int](
         help_text=gettext_lazy("The size of the file in bytes"),
     )
 
-    marked_as_deleted = models.BooleanField(
+    marked_as_deleted = models.BooleanField[bool, bool](
         default=False,
         help_text=gettext_lazy("If this flag is enabled, this asset will be deleted in the future"),
     )
@@ -267,7 +269,7 @@ class CommonAsset(Model):
         blank=True,
     )
 
-    external_url = models.CharField(
+    external_url = models.CharField[str | None, str | None](
         null=True,
         blank=True,
         help_text=gettext_lazy("Provide link to the file associated with the asset"),

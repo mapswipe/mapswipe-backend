@@ -1,5 +1,6 @@
 # pyright: reportUninitializedInstanceVariable=false
 # TODO(thenav56): Check and add missing unique_together
+import datetime
 import typing
 
 from django.db import models
@@ -25,21 +26,27 @@ class MappingSessionClientTypeEnum(models.IntegerChoices):
 
 
 class MappingSession(models.Model):
-    project_task_group: ProjectTaskGroup = models.ForeignKey(ProjectTaskGroup, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
-    contributor_user: ContributorUser = models.ForeignKey(ContributorUser, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
+    project_task_group = models.ForeignKey[ProjectTaskGroup, ProjectTaskGroup](ProjectTaskGroup, on_delete=models.PROTECT)
+    contributor_user = models.ForeignKey[ContributorUser, ContributorUser](ContributorUser, on_delete=models.PROTECT)
 
-    app_version = models.CharField(max_length=10)
-    client_type = IntegerChoicesField(choices_enum=MappingSessionClientTypeEnum)
-    items_count = models.IntegerField()  # TODO(thenav56): Rename or just use task_group.number_of_tasks?
-    start_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null
-    end_time = models.DateTimeField(null=True, blank=True)  # XXX: New data are not null
+    app_version = models.CharField[str, str](max_length=10)
+    client_type: int = IntegerChoicesField(choices_enum=MappingSessionClientTypeEnum)  # type: ignore[reportAssignmentType]
+    items_count = models.IntegerField[int, int]()  # TODO(thenav56): Rename or just use task_group.number_of_tasks?
+    start_time = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](
+        null=True,
+        blank=True,
+    )  # XXX: New data are not null
+    end_time = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](
+        null=True,
+        blank=True,
+    )  # XXX: New data are not null
 
     # Type hints
     id: int
     project_task_group_id: int
     contributor_user_id: int
 
-    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+    class Meta:
         unique_together = (("project_task_group", "contributor_user"),)
 
     @typing.override
@@ -48,14 +55,18 @@ class MappingSession(models.Model):
 
 
 class MappingSessionUserGroup(models.Model):
-    mapping_session: MappingSession = models.ForeignKey(MappingSession, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
-    user_group: ContributorUserGroup = models.ForeignKey(  # type: ignore[reportIncompatibleVariableOverride]
+    mapping_session = models.ForeignKey[MappingSession, MappingSession](MappingSession, on_delete=models.PROTECT)
+    user_group = models.ForeignKey[ContributorUserGroup, ContributorUserGroup](
         ContributorUserGroup,
         on_delete=models.PROTECT,
         related_name="+",
     )
 
-    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+    # Type hints
+    mapping_session_id: int
+    user_group_id: int
+
+    class Meta:
         unique_together = (("mapping_session", "user_group"),)
 
     @typing.override
@@ -64,9 +75,9 @@ class MappingSessionUserGroup(models.Model):
 
 
 class MappingSessionResult(models.Model):
-    session: MappingSession = models.ForeignKey(MappingSession, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
-    project_task: ProjectTask = models.ForeignKey(ProjectTask, on_delete=models.PROTECT)  # type: ignore[reportIncompatibleVariableOverride]
-    result = models.PositiveSmallIntegerField()
+    session = models.ForeignKey[MappingSession, MappingSession](MappingSession, on_delete=models.PROTECT)
+    project_task = models.ForeignKey[ProjectTask, ProjectTask](ProjectTask, on_delete=models.PROTECT)
+    result = models.PositiveSmallIntegerField[int, int]()
 
     # TODO(thenav56): Add constraint to make sure we have non-duplicate row with task_id, .session.user_id
 
@@ -74,7 +85,7 @@ class MappingSessionResult(models.Model):
     session_id: int
     project_task_id: int
 
-    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+    class Meta:
         unique_together = (("session", "project_task"),)
 
     @typing.override
@@ -84,10 +95,10 @@ class MappingSessionResult(models.Model):
 
 # TODO: Rename to MappingSessionUserGroupStage?
 class MappingSessionUserGroupTemp(models.Model):
-    project_firebase_id = models.CharField(max_length=255)
-    group_firebase_id = models.CharField(max_length=255)
-    contributor_user_firebase_id = models.CharField(max_length=255)
-    user_group_firebase_id = models.CharField(max_length=255)
+    project_firebase_id = models.CharField[str, str](max_length=255)
+    group_firebase_id = models.CharField[str, str](max_length=255)
+    contributor_user_firebase_id = models.CharField[str, str](max_length=255)
+    user_group_firebase_id = models.CharField[str, str](max_length=255)
 
     @typing.override
     def __str__(self):
@@ -96,15 +107,15 @@ class MappingSessionUserGroupTemp(models.Model):
 
 # TODO: Rename to MappingSessionResultStage?
 class MappingSessionResultTemp(models.Model):
-    project_firebase_id = models.CharField(max_length=255)
-    group_firebase_id = models.CharField(max_length=255)
-    contributor_user_firebase_id = models.CharField(max_length=255)
-    task_firebase_id = models.CharField(max_length=255)
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
-    result = models.PositiveSmallIntegerField()
-    app_version = models.CharField(max_length=255)
-    client_type = IntegerChoicesField(choices_enum=MappingSessionClientTypeEnum)
+    project_firebase_id = models.CharField[str, str](max_length=255)
+    group_firebase_id = models.CharField[str, str](max_length=255)
+    contributor_user_firebase_id = models.CharField[str, str](max_length=255)
+    task_firebase_id = models.CharField[str, str](max_length=255)
+    start_time = models.DateTimeField[datetime.datetime, datetime.datetime]()
+    end_time = models.DateTimeField[datetime.datetime, datetime.datetime]()
+    result = models.PositiveSmallIntegerField[int, int]()
+    app_version = models.CharField[str, str](max_length=255)
+    client_type: int = IntegerChoicesField(choices_enum=MappingSessionClientTypeEnum)  # type: ignore[reportAssignmentType]
 
     @typing.override
     def __str__(self):

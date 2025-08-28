@@ -8,19 +8,22 @@ from django.utils.translation import gettext
 
 from .managers import CustomUserManager
 
+if typing.TYPE_CHECKING:
+    from apps.contributor.models import ContributorUser  # noqa: F401
+
 
 class User(AbstractUser):
     EMAIL_FIELD = USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
     username = None
-    email = models.EmailField(unique=True)
-    display_name = models.CharField(max_length=255)
+    email = models.EmailField[str, str](unique=True)
+    display_name = models.CharField[str, str](max_length=255)
     # FIXME(tnagorra): We might need to skip the indexing
     # TODO(tnagorra): Rename this to firebase_userid
 
     # TODO: change this to one-to-one field
-    contributor_user = models.ForeignKey(
+    contributor_user = models.ForeignKey["ContributorUser", "ContributorUser"](
         "contributor.ContributorUser",
         on_delete=models.PROTECT,
         null=True,
@@ -67,7 +70,7 @@ class User(AbstractUser):
     def save(self, *args, **kwargs):
         # Make sure email are same and lowercase
         self.email = self.email.lower()
-        if self.pk is None:  # pyright: ignore [reportUnnecessaryComparison]
+        if self.pk is None:  # type: ignore[reportUnnecessaryComparison]
             super().save(*args, **kwargs)
             # Remove force_insert since we have already inserted
             kwargs.pop("force_insert", None)

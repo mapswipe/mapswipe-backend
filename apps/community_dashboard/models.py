@@ -1,4 +1,5 @@
 # pyright: reportUninitializedInstanceVariable=false
+import datetime
 import typing
 
 from django.db import models
@@ -17,9 +18,10 @@ class AggregatedTrackingTypeEnum(models.IntegerChoices):
 
 
 class AggregatedTracking(Model):
-    type = IntegerChoicesField(choices_enum=AggregatedTrackingTypeEnum, unique=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    value = models.CharField(
+    type: int = IntegerChoicesField(choices_enum=AggregatedTrackingTypeEnum, unique=True)  # type: ignore[reportAssignmentType]
+    updated_at = models.DateTimeField[datetime.datetime, datetime.datetime](auto_now=True)
+    # TODO(thenav56): Change the value to DateField
+    value = models.CharField[str | None, str | None](
         max_length=225,
         null=True,
         help_text=gettext("Represents the date before which data is synced to aggregated tables."),
@@ -32,14 +34,14 @@ class AggregatedTracking(Model):
 
 class AggregatedUserStatData(Model):
     # Ref Fields
-    project: Project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="+")  # type: ignore[reportIncompatibleVariableOverride]
-    user: ContributorUser = models.ForeignKey(ContributorUser, on_delete=models.CASCADE, related_name="+")  # type: ignore[reportIncompatibleVariableOverride]
-    timestamp_date = models.DateField()
+    project = models.ForeignKey[Project, Project](Project, on_delete=models.CASCADE, related_name="+")
+    user = models.ForeignKey[ContributorUser, ContributorUser](ContributorUser, on_delete=models.CASCADE, related_name="+")
+    timestamp_date = models.DateField[datetime.date, datetime.date]()
     # Aggregated Fields
-    total_time = models.IntegerField()  # seconds
-    task_count = models.IntegerField()  # Number of tasks
-    swipes = models.IntegerField()  # Number of swipes
-    area_swiped = models.FloatField()  # sqkm
+    total_time = models.IntegerField[int, int]()  # seconds
+    task_count = models.IntegerField[int, int]()  # Number of tasks
+    swipes = models.IntegerField[int, int]()  # Number of swipes
+    area_swiped = models.FloatField[float, float]()  # sqkm
 
     # Type hints
     project_id: int
@@ -59,15 +61,19 @@ class AggregatedUserStatData(Model):
 
 class AggregatedUserGroupStatData(Model):
     # Ref Fields
-    project: Project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="+")  # type: ignore[reportIncompatibleVariableOverride]
-    user: ContributorUser = models.ForeignKey(ContributorUser, on_delete=models.CASCADE, related_name="+")  # type: ignore[reportIncompatibleVariableOverride]
-    user_group: ContributorUserGroup = models.ForeignKey(ContributorUserGroup, on_delete=models.CASCADE, related_name="+")  # type: ignore[reportIncompatibleVariableOverride]
-    timestamp_date = models.DateField()
+    project = models.ForeignKey[Project, Project](Project, on_delete=models.CASCADE, related_name="+")
+    user = models.ForeignKey[ContributorUser, ContributorUser](ContributorUser, on_delete=models.CASCADE, related_name="+")
+    user_group = models.ForeignKey[ContributorUserGroup, ContributorUserGroup](
+        ContributorUserGroup,
+        on_delete=models.CASCADE,
+        related_name="+",
+    )
+    timestamp_date = models.DateField[datetime.date, datetime.date]()
     # Aggregated Fields
-    total_time = models.IntegerField()  # seconds
-    task_count = models.FloatField()  # Number of tasks
-    swipes = models.FloatField()  # Number of swipes
-    area_swiped = models.FloatField()
+    total_time = models.IntegerField[int, int]()  # seconds
+    task_count = models.FloatField[float, float]()  # Number of tasks
+    swipes = models.FloatField[float, float]()  # Number of swipes
+    area_swiped = models.FloatField[float, float]()
 
     # Type hints
     project_id: int

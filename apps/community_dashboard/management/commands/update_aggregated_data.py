@@ -191,6 +191,7 @@ UPDATE_USER_GROUP_SQL = f"""
 """
 
 INTERVAL_RANGE_DAYS = 30
+DATE_FORMAT = "%Y-%m-%d"
 
 
 class Command(BaseCommand):
@@ -201,9 +202,11 @@ class Command(BaseCommand):
         # which is quite big.
         from_date = tracker.value
         if tracker.value is not None:
-            from_date = datetime.datetime.strptime(tracker.value, "%Y-%m-%d").date()
+            from_date = datetime.datetime.strptime(tracker.value, DATE_FORMAT).date()
         else:
-            timestamp_min = MappingSession.objects.aggregate(timestamp_min=models.Min("start_time"))["timestamp_min"]
+            timestamp_min: datetime.datetime | None = MappingSession.objects.aggregate(
+                timestamp_min=models.Min("start_time"),
+            )["timestamp_min"]
             if timestamp_min:
                 self.stdout.write(f"Using min timestamps from database {timestamp_min}")
                 from_date = timestamp_min.date()
@@ -219,8 +222,8 @@ class Command(BaseCommand):
                 self.stdout.write(f"{label.title()} Nothing to do here.....")
                 break
             params = dict(
-                from_date=from_date.strftime("%Y-%m-%d"),
-                until_date=until_date.strftime("%Y-%m-%d"),
+                from_date=from_date.strftime(DATE_FORMAT),
+                until_date=until_date.strftime(DATE_FORMAT),
             )
             start_time = time.time()
 
@@ -229,8 +232,9 @@ class Command(BaseCommand):
                 with connection.cursor() as cursor:
                     cursor.execute(sql, params)
                 self.stdout.write(self.style.SUCCESS(f"Successful. Runtime: {time.time() - start_time} seconds"))
-                tracker.value = from_date = until_date
+                from_date = until_date
                 self.stdout.write(f"Saving date {tracker.value} as last tracker")
+                tracker.value = from_date.strftime(DATE_FORMAT)
                 tracker.save()
 
     def run(self):

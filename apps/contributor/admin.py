@@ -40,7 +40,7 @@ class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
 
     @typing.override
     def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
+        super().save_model(request, obj, form, change)
         FirebaseContributorUser(obj).trigger()
 
 
@@ -67,7 +67,7 @@ class ContributorTeamAdmin(
 
     @typing.override
     def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)  # type: ignore[reportAttributeAccessIssue]
+        super().save_model(request, obj, form, change)
         FirebaseContributorTeam(obj).trigger()
 
     def view_team_members(self, obj):
