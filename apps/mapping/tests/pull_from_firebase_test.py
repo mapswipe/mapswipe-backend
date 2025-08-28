@@ -1,6 +1,7 @@
 import typing
 
 from apps.contributor.factories import ContributorUserFactory, ContributorUserGroupFactory
+from apps.contributor.models import ContributorUser
 from apps.mapping.firebase.firebase import pull_results_from_firebase
 from apps.mapping.models import (
     MappingSession,
@@ -77,6 +78,7 @@ class TestPullFromFirebase(TestCase):
         users_to_map: int,
         override_data: dict[str, typing.Any] | None = None,
         invalid_data: bool = False,
+        invalid_contributor_users: bool = False,
     ):
         project = ProjectFactory.create(
             **self.project_common_kwargs,
@@ -117,7 +119,18 @@ class TestPullFromFirebase(TestCase):
                         },
                         **(override_data or {}),
                     }
-                    for contributor_user in contributor_users
+                    for contributor_user in [
+                        *contributor_users,
+                        *(
+                            [
+                                # Some non-referenceable dataset
+                                ContributorUser(firebase_id="dummy-01"),
+                                ContributorUser(firebase_id="dummy-02"),
+                            ]
+                            if invalid_contributor_users
+                            else []
+                        ),
+                    ]
                 }
                 for project_task_group in project_groups
             },
@@ -135,7 +148,16 @@ class TestPullFromFirebase(TestCase):
 
         pull_results_from_firebase()
 
-        assert ref_results.get() is None, "results should be cleared from the firebase"
+        if invalid_contributor_users:
+            assert ref_results.get() is not None, "results should not be empty in the firebase"
+            assert {
+                contributor_user_fid
+                for _, p_data in ref_results.get().items()  # pyright: ignore[reportAttributeAccessIssue]
+                for _, g_data in p_data.items()
+                for contributor_user_fid in g_data
+            } == {"dummy-01", "dummy-02"}, "only dummy results should be in the firebase"
+        else:
+            assert ref_results.get() is None, "results should be cleared from the firebase"
 
         expected_mapping_sessions_count = task_group_count * users_to_map
         expected_mapping_sessions_user_groups_count = expected_mapping_sessions_count * user_groups_to_map
@@ -218,6 +240,16 @@ class TestPullFromFirebase(TestCase):
             override_data={
                 "results": "noop",
             },
+        )
+
+    def test_invalid_data_03(self):
+        # TODO: Add more cases, for group?
+        self._valid_data(
+            task_group_count=5,
+            task_count=10,
+            user_groups_to_map=2,
+            users_to_map=5,
+            invalid_contributor_users=True,
         )
 
     # TODO: Handle handle this kind of data?

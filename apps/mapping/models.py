@@ -105,17 +105,34 @@ class MappingSessionUserGroupTemp(models.Model):
         return str(self.pk)
 
 
-# TODO: Rename to MappingSessionResultStage?
+# TODO(thenav56): Rename to MappingSessionResultStage?
+# TODO(thenav56): Look into avoiding WAL for this table? As we don't need to backup this table data (UNLOGGED)
 class MappingSessionResultTemp(models.Model):
+    # Firebase id (Raw data from firebase pushed from mapswipe web/phone apps)
     project_firebase_id = models.CharField[str, str](max_length=255)
     group_firebase_id = models.CharField[str, str](max_length=255)
     contributor_user_firebase_id = models.CharField[str, str](max_length=255)
     task_firebase_id = models.CharField[str, str](max_length=255)
+
+    # Internal reference fields (Firebase id transformed to internal ids)
+    # NOTE: why BigIntegerField, check settings.py DEFAULT_AUTO_FIELD
+    # NOTE: If we use ForeignKey here, then we get pending state issue with TRUNCATE
+    group_id = models.BigIntegerField[int | None, int | None](blank=True, null=True)
+    task_id = models.BigIntegerField[int | None, int | None](blank=True, null=True)
+    contributor_user_id = models.BigIntegerField[int | None, int | None](blank=True, null=True)
+
+    # Mapping metadata
     start_time = models.DateTimeField[datetime.datetime, datetime.datetime]()
     end_time = models.DateTimeField[datetime.datetime, datetime.datetime]()
     result = models.PositiveSmallIntegerField[int, int]()
     app_version = models.CharField[str, str](max_length=255)
     client_type: int = IntegerChoicesField(choices_enum=MappingSessionClientTypeEnum)  # type: ignore[reportAssignmentType]
+
+    # Misc
+    is_firebase_mapping_valid = models.BooleanField[bool | None, bool | None](blank=True, null=True)
+
+    # Typing hints
+    id: int
 
     @typing.override
     def __str__(self):

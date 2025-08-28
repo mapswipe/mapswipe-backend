@@ -1,6 +1,5 @@
 import logging
 import typing
-from collections import defaultdict
 
 import dateutil.parser
 from django.db import connection, transaction
@@ -32,9 +31,7 @@ class FirebaseCleanupAlreadyDoneException(Exception): ...
 class FirebaseCleanup:
     def __init__(self):
         # NOTE: We need to set value to None to clear the value in firebase
-        self._mapping_sessions: defaultdict[str, defaultdict[str, dict[str, None]]] = defaultdict(
-            lambda: defaultdict(lambda: defaultdict(None)),
-        )
+        self._mapping_sessions: dict[str, None] = {}
         # NOTE: We need to set value to None to clear the value in firebase
         self._root_project: dict[str, None] = {}
         self._done = False
@@ -43,7 +40,16 @@ class FirebaseCleanup:
         if self._done:
             raise FirebaseCleanupAlreadyDoneException("done already called")
 
-    def add_mapping_session(
+    @staticmethod
+    def _generate_ref_key(
+        *,
+        project_firebase_id: str,
+        group_firebase_id: str,
+        contributor_user_firebase_id: str,
+    ):
+        return f"{project_firebase_id}/{group_firebase_id}/{contributor_user_firebase_id}"
+
+    def mark_as_delete(
         self,
         *,
         project_firebase_id: str,
@@ -54,7 +60,31 @@ class FirebaseCleanup:
         Flags a contributor's mapping session data in a project group for deletion in Firebase.
         """
         self._already_done_check()
-        self._mapping_sessions[project_firebase_id][group_firebase_id][contributor_user_firebase_id] = None
+        key = self._generate_ref_key(
+            project_firebase_id=project_firebase_id,
+            group_firebase_id=group_firebase_id,
+            contributor_user_firebase_id=contributor_user_firebase_id,
+        )
+        self._mapping_sessions[key] = None
+
+    def undo_mark_as_delete(
+        self,
+        *,
+        project_firebase_id: str,
+        group_firebase_id: str,
+        contributor_user_firebase_id: str,
+    ):
+        """
+        Removes the deletion flag from a contributor's mapping session data within a project group in Firebase
+        """
+        self._already_done_check()
+        key = self._generate_ref_key(
+            project_firebase_id=project_firebase_id,
+            group_firebase_id=group_firebase_id,
+            contributor_user_firebase_id=contributor_user_firebase_id,
+        )
+        if key in self._mapping_sessions:
+            del self._mapping_sessions[key]
 
     def add_project(
         self,
@@ -126,6 +156,48 @@ def results_complete(
     return complete
 
 
+SQL_QUERY_TO_PRE_FILL_TEMP_TABLE_DATA_REF_COLUMNS = f"""
+    WITH processed AS (
+        SELECT
+            RT.{fd_name(MappingSessionResultTemp.id)} as mapping_session_id,
+            -- Ref
+            PTG.{fd_name(ProjectTaskGroup.id)} as project_task_group_id,
+            PT.{fd_name(ProjectTask.id)} as project_task_id,
+            CU.{fd_name(ContributorUser.id)} as contributor_user_id
+        FROM
+            {tb_name(MappingSessionResultTemp)} RT
+                -- Project
+                LEFT JOIN {tb_name(Project)} P ON
+                    P.{fd_name(Project.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.project_firebase_id)}
+                -- Project Task Group
+                LEFT JOIN {tb_name(ProjectTaskGroup)} PTG ON
+                    PTG.{fd_name(ProjectTaskGroup.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.group_firebase_id)} AND
+                    PTG.{fd_name(ProjectTaskGroup.project)} = P.{fd_name(Project.id)}
+                -- Project Task
+                LEFT JOIN {tb_name(ProjectTask)} PT ON
+                    PT.{fd_name(ProjectTask.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.task_firebase_id)} AND
+                    PT.{fd_name(ProjectTask.task_group)} = PTG.{fd_name(ProjectTaskGroup.id)}
+                -- Contributor User
+                LEFT JOIN {tb_name(ContributorUser)} CU ON
+                    CU.{fd_name(ContributorUser.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.contributor_user_firebase_id)}
+    )
+    UPDATE {tb_name(MappingSessionResultTemp)}
+    SET
+        {fd_name(MappingSessionResultTemp.group_id)} = processed.project_task_group_id,
+        {fd_name(MappingSessionResultTemp.task_id)} = processed.project_task_id,
+        {fd_name(MappingSessionResultTemp.contributor_user_id)} = processed.contributor_user_id,
+        {fd_name(MappingSessionResultTemp.is_firebase_mapping_valid)} = (
+            -- XXX: We only need to check contributor_user_id, others are generated from backend
+            processed.project_task_group_id is not NULL
+            AND processed.project_task_id is not NULL
+            AND processed.contributor_user_id is not NULL
+        )
+    FROM processed
+    WHERE
+        {tb_name(MappingSessionResultTemp)}.{fd_name(MappingSessionResultTemp.id)} = processed.mapping_session_id;
+"""  # noqa: E501
+
+
 SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSIONS = f"""
     INSERT INTO {tb_name(MappingSession)} (
         -- Ref
@@ -141,8 +213,8 @@ SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSIONS = f"""
     ) (
         SELECT
             -- Ref
-            PTG.{fd_name(ProjectTaskGroup.id)},                         -- project_task_group_id
-            CU.{fd_name(ContributorUser.id)},                           -- contributor_user_id
+            RT.{fd_name(MappingSessionResultTemp.group_id)},                -- project_task_group_id
+            RT.{fd_name(MappingSessionResultTemp.contributor_user_id)},     -- contributor_user_id
             -- Swipe Metadata (Aggregates)
             min(RT.{fd_name(MappingSessionResultTemp.start_time)}),      -- start_time
             max(RT.{fd_name(MappingSessionResultTemp.end_time)}),        -- end_time
@@ -152,19 +224,11 @@ SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSIONS = f"""
             RT.{fd_name(MappingSessionResultTemp.client_type)}           -- client_type
         FROM
             {tb_name(MappingSessionResultTemp)} RT
-                -- Project
-                LEFT JOIN {tb_name(Project)} P ON
-                    P.{fd_name(Project.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.project_firebase_id)}
-                -- Project Task Group
-                LEFT JOIN {tb_name(ProjectTaskGroup)} PTG ON
-                    PTG.{fd_name(ProjectTaskGroup.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.group_firebase_id)} AND
-                    PTG.{fd_name(ProjectTaskGroup.project)} = P.{fd_name(Project.id)}
-                -- Contributor User
-                LEFT JOIN {tb_name(ContributorUser)} CU ON
-                    CU.{fd_name(ContributorUser.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.contributor_user_firebase_id)}
+        WHERE
+            RT.{fd_name(MappingSessionResultTemp.is_firebase_mapping_valid)} is True
         GROUP BY
-            PTG.{fd_name(ProjectTaskGroup.id)},
-            CU.{fd_name(ContributorUser.id)},
+            RT.{fd_name(MappingSessionResultTemp.group_id)},
+            RT.{fd_name(MappingSessionResultTemp.contributor_user_id)},
             RT.{fd_name(MappingSessionResultTemp.app_version)},
             RT.{fd_name(MappingSessionResultTemp.client_type)}
     )
@@ -173,7 +237,8 @@ SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSIONS = f"""
          {fd_name(MappingSession.contributor_user)}
     )
     DO NOTHING;
-"""  # noqa: E501
+"""
+
 
 SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_RESULTS = f"""
     INSERT INTO {tb_name(MappingSessionResult)} (
@@ -186,28 +251,15 @@ SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_RESULTS = f"""
         SELECT
             -- Ref
             MS.{fd_name(MappingSession.id)},               -- mapping_session_id
-            PT.{fd_name(ProjectTask.id)},                  -- task_id
+            RT.{fd_name(MappingSessionResultTemp.task_id)},   -- task_id
             -- Value
             RT.{fd_name(MappingSessionResultTemp.result)}  -- result [TODO: ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(RT.result), 3857), 4326)]
         FROM {tb_name(MappingSessionResultTemp)} RT
-            -- Project
-            LEFT JOIN {tb_name(Project)} P ON
-                P.{fd_name(Project.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.project_firebase_id)}
-            -- Project Task Group
-            LEFT JOIN {tb_name(ProjectTaskGroup)} PTG ON
-                PTG.{fd_name(ProjectTaskGroup.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.group_firebase_id)} AND
-                PTG.{fd_name(ProjectTaskGroup.project)} = P.{fd_name(Project.id)}
-            -- Project Task
-            LEFT JOIN {tb_name(ProjectTask)} PT ON
-                PT.{fd_name(ProjectTask.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.task_firebase_id)} AND
-                PT.{fd_name(ProjectTask.task_group)} = PTG.{fd_name(ProjectTaskGroup.id)}
-            -- Contributor User
-            LEFT JOIN {tb_name(ContributorUser)} CU ON
-                CU.{fd_name(ContributorUser.firebase_id)} = RT.{fd_name(MappingSessionResultTemp.contributor_user_firebase_id)}
-            -- Mapping Session
             LEFT JOIN {tb_name(MappingSession)} MS ON
-                MS.{fd_name(MappingSession.project_task_group)} = PTG.{fd_name(ProjectTaskGroup.id)} AND
-                MS.{fd_name(MappingSession.contributor_user)} = CU.{fd_name(ContributorUser.id)}
+                MS.{fd_name(MappingSession.project_task_group)} = RT.{fd_name(MappingSessionResultTemp.group_id)} AND
+                MS.{fd_name(MappingSession.contributor_user)} = RT.{fd_name(MappingSessionResultTemp.contributor_user_id)}
+        WHERE
+            RT.{fd_name(MappingSessionResultTemp.is_firebase_mapping_valid)} is True
     )
     ON CONFLICT (
         {fd_name(MappingSessionResult.session)},
@@ -243,6 +295,8 @@ SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_USER_GROUP = f"""
             -- Contributor User Group
             LEFT JOIN {tb_name(ContributorUserGroup)} UG ON
                 UG.{fd_name(ContributorUserGroup.firebase_id)} = UGRT.{fd_name(MappingSessionUserGroupTemp.user_group_firebase_id)}
+        WHERE
+            MS.{fd_name(MappingSession.id)} is not NULL
     )
     ON CONFLICT (
          {fd_name(MappingSessionUserGroup.mapping_session)},
@@ -252,8 +306,12 @@ SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_USER_GROUP = f"""
 """  # noqa: E501
 
 
-def transfer_results_from_temp_tables():
+def transfer_results_from_temp_tables(
+    firebase_cleanup: FirebaseCleanup,
+):
     with transaction.atomic(), connection.cursor() as cursor:
+        logger.info("Processing mapping sessions temp table data")
+        cursor.execute(SQL_QUERY_TO_PRE_FILL_TEMP_TABLE_DATA_REF_COLUMNS)
         logger.info("Transferring staging results to real tables")
         logger.info("Creating mapping sessions")
         cursor.execute(SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSIONS)
@@ -262,6 +320,22 @@ def transfer_results_from_temp_tables():
         logger.info("Creating mapping sessions for contributor user groups")
         cursor.execute(SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_USER_GROUP)
         logger.info("Transferred staging results to real tables")
+
+        invalid_result_temp_qs = (
+            MappingSessionResultTemp.objects.filter(is_firebase_mapping_valid=False)
+            .values_list(
+                "project_firebase_id",
+                "group_firebase_id",
+                "contributor_user_firebase_id",
+            )
+            .distinct()
+        )
+        for project_firebase_id, group_firebase_id, contributor_user_firebase_id in invalid_result_temp_qs:
+            firebase_cleanup.undo_mark_as_delete(
+                project_firebase_id=project_firebase_id,
+                group_firebase_id=group_firebase_id,
+                contributor_user_firebase_id=contributor_user_firebase_id,
+            )
 
         logger.info("Cleaning up staging results")
         cursor.execute(f"TRUNCATE TABLE {tb_name(MappingSessionResultTemp)} RESTART IDENTITY;")
@@ -289,7 +363,7 @@ def results_to_temp_table(
 
     for group_firebase_id, users_results in group_results.items():
         for contributor_user_firebase_id, mapping_session_data in users_results.items():
-            firebase_cleanup.add_mapping_session(
+            firebase_cleanup.mark_as_delete(
                 project_firebase_id=project.firebase_id,
                 group_firebase_id=group_firebase_id,
                 contributor_user_firebase_id=contributor_user_firebase_id,
