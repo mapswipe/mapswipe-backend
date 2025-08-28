@@ -33,6 +33,10 @@ class CompareProject(
         if typing.TYPE_CHECKING:
             assert project.project_type == ProjectTypeEnum.COMPARE, f"{type(self)} is defined for COMPARE"
 
+    @typing.override
+    def get_max_time_spend_percentile(self) -> float:
+        return 11.2
+
     # FIREBASE
 
     @typing.override

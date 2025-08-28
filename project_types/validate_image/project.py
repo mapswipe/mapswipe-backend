@@ -214,6 +214,10 @@ class ValidateImageProject(
     @typing.override
     def post_create_groups(self): ...
 
+    @typing.override
+    def get_max_time_spend_percentile(self) -> float:
+        return 6.1
+
     # FIREBASE
 
     @typing.override

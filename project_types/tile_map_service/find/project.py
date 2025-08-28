@@ -32,6 +32,10 @@ class FindProject(
             assert project.project_type == ProjectTypeEnum.FIND, f"{type(self)} is defined for FIND"
 
     @typing.override
+    def get_max_time_spend_percentile(self) -> float:
+        return 1.4
+
+    @typing.override
     def get_project_specifics_for_firebase(self):
         tsp = self.project_type_specifics.tile_server_property
         return firebase_models.FbProjectFindCreateOnlyInput(
