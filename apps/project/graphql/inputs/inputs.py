@@ -62,7 +62,7 @@ class ProjectCreateInput(UserResourceCreateInputMixin):
     project_type: strawberry.auto
     requesting_organization: strawberry.ID
     look_for: strawberry.auto
-    project_instruction: strawberry.auto
+    project_instruction: str
     additional_info_url: strawberry.auto
     description: strawberry.auto
     team: strawberry.ID | None = strawberry.UNSET

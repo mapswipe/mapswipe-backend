@@ -1276,7 +1276,7 @@ input ProjectCreateInput {
   lookFor: String
 
   """Provide project instruction"""
-  projectInstruction: String
+  projectInstruction: String!
   projectNumber: Int!
   projectType: ProjectTypeEnum!
   region: String!
