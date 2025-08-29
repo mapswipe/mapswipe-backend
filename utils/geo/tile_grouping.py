@@ -1,4 +1,4 @@
-"""Copied from https://github.com/mapswipe/python-mapswipe-workers/blob/bf576a0/mapswipe_workers/mapswipe_workers/utils/tile_grouping_functions.py"""
+# Copied from https://github.com/mapswipe/python-mapswipe-workers/blob/bf576a0/mapswipe_workers/mapswipe_workers/utils/tile_grouping_functions.py
 
 import logging
 import math
@@ -145,12 +145,12 @@ def _get_horizontal_slice(
     )
 
 
-def _get_vertical_slice(
+def _get_vertical_slice(  # noqa: D417
     slice_infos: _HorizontalSliceInfo,
     zoom: int,
     width_threshold: int = 40,
 ) -> dict[str, RawGroup]:
-    """The function slices the horizontal stripes vertically.
+    """Slices the horizontal stripes vertically.
     Each input stripe has a height of three tiles
     and will be split into vertical parts.
     The width of each part is defined by the width threshold set below.
@@ -384,7 +384,7 @@ def _adjust_overlapping_groups(
     return groups_without_overlap, overlaps_total
 
 
-def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, group_size: int) -> dict[str, RawGroup]:
+def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, group_size: int) -> dict[str, RawGroup]:  # noqa: D417
     """The function to polygon geometries of a given input file
     into horizontal slices and then vertical slices.
 

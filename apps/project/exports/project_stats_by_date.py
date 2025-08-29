@@ -110,8 +110,10 @@ def get_progress_by_date(results_df: pd.DataFrame, groups_df: pd.DataFrame) -> p
 
 
 def get_contributors_by_date(results_df: pd.DataFrame) -> pd.DataFrame:
-    """For each project we retrospectively generate the following attributes for a given
-    date utilizing the results:
+    """For each project we retrospectively generate the attributes for a given
+    date utilizing the results.
+
+    The following attributes are generated:
 
     number_of_users:
         - number of distinct users active per day

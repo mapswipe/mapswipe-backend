@@ -65,8 +65,9 @@ def _calc_quadkey(row: pd.Series) -> str:
 
 def _calc_agreement(row: pd.Series) -> float:
     """For each task the "agreement" is computed (i.e. the extent to which
-    raters agree for the i-th subject). This measure is a component of
-    Fleiss' kappa: https://en.wikipedia.org/wiki/Fleiss%27_kappa
+    raters agree for the i-th subject).
+
+    This measure is a component of Fleiss' kappa: https://en.wikipedia.org/wiki/Fleiss%27_kappa
     """
     # Calculate total count as the sum of all categories
     n = row["total_count"]

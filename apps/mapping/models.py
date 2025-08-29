@@ -11,6 +11,8 @@ from apps.project.models import ProjectTask, ProjectTaskGroup
 
 
 class MappingSessionClientTypeEnum(models.IntegerChoices):
+    """Enum representing client type used during a mapping session."""
+
     UNKNOWN = 0, "Unknown"
     MOBILE_ANDROID = 1, "Mobile (Android)"
     MOBILE_IOS = 2, "Mobile (IOS)"
@@ -26,6 +28,8 @@ class MappingSessionClientTypeEnum(models.IntegerChoices):
 
 
 class MappingSession(models.Model):
+    """Model representing a mapping session where a contributor user worked on a specific project task group."""
+
     project_task_group = models.ForeignKey[ProjectTaskGroup, ProjectTaskGroup](ProjectTaskGroup, on_delete=models.PROTECT)
     contributor_user = models.ForeignKey[ContributorUser, ContributorUser](ContributorUser, on_delete=models.PROTECT)
 
@@ -55,6 +59,11 @@ class MappingSession(models.Model):
 
 
 class MappingSessionUserGroup(models.Model):
+    """Model representing a link between mapping session and contributor user group.
+
+    There can be multiple contributor user group linked to the same mapping session.
+    """
+
     mapping_session = models.ForeignKey[MappingSession, MappingSession](MappingSession, on_delete=models.PROTECT)
     user_group = models.ForeignKey[ContributorUserGroup, ContributorUserGroup](
         ContributorUserGroup,
@@ -75,6 +84,8 @@ class MappingSessionUserGroup(models.Model):
 
 
 class MappingSessionResult(models.Model):
+    """Model representing the result of a mapping session."""
+
     session = models.ForeignKey[MappingSession, MappingSession](MappingSession, on_delete=models.PROTECT)
     project_task = models.ForeignKey[ProjectTask, ProjectTask](ProjectTask, on_delete=models.PROTECT)
     result = models.PositiveSmallIntegerField[int, int]()
@@ -95,6 +106,8 @@ class MappingSessionResult(models.Model):
 
 # TODO: Rename to MappingSessionUserGroupStage?
 class MappingSessionUserGroupTemp(models.Model):
+    """Model storing intermediate data representing groups while pulling data from firebase."""
+
     project_firebase_id = models.CharField[str, str](max_length=255)
     group_firebase_id = models.CharField[str, str](max_length=255)
     contributor_user_firebase_id = models.CharField[str, str](max_length=255)
@@ -108,6 +121,8 @@ class MappingSessionUserGroupTemp(models.Model):
 # TODO(thenav56): Rename to MappingSessionResultStage?
 # TODO(thenav56): Look into avoiding WAL for this table? As we don't need to backup this table data (UNLOGGED)
 class MappingSessionResultTemp(models.Model):
+    """Model storing intermediate data representing results while pulling data from firebase."""
+
     # Firebase id (Raw data from firebase pushed from mapswipe web/phone apps)
     project_firebase_id = models.CharField[str, str](max_length=255)
     group_firebase_id = models.CharField[str, str](max_length=255)

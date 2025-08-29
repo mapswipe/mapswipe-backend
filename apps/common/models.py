@@ -17,6 +17,8 @@ if typing.TYPE_CHECKING:
 
 
 class FirebasePushStatusEnum(models.IntegerChoices):
+    """Enum representing the status of a data push operation to firebase."""
+
     PENDING = 1, "Pending"
     PROCESSING = 2, "Processing"
     SUCCESS = 3, "Success"
@@ -24,6 +26,8 @@ class FirebasePushStatusEnum(models.IntegerChoices):
 
 
 class UploadHelper:
+    """Utility class providing helper functions for generating upload paths."""
+
     @staticmethod
     def common_asset(instance: "CommonAsset", filename: str):
         return f"common/asset/{instance.type}/{ULID()!s}/{filename}"
@@ -31,6 +35,8 @@ class UploadHelper:
 
 # -- Abstracts
 class UserResource(Model):
+    """Abstract base model for resources created or modified by a user."""
+
     client_id = models.CharField[str, str](
         null=False,
         blank=False,
@@ -66,6 +72,8 @@ class UserResource(Model):
 
 
 class ArchivableResource(Model):
+    """Abstract base model that adds archiving capability to resources."""
+
     is_archived = models.BooleanField[bool, bool](default=False)
     archived_at = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](null=True, blank=True)
     archived_by = models.ForeignKey["User", "User"](
@@ -87,6 +95,8 @@ class ArchivableResource(Model):
 # NOTE: The labels should not be edited.
 # If the change is absolutely required, it requires migrating data in firebase as well.
 class IconEnum(models.IntegerChoices):
+    """Enum representing the icons available for use in custom options and tutorial instructions."""
+
     ADD_OUTLINE = 1, "add-outline"
     ALERT_OUTLINE = 2, "alert-outline"
     BAN_OUTLINE = 3, "ban-outline"
@@ -123,6 +133,8 @@ class IconEnum(models.IntegerChoices):
 
 
 class FirebasePushResource(Model):
+    """Abstract base model to track firebase data push operation for resources."""
+
     # NOTE: We should not directly use old_id. This is ID reference to old system
     old_id = models.CharField[str | None, str | None](max_length=30, db_index=True, null=True, blank=True)
 
@@ -165,6 +177,8 @@ class FirebasePushResource(Model):
 
 
 class FirebasePullResource(Model):
+    """Abstract base model to track firebase data pull operation for resources."""
+
     firebase_id = models.CharField[str, str](max_length=30, unique=True)
 
     firebase_last_pulled = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](
@@ -178,6 +192,8 @@ class FirebasePullResource(Model):
 
 
 class AssetMimetypeEnum(models.IntegerChoices):
+    """Enum representing the supported MIME types for assets."""
+
     GEOJSON = 100, "application/geo+json"
     JSON = 101, "application/json"
 
@@ -212,6 +228,8 @@ class AssetMimetypeEnum(models.IntegerChoices):
 
 # FIXME(tnagorra): Finalize the enum labels
 class AssetTypeEnum(models.IntegerChoices):
+    """Enum representing the types of assets."""
+
     INPUT = 100, "Input"
     OUTPUT = 200, "Output"
     EXPORT = 300, "Export"
@@ -237,6 +255,8 @@ class AssetTypeEnum(models.IntegerChoices):
 
 
 class CommonAsset(Model):
+    """Abstract model representing a common asset with associated metadata."""
+
     Mimetype = AssetMimetypeEnum
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # MB
     Type = AssetTypeEnum

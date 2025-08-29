@@ -8,7 +8,7 @@ from firebase_admin.db import Reference as FbReference
 
 
 class BaseBulkManager:
-    """This helper class keeps track of ORM objects to be action for multiple
+    """Keeps track of ORM objects to be action for multiple
     model classes, and automatically creates those objects with `bulk_create`
     when the number of objects accumulated for a given model class exceeds
     `chunk_size`.
@@ -123,6 +123,7 @@ class FirebaseBulkManager[T]:
 
     def add(self, key: str, value: T) -> None:
         """Add a single item to the buffer. When buffer reaches chunk_size, flush it.
+
         :param key: Firebase node/document ID
         :param value: Data to be written to the Firebase
         """

@@ -24,7 +24,7 @@ split_groups_list: list[dict[str, YesResult]]
 
 
 def load_data(project: Project, gzipped_csv_file: Path) -> list[ProjectData]:
-    """This will load the aggregated results csv file into a list of dictionaries.
+    """Load the aggregated results csv file into a list of dictionaries.
     For further steps we currently rely on task_x, task_y, task_z and yes_share and
     maybe_share and wkt.
     """
@@ -132,7 +132,7 @@ def filter_data(project_data: list[ProjectData]) -> list[ProjectData]:
 
 
 def check_list_sum(x: list[int], range_val: float | int):
-    """This checks if a give tile belongs to the defined "star"-shaped neighbourhood"""
+    """Checks if a give tile belongs to the defined "star"-shaped neighbourhood."""
     item_sum = abs(x[0]) + abs(x[1])
     return item_sum <= range_val
 
@@ -229,7 +229,9 @@ def remove_duplicates(duplicated_groups: dict[int, set[int]]):
 
 
 def split_groups(q: Queue[tuple[str, dict[str, YesResult], int]]):
-    """This function will be executed using threading.
+    """Split tasks into groups.
+
+    This function will be executed using threading.
     First it checks if there are still processes pending in the queue.
     We are using a clustering algorithm to put tasks together in groups.
     Since it is computationally expensive to check which tiles are neighbours,
@@ -316,8 +318,9 @@ def create_hot_tm_tasks(
     neighbourhood_shape: typing.Literal["rectangle", "star"] = "rectangle",
     neighbourhood_size: int = 5,
 ) -> dict[int, dict[str, YesResult]]:
-    """This functions creates a dictionary of tiles which will be forming a task in the HOT
+    """Creates a dictionary of tiles which will be forming a task in the HOT
     Tasking Manager.
+
     It will create a neighbourhood list, which will function as a mask to filter tiles
     that are close to each other.
     The functions assigns group ids to each tile.
@@ -439,7 +442,7 @@ def create_hot_tm_tasks(
 
 
 def dissolve_project_data(project_data_list: list[ProjectData]):
-    """This functions uses the unionCascaded function to return a dissolved MultiPolygon
+    """Uses the unionCascaded function to return a dissolved MultiPolygon
     geometry from several Single Part Polygon geometries.
     """
     multipolygon_geometry = ogr.Geometry(ogr.wkbMultiPolygon)
@@ -456,7 +459,7 @@ def generate_tasking_manager_geometries(
     yes_maybe_destination_filename: Path,
     hot_tm_destination_filename: Path,
 ):
-    """This functions runs the workflow to create a GeoJSON file ready to be used in the
+    """Runs the workflow to create a GeoJSON file ready to be used in the
     HOT Tasking Manager.
     First, data is loaded from the aggregated results csv file.
     Then it filers results for which a defined threshold of yes and maybe

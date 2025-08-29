@@ -345,11 +345,13 @@ def results_to_temp_table(
     group_results: dict[str, typing.Any],
     # result_type: str = "integer",
 ):
-    """- projects
-    - groups (group_results)
-      - users (Mapping session)
-        results
-          - tasks: value
+    """Move results from firebase to temporary table.
+
+    - projects
+      - groups (group_results)
+        - users (Mapping session)
+          results
+            - tasks: value
     """
     logger.info("project %s: Start transfer results to staging area", project.firebase_id)
     logger.info("project %s: Got %s groups", project.firebase_id, len(group_results.items()))

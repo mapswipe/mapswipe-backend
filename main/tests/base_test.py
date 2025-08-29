@@ -132,8 +132,8 @@ class TestCase(BaseTestCase):
 
     def assertResponseNoErrors(self, resp: typing.Any, msg=None):
         """Assert that the call went through correctly. 200 means the syntax is ok,
-        if there are no `errors`,
-        the call was fine.
+        if there are no `errors`, the call was fine.
+
         :resp HttpResponse: Response
         """
         content = resp.json()
@@ -141,8 +141,9 @@ class TestCase(BaseTestCase):
         assert "errors" not in list(content.keys()), msg or content
 
     def assertResponseHasErrors(self, resp: typing.Any, msg=None):
-        """Assert that the call was failing. Take care: Even with errors,
-        GraphQL returns status 200!
+        """Assert that the call was failing.
+
+        Take care: Even with errors, GraphQL returns status 200!
         :resp HttpResponse: Response
         """
         content = resp.json()

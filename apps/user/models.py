@@ -13,6 +13,14 @@ if typing.TYPE_CHECKING:
 
 
 class User(AbstractUser):
+    """Custom user model with email as unique identifier.
+
+    The user is linked to a contributor user, which holds user information synced from firebase.
+    This mapping is essential to integrate Firebase authentication this system.
+    Additionally, the mapping ensures that data created or updated in this system
+    can be accurately synchronized back to Firebase with the correct user association.
+    """
+
     EMAIL_FIELD = USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
