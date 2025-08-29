@@ -46,9 +46,7 @@ def get_community_stats() -> CommunityStatsType:
 # TODO: Cache this
 @sync_to_async
 def get_community_stats_latest() -> CommunityStatsType:
-    """
-    Stats from last 30 days
-    """
+    """Stats from last 30 days."""
     date_threshold = timezone.now() - datetime.timedelta(days=30)
     user_agg_data = AggregatedUserStatData.objects.filter(timestamp_date__gte=date_threshold).aggregate(
         swipes_sum=models.Sum("swipes"),

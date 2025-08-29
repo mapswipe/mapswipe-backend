@@ -131,8 +131,7 @@ class TestCase(BaseTestCase):
             warnings.warn(warning_message, stacklevel=2)
 
     def assertResponseNoErrors(self, resp: typing.Any, msg=None):
-        """
-        Assert that the call went through correctly. 200 means the syntax is ok,
+        """Assert that the call went through correctly. 200 means the syntax is ok,
         if there are no `errors`,
         the call was fine.
         :resp HttpResponse: Response
@@ -142,8 +141,7 @@ class TestCase(BaseTestCase):
         assert "errors" not in list(content.keys()), msg or content
 
     def assertResponseHasErrors(self, resp: typing.Any, msg=None):
-        """
-        Assert that the call was failing. Take care: Even with errors,
+        """Assert that the call was failing. Take care: Even with errors,
         GraphQL returns status 200!
         :resp HttpResponse: Response
         """
@@ -152,9 +150,7 @@ class TestCase(BaseTestCase):
 
     @staticmethod
     def genum(_enum: models.TextChoices | models.IntegerChoices | Enum):
-        """
-        Return appropriate enum value.
-        """
+        """Return appropriate enum value."""
         if _enum:
             return _enum.name
         return None

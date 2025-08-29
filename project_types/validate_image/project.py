@@ -147,7 +147,7 @@ class ValidateImageProject(
 
     @typing.override
     def validate(self) -> list[ValidImage]:
-        """Validate project before creating groups"""
+        """Validate project before creating groups."""
         # FIXME(tnagora): rename VALIDATING_GEOMETRY to VALIDATING_INPUT
         self.project.update_processing_status(Project.ProcessingStatus.VALIDATING_GEOMETRY, True)
 

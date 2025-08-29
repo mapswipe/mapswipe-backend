@@ -24,10 +24,9 @@ split_groups_list: list[dict[str, YesResult]]
 
 
 def load_data(project: Project, gzipped_csv_file: Path) -> list[ProjectData]:
-    """
-    This will load the aggregated results csv file into a list of dictionaries.
+    """This will load the aggregated results csv file into a list of dictionaries.
     For further steps we currently rely on task_x, task_y, task_z and yes_share and
-    maybe_share and wkt
+    maybe_share and wkt.
     """
 
     def _get_row_value[T: int | float](
@@ -37,9 +36,7 @@ def load_data(project: Project, gzipped_csv_file: Path) -> list[ProjectData]:
         default: int = 0,
         modifier: typing.Callable[[int | float | str], T] = int,
     ) -> T:
-        """
-        Get row value by using column name.
-        """
+        """Get row value by using column name."""
         if label not in column_index_map:
             return modifier(default)
         index = column_index_map[label]
@@ -119,31 +116,23 @@ def load_data(project: Project, gzipped_csv_file: Path) -> list[ProjectData]:
 
 
 def yes_maybe_condition_true(x: ProjectData) -> bool:
-    """
-    The yes maybe condition is true if 35% or
+    """The yes maybe condition is true if 35% or
     2 (or more) out of 3 users
     2 (or more) out of 4 users
     2 (or more) out of 5 users
-    have classified as 'yes' or 'maybe'
+    have classified as 'yes' or 'maybe'.
     """
-
     return x["yes_share"] + x["maybe_share"] > 0.35
 
 
 def filter_data(project_data: list[ProjectData]) -> list[ProjectData]:
-    """
-    Filter results that fulfil the yes_maybe_condition.
-    """
-
+    """Filter results that fulfil the yes_maybe_condition."""
     # filter yes and maybe
     return [x for x in project_data if yes_maybe_condition_true(x)]
 
 
 def check_list_sum(x: list[int], range_val: float | int):
-    """
-    This checks if a give tile belongs to the defined "star"-shaped neighbourhood
-    """
-
+    """This checks if a give tile belongs to the defined "star"-shaped neighbourhood"""
     item_sum = abs(x[0]) + abs(x[1])
     return item_sum <= range_val
 
@@ -152,8 +141,7 @@ def get_neighbour_list(
     neighbourhood_shape: typing.Literal["rectangle", "star"],
     neighbourhood_size: int,
 ) -> list[list[int]]:
-    """
-    Filters tiles that are neighbours.
+    """Filters tiles that are neighbours.
     This is based on a given search radius (neighbourhood size) and search window shape
     (neighbourhood shape=.
     """
@@ -175,11 +163,9 @@ def get_neighbour_list(
 
 # FIXME: This function mutates global variables
 def add_group_id_to_neighbours(task_x: int, task_y: int, task_z: int, group_id: int):
-    """
-    Add a group id to all other tiles that are in the neighbourhood of the given tile,
+    """Add a group id to all other tiles that are in the neighbourhood of the given tile,
     which is defined by task_x, task_y and task_z.
     """
-
     # look for neighbours
     for i, j in neighbour_list:
         new_task_x = int(task_x) + i
@@ -191,11 +177,9 @@ def add_group_id_to_neighbours(task_x: int, task_y: int, task_z: int, group_id: 
 
 
 def create_duplicates_dict() -> dict[int, set[int]]:
-    """
-    Check which tasks belong to multiple groups.
+    """Check which tasks belong to multiple groups.
     This will be used as a later stage to put tasks into distinct groups.
     """
-
     duplicated_groups: dict[int, set[int]] = {}
     for task_id in yes_results_dict:
         my_group_id = yes_results_dict[task_id]["my_group_id"]
@@ -224,12 +208,10 @@ def create_duplicates_dict() -> dict[int, set[int]]:
 
 
 def remove_duplicates(duplicated_groups: dict[int, set[int]]):
-    """
-    Remove groups ids for tasks which have more than one.
+    """Remove groups ids for tasks which have more than one.
     This is to make sure that every task belongs to a single group only.
     This distinct group id will be the basis for further geometric processing.
     """
-
     for duplicated_group_id in sorted(duplicated_groups.keys(), reverse=True):
         logger.debug(
             "%s: %s",
@@ -247,8 +229,7 @@ def remove_duplicates(duplicated_groups: dict[int, set[int]]):
 
 
 def split_groups(q: Queue[tuple[str, dict[str, YesResult], int]]):
-    """
-    This function will be executed using threading.
+    """This function will be executed using threading.
     First it checks if there are still processes pending in the queue.
     We are using a clustering algorithm to put tasks together in groups.
     Since it is computationally expensive to check which tiles are neighbours,
@@ -257,7 +238,6 @@ def split_groups(q: Queue[tuple[str, dict[str, YesResult], int]]):
     Otherwise, the group will be split into two parts and
     both will be added as new groups to our queue.
     """
-
     while not q.empty():
         group_id, group_data, group_size = q.get()
         logger.debug(
@@ -336,8 +316,7 @@ def create_hot_tm_tasks(
     neighbourhood_shape: typing.Literal["rectangle", "star"] = "rectangle",
     neighbourhood_size: int = 5,
 ) -> dict[int, dict[str, YesResult]]:
-    """
-    This functions creates a dictionary of tiles which will be forming a task in the HOT
+    """This functions creates a dictionary of tiles which will be forming a task in the HOT
     Tasking Manager.
     It will create a neighbourhood list, which will function as a mask to filter tiles
     that are close to each other.
@@ -350,7 +329,6 @@ def create_hot_tm_tasks(
     Finally, a dictionary is returned which holds each group as an item.
     Each group consists of a limited number of tiles.
     """
-
     # final groups dict will store the groups that are exported
     final_groups_dict: dict[int, dict[str, YesResult]] = {}
     highest_group_id = 0
@@ -461,11 +439,9 @@ def create_hot_tm_tasks(
 
 
 def dissolve_project_data(project_data_list: list[ProjectData]):
-    """
-    This functions uses the unionCascaded function to return a dissolved MultiPolygon
+    """This functions uses the unionCascaded function to return a dissolved MultiPolygon
     geometry from several Single Part Polygon geometries.
     """
-
     multipolygon_geometry = ogr.Geometry(ogr.wkbMultiPolygon)
     for item in project_data_list:
         polygon = ogr.CreateGeometryFromWkt(item["wkt"])
@@ -480,8 +456,7 @@ def generate_tasking_manager_geometries(
     yes_maybe_destination_filename: Path,
     hot_tm_destination_filename: Path,
 ):
-    """
-    This functions runs the workflow to create a GeoJSON file ready to be used in the
+    """This functions runs the workflow to create a GeoJSON file ready to be used in the
     HOT Tasking Manager.
     First, data is loaded from the aggregated results csv file.
     Then it filers results for which a defined threshold of yes and maybe
@@ -490,7 +465,6 @@ def generate_tasking_manager_geometries(
     filtered results.
     Finally, both data sets are saved into GeoJSON files.
     """
-
     # load project data from existing files
     results = load_data(project, agg_results_filename)
 

@@ -56,9 +56,7 @@ class FirebaseCleanup:
         group_firebase_id: str,
         contributor_user_firebase_id: str,
     ):
-        """
-        Flags a contributor's mapping session data in a project group for deletion in Firebase.
-        """
+        """Flags a contributor's mapping session data in a project group for deletion in Firebase."""
         self._already_done_check()
         key = self._generate_ref_key(
             project_firebase_id=project_firebase_id,
@@ -74,9 +72,7 @@ class FirebaseCleanup:
         group_firebase_id: str,
         contributor_user_firebase_id: str,
     ):
-        """
-        Removes the deletion flag from a contributor's mapping session data within a project group in Firebase
-        """
+        """Removes the deletion flag from a contributor's mapping session data within a project group in Firebase."""
         self._already_done_check()
         key = self._generate_ref_key(
             project_firebase_id=project_firebase_id,
@@ -91,8 +87,7 @@ class FirebaseCleanup:
         *,
         project_firebase_id: str,
     ):
-        """
-        ⚠️ Use with caution!
+        """⚠️ Use with caution!
         Flags all mapping sessions related to a project in Firebase for deletion.
         """
         self._already_done_check()
@@ -137,7 +132,7 @@ def results_complete(
     contributor_user_firebase_id: str,
     required_attributes: list[str],
 ) -> bool:
-    """check if all attributes are set"""
+    """Check if all attributes are set."""
     complete = True
     for attribute in required_attributes:
         if attribute not in mapping_session_data:
@@ -350,14 +345,12 @@ def results_to_temp_table(
     group_results: dict[str, typing.Any],
     # result_type: str = "integer",
 ):
+    """- projects
+    - groups (group_results)
+      - users (Mapping session)
+        results
+          - tasks: value
     """
-    - projects
-      - groups (group_results)
-        - users (Mapping session)
-          results
-            - tasks: value
-    """
-
     logger.info("project %s: Start transfer results to staging area", project.firebase_id)
     logger.info("project %s: Got %s groups", project.firebase_id, len(group_results.items()))
 

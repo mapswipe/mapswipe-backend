@@ -39,11 +39,9 @@ def _add_missing_result_columns(
     df: pd.DataFrame,
     custom_options: dict[int, set[int]],
 ) -> pd.DataFrame:
-    """
-    Check if all possible answers columns are included in the grouped results
+    """Check if all possible answers columns are included in the grouped results
     data frame and add columns if missing.
     """
-
     all_custom_options_values_set = set(
         [_option for option, sub_options in custom_options.items() for _option in [option, *sub_options]],
     )
@@ -66,12 +64,10 @@ def _calc_quadkey(row: pd.Series) -> str:
 
 
 def _calc_agreement(row: pd.Series) -> float:
-    """
-    for each task the "agreement" is computed (i.e. the extent to which
+    """For each task the "agreement" is computed (i.e. the extent to which
     raters agree for the i-th subject). This measure is a component of
     Fleiss' kappa: https://en.wikipedia.org/wiki/Fleiss%27_kappa
     """
-
     # Calculate total count as the sum of all categories
     n = row["total_count"]
 

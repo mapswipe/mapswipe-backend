@@ -15,12 +15,11 @@ def parse_input_data(
     data: InputDataType,
     dataclass_transformer: typing.Callable[[DataclassInstance], tuple[bool, InputDataType]] | None = None,
 ):
-    """
-    Return dict from Strawberry Input Object
+    """Return dict from Strawberry Input Object.
+
     NOTE: strawberry.asdict doesn't handle nested and strawberry.UNSET
     Related issue: https://github.com/strawberry-graphql/strawberry/issues/3265
     https://github.com/strawberry-graphql/strawberry/blob/d2c0fb4d2d363929c9ac10161884d004ab9cf555/strawberry/object_type.py#L395
-
     """
     # TODO(thenav56): Write test
     if type(data) is tuple:

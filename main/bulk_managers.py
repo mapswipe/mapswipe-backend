@@ -8,8 +8,7 @@ from firebase_admin.db import Reference as FbReference
 
 
 class BaseBulkManager:
-    """
-    This helper class keeps track of ORM objects to be action for multiple
+    """This helper class keeps track of ORM objects to be action for multiple
     model classes, and automatically creates those objects with `bulk_create`
     when the number of objects accumulated for a given model class exceeds
     `chunk_size`.
@@ -30,8 +29,7 @@ class BaseBulkManager:
         return obj
 
     def add(self, *objs: models.Model):
-        """
-        Add an object to the queue to be action, and call bulk_create if we
+        """Add an object to the queue to be action, and call bulk_create if we
         have enough objs.
         """
         for obj in objs:
@@ -42,8 +40,7 @@ class BaseBulkManager:
                 self._commit(model_class)
 
     def done(self):
-        """
-        Always call this upon completion to make sure the final partial chunk
+        """Always call this upon completion to make sure the final partial chunk
         is saved.
         """
         for model_name, objs in self._queues.items():
@@ -110,8 +107,7 @@ class BulkManagerSummary(typing.TypedDict):
 
 class FirebaseBulkManager[T]:
     def __init__(self, ref: FbReference, chunk_size: int = 150):
-        """
-        :param ref: Firebase reference object (Realtime DB)
+        """:param ref: Firebase reference object (Realtime DB)
         :param chunk_size: Number of items to batch before committing
         """
         self.ref = ref
@@ -120,16 +116,13 @@ class FirebaseBulkManager[T]:
         self._written_count = 0
 
     def _commit(self) -> None:
-        """
-        Commit the current buffer to Firebase and clear the buffer.
-        """
+        """Commit the current buffer to Firebase and clear the buffer."""
         self.ref.update(self._buffer)
         self._written_count += len(self._buffer)
         self._buffer.clear()
 
     def add(self, key: str, value: T) -> None:
-        """
-        Add a single item to the buffer. When buffer reaches chunk_size, flush it.
+        """Add a single item to the buffer. When buffer reaches chunk_size, flush it.
         :param key: Firebase node/document ID
         :param value: Data to be written to the Firebase
         """
@@ -143,7 +136,5 @@ class FirebaseBulkManager[T]:
             self._commit()
 
     def summary(self) -> BulkManagerSummary:
-        """
-        Returns a summary of the number of items written.
-        """
+        """Returns a summary of the number of items written."""
         return {"count": self._written_count}

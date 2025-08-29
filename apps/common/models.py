@@ -199,9 +199,7 @@ class AssetMimetypeEnum(models.IntegerChoices):
 
     @classmethod
     def is_valid_mimetype(cls, mimetype: str) -> bool:
-        """
-        Check if the given mimetype is valid for project assets.
-        """
+        """Check if the given mimetype is valid for project assets."""
         return mimetype in [choice.label for choice in cls]
 
     @classmethod
@@ -284,5 +282,5 @@ class CommonAsset(Model):
 
     @classmethod
     def usable_objects(cls):
-        """Returns objects that are mot marked for deletion"""
+        """Get objects that are mot marked for deletion."""
         return cls.objects.filter(marked_as_deleted=False)

@@ -171,6 +171,8 @@ class TutorialScenarioPage(UserResource):
 
 
 class TutorialTask(UserResource):
+    """Model representing a individual task in the scenario."""
+
     scenario = models.ForeignKey[TutorialScenarioPage, TutorialScenarioPage](
         TutorialScenarioPage,
         on_delete=models.CASCADE,

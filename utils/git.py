@@ -17,9 +17,7 @@ class GitHelper:
 
     @staticmethod
     def ssh_to_https(url: str) -> str:
-        """
-        Converts git@github.com:mapswipe/mapswipe-backend.git -> https://github.com/mapswipe/mapswipe-backend
-        """
+        """Converts git@github.com:mapswipe/mapswipe-backend.git -> https://github.com/mapswipe/mapswipe-backend."""
         if url.startswith("git@"):
             user_host, repo_path = url.split(":", 1)
             host = user_host[4:]

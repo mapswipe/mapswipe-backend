@@ -120,9 +120,8 @@ class BaseProject[
 
     @abstractmethod
     def get_max_time_spend_percentile(self) -> float:
-        """
-        Factor calculated by @Hagellach37
-        For defining the threshold for outliers using `95_percent`
+        """Factor calculated by @Hagellach37
+        For defining the threshold for outliers using `95_percent`.
 
         |project_type|median|95_percent|avg|
         |------------|------|----------|---|
@@ -145,10 +144,7 @@ class BaseProject[
     def create_groups(self, resp: ValidatedData): ...
 
     def process_project(self) -> bool:
-        """
-        Save all project info with groups and tasks in postgres.
-        """
-
+        """Save all project info with groups and tasks in postgres."""
         if self.project.status not in [
             Project.Status.MARKED_AS_READY,
             Project.Status.FAILED,
@@ -197,8 +193,7 @@ class BaseProject[
     def get_project_specifics_for_firebase(self) -> BaseModel: ...
 
     def _save_tasks_as_json(self, grouped_tasks: dict[str, list[dict[str, typing.Any]]]) -> None:
-        """
-        Generates a JSON file with all tasks and save it as a project asset.
+        """Generates a JSON file with all tasks and save it as a project asset.
         Using this for debugging purpose of compressed tasks.
         """
         task_json = json.dumps(grouped_tasks, separators=(",", ":"))

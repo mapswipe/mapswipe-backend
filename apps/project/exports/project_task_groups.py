@@ -13,14 +13,12 @@ logger = logging.getLogger(__name__)
 
 
 def generate_project_task_groups(destination_filename: Path, project: Project) -> pd.DataFrame:
-    """
-    Check if groups have been downloaded already.
+    """Check if groups have been downloaded already.
     If not: Query groups from postgres database for project id and
     save groups to a csv file.
     Then load pandas dataframe from this csv file.
     Return dataframe.
     """
-
     # TODO: check how we use number_of_users_required
     #   it can get you a wrong number, if more users finished than required
     # TODO: Use firebase id for group_id?

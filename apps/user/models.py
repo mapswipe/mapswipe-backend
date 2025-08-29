@@ -48,8 +48,8 @@ class User(AbstractUser):
 
     @property
     def firebase_id(self) -> str | None:
-        """
-        Return linked contributor user's firebase ID
+        """Get linked contributor user's firebase ID.
+
         NOTE: N+1 issue
         """
         if self.contributor_user_id:

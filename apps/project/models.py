@@ -395,8 +395,7 @@ class Project(UserResource, FirebasePushResource):
         return self.generate_name()
 
     def generate_name(self) -> str:
-        """
-        Returns a generated name for the project based on topic, region and project number.
+        """Get generated name for the project based on topic, region and project number.
 
         Use select_related to avoid N+1 queries.
         """
@@ -405,9 +404,7 @@ class Project(UserResource, FirebasePushResource):
 
     @staticmethod
     def generate_name_query(prefix: str = ""):
-        """
-        Returns a Django QuerySet expression to generate the project name.
-        """
+        """Get a Django QuerySet expression to generate the project name."""
         return Concat(
             models.F(f"{prefix}topic"),
             Value(" - "),

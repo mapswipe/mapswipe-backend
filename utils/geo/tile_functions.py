@@ -1,6 +1,4 @@
-"""
-Copied from https://github.com/mapswipe/python-mapswipe-workers/blob/bf576a0/mapswipe_workers/mapswipe_workers/utils/tile_functions.py
-"""
+"""Copied from https://github.com/mapswipe/python-mapswipe-workers/blob/bf576a0/mapswipe_workers/mapswipe_workers/utils/tile_functions.py"""
 
 import math
 
@@ -8,14 +6,15 @@ from osgeo import ogr
 
 
 class _Point:
-    """
-    The basic class point representing a Pixel
+    """The basic class point representing a Pixel.
+
     Attributes
     ----------
     x : int
         x coordinate
     y : int
         y coordinate
+
     """
 
     def __init__(self, x: float = 0.0, y: float = 0.0):
@@ -24,8 +23,7 @@ class _Point:
 
 
 class _Tile:
-    """
-    The basic class tile representing a TMS tile
+    """The basic class tile representing a TMS tile.
 
     Attributes
     ----------
@@ -33,6 +31,7 @@ class _Tile:
         x coordinate
     y : int
         y coordinate
+
     """
 
     def __init__(self, x: int = 0, y: int = 0):
@@ -42,7 +41,6 @@ class _Tile:
 
 def lat_long_zoom_to_pixel_coords(lat: float, lon: float, zoom: int):
     """Compute pixel coordinates from lat-long point at a given zoom level."""
-
     p = _Point()
     sinLat = math.sin(lat * math.pi / 180.0)
     x = ((lon + 180) / 360) * 256 * math.pow(2, zoom)
@@ -54,7 +52,6 @@ def lat_long_zoom_to_pixel_coords(lat: float, lon: float, zoom: int):
 
 def pixel_coords_zoom_to_lat_lon(pixel_x: float, pixel_y: float, zoom: int):
     """Compute latitude, longitude from pixel coordinates at a given zoom level."""
-
     MapSize = 256 * math.pow(2, zoom)
     x = (pixel_x / MapSize) - 0.5
     y = 0.5 - (pixel_y / MapSize)
@@ -66,7 +63,6 @@ def pixel_coords_zoom_to_lat_lon(pixel_x: float, pixel_y: float, zoom: int):
 
 def pixel_coords_to_tile_address(pixel_x: float, pixel_y: float):
     """Compute a tile address from pixel coordinates of point within tile."""
-
     t = _Tile()
     t.x = int(math.floor(pixel_x / 256))
     t.y = int(math.floor(pixel_y / 256))
@@ -75,7 +71,6 @@ def pixel_coords_to_tile_address(pixel_x: float, pixel_y: float):
 
 def tile_coords_and_zoom_to_quad_key(tile_x: int, tile_y: int, zoom: int) -> str:
     """Create a quad_key for use with certain tileservers that use them, e.g. Bing."""
-
     quad_key = ""
     for i in range(zoom, 0, -1):
         digit = 0
@@ -98,7 +93,6 @@ def quad_key_to_bing_url(quad_key: str, api_key: str):
 # FIXME(tnagorra): Add typings for osgeo
 def geometry_from_tile_coords(tile_x: float, tile_y: float, zoom: int) -> str:
     """Compute the polygon geometry of a tile map service tile."""
-
     # Calculate lat, lon of upper left corner of tile
     pixel_x = tile_x * 256
     pixel_y = tile_y * 256
