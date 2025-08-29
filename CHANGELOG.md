@@ -1,5 +1,62 @@
 # Changelog
 
+## [0.2.0-dev3](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev2..v0.2.0-dev3) - 2025-08-29
+### Changes:
+
+#### 🚀  Features
+
+- *(asset)* Add mapswipe-assets as submodule - ([3c33bb8](https://github.com/mapswipe/mapswipe-backend/commit/3c33bb82a0edbe295fd671a635c64dd690d402f8))
+- *(cron)* Setup a cron job to fetch users from firebase - ([39d1602](https://github.com/mapswipe/mapswipe-backend/commit/39d1602fd213f8b8896ebe9479fcfe195c628f77))
+- *(firebase)* Disable firebase functions on test - ([0c341ce](https://github.com/mapswipe/mapswipe-backend/commit/0c341ce828426aae393fd9c9d2e0cf554a90c859))
+- *(lint)* Add a script to bulk ignore warnings - ([ae76e57](https://github.com/mapswipe/mapswipe-backend/commit/ae76e57db8c47ad49a71f8aff0d90b828eaebd7e))
+- *(project)* Make project_instruction required on serializer - ([9691c90](https://github.com/mapswipe/mapswipe-backend/commit/9691c9047344223c6ba1f1bb66a9c6283961a804))
+- *(project)* Add new field project instruction - ([3d68a0d](https://github.com/mapswipe/mapswipe-backend/commit/3d68a0ddf350babcc1020737a121648b1a69f986))
+- *(project)* Add new field project instruction - ([e944a41](https://github.com/mapswipe/mapswipe-backend/commit/e944a411bcb5da24f1863ad3eea62b7a4155d66c))
+- *(results)* Process partial data - ([5d8da43](https://github.com/mapswipe/mapswipe-backend/commit/5d8da4364f7ab0adb7275f3f899135bbf98f7c09))
+- *(schema)* Monkeypatch graphql printer to sort members alphabetically - ([f14903a](https://github.com/mapswipe/mapswipe-backend/commit/f14903ab1acc9044e19fee7c799eea99d7890d96))
+- *(serializer)* Allow plain text in aoi validation - ([a03cd0e](https://github.com/mapswipe/mapswipe-backend/commit/a03cd0e914a15e0f9e3ed84c1d0277d69e52cc71))
+
+#### 🐛 Bug Fixes
+
+- *(project)* Fix organization archive validation - ([3eb742b](https://github.com/mapswipe/mapswipe-backend/commit/3eb742b53b012035e00ed948e57fdb6438019c1d))
+- *(project)* Use project and tutorial type on update status response - ([a87b752](https://github.com/mapswipe/mapswipe-backend/commit/a87b752f5b666545bc8c59057a13ff3c6d5f786d))
+- *(serializer)* Fix serialization of object_errors - ([6b68d9c](https://github.com/mapswipe/mapswipe-backend/commit/6b68d9c7d48b47e046d682db869ab773d4a0aff2))
+- *(typing)* Fix typing issues with assertions and null checks - ([5de963b](https://github.com/mapswipe/mapswipe-backend/commit/5de963bb14b8f06d754cf0fd0ddd99c56c78525b))
+
+#### 🚜 Refactor
+
+- *(typing)* Add type hints on added fields - ([603d9a6](https://github.com/mapswipe/mapswipe-backend/commit/603d9a6349cba01b90f5536dbb8805f3008e9b10))
+- *(typing)* Add typing in django fields - ([cb40cf9](https://github.com/mapswipe/mapswipe-backend/commit/cb40cf93653dfee89a30e7506c06fc8c740cbdb9))
+- *(validate)* Use custom_fields instead of manually defining types - ([de99350](https://github.com/mapswipe/mapswipe-backend/commit/de99350e6d3e8a64c5746d0e3c72428ea9623f23))
+
+#### 🧪 Testing
+
+- *(tutorial)* Add test for publishing a tutorial - ([e7596e8](https://github.com/mapswipe/mapswipe-backend/commit/e7596e8569794f71b7040a46f19008f82df46370))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(base)* Separate max time spend percentile - ([677291c](https://github.com/mapswipe/mapswipe-backend/commit/677291ce179d1166975df803f112d60e76218c50))
+- *(firebase)* Set target=emulator for firebase - ([0dd5fa3](https://github.com/mapswipe/mapswipe-backend/commit/0dd5fa389b9e74339d739f0029ce63326911717b))
+- *(migration)* Create merge migration - ([5186787](https://github.com/mapswipe/mapswipe-backend/commit/51867874dec9db7af42ead609fec9eced67edde4))
+- *(mutation)* Add mutation for updating project status - ([e643904](https://github.com/mapswipe/mapswipe-backend/commit/e643904da8255bd52e0beca64a71ee584d1db83a))
+- *(mutation)* Add mutation for updating project status - ([4a071e7](https://github.com/mapswipe/mapswipe-backend/commit/4a071e7e67b8a14052211038eadfc4a56e8b631d))
+- *(precommit)* Add pyupgrade, merge conflict, test naming - ([5419474](https://github.com/mapswipe/mapswipe-backend/commit/541947440ae017920e27616cc8bb0720b9cd0839))
+- *(testcase)* Add test case for firebase push. - ([479b34d](https://github.com/mapswipe/mapswipe-backend/commit/479b34d0dd57cee0abc191323cba5bafd5423b4b))
+- *(tutorial)* Add api to update tutorial status - ([cf99553](https://github.com/mapswipe/mapswipe-backend/commit/cf995537f6c3e52aa64ceb93c456a9d56311c156))
+- *(typing)* Enable monkeypatching for django stubs ext - ([f53b8b6](https://github.com/mapswipe/mapswipe-backend/commit/f53b8b69f53801a80154b102451294e3fb2574ce))
+
+### 🍻 Pull Requests (9)
+- (#115) [Breaking: Mutation for project and tutorial state change](https://github.com/mapswipe/mapswipe-backend/pull/115)
+- (#124) [FirebaseTestcase: add test case for firebase push.](https://github.com/mapswipe/mapswipe-backend/pull/124)
+- (#125) [Feature/Project instruction](https://github.com/mapswipe/mapswipe-backend/pull/125)
+- (#126) [Separate max time spend percentile](https://github.com/mapswipe/mapswipe-backend/pull/126)
+- (#127) [Feat(asset): Add mapswipe-assets as submodule](https://github.com/mapswipe/mapswipe-backend/pull/127)
+- (#128) [Allow plain text in aoi validation](https://github.com/mapswipe/mapswipe-backend/pull/128)
+- (#129) [Feat(results): process partial data](https://github.com/mapswipe/mapswipe-backend/pull/129)
+- (#130) [Feat(cron): setup a cron job to fetch users from firebase](https://github.com/mapswipe/mapswipe-backend/pull/130)
+- (#131) [Feat(firebase): disable firebase functions on test](https://github.com/mapswipe/mapswipe-backend/pull/131)
+
+
 ## [0.2.0-dev2](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev1..v0.2.0-dev2) - 2025-08-25
 ### Changes:
 
