@@ -92,7 +92,6 @@ class BaseProject[
 
         project_task_groups_qs = ProjectTaskGroup.objects.filter(project_id=self.project.pk)
         project_task_groups_qs.update(
-            number_of_groups=project_task_groups_qs.count(),
             number_of_tasks=models.Subquery(
                 ProjectTask.objects.filter(task_group_id=models.OuterRef("id"))
                 .values("task_group_id")

@@ -298,7 +298,6 @@ class ValidateProject(
                 firebase_id=group_key,
                 project_id=self.project.pk,
                 number_of_tasks=0,
-                number_of_groups=0,
                 progress=0,
                 finished_count=0,
                 required_count=0,

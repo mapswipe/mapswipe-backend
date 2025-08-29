@@ -2,7 +2,7 @@ import logging
 from collections.abc import Hashable
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
-from typing import Any, TypedDict
+from typing import Any
 from warnings import deprecated
 
 import mercantile
@@ -19,15 +19,13 @@ from vt2geojson import tools as vt2geojson_tools
 
 from main.config import Config
 from main.logging import log_extra_response
-from utils import fields as custom_fields
+from utils.common import Grouping
 from utils.spatial_sampling import spatial_sampling
 
 logger = logging.getLogger(__name__)
 
 
-class StreetRawGroupItem(TypedDict):
-    ids: list[int]
-    geometries: list[Point]
+class StreetFeature(Point): ...
 
 
 class StreetException(Exception):
@@ -45,7 +43,7 @@ def create_tiles(
     if isinstance(polygon, Polygon):
         polygon = MultiPolygon([polygon])
 
-    tiles = set()
+    tiles: set[mercantile.Tile] = set()
     for _, poly in enumerate(polygon.geoms):
         tiles.update(list(mercantile.tiles(*poly.bounds, level)))
 
@@ -70,6 +68,7 @@ def create_tiles(
 
 
 def geojson_to_polygon(geojson_data: dict[str, Any]):
+    # NOTE: We might not need this, as we already check this
     try:
         fc = FeatureCollection(**geojson_data)
     except ValidationError as e:
@@ -260,14 +259,14 @@ def get_image_metadata(
     *,
     aoi_geojson: dict[str, Any],
     level: int = 14,
-    is_pano: custom_fields.PydanticIsPano = False,
-    creator_id: custom_fields.PydanticCreatorId = None,
-    organization_id: custom_fields.PydanticOrganizationId = None,
-    start_time: custom_fields.PydanticStartTime = None,
-    end_time: custom_fields.PydanticEndTime = None,
-    randomize_order: custom_fields.PydanticRandomizeOrder = False,
-    sampling_threshold: custom_fields.PydanticSamplingThreshold = None,
-) -> StreetRawGroupItem:
+    is_pano: bool | None = False,
+    creator_id: str | None = None,
+    organization_id: str | None = None,
+    start_time: str | None = None,
+    end_time: str | None = None,
+    randomize_order: bool = False,
+    sampling_threshold: int | None = None,
+) -> Grouping[StreetFeature]:
     kwargs = {
         "is_pano": is_pano,
         "creator_id": creator_id,
@@ -302,7 +301,7 @@ def get_image_metadata(
             f"Too many Images with selected filter options for the AoI: {total_images}",
         )
 
-    return StreetRawGroupItem(
-        ids=downloaded_metadata["id"].tolist(),
-        geometries=downloaded_metadata["geometry"].tolist(),
+    return Grouping[StreetFeature](
+        feature_ids=downloaded_metadata["id"].tolist(),
+        features=downloaded_metadata["geometry"].tolist(),
     )

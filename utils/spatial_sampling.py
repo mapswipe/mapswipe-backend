@@ -7,17 +7,16 @@ def distance_on_sphere(
     pp1: list[NDArray[np.float64]] | list[float],
     pp2: list[NDArray[np.float64]] | list[float],
 ) -> NDArray[np.float64]:
-    """
-    p1 and p2 are two lists that have two elements. They are numpy arrays of the long
-    and lat coordinates of the points in set1 and set2
+    """p1 and p2 are two lists that have two elements. They are numpy arrays of the long
+    and lat coordinates of the points in set1 and set2.
 
     Calculate the distance between two points on the Earth's surface using the
     haversine formula.
 
     Args:
-        p1 (list): Array containing the longitude and latitude coordinates of points
+        pp1 (list): Array containing the longitude and latitude coordinates of points
         FROM which the distance to be calculated in degree
-        p2 (list): Array containing the longitude and latitude coordinates of points
+        pp2 (list): Array containing the longitude and latitude coordinates of points
         TO which the distance to be calculated in degree
 
     Returns:
@@ -29,6 +28,7 @@ def distance_on_sphere(
     Earth. The input arrays `p1` and `p2` should contain longitude and latitude
     coordinates in degrees. The function returns an array containing the distances
     between corresponding pairs of points.
+
     """
     earth_radius = 6371  # km
 
@@ -45,8 +45,7 @@ def distance_on_sphere(
 
 
 def filter_points(df: pd.DataFrame, threshold_distance: float) -> pd.DataFrame:
-    """
-    Filter points from a DataFrame based on a threshold distance.
+    """Filter points from a DataFrame based on a threshold distance.
 
     Args:
         df (pandas.DataFrame): DataFrame containing latitude and longitude columns.
@@ -62,6 +61,7 @@ def filter_points(df: pd.DataFrame, threshold_distance: float) -> pd.DataFrame:
     those points and constructs a new DataFrame. Additionally, it manually checks the
     last point to include it if it satisfies the length condition. The function
     returns the filtered DataFrame along with the calculated road length.
+
     """
     road_length = 0
     mask = np.zeros(len(df), dtype=bool)
@@ -110,8 +110,7 @@ def spatial_sampling(
     df: pd.DataFrame,
     interval_length: float,
 ):
-    """
-    Calculate spacing between points in a GeoDataFrame.
+    """Calculate spacing between points in a GeoDataFrame.
 
     Args:
         df (pandas.DataFrame): DataFrame containing points with timestamps.
@@ -125,6 +124,7 @@ def spatial_sampling(
     points based on the provided interval length. It first sorts the GeoDataFrame by
     timestamp and then filters points using the filter_points function. The function
     returns the filtered GeoDataFrame along with the total road length.
+
     """
     if len(df) == 1:
         return df

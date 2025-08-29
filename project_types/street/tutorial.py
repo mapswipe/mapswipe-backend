@@ -13,6 +13,7 @@ class StreetTutorialTaskProperty(base_tutorial.BaseTutorialTaskProperty):
     object_geometry: str
 
 
+# TODO(susilnem): This is not finalized
 class StreetTutorial(
     base_tutorial.BaseTutorial[
         StreetProjectProperty,

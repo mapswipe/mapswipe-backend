@@ -8,29 +8,35 @@ from django.core.files.base import ContentFile
 from pydantic import BaseModel
 from pyfirebase_mapswipe import models as firebase_models
 from shapely import to_wkt
-from shapely.geometry.point import Point
 from ulid import ULID
 
 from apps.common.models import AssetMimetypeEnum, AssetTypeEnum
-from apps.project.models import Project, ProjectAsset, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
+from apps.project.models import (
+    Project,
+    ProjectAsset,
+    ProjectAssetInputTypeEnum,
+    ProjectTask,
+    ProjectTaskGroup,
+    ProjectTypeEnum,
+)
 from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
-from project_types.street.api_calls import StreetRawGroupItem, get_image_metadata
+from project_types.street.api_calls import StreetFeature, get_image_metadata
 from utils import fields as custom_fields
-from utils.common import create_json_dump
+from utils.common import Grouping, create_json_dump
 from utils.custom_options.models import CustomOption
 
 logger = logging.getLogger(__name__)
 
 
 class StreetMapillaryImageFilters(BaseModel):
-    is_pano: custom_fields.PydanticIsPano
-    creator_id: custom_fields.PydanticCreatorId
-    organization_id: custom_fields.PydanticOrganizationId
-    start_time: custom_fields.PydanticStartTime
-    end_time: custom_fields.PydanticEndTime
-    randomize_order: custom_fields.PydanticRandomizeOrder
-    sampling_threshold: custom_fields.PydanticSamplingThreshold
+    is_pano: custom_fields.PydanticBool | None = False
+    creator_id: custom_fields.PydanticLongText | None = None
+    organization_id: custom_fields.PydanticLongText | None = None
+    start_time: custom_fields.PydanticDate | None = None
+    end_time: custom_fields.PydanticDate | None = None
+    randomize_order: custom_fields.PydanticBool = False
+    sampling_threshold: custom_fields.PydanticPositiveInt | None = None
 
 
 class StreetProjectProperty(base_project.BaseProjectProperty):
@@ -45,7 +51,6 @@ class StreetTaskGroupProperty(base_project.BaseProjectTaskGroupProperty): ...
 class StreetTaskProperty(base_project.BaseProjectTaskProperty):
     task_id: str
     group_id: str
-    geometry: str
 
 
 class StreetProject(
@@ -53,8 +58,8 @@ class StreetProject(
         StreetProjectProperty,
         StreetTaskGroupProperty,
         StreetTaskProperty,
-        StreetRawGroupItem,
-        list[tuple[int, Point]],
+        Grouping[StreetFeature],
+        Grouping[StreetFeature],
     ],
 ):
     project_property_class = StreetProjectProperty
@@ -67,13 +72,14 @@ class StreetProject(
             assert project.project_type == ProjectTypeEnum.STREET, f"{type(self)} is defined for STREET"
 
     @typing.override
-    def validate(self) -> StreetRawGroupItem:
-        """Validate project before creating groups"""
+    def validate(self) -> Grouping[StreetFeature]:
+        """Validate project before creating groups."""
         self.project.update_processing_status(Project.ProcessingStatus.VALIDATING_GEOMETRY, True)
 
         aoi_asset = ProjectAsset.usable_objects().get(
             id=self.project_type_specifics.aoi_geometry,
             type=AssetTypeEnum.INPUT,
+            input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
             project_id=self.project.pk,
         )
 
@@ -98,13 +104,14 @@ class StreetProject(
         self,
         /,
         group: ProjectTaskGroup,
-        raw_group: list[tuple[int, Point]],
+        raw_group: Grouping[StreetFeature],
     ) -> int:
         """Create tasks for a group."""
         bulk_mgr = BulkCreateManager(chunk_size=1000)
         tasks_count = 0
+        features = list(zip(raw_group["feature_ids"], raw_group["features"], strict=True))
 
-        for f_id, feature in raw_group:
+        for f_id, feature in features:
             geometry_str = to_wkt(feature)
 
             bulk_mgr.add(
@@ -115,7 +122,6 @@ class StreetProject(
                     project_type_specifics=self.project_task_property_class(
                         task_id=f"{f_id}",
                         group_id=f"g{group.pk}",
-                        geometry=geometry_str,
                     ).model_dump(),
                 ),
             )
@@ -125,22 +131,22 @@ class StreetProject(
         return tasks_count
 
     @typing.override
-    def create_groups(self, resp: StreetRawGroupItem):
+    def create_groups(self, resp: Grouping[StreetFeature]):
         self.project.update_processing_status(Project.ProcessingStatus.GENERATING_GROUPS_AND_TASKS, True)
-        number_of_groups = math.ceil(len(resp["ids"]) / self.project.group_size)
+        number_of_groups = math.ceil(len(resp["feature_ids"]) / self.project.group_size)
 
         for group_id in range(number_of_groups):
             start_index = group_id * self.project.group_size
             end_index = start_index + self.project.group_size
 
-            group_features = resp["geometries"][start_index:end_index]
-            group_feature_ids = resp["ids"][start_index:end_index]
-            raw_group = list(zip(group_feature_ids, group_features, strict=True))
+            features = Grouping[StreetFeature](
+                feature_ids=resp["feature_ids"][start_index:end_index],
+                features=resp["features"][start_index:end_index],
+            )
             new_group = ProjectTaskGroup.objects.create(
                 firebase_id=f"g{group_id}",
                 project_id=self.project.pk,
                 number_of_tasks=0,
-                number_of_groups=0,
                 progress=0,
                 finished_count=0,
                 required_count=0,
@@ -148,7 +154,10 @@ class StreetProject(
             )
 
             # Create new tasks for this group
-            total_tasks = self.create_tasks(new_group, raw_group)
+            total_tasks = self.create_tasks(
+                group=new_group,
+                raw_group=features,
+            )
             logger.info("Created %s tasks for group: %s", total_tasks, new_group.pk)
 
     @typing.override
@@ -197,6 +206,10 @@ class StreetProject(
         self.project.project_type_specific_output = asset
         self.project.save(update_fields=("project_type_specific_output",))
 
+    @typing.override
+    def get_max_time_spend_percentile(self) -> float:
+        return 65
+
     # FIREBASE
 
     @typing.override
@@ -215,13 +228,14 @@ class StreetProject(
     def get_group_specifics_for_firebase(self, group: ProjectTaskGroup):
         return firebase_models.FbMappingGroupStreetCreateOnlyInput(
             groupId=group.firebase_id,
-            numberOfGroups=group.number_of_groups,
         )
 
     @typing.override
     def get_project_specifics_for_firebase(self):
         custom_opts = self.project_type_specifics.custom_options
+        number_of_groups = ProjectTaskGroup.objects.filter(project=self.project).count()
         return firebase_models.FbProjectStreetCreateOnlyInput(
+            numberOfGroups=number_of_groups,
             customOptions=[
                 firebase_models.FbObjCustomOption(
                     title=opt.title,

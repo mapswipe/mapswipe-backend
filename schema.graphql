@@ -1948,48 +1948,22 @@ input StrFilterLookup {
 }
 
 type StreetMapillaryImageFilters {
-  """Filter for images created by a specific user."""
   creatorId: String
-
-  """Filter for images captured before this timestamp."""
   endTime: String
-
-  """Filter for images that are panoramas."""
   isPano: Boolean
-
-  """Filter for images that belong to a specific organization."""
   organizationId: String
-
-  """Randomize the order of the images."""
   randomizeOrder: Boolean!
-
-  """Sampling threshold for filtering images."""
   samplingThreshold: Int
-
-  """Filter for images captured after this timestamp."""
   startTime: String
 }
 
 input StreetMapillaryImageFiltersInput {
-  """Filter for images created by a specific user."""
   creatorId: String = null
-
-  """Filter for images captured before this timestamp."""
   endTime: String = null
-
-  """Filter for images that are panoramas."""
   isPano: Boolean = false
-
-  """Filter for images that belong to a specific organization."""
   organizationId: String = null
-
-  """Randomize the order of the images."""
   randomizeOrder: Boolean! = false
-
-  """Sampling threshold for filtering images."""
   samplingThreshold: Int = null
-
-  """Filter for images captured after this timestamp."""
   startTime: String = null
 }
 

@@ -85,60 +85,12 @@ PydanticZoomLevel = typing.Annotated[int, Field(strict=True, ge=0, lt=23)]
 # FIXME(frozenhelium): add proper validation
 PydanticUlid = typing.Annotated[str, Field(strict=True, pattern=r"^[0-9A-Z]{26}$")]
 
+PydanticBool = typing.Annotated[bool, Field(strict=True)]
 
-PydanticIsPano = typing.Annotated[
-    bool | None,
+PydanticDate = typing.Annotated[
+    str,
     Field(
-        default=False,
-        description="Filter for images that are panoramas.",
-    ),
-]
-
-PydanticCreatorId = typing.Annotated[
-    str | None,
-    Field(
-        default=None,
-        description="Filter for images created by a specific user.",
-    ),
-]
-
-PydanticOrganizationId = typing.Annotated[
-    str | None,
-    Field(
-        default=None,
-        description="Filter for images that belong to a specific organization.",
-    ),
-]
-
-PydanticStartTime = typing.Annotated[
-    str | None,
-    Field(
-        default=None,
-        description="Filter for images captured after this timestamp.",
-    ),
-]
-
-PydanticEndTime = typing.Annotated[
-    str | None,
-    Field(
-        default=None,
-        description="Filter for images captured before this timestamp.",
-    ),
-]
-
-PydanticRandomizeOrder = typing.Annotated[
-    bool,
-    Field(
-        default=False,
-        description="Randomize the order of the images.",
-    ),
-]
-
-PydanticSamplingThreshold = typing.Annotated[
-    int | None,
-    Field(
-        default=None,
-        description="Sampling threshold for filtering images.",
+        pattern=r"^\d{4}-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])$",
     ),
 ]
 
