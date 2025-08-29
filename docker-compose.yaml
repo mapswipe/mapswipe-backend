@@ -1,6 +1,7 @@
 x-firebase: &base_firebase_setup
   build:
     context: ./firebase/
+    target: emulator
   stop_grace_period: 30s
   tty: true
   entrypoint: ["./docker_entrypoint.sh"]
@@ -113,6 +114,10 @@ services:
     <<: *base_firebase_setup
     environment:
       FIREBASE_EMULATOR_DATA_DIR: "/emulator"
+      # NOTE: We are disabling functions on firebase because it is consuming
+      # lot of resources and we do not actually need output from functions on
+      # the backend
+      FIREBASE_EMULATOR_FUNCTIONS_DISABLED: true
     volumes:
       - ./firebase:/firebase
 

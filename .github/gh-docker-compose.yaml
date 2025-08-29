@@ -1,6 +1,6 @@
 services:
   firebase-test:
-    image: ghcr.io/mapswipe/mapswipe-firebase:0.3.1-dev
+    image: ghcr.io/mapswipe/mapswipe-firebase:0.3.3-dev
     build: !reset null
     environment:
       CI: "true"
