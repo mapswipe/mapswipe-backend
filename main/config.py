@@ -165,8 +165,9 @@ class Slack:
     @dataclass
     class SlackConfigEnabled:
         enabled: typing.Literal[True]
-        webhook_url: str
-        bot_name: str
+        token: str
+        channel: str
+        bot_name: str | None
 
     SlackConfig = SlackConfigEnabled | SlackConfigDisabled
 
@@ -175,7 +176,8 @@ class Slack:
         if settings.SLACK_BOT_ENABLED:
             return cls.SlackConfigEnabled(
                 enabled=True,
-                webhook_url=settings.SLACK_WEBHOOK_URL,
+                token=settings.SLACK_BOT_TOKEN,
+                channel=settings.SLACK_BOT_CHANNEL,
                 bot_name=settings.SLACK_BOT_NAME,
             )
         return cls.SlackConfigDisabled(enabled=False)

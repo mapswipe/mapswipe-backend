@@ -52,7 +52,6 @@ env = environ.Env(
     SESSION_COOKIE_DOMAIN=str,  # .example.com
     CSRF_COOKIE_DOMAIN=str,  # .example.com
     MAPSWIPE_ADDITIONAL_TRUSTED_ORIGINS=(list, []),  # https://app1.example.com,https://app2.example.com
-    MANAGER_DASHBOARD_URL=(str, "https://managers.mapswipe.org/"),
     # NOTE: Changing TIME_ZONE will break celery periodic tasks https://django-celery-beat.readthedocs.io/en/latest/#important-warning-about-time-zones
     TIME_ZONE=(str, "UTC"),
     # Database
@@ -134,8 +133,9 @@ env = environ.Env(
     ENABLE_DANGER_MODE=(bool, False),
     # Slack
     SLACK_BOT_ENABLED=(bool, False),
-    SLACK_WEBHOOK_URL=(str, None),
     SLACK_BOT_NAME=(str, None),
+    SLACK_BOT_TOKEN=str,
+    SLACK_BOT_CHANNEL=str,
 )
 
 ENABLE_DANGER_MODE = env("ENABLE_DANGER_MODE")
@@ -155,7 +155,6 @@ APP_ENVIRONMENT = env("APP_ENVIRONMENT").upper()
 APP_TYPE = env("APP_TYPE").upper()
 APP_RELEASE = env("APP_RELEASE") or GIT_HELPER.commit_sha
 SECRET_KEY = env("SECRET_KEY")
-MANAGER_DASHBOARD_URL = env("MANAGER_DASHBOARD_URL")
 DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = [
@@ -523,8 +522,9 @@ if SENTRY_ENABLED:
 # Slack
 SLACK_BOT_ENABLED = env("SLACK_BOT_ENABLED")
 if SLACK_BOT_ENABLED:
-    SLACK_WEBHOOK_URL = env("SLACK_WEBHOOK_URL")
     SLACK_BOT_NAME = env("SLACK_BOT_NAME")
+    SLACK_BOT_TOKEN = env("SLACK_BOT_TOKEN")
+    SLACK_BOT_CHANNEL = env("SLACK_BOT_CHANNEL")
 
 # Strawberry
 ENABLE_STRAWBERRY_GRAPHIQL = env("ENABLE_STRAWBERRY_GRAPHIQL")
