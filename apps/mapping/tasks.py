@@ -2,7 +2,7 @@ import logging
 
 from celery import shared_task
 
-from apps.mapping.firebase.firebase import pull_results_from_firebase
+from apps.mapping.firebase.pull import pull_results_from_firebase
 from main.cache import CeleryLock
 
 logger = logging.getLogger(__name__)

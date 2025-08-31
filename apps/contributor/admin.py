@@ -7,7 +7,7 @@ from djangoql.admin import DjangoQLSearchMixin
 
 from apps.common.admin import ArchivableResourceAdmin, FirebaseResourceAdmin, ReadOnlyAdmin
 
-from .firebase import FirebaseContributorTeam, FirebaseContributorUser
+from .firebase.push import FirebaseContributorTeam, FirebaseContributorUser
 from .models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
 
 

@@ -1,7 +1,7 @@
 import typing
 
 from apps.common.serializers import ArchivableResourceSerializer, UserResourceSerializer
-from apps.contributor.firebase import FirebaseContributorUserGroup
+from apps.contributor.firebase.push import FirebaseContributorUserGroup
 
 from .models import ContributorUserGroup
 

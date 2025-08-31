@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 FH = Config.FIREBASE_HELPER
 
 
-def transfer_results_for_project(
+def _transfer_results_for_project(
     *,
     bulk_create_manager: BulkCreateManager,
     firebase_cleanup: FirebaseCleanup,
@@ -48,6 +48,7 @@ def pull_results_from_firebase():
     firebase_cleanup = FirebaseCleanup()
     bulk_create_manager = BulkCreateManager()
     for project_firebase_id in project_firebase_id_to_fetch:
+        # NOTE: This check is not needed as we already have a mapping of project that does not include tutorial
         if "tutorial" in project_firebase_id:
             logger.error(
                 "Tutorial should not be included in the results. It will not be transferred",
@@ -74,7 +75,7 @@ def pull_results_from_firebase():
             firebase_cleanup.add_project(project_firebase_id=project_firebase_id)
             continue
 
-        transfer_results_for_project(
+        _transfer_results_for_project(
             project=project,
             firebase_cleanup=firebase_cleanup,
             bulk_create_manager=bulk_create_manager,
