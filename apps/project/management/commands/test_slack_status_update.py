@@ -3,8 +3,8 @@ import typing
 from django.core.management.base import BaseCommand, CommandError
 
 from apps.project.models import Project
-from apps.project.tasks import send_message_for_progress
-from utils.common import get_absolute_file_url
+from apps.project.tasks import project_status_update_message
+
 
 class Command(BaseCommand):
     help = "Test sending a Slack progress message for a given project"
@@ -24,16 +24,17 @@ class Command(BaseCommand):
 
         try:
             project = Project.objects.get(id=project_id)
-        except Project.DoesNotExist:
-            raise CommandError(f"Project with id={project_id} does not exist")
-        
-        project_name = project.generate_name()
-        progress = project.progress
-        if project.image:
-            cover_image_url = get_absolute_file_url(project.image.file)
-        else:
-            cover_image_url = "https://pbs.twimg.com/profile_images/625633822235693056/lNGUneLX_400x400.jpg"
+        except Exception as err:
+            raise CommandError(f"Project with id={project_id} does not exist") from err
 
-        send_message_for_progress.delay(project_name=project_name, progress=progress, cover_image=cover_image_url)
+        slack_thread = project.slack_thread_ts
+
+        if not slack_thread:
+            raise CommandError(f"Project id={project_id} has no Slack thread. Message not sent.")
+
+        try:
+            project_status_update_message.delay(project_id=project_id)
+        except Exception as err:
+            raise CommandError("Failed to send slack message for status update") from err
+
         self.stdout.write(self.style.SUCCESS("Slack message sent successfully"))
-     
