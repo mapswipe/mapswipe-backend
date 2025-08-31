@@ -19,7 +19,12 @@ from utils.geo.transform import convert_json_dict_to_geometry_collection, get_ar
 from utils.graphql.drf import handle_pydantic_validation_error
 
 from .models import Geometry, Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
-from .tasks import process_project_task, push_project_to_firebase
+from .tasks import (
+    process_project_task,
+    project_creation_success_message,
+    project_status_update_message,
+    push_project_to_firebase,
+)
 
 if typing.TYPE_CHECKING:
     from django.core.files.base import ContentFile
@@ -663,6 +668,7 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
     def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:
         old_status_enum = instance.status_enum
         updated_project = super().update(instance, validated_data)
+        requesting_user = self.context["request"].user
 
         if (
             old_status_enum != Project.Status.READY_TO_PROCESS
@@ -676,5 +682,15 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
         ):
             updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
             transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
+
+        if (
+            old_status_enum != updated_project.status_enum
+            and old_status_enum != Project.Status.PAUSED
+            and updated_project.status_enum == Project.Status.PUBLISHED
+        ):
+            project_creation_success_message.delay(project_id=instance.pk)
+
+        if instance.created_by != requesting_user:
+            project_status_update_message.delay(project_id=instance.pk)
 
         return updated_project
