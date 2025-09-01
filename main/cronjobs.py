@@ -51,7 +51,7 @@ SCHEDULES: dict[str, CronJob] = {
         schedule=crontab(minute="1", hour="1", day_of_week="1"),
     ),
     "pull_users_from_firebase": CronJob(
-        task="apps.contributor.tasks.pull_users_from_firebase",
+        task="apps.contributor.tasks.pull_users_from_firebase_task",
         schedule=crontab(minute="*/1"),  # Every 1 minutes
         sentry_config=CronJobSentryConfig(
             failure_issue_threshold=10,
