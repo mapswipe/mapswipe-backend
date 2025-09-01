@@ -495,6 +495,7 @@ class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibl
         help_text=gettext_lazy("The file associated with the asset"),
         null=True,
         blank=True,
+        max_length=255,
     )
 
     # This depends on the input_type

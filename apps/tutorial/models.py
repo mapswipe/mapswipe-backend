@@ -127,6 +127,7 @@ class TutorialAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatib
     file = OverwritableFileField(
         upload_to=UploadHelper.tutorial_asset,
         help_text=gettext_lazy("The file associated with the asset"),
+        max_length=255,
     )
 
     @property
