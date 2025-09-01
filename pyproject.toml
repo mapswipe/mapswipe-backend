@@ -1,6 +1,6 @@
 [project]
 name = "mapswipe-backend"
-version = "0.2.0-dev3"  # managed by release.sh
+version = "0.2.0-dev4"  # managed by release.sh
 description = "Backend for Mapswipe"
 authors = [
   {name = "Mapswipe", email = "info@mapswipe.org"},

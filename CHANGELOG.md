@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.2.0-dev4](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev3..v0.2.0-dev4) - 2025-09-01
+### Changes:
+
+#### 🚀  Features
+
+- *(firebase)* Pull user group membership data from firebase - ([9e0d748](https://github.com/mapswipe/mapswipe-backend/commit/9e0d748f645917891ac816cdc32b00db958fdc2c))
+
+#### 🐛 Bug Fixes
+
+- *(firebase)* Use updated schema for user - ([f98abc2](https://github.com/mapswipe/mapswipe-backend/commit/f98abc275ba6b38b93684e6b98751875bb6afa33))
+- *(firebase)* Update usergroup archived at value before syncing to firebase - ([7b0404a](https://github.com/mapswipe/mapswipe-backend/commit/7b0404a0158a661f3dd3fae30cc0d14a548cc2ac))
+
+#### 🚜 Refactor
+
+- *(firebase)* Move firebase pull/push logic inside firebase dir - ([fcdf4f4](https://github.com/mapswipe/mapswipe-backend/commit/fcdf4f4b90fbf34ae1215b98066e045576f3a041))
+
+#### 🧪 Testing
+
+- *(firebase)* Add test for user data pull from firebase - ([6972d1e](https://github.com/mapswipe/mapswipe-backend/commit/6972d1efb3e3de571532d0a18fb363e556c324cc))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(firebase)* Update verbose log on get_list_of_items_from_firebase - ([cb13c13](https://github.com/mapswipe/mapswipe-backend/commit/cb13c1321a1e52968a0ed0c251fd8b0b1484a913))
+- *(ruff)* Add docstrings on public class on models - ([9a38b88](https://github.com/mapswipe/mapswipe-backend/commit/9a38b88780d88b2c59035313434519cfb93e27b2))
+- *(ruff)* Auto fix issues related to docstrings - ([27b6c65](https://github.com/mapswipe/mapswipe-backend/commit/27b6c6503a10309ec43d6e3ba170130f3245058f))
+- *(ruff)* Enable linter for docstrings - ([24e5be4](https://github.com/mapswipe/mapswipe-backend/commit/24e5be4c9c4c7c3a0a7996f7769bf62381b17816))
+
+### 🍻 Pull Requests (3)
+- (#132) [Chore(ruff): enable linter for docstrings](https://github.com/mapswipe/mapswipe-backend/pull/132)
+- (#133) [Pull user group membership data from firebase](https://github.com/mapswipe/mapswipe-backend/pull/133)
+- (#135) [Update usergroup archived at value before syncing to firebase](https://github.com/mapswipe/mapswipe-backend/pull/135)
+
+
 ## [0.2.0-dev3](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev2..v0.2.0-dev3) - 2025-08-29
 ### Changes:
 
