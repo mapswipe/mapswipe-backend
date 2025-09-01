@@ -110,6 +110,10 @@ class Config:
             return "/v2/updates/users"
 
         @staticmethod
+        def contributor_user_update(user_id: str):
+            return f"/v2/updates/users/{user_id}"
+
+        @staticmethod
         def contributor_user_group(group_id: str):
             return f"/v2/userGroups/{group_id}"
 
