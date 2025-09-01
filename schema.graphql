@@ -342,7 +342,11 @@ type ContributorSwipeStatType {
 }
 
 """
-ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, token)
+Model representing a private team that contributor users can be assigned to.
+
+Team membership is managed exclusively by system managers; contributor users
+cannot join or leave teams on their own. Members of a team can only access
+projects linked to that team.
 """
 input ContributorTeamFilter {
   AND: ContributorTeamFilter
@@ -360,7 +364,11 @@ input ContributorTeamOrder {
 }
 
 """
-ContributorTeam(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, token)
+Model representing a private team that contributor users can be assigned to.
+
+Team membership is managed exclusively by system managers; contributor users
+cannot join or leave teams on their own. Members of a team can only access
+projects linked to that team.
 """
 type ContributorTeamType implements UserResourceTypeMixin {
   archivedAt: DateTime
@@ -395,7 +403,10 @@ type ContributorTimeStatType {
 }
 
 """
-ContributorUser(id, old_id, firebase_push_status, firebase_last_pushed, team, username, firebase_id, created_at, modified_at)
+Model representing contributors synchronized from firebase.
+
+Contributor accounts are typically created in firebase and then synced into this system.
+A contributor user may or may not be linked to a corresponding user in the system.
 """
 input ContributorUserFilter {
   AND: ContributorUserFilter
@@ -421,7 +432,10 @@ type ContributorUserFilteredStats implements ContributorUserUserGroupBaseFilterS
 }
 
 """
-ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description)
+Model representing a group that contributor users can join or leave.
+
+Groups are used to aggregate contributions made by users within the group,
+facilitating management and organization of collective efforts.
 """
 input ContributorUserGroupCreateInput {
   clientId: String!
@@ -430,7 +444,10 @@ input ContributorUserGroupCreateInput {
 }
 
 """
-ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description)
+Model representing a group that contributor users can join or leave.
+
+Groups are used to aggregate contributions made by users within the group,
+facilitating management and organization of collective efforts.
 """
 input ContributorUserGroupFilter {
   AND: ContributorUserGroupFilter
@@ -461,7 +478,9 @@ type ContributorUserGroupLatestStatsType {
   totalSwipes: Int!
 }
 
-"""ContributorUserGroupMembership(id, user_group, user, is_active)"""
+"""
+Model representing membership of contributor users in contributor user groups.
+"""
 input ContributorUserGroupMembershipFilter {
   AND: ContributorUserGroupMembershipFilter
   DISTINCT: Boolean
@@ -480,7 +499,9 @@ input ContributorUserGroupMembershipOrder {
   id: Ordering
 }
 
-"""ContributorUserGroupMembership(id, user_group, user, is_active)"""
+"""
+Model representing membership of contributor users in contributor user groups.
+"""
 type ContributorUserGroupMembershipType {
   id: ID!
   isActive: Boolean!
@@ -527,7 +548,10 @@ type ContributorUserGroupStatsType {
 }
 
 """
-ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description)
+Model representing a group that contributor users can join or leave.
+
+Groups are used to aggregate contributions made by users within the group,
+facilitating management and organization of collective efforts.
 """
 type ContributorUserGroupType implements UserResourceTypeMixin {
   archivedAt: DateTime
@@ -563,7 +587,10 @@ type ContributorUserGroupTypeOffsetPaginated {
 }
 
 """
-ContributorUserGroup(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description)
+Model representing a group that contributor users can join or leave.
+
+Groups are used to aggregate contributions made by users within the group,
+facilitating management and organization of collective efforts.
 """
 input ContributorUserGroupUpdateInput {
   clientId: String!
@@ -604,7 +631,10 @@ type ContributorUserStats {
 }
 
 """
-ContributorUser(id, old_id, firebase_push_status, firebase_last_pushed, team, username, firebase_id, created_at, modified_at)
+Model representing contributors synchronized from firebase.
+
+Contributor accounts are typically created in firebase and then synced into this system.
+A contributor user may or may not be linked to a corresponding user in the system.
 """
 type ContributorUserType {
   communityDashboardUrl: String!
@@ -951,9 +981,7 @@ enum Ordering {
   DESC_NULLS_LAST
 }
 
-"""
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description, abbreviation, unique_name)
-"""
+"""Model representing the organization requesting the project."""
 input OrganizationCreateInput {
   abbreviation: String
   clientId: String!
@@ -961,9 +989,7 @@ input OrganizationCreateInput {
   name: String!
 }
 
-"""
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description, abbreviation, unique_name)
-"""
+"""Model representing the organization requesting the project."""
 input OrganizationFilter {
   AND: OrganizationFilter
   DISTINCT: Boolean
@@ -984,9 +1010,7 @@ type OrganizationSwipeStatsType {
   totalSwipes: Int!
 }
 
-"""
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description, abbreviation, unique_name)
-"""
+"""Model representing the organization requesting the project."""
 type OrganizationType implements UserResourceTypeMixin {
   abbreviation: String
   archivedAt: DateTime
@@ -1018,9 +1042,7 @@ type OrganizationTypeOffsetPaginated {
   totalCount: Int!
 }
 
-"""
-Organization(id, client_id, created_at, modified_at, created_by, modified_by, is_archived, archived_at, archived_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, name, description, abbreviation, unique_name)
-"""
+"""Model representing the organization requesting the project."""
 input OrganizationUpdateInput {
   abbreviation: String
   clientId: String!
@@ -1034,9 +1056,7 @@ enum OverlayLayerTypeEnum {
   VECTOR_TILE
 }
 
-"""
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, project_instruction, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
-"""
+"""Model representing the project."""
 input ProcessedProjectUpdateInput {
   """
   Provide an optional link to a resource with additional information on the project
@@ -1064,9 +1084,7 @@ input ProcessedProjectUpdateInput {
   tutorial: ID
 }
 
-"""
-ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, export_type, input_type, project, file, asset_type_specifics)
-"""
+"""Model representing assets for a project."""
 input ProjectAssetCreateInput {
   assetTypeSpecifics: AssetTypeSpecificInput
   clientId: String!
@@ -1141,9 +1159,7 @@ input ProjectAssetExportTypeEnumFilterLookup {
   startsWith: ProjectAssetExportTypeEnum
 }
 
-"""
-ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, export_type, input_type, project, file, asset_type_specifics)
-"""
+"""Model representing assets for a project."""
 input ProjectAssetFilter {
   AND: ProjectAssetFilter
   DISTINCT: Boolean
@@ -1215,9 +1231,7 @@ input ProjectAssetOrder {
   id: Ordering
 }
 
-"""
-ProjectAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, export_type, input_type, project, file, asset_type_specifics)
-"""
+"""Model representing assets for a project."""
 type ProjectAssetType implements UserResourceTypeMixin {
   assetTypeSpecifics: AoiGeometryAssetPropertyTypeObjectImageAssetPropertyType
   clientId: String!
@@ -1261,9 +1275,7 @@ type ProjectAssetTypeOffsetPaginated {
   totalCount: Int!
 }
 
-"""
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, project_instruction, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
-"""
+"""Model representing the project."""
 input ProjectCreateInput {
   """
   Provide an optional link to a resource with additional information on the project
@@ -1322,9 +1334,7 @@ interface ProjectExportAssetTypeMixin {
   exportUsers: ProjectAssetType
 }
 
-"""
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, project_instruction, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
-"""
+"""Model representing the project."""
 input ProjectFilter {
   AND: ProjectFilter
   DISTINCT: Boolean
@@ -1536,17 +1546,13 @@ input ProjectStatusEnumFilterLookup {
   startsWith: ProjectStatusEnum
 }
 
-"""
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, project_instruction, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
-"""
+"""Model representing the project."""
 input ProjectStatusUpdateInput {
   clientId: String!
   status: ProjectStatusEnum
 }
 
-"""
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, project_instruction, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
-"""
+"""Model representing the project."""
 type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin {
   """
   Provide an optional link to a resource with additional information on the project
@@ -1715,9 +1721,7 @@ type ProjectTypeSwipeStatsType {
   totalSwipes: Int!
 }
 
-"""
-Project(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_id, firebase_push_status, firebase_last_pushed, project_type, requesting_organization, topic, region, project_number, look_for, additional_info_url, description, project_instruction, image, tutorial, verification_number, group_size, max_tasks_per_user, project_type_specifics, project_type_specific_output, centroid, is_featured, status, processing_status, team, is_private, progress, required_results, result_count)
-"""
+"""Model representing the project."""
 input ProjectUpdateInput {
   """
   Provide an optional link to a resource with additional information on the project
@@ -1791,7 +1795,7 @@ type Query {
   communityFilteredStats(dateRange: DateRangeInput = null): CommunityFilteredStats!
   communityStats: CommunityStatsType!
 
-  "\nStats from last 30 days\n"
+  """Stats from last 30 days."""
   communityStatsLatest: CommunityStatsType!
   communityUserGroupStats(userGroupId: ID!): ContributorUserGroupStats!
   communityUserStats(firebaseId: ID!): ContributorUserStats!
@@ -1903,9 +1907,7 @@ input StrFilterLookup {
   startsWith: String
 }
 
-"""
-TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, tutorial, input_type, file)
-"""
+"""Model representing assets for a tutorial."""
 input TutorialAssetCreateInput {
   clientId: String!
 
@@ -1915,9 +1917,7 @@ input TutorialAssetCreateInput {
   tutorial: ID!
 }
 
-"""
-TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, tutorial, input_type, file)
-"""
+"""Model representing assets for a tutorial."""
 input TutorialAssetFilter {
   AND: TutorialAssetFilter
   DISTINCT: Boolean
@@ -1937,9 +1937,7 @@ input TutorialAssetOrder {
   id: Ordering
 }
 
-"""
-TutorialAsset(id, client_id, created_at, modified_at, created_by, modified_by, type, mimetype, file_size, marked_as_deleted, external_url, tutorial, input_type, file)
-"""
+"""Model representing assets for a tutorial."""
 type TutorialAssetType implements UserResourceTypeMixin {
   clientId: String!
   createdAt: DateTime!
@@ -1979,7 +1977,10 @@ type TutorialAssetTypeOffsetPaginated {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
+Model representing a tutorial associated with a specific project.
+
+Tutorial guides users through the process of contributing to a project.
+It includes instructions, and examples to help users understand how to complete tasks.
 """
 input TutorialCreateInput {
   clientId: String!
@@ -1990,7 +1991,10 @@ input TutorialCreateInput {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
+Model representing a tutorial associated with a specific project.
+
+Tutorial guides users through the process of contributing to a project.
+It includes instructions, and examples to help users understand how to complete tasks.
 """
 input TutorialFilter {
   AND: TutorialFilter
@@ -2005,9 +2009,7 @@ input TutorialFilter {
   status: TutorialStatusEnumFilterLookup
 }
 
-"""
-TutorialInformationPageBlock(id, client_id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
-"""
+"""Model representing a text or image block in the information page."""
 input TutorialInformationPageBlockCreateInput {
   blockNumber: Int!
   blockType: TutorialInformationPageBlockTypeEnum!
@@ -2022,9 +2024,7 @@ input TutorialInformationPageBlockInput {
   update: TutorialInformationPageBlockUpdateInput
 }
 
-"""
-TutorialInformationPageBlock(id, client_id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
-"""
+"""Model representing a text or image block in the information page."""
 type TutorialInformationPageBlockType implements UserResourceTypeMixin {
   blockNumber: Int!
   blockType: TutorialInformationPageBlockTypeEnum!
@@ -2045,9 +2045,7 @@ enum TutorialInformationPageBlockTypeEnum {
   TEXT
 }
 
-"""
-TutorialInformationPageBlock(id, client_id, created_at, modified_at, created_by, modified_by, page, block_number, block_type, text, image)
-"""
+"""Model representing a text or image block in the information page."""
 input TutorialInformationPageBlockUpdateInput {
   blockNumber: Int
   blockType: TutorialInformationPageBlockTypeEnum
@@ -2057,9 +2055,7 @@ input TutorialInformationPageBlockUpdateInput {
   text: String
 }
 
-"""
-TutorialInformationPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
-"""
+"""Model representing a information page in the tutorial."""
 input TutorialInformationPageCreateInput {
   blocks: [TutorialInformationPageBlockCreateInput!]!
   clientId: String!
@@ -2073,9 +2069,7 @@ input TutorialInformationPageInput {
   update: TutorialInformationPageUpdateInput
 }
 
-"""
-TutorialInformationPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
-"""
+"""Model representing a information page in the tutorial."""
 type TutorialInformationPageType implements UserResourceTypeMixin {
   blocks: [TutorialInformationPageBlockType!]!
   clientId: String!
@@ -2089,9 +2083,7 @@ type TutorialInformationPageType implements UserResourceTypeMixin {
   tutorialId: ID!
 }
 
-"""
-TutorialInformationPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, title, page_number)
-"""
+"""Model representing a information page in the tutorial."""
 input TutorialInformationPageUpdateInput {
   blocks: [TutorialInformationPageBlockInput!]
   clientId: String!
@@ -2105,9 +2097,7 @@ input TutorialOrder {
   name: Ordering
 }
 
-"""
-TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_page_number, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
-"""
+"""Model representing a scenario in the tutorial."""
 input TutorialScenarioPageCreateInput {
   clientId: String!
   hintDescription: String
@@ -2123,18 +2113,14 @@ input TutorialScenarioPageCreateInput {
   tasks: [TutorialTaskCreateInput!]!
 }
 
-"""
-TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
-"""
+"""Model representing a individual task in the scenario."""
 input TutorialScenarioPageInput {
   create: TutorialScenarioPageCreateInput
   delete: DeleteInput
   update: TutorialScenarioPageUpdateInput
 }
 
-"""
-TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_page_number, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
-"""
+"""Model representing a scenario in the tutorial."""
 type TutorialScenarioPageType implements UserResourceTypeMixin {
   clientId: String!
   createdAt: DateTime!
@@ -2156,9 +2142,7 @@ type TutorialScenarioPageType implements UserResourceTypeMixin {
   tutorialId: ID!
 }
 
-"""
-TutorialScenarioPage(id, client_id, created_at, modified_at, created_by, modified_by, tutorial, scenario_page_number, instructions_description, instructions_icon, instructions_title, hint_description, hint_icon, hint_title, success_description, success_icon, success_title)
-"""
+"""Model representing a scenario in the tutorial."""
 input TutorialScenarioPageUpdateInput {
   clientId: String!
   hintDescription: String
@@ -2231,16 +2215,17 @@ input TutorialStatusEnumFilterLookup {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
+Model representing a tutorial associated with a specific project.
+
+Tutorial guides users through the process of contributing to a project.
+It includes instructions, and examples to help users understand how to complete tasks.
 """
 input TutorialStatusUpdateInput {
   clientId: String!
   status: TutorialStatusEnum
 }
 
-"""
-TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
-"""
+"""Model representing a individual task in the scenario."""
 input TutorialTaskCreateInput {
   clientId: String!
   projectTypeSpecifics: TutorialTaskProjectTypeSpecificInput!
@@ -2261,9 +2246,7 @@ input TutorialTaskProjectTypeSpecificInput @oneOf {
   validateImage: ValidateImageTutorialTaskPropertyInput
 }
 
-"""
-TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
-"""
+"""Model representing a individual task in the scenario."""
 type TutorialTaskType implements UserResourceTypeMixin {
   clientId: String!
   createdAt: DateTime!
@@ -2276,9 +2259,7 @@ type TutorialTaskType implements UserResourceTypeMixin {
   scenarioId: ID!
 }
 
-"""
-TutorialTask(id, client_id, created_at, modified_at, created_by, modified_by, scenario, reference, project_type_specifics)
-"""
+"""Model representing a individual task in the scenario."""
 input TutorialTaskUpdateInput {
   clientId: String!
   id: ID!
@@ -2287,7 +2268,10 @@ input TutorialTaskUpdateInput {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
+Model representing a tutorial associated with a specific project.
+
+Tutorial guides users through the process of contributing to a project.
+It includes instructions, and examples to help users understand how to complete tasks.
 """
 type TutorialType implements UserResourceTypeMixin {
   clientId: String!
@@ -2325,7 +2309,10 @@ type TutorialTypeOffsetPaginated {
 }
 
 """
-Tutorial(id, client_id, created_at, modified_at, created_by, modified_by, old_id, firebase_push_status, firebase_last_pushed, project, name, status, firebase_id)
+Model representing a tutorial associated with a specific project.
+
+Tutorial guides users through the process of contributing to a project.
+It includes instructions, and examples to help users understand how to complete tasks.
 """
 input TutorialUpdateInput {
   clientId: String!
@@ -2351,7 +2338,12 @@ union UpdateTutorialStatusPayload = OperationInfo | TutorialTypeMutationResponse
 scalar Upload
 
 """
-User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, contributor_user)
+Custom user model with email as unique identifier.
+
+The user is linked to a contributor user, which holds user information synced from firebase.
+This mapping is essential to integrate Firebase authentication this system.
+Additionally, the mapping ensures that data created or updated in this system
+can be accurately synchronized back to Firebase with the correct user association.
 """
 input UserFilter {
   AND: UserFilter
@@ -2363,7 +2355,12 @@ input UserFilter {
 }
 
 """
-User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, contributor_user)
+Custom user model with email as unique identifier.
+
+The user is linked to a contributor user, which holds user information synced from firebase.
+This mapping is essential to integrate Firebase authentication this system.
+Additionally, the mapping ensures that data created or updated in this system
+can be accurately synchronized back to Firebase with the correct user association.
 """
 type UserMeType {
   anonymizeEmail: String!
@@ -2388,7 +2385,12 @@ interface UserResourceTypeMixin {
 }
 
 """
-User(id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, display_name, contributor_user)
+Custom user model with email as unique identifier.
+
+The user is linked to a contributor user, which holds user information synced from firebase.
+This mapping is essential to integrate Firebase authentication this system.
+Additionally, the mapping ensures that data created or updated in this system
+can be accurately synchronized back to Firebase with the correct user association.
 """
 type UserType {
   anonymizeEmail: String!

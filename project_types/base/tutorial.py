@@ -80,8 +80,7 @@ class BaseTutorial[
     def get_tutorial_specifics_for_firebase(self) -> BaseModel: ...
 
     def _save_tasks_as_json(self, grouped_tasks: typing.Any) -> None:
-        """
-        Generates a JSON file with all tasks and save it as a tutorial asset.
+        """Generates a JSON file with all tasks and save it as a tutorial asset.
         Using this for debugging purpose of compressed tasks.
         """
         task_json = json.dumps(grouped_tasks, separators=(",", ":"))

@@ -16,6 +16,8 @@ from main.fields import OverwritableFileField
 
 
 class TutorialAssetInputTypeEnum(models.IntegerChoices):
+    """Enum representing the types of tutorial input asset."""
+
     INFORMATION_BLOCK_IMAGE = 100, "Image for information block"
 
     @classmethod
@@ -26,6 +28,8 @@ class TutorialAssetInputTypeEnum(models.IntegerChoices):
 
 
 class UploadHelper:
+    """Utility class providing helper functions for generating upload paths."""
+
     @deprecated("This is kept because it's referenced in migrations")
     @staticmethod
     def information_page_block_image(instance: "TutorialInformationPageBlock", filename: str):
@@ -37,6 +41,8 @@ class UploadHelper:
 
 
 class TutorialStatusEnum(models.IntegerChoices):
+    """Enum representing the status of a tutorial."""
+
     DRAFT = 10, "Draft"
     """
     Draft tutorials are not ready to be attached to projects.
@@ -65,6 +71,12 @@ def generate_tutorial_firebase_id():
 
 
 class Tutorial(UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
+    """Model representing a tutorial associated with a specific project.
+
+    Tutorial guides users through the process of contributing to a project.
+    It includes instructions, and examples to help users understand how to complete tasks.
+    """
+
     Status = TutorialStatusEnum
 
     # FIXME(tnagorra): We might need to rename this field
@@ -94,6 +106,8 @@ class Tutorial(UserResource, FirebasePushResource):  # type: ignore[reportIncomp
 
 
 class TutorialAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibleVariableOverride]
+    """Model representing assets for a tutorial."""
+
     tutorial = models.ForeignKey[Tutorial, Tutorial](
         Tutorial,
         on_delete=models.CASCADE,
@@ -120,6 +134,8 @@ class TutorialAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatib
 
 
 class TutorialScenarioPage(UserResource):
+    """Model representing a scenario in the tutorial."""
+
     tutorial = models.ForeignKey[Tutorial, Tutorial](
         Tutorial,
         on_delete=models.CASCADE,
@@ -171,6 +187,8 @@ class TutorialScenarioPage(UserResource):
 
 
 class TutorialTask(UserResource):
+    """Model representing a individual task in the scenario."""
+
     scenario = models.ForeignKey[TutorialScenarioPage, TutorialScenarioPage](
         TutorialScenarioPage,
         on_delete=models.CASCADE,
@@ -190,6 +208,8 @@ class TutorialTask(UserResource):
 
 
 class TutorialInformationPage(UserResource):
+    """Model representing a information page in the tutorial."""
+
     tutorial = models.ForeignKey[Tutorial, Tutorial](
         Tutorial,
         on_delete=models.CASCADE,
@@ -213,6 +233,8 @@ class TutorialInformationPage(UserResource):
 
 
 class TutorialInformationPageBlockTypeEnum(models.IntegerChoices):
+    """Enum representing the type of block in information page."""
+
     TEXT = 1, "Text"
     IMAGE = 2, "Image"
 
@@ -225,6 +247,8 @@ class TutorialInformationPageBlockTypeEnum(models.IntegerChoices):
 
 
 class TutorialInformationPageBlock(UserResource):
+    """Model representing a text or image block in the information page."""
+
     Type = TutorialInformationPageBlockTypeEnum
 
     page = models.ForeignKey[TutorialInformationPage, TutorialInformationPage](

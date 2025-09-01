@@ -85,7 +85,8 @@ _get_monitor_config = sentry_celery_beat._get_monitor_config  # type: ignore[rep
 class SentryMonkeyPatch:
     @staticmethod
     def custom__get_monitor_config(celery_schedule: typing.Any, app: "Celery", monitor_name: str) -> "MonitorConfig":
-        """
+        """Get configuration for sentry monitoring.
+
         https://github.com/getsentry/sentry-python/blob/5715734eac1c5fb4b6ec61ef459080c74fa777b5/sentry_sdk/integrations/celery/beat.py#L59
         """
         config = _get_monitor_config(celery_schedule, app, monitor_name)

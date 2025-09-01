@@ -125,7 +125,7 @@ class ValidateProject(
         super().__init__(project)
 
     def _process_polygons(self, geojson_data: dict[str, Any]) -> list[ValidFeature]:
-        """We only want polygon and multipolygon features"""
+        """We only want polygon and multipolygon features."""
         try:
             fc = FeatureCollection.model_validate(geojson_data)
         except ValidationError as e:
@@ -234,7 +234,7 @@ class ValidateProject(
 
     @typing.override
     def validate(self) -> list[ValidFeature]:
-        """Validate project before creating groups"""
+        """Validate project before creating groups."""
         self.project.update_processing_status(Project.ProcessingStatus.VALIDATING_GEOMETRY, True)
 
         if self.project_type_specifics.object_source.source_type == ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:

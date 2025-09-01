@@ -5,7 +5,8 @@ import requests
 
 
 def log_render_extra_context(record: logging.LogRecord):
-    """Append extra->context to logs
+    """Append extra->context to logs.
+
     NOTE: This will appear in logs when used with logger.xxx(..., extra={'context': {..content}})
     """
     extra_str = ""
@@ -20,7 +21,7 @@ def log_render_extra_context(record: logging.LogRecord):
 
 
 def log_extra(extra: dict[typing.Any, typing.Any]):
-    """Basic helper function to view extra argument in logs using log_render_extra_context"""
+    """Basic helper function to view extra argument in logs using log_render_extra_context."""
     return {
         "context": extra,
     }

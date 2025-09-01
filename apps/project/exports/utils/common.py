@@ -16,8 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_df_from_csv(filename: Path) -> pd.DataFrame:
-    """
-    Load a csv file into a pandas dataframe.
+    """Load a csv file into a pandas dataframe.
     Make sure that project_id, group_id and task_id are read as strings.
     """
     df = pd.read_csv(
@@ -55,9 +54,7 @@ def normalize_project_type_specifics(path: Path):
 
 
 def write_sql_to_gzipped_csv(filename: Path, sql_query: sql.Composed | sql.SQL):
-    """
-    Use the copy statement to write data from postgres to a csv file.
-    """
+    """Use the copy statement to write data from postgres to a csv file."""
     with tempfile.NamedTemporaryFile(suffix=".csv", dir=Config.TEMP_DIR) as tmp_csv_file:
         with connection.cursor() as cursor:
             cursor.copy_expert(sql_query, tmp_csv_file)

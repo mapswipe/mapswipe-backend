@@ -17,14 +17,12 @@ def generate_project_tasks(
     destination_filename: Path,
     project: Project,
 ) -> pd.DataFrame:
-    """
-    Check if tasks have been downloaded already.
+    """Check if tasks have been downloaded already.
     If not: Query tasks from postgres database for project id and
     save tasks to a csv file.
     Then load pandas dataframe from this csv file.
     Return dataframe.
     """
-
     # TODO: what is this is already generated?
 
     # TODO: check zoom_level usages

@@ -116,6 +116,7 @@ extend-select = [
     "PTH",  # flake8-use-pathlib
     "UP",  # pyupgrad
 
+    "D", # pydocstyle
     "ASYNC",  # flake8-async
     "S",  # flake8-bandit
     "BLE",  # blind-except
@@ -159,6 +160,16 @@ ignore = [
     "TRY002",  # raise-vanilla-class
     "TRY301",  # raise-within-try
     "TRY400",  # error-instead-of-exception
+
+    "D100",  # undocumented-public-moduleg
+    "D102",  # undocumented-public-methodg
+    "D103",  # undocumented-public-functiong
+    "D104",  # undocumented-public-packageg
+    "D105",  # undocumented-magic-methodg
+    "D106",  # undocumented-public-nested-classg
+    "D107",  # undocumented-public-initg
+    "D401",
+    "D205",
 ]
 # TODO(thenav56): Use this instead `select = ["ALL"]` and add rules to ignore
 #   ruff check --statistics ./
@@ -167,6 +178,7 @@ ignore = [
 "__init__.py" = ["E402"]
 "/**/tests/*_mock_data.py" = ["E501"]
 "**/snap_test_*.py" = ["E501"]
+"!./apps/**/models.py" = ["D101"]  # undocumented-public-class
 
 [tool.pyright]
 venvPath = "."

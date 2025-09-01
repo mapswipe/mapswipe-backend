@@ -29,6 +29,8 @@ if typing.TYPE_CHECKING:
 
 
 class ProjectAssetInputTypeEnum(models.IntegerChoices):
+    """Enum representing the types of project input asset."""
+
     AOI_GEOMETRY = 100, "AOI Geometry"
     OBJECT_IMAGE = 200, "Image with object annotations"
     COVER_IMAGE = 201, "Image for project cover"
@@ -41,6 +43,8 @@ class ProjectAssetInputTypeEnum(models.IntegerChoices):
 
 
 class ProjectAssetExportTypeEnum(models.IntegerChoices):
+    """Enum representing the types of project export asset."""
+
     # Common?
     AGGREGATED_RESULTS = 100, "Aggregated Results (CSV)"
     AGGREGATED_RESULTS_WITH_GEOMETRY = 101, "Aggregated Results (with Geometry) (GEOJSON)"
@@ -86,6 +90,8 @@ class ProjectAssetExportTypeEnum(models.IntegerChoices):
 
 
 class ProjectTypeEnum(models.IntegerChoices):
+    """Enum representing the types of project."""
+
     FIND = 1, "Find"
     """ Find project type. Previously known as Classification / Build Area. """
 
@@ -127,6 +133,8 @@ class ProjectTypeEnum(models.IntegerChoices):
 
 
 class ProjectStatusEnum(models.IntegerChoices):
+    """Enum representing the status of a project."""
+
     DRAFT = 10, "Draft"
     """
     Background processes and validations will not be triggered for a "Draft" project.
@@ -176,6 +184,8 @@ class ProjectStatusEnum(models.IntegerChoices):
 
 
 class ProjectProcessingStatusEnum(models.IntegerChoices):
+    """Enum representing the granular status of a project that is being processed."""
+
     PREPARING = 10, "Preparing"
     VALIDATING_GEOMETRY = 20, "Validating Geometry"
     GENERATING_GROUPS_AND_TASKS = 30, "Generating groups and tasks"
@@ -185,6 +195,8 @@ class ProjectProcessingStatusEnum(models.IntegerChoices):
 
 
 class UploadHelper:
+    """Utility class providing helper functions for generating upload paths."""
+
     @staticmethod
     def project_asset(instance: "ProjectAsset", filename: str):
         client_id = instance.client_id
@@ -198,6 +210,8 @@ class UploadHelper:
 
 
 class Organization(UserResource, ArchivableResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
+    """Model representing the organization requesting the project."""
+
     name = models.CharField[str, str](max_length=255)
     description = models.TextField[str | None, str | None](null=True, blank=True)
     abbreviation = models.CharField[str, str](max_length=50, null=True, blank=True)
@@ -216,6 +230,8 @@ class Organization(UserResource, ArchivableResource, FirebasePushResource):  # t
 
 
 class Project(UserResource, FirebasePushResource):
+    """Model representing the project."""
+
     Type = ProjectTypeEnum
     Status = ProjectStatusEnum
     ProcessingStatus = ProjectProcessingStatusEnum
@@ -395,8 +411,7 @@ class Project(UserResource, FirebasePushResource):
         return self.generate_name()
 
     def generate_name(self) -> str:
-        """
-        Returns a generated name for the project based on topic, region and project number.
+        """Get generated name for the project based on topic, region and project number.
 
         Use select_related to avoid N+1 queries.
         """
@@ -405,9 +420,7 @@ class Project(UserResource, FirebasePushResource):
 
     @staticmethod
     def generate_name_query(prefix: str = ""):
-        """
-        Returns a Django QuerySet expression to generate the project name.
-        """
+        """Get a Django QuerySet expression to generate the project name."""
         return Concat(
             models.F(f"{prefix}topic"),
             Value(" - "),
@@ -456,6 +469,8 @@ class Project(UserResource, FirebasePushResource):
 
 
 class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibleVariableOverride]
+    """Model representing assets for a project."""
+
     # TODO(thenav56): add validation
     # Type specific nested types
     export_type: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
@@ -494,6 +509,12 @@ class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibl
 
 
 class ProjectTaskGroup(FirebasePushResource):
+    """Model representing a group of tasks within a project.
+
+    Each project is divided into manageable task groups, and each group contains multiple tasks.
+    Contributors submit data at the group level rather than for individual tasks.
+    """
+
     firebase_id = models.CharField[str, str](max_length=30)
 
     project: Project = models.ForeignKey[Project, Project](  # type: ignore[reportAssignmentType]
@@ -533,6 +554,12 @@ class ProjectTaskGroup(FirebasePushResource):
 
 
 class ProjectTask(FirebasePushResource):
+    """Model representing an individual task within a project group.
+
+    Each task corresponds to a specific unit of work, typically a tile or area to be analyzed
+    in the context of a larger mapping or data collection project.
+    """
+
     firebase_id = models.CharField[str, str](max_length=30)
 
     task_group: ProjectTaskGroup = models.ForeignKey[ProjectTaskGroup, ProjectTaskGroup](  # type: ignore[reportAssignmentType]

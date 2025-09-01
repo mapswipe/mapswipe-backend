@@ -16,13 +16,11 @@ def calc_results_progress(
     number_of_tasks: int,
     number_of_results: int,
 ) -> int:
-    """
-    for each project the progress is calculated
+    """For each project the progress is calculated
     not all results are considered when calculating the progress
     if the required number of users has been reached for a task
-    all further results will not contribute to increase the progress
+    all further results will not contribute to increase the progress.
     """
-
     if cum_number_of_users <= number_of_users_required:
         # this is the simplest case, the number of users is less than the required
         # number of users all results contribute to progress
@@ -41,18 +39,14 @@ def calc_results_progress(
 
 
 def is_new_user(day: datetime.datetime, first_day: datetime.datetime):
-    """
-    Check if user has contributed results to this project before
-    """
-
+    """Check if user has contributed results to this project before."""
     if day == first_day:
         return 1
     return 0
 
 
 def get_progress_by_date(results_df: pd.DataFrame, groups_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    for each project we retrospectively generate the following attributes for a given
+    """For each project we retrospectively generate the following attributes for a given
     date utilizing the results.
 
     number_of_results:
@@ -71,7 +65,6 @@ def get_progress_by_date(results_df: pd.DataFrame, groups_df: pd.DataFrame) -> p
         - absolute progress up to that day
         - refers to the project progress attribute in firebase
     """
-
     groups_df["required_results"] = groups_df["number_of_tasks"] * groups_df["number_of_users_required"]
     required_results = groups_df["required_results"].sum()
     logger.info("calculated required results: %s", required_results)
@@ -117,9 +110,10 @@ def get_progress_by_date(results_df: pd.DataFrame, groups_df: pd.DataFrame) -> p
 
 
 def get_contributors_by_date(results_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    for each project we retrospectively generate the following attributes for a given
-    date utilizing the results:
+    """For each project we retrospectively generate the attributes for a given
+    date utilizing the results.
+
+    The following attributes are generated:
 
     number_of_users:
         - number of distinct users active per day
@@ -133,7 +127,6 @@ def get_contributors_by_date(results_df: pd.DataFrame) -> pd.DataFrame:
         - overall number of distinct users active up to that day
         - refers to the project contributorCount attribute in firebase
     """
-
     user_first_day_df = results_df.groupby(["user_id"]).agg(first_day=pd.NamedAgg(column="day", aggfunc="min"))
     logger.info("calculated first day per user")
 
@@ -171,13 +164,11 @@ def get_project_history(
     project: Project,
     destination_filename: Path,
 ) -> pd.DataFrame:
-    """
-    Calculate the progress df for every day based on results and groups df.
+    """Calculate the progress df for every day based on results and groups df.
     The Calculate the contributors for every day based on results df.
     Merge both dataframes.
     Return project history dataframe.
     """
-
     # calculate progress by date
     progress_by_date_df = get_progress_by_date(results_df, groups_df)
 

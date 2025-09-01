@@ -2,11 +2,9 @@ import pandas as pd
 
 
 def get_agreeing_contributions_per_user_and_task(row: pd.Series) -> int:
-    """
-    Compare user contribution to classifications of other users by calculating
+    """Compare user contribution to classifications of other users by calculating
     the number of agreeing and disagreeing results.
     """
-
     r = row["result"]
     count_str = f"{r}_count"
     # ignore -999 values
@@ -16,11 +14,9 @@ def get_agreeing_contributions_per_user_and_task(row: pd.Series) -> int:
 
 
 def get_disagreeing_contributions_per_user_and_task(row: pd.Series) -> int:
-    """
-    Compare user contribution to classifications of other users by calculating
+    """Compare user contribution to classifications of other users by calculating
     the number of agreeing and disagreeing results.
     """
-
     total_count = row["total_count"]
     if total_count == 0:
         return 0
@@ -33,8 +29,7 @@ def generate_mapping_results_aggregate_by_user(
     results_df: pd.DataFrame,
     agg_results_df: pd.DataFrame,
 ) -> pd.DataFrame:
-    """
-    For each user we calculate the number of total contributions (tasks)
+    """For each user we calculate the number of total contributions (tasks)
     and completed groups.
     Then we compute agreeing and disagreeing contributions from other users.
     This is the basis for a simple agreement score.

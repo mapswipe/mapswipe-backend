@@ -64,14 +64,13 @@ def validate_ulid(val: str):
 
 
 def clean_up_none_keys(data: typing.Any):
-    """
-    Remove keys with none values (Also supports nested dict and list)
+    """Remove keys with none values (Also supports nested dict and list).
+
     Input:
      {"a": None, "b": "Hi"}
     Output:
      {"b": "Hi"}
     """
-
     if isinstance(data, list):
         return [clean_up_none_keys(x) for x in data]
     if isinstance(data, dict):
@@ -122,9 +121,7 @@ def create_json_dump(item: dict[typing.Any, typing.Any]) -> bytes:
 
 
 def parse_b64gzjson_to_dict(text: str) -> dict[str, typing.Any]:
-    """
-    Parse output of `gzip -cn file.json | base64 -w 0` to dict
-    """
+    """Parse output of `gzip -cn file.json | base64 -w 0` to dict."""
     gzipped_bytes = base64.b64decode(text)
     with gzip.GzipFile(fileobj=io.BytesIO(gzipped_bytes)) as f:
         json_bytes = f.read()
@@ -133,8 +130,7 @@ def parse_b64gzjson_to_dict(text: str) -> dict[str, typing.Any]:
 
 @deprecated("We can directly use geojson_pydantic with more specific geometry")
 def validate_geojson_file(file: ContentFile) -> None:
-    """
-    Validates if the given file contains a valid GeoJSON FeatureCollection.
+    """Validates if the given file contains a valid GeoJSON FeatureCollection.
 
     Args:
         file: File object
@@ -142,8 +138,8 @@ def validate_geojson_file(file: ContentFile) -> None:
     Raises:
         ValidationError: If the file is not a valid JSON or does not conform to GeoJSON standards.
         ValueError: If the GeoJSON doesn't meet expected structure.
-    """
 
+    """
     try:
         geojson_data = json.load(file)
     except json.JSONDecodeError as e:
@@ -156,9 +152,7 @@ def validate_geojson_file(file: ContentFile) -> None:
 
 
 def gzip_str(string_: str) -> bytes:
-    """
-    Produce a complete gzip-compatible binary string.
-    """
+    """Produce a complete gzip-compatible binary string."""
     out = io.BytesIO()
     # NOTE : mtime=0 (keeps timestamp constant which result same zip output each time)
     with gzip.GzipFile(fileobj=out, mode="w", mtime=0) as f:
@@ -167,9 +161,7 @@ def gzip_str(string_: str) -> bytes:
 
 
 def compress_tasks(tasks_list: list[dict[str, typing.Any]]) -> str:
-    """
-    Compress tasks for validate project type using gzip.
-    """
+    """Compress tasks for validate project type using gzip."""
     # FIXME(tnagorra): Removed replace(" ", "").replace("\n", "")
     json_string_tasks = json.dumps(tasks_list)
     compressed_tasks = gzip_str(json_string_tasks)
@@ -180,13 +172,13 @@ def compress_tasks(tasks_list: list[dict[str, typing.Any]]) -> str:
 
 
 def tb_name(model: type[models.Model]) -> str:
-    """Return django model table name"""
+    """Return django model table name."""
     return model._meta.db_table
 
 
 # FIXME(thenav56): Add typing for the field
 def fd_name(field: typing.Any) -> str:
-    """Return django model table fields's column name"""
+    """Return django model table fields's column name."""
     return field.field.column
 
 

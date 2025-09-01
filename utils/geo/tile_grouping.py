@@ -1,6 +1,4 @@
-"""
-Copied from https://github.com/mapswipe/python-mapswipe-workers/blob/bf576a0/mapswipe_workers/mapswipe_workers/utils/tile_grouping_functions.py
-"""
+# Copied from https://github.com/mapswipe/python-mapswipe-workers/blob/bf576a0/mapswipe_workers/mapswipe_workers/utils/tile_grouping_functions.py
 
 import logging
 import math
@@ -66,15 +64,13 @@ def _get_horizontal_slice(
     polygons: list[Polygon],
     zoom: int,
 ) -> _HorizontalSliceInfo:
-    """
-    The function slices all input geometries vertically
+    """The function slices all input geometries vertically
     using a height of max 3 tiles per geometry.
     The function iterates over all input geometries.
     For each geometry tile coordinates are calculated.
     Then this geometry is split into several geometries using the min
     and max tile coordinates for the geometry.
     """
-
     tile_y_top: list[int] = []
     tile_y_bottom: list[int] = []
     slice_collection = GeometryCollection()
@@ -149,13 +145,12 @@ def _get_horizontal_slice(
     )
 
 
-def _get_vertical_slice(
+def _get_vertical_slice(  # noqa: D417
     slice_infos: _HorizontalSliceInfo,
     zoom: int,
     width_threshold: int = 40,
 ) -> dict[str, RawGroup]:
-    """
-    The function slices the horizontal stripes vertically.
+    """Slices the horizontal stripes vertically.
     Each input stripe has a height of three tiles
     and will be split into vertical parts.
     The width of each part is defined by the width threshold set below.
@@ -175,8 +170,8 @@ def _get_vertical_slice(
         a dictionary containing "xMin", "xMax", "yMin", "yMax"
         and a "group_polygon" as ogr.Geometry(ogr.wkbPolygon)
         and the "group_id" as key
-    """
 
+    """
     # create an empty dict for the group ids
     # and TileY_min, TileY_may, TileX_min, TileX_max
     raw_groups: dict[str, RawGroup] = {}
@@ -305,7 +300,6 @@ def _merge_groups(group_a: RawGroup, group_b: RawGroup, zoom: int) -> RawGroup:
     longer than the initial groupSize defined by the project
     manager.
     """
-
     x_max = int(group_a["xMax"])
     x_min = int(group_a["xMin"])
     y_max = int(group_a["yMax"])
@@ -360,7 +354,6 @@ def _adjust_overlapping_groups(
     zoom: int,
 ) -> tuple[dict[str, RawGroup], int]:
     """Loop through groups dict and merge overlapping groups."""
-
     groups_without_overlap: dict[str, RawGroup] = {}
     overlaps_total = 0
 
@@ -391,9 +384,8 @@ def _adjust_overlapping_groups(
     return groups_without_overlap, overlaps_total
 
 
-def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, group_size: int) -> dict[str, RawGroup]:
-    """
-    The function to polygon geometries of a given input file
+def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, group_size: int) -> dict[str, RawGroup]:  # noqa: D417
+    """The function to polygon geometries of a given input file
     into horizontal slices and then vertical slices.
 
     Parameters
@@ -410,6 +402,7 @@ def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, group_size: int) -> d
         a dictionary containing "xMin", "xMax", "yMin", "yMax"
         and a "group_polygon" as ogr.Geometry(ogr.wkbPolygon)
         and the "group_id" as key
+
     """
     extent = aoi_geometry["extent"]
     polygons = aoi_geometry["polygons"]

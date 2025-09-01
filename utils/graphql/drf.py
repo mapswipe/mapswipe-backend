@@ -177,9 +177,7 @@ def _serializer_error_to_error_types(
 
 
 def mutation_is_not_valid(serializer: typing.Any) -> CustomErrorType | None:
-    """
-    Checks if serializer is valid, if not returns list of errorTypes
-    """
+    """Checks if serializer is valid, if not returns list of errorTypes."""
     if not serializer.is_valid():
         errors = _serializer_error_to_error_types(serializer.errors, serializer.initial_data)
         return CustomErrorType([dict(each) for each in errors])

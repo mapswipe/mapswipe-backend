@@ -1,5 +1,6 @@
 # pyright: reportUninitializedInstanceVariable=false
 # pyright: reportIncompatibleVariableOverride=false
+# ruff: noqa: D101
 import datetime
 import typing
 

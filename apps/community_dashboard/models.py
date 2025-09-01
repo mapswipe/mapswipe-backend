@@ -13,11 +13,15 @@ from main.db import Model
 
 
 class AggregatedTrackingTypeEnum(models.IntegerChoices):
+    """Enum representing type of tracking of aggregated data."""
+
     USER_DATA_LATEST_DATE = 0, _("Contributor User Data Latest Date")
     USER_GROUP_DATA_LATEST_DATE = 1, _("Contributor UserGroup Stat Data Latest Date")
 
 
 class AggregatedTracking(Model):
+    """Model representing tracking of aggregated data."""
+
     type: int = IntegerChoicesField(choices_enum=AggregatedTrackingTypeEnum, unique=True)  # type: ignore[reportAssignmentType]
     updated_at = models.DateTimeField[datetime.datetime, datetime.datetime](auto_now=True)
     # TODO(thenav56): Change the value to DateField
@@ -33,6 +37,8 @@ class AggregatedTracking(Model):
 
 
 class AggregatedUserStatData(Model):
+    """Model representing aggregated contributor user statistics."""
+
     # Ref Fields
     project = models.ForeignKey[Project, Project](Project, on_delete=models.CASCADE, related_name="+")
     user = models.ForeignKey[ContributorUser, ContributorUser](ContributorUser, on_delete=models.CASCADE, related_name="+")
@@ -60,6 +66,8 @@ class AggregatedUserStatData(Model):
 
 
 class AggregatedUserGroupStatData(Model):
+    """Model representing aggregated contributor user group statistics."""
+
     # Ref Fields
     project = models.ForeignKey[Project, Project](Project, on_delete=models.CASCADE, related_name="+")
     user = models.ForeignKey[ContributorUser, ContributorUser](ContributorUser, on_delete=models.CASCADE, related_name="+")

@@ -13,6 +13,12 @@ from apps.common.models import ArchivableResource, FirebasePushResource, UserRes
 
 # NOTE: Users are created from Apps (Web/Mobile)
 class ContributorUser(FirebasePushResource):
+    """Model representing contributors synchronized from firebase.
+
+    Contributor accounts are typically created in firebase and then synced into this system.
+    A contributor user may or may not be linked to a corresponding user in the system.
+    """
+
     team = models.ForeignKey["ContributorTeam | None", "ContributorTeam | None"](
         "ContributorTeam",
         on_delete=models.SET_NULL,
@@ -48,6 +54,12 @@ class ContributorUser(FirebasePushResource):
 
 
 class ContributorUserGroup(ArchivableResource, UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
+    """Model representing a group that contributor users can join or leave.
+
+    Groups are used to aggregate contributions made by users within the group,
+    facilitating management and organization of collective efforts.
+    """
+
     name = models.CharField[str, str](max_length=255)
     description = models.TextField[str, str]()
 
@@ -58,6 +70,8 @@ class ContributorUserGroup(ArchivableResource, UserResource, FirebasePushResourc
 
 # NOTE: Extend FirebasePullResource later if necessary
 class ContributorUserGroupMembership(models.Model):
+    """Model representing membership of contributor users in contributor user groups."""
+
     user_group = models.ForeignKey[ContributorUserGroup, ContributorUserGroup](
         ContributorUserGroup,
         on_delete=models.CASCADE,
@@ -81,11 +95,15 @@ class ContributorUserGroupMembership(models.Model):
 
 
 class ContributorUserGroupMembershipLogActionEnum(models.IntegerChoices):
+    """Model representing membership action for contributor users."""
+
     JOIN = 1, "Join"
     LEAVE = 2, "Leave"
 
 
 class ContributorUserGroupMembershipLog(models.Model):
+    """Model representing membership logs for contributor user such as joining or leaving groups."""
+
     ACTION = ContributorUserGroupMembershipLogActionEnum
 
     membership = models.ForeignKey[ContributorUserGroupMembership, ContributorUserGroupMembership](
@@ -106,6 +124,13 @@ class ContributorUserGroupMembershipLog(models.Model):
 
 # TEAM
 class ContributorTeam(ArchivableResource, UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
+    """Model representing a private team that contributor users can be assigned to.
+
+    Team membership is managed exclusively by system managers; contributor users
+    cannot join or leave teams on their own. Members of a team can only access
+    projects linked to that team.
+    """
+
     name = models.CharField[str, str](max_length=255)
     token = models.UUIDField(default=uuid.uuid4, unique=True)
 

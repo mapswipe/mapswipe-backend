@@ -40,7 +40,6 @@ def create_group_geom(
     shape: str = "bounding_box",
 ):
     """Create bounding box or convex hull of input task geometries."""
-
     result_geom_collection = ogr.Geometry(ogr.wkbMultiPolygon)
     for _, data in group_data.items():
         result_geom = ogr.CreateGeometryFromWkt(data["wkt"])
@@ -81,7 +80,6 @@ def create_geojson_file_from_dict(
     Then we add these features to the final GeoJSON file.
     The current shape of the output geometries is set to 'bounding_box'.
     """
-
     driver = ogr.GetDriverByName("GeoJSONSeq")
     # define spatial Reference
     srs = osr.SpatialReference()

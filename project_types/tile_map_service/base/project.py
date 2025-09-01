@@ -211,7 +211,7 @@ class TileMapServiceBaseProject[
 
     @typing.override
     def validate(self):
-        """Validate project before creating groups"""
+        """Validate project before creating groups."""
         self.project.update_processing_status(Project.ProcessingStatus.VALIDATING_GEOMETRY, True)
 
         aoi_asset = ProjectAsset.usable_objects().get(

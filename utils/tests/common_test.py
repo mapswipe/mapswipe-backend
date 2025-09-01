@@ -31,7 +31,7 @@ class TestUtils(TestCase):
         super().setUpClass()
 
     def test_validate_imagery_url(self):
-        """Test valid XYZ tile URL format"""
+        """Test valid XYZ tile URL format."""
         # test valid urls
         valid_urls = [
             "https://example.com/tiles/{x}/{y}/{z}.jpg",

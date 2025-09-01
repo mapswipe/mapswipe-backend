@@ -13,10 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def add_metadata_to_geojson(filename: Path):
-    """
-    Add a metadata attribute to the geojson file about intended data usage.
-    """
-
+    """Add a metadata attribute to the geojson file about intended data usage."""
     with Path.open(filename, mode="r") as f:
         geojson_data = json.load(f)
 
@@ -35,11 +32,9 @@ def add_metadata_to_geojson(filename: Path):
 
 
 def cast_datatypes_for_geojson(filename: Path):
+    """Go through geojson file and try to cast all values as float, except project_id
+    remove redundant geometry property.
     """
-    Go through geojson file and try to cast all values as float, except project_id
-    remove redundant geometry property
-    """
-
     with Path.open(filename) as f:
         geojson_data = json.load(f)
 
