@@ -95,7 +95,7 @@ class FirebaseContributorUserGroup(FirebasePush[ContributorUserGroup, firebase_e
             nameKey=model_obj.name.lower().strip(),
             users=None,
             archivedBy=model_obj.modified_by.firebase_id or str(model_obj.modified_by_id) if model_obj.is_archived else None,
-            archivedAt=int(model_obj.modified_at.timestamp()) if model_obj.is_archived else None,
+            archivedAt=int(model_obj.modified_at.timestamp() * 1000) if model_obj.is_archived else None,
         )
 
         fb_reference.set(
@@ -118,7 +118,7 @@ class FirebaseContributorUserGroup(FirebasePush[ContributorUserGroup, firebase_e
                     archivedBy=model_obj.modified_by.firebase_id or str(model_obj.modified_by_id)
                     if model_obj.is_archived
                     else None,
-                    archivedAt=int(model_obj.modified_at.timestamp()) if model_obj.is_archived else None,
+                    archivedAt=int(model_obj.modified_at.timestamp() * 1000) if model_obj.is_archived else None,
                 ),
             ),
         )
