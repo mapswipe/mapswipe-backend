@@ -12,6 +12,7 @@ from apps.common.graphql.types import (
 from apps.contributor.graphql.types import ContributorTeamType
 from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum
 from apps.tutorial.graphql.types.types import TutorialType
+from main.config import Config
 from main.graphql.context import Info
 from project_types.tile_map_service.compare import project as compare_project
 from project_types.tile_map_service.completeness import project as completeness_project
@@ -172,6 +173,10 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
             return project.generated_name  # type: ignore[reportAttributeAccessIssue]
         # This is used for mutation response
         return project.generate_name()
+
+    @strawberry_django.field(only=["firebase_id"])
+    def website_url(self, project: strawberry.Parent[Project]) -> str:
+        return Config.WebsiteKeys.project(project.firebase_id)
 
     @strawberry_django.field(only=["project_type_specifics", "project_type"])
     async def project_type_specifics(

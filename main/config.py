@@ -26,6 +26,7 @@ class Config:
     # Client domains
     MANAGER_DASHBOARD_DOMAIN = typing.cast("URLParseResult", settings.MANAGER_DASHBOARD_DOMAIN)
     COMMUNITY_DASHBOARD_DOMAIN = typing.cast("URLParseResult", settings.COMMUNITY_DASHBOARD_DOMAIN)
+    WEBSITE_DOMAIN = typing.cast("URLParseResult", settings.WEBSITE_DOMAIN)
 
     # NOTE: We get AOI for validate from HOT tasking manager
     HOT_TASKING_MANAGER_PROJECT_API_LINK = "https://tasking-manager-production-api.hotosm.org/api/v2/"
@@ -59,6 +60,11 @@ class Config:
         @staticmethod
         def contributor_user_group(firebase_id: str):
             return f"{Config.COMMUNITY_DASHBOARD_DOMAIN.geturl()}/user-group/{firebase_id}"
+
+    class WebsiteKeys:
+        @staticmethod
+        def project(firebase_id: str):
+            return f"{Config.WEBSITE_DOMAIN.geturl()}/en/projects/{firebase_id}"
 
     class FirebaseKeys:
         @staticmethod

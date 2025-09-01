@@ -46,9 +46,9 @@ env = environ.Env(
     # Domain configs
     APP_DOMAIN=str,  # Eg: https://api.example.org
     MEDIA_STORAGE_DOMAIN=(str, None),
-    FRONTEND_DOMAIN=str,  # Eg: https://web.example.org
     MANAGER_DASHBOARD_DOMAIN=str,  # Eg: https://managers.mapswipe.org
-    COMMUNITY_DASHBOARD_DOMAIN=str,  # Eg: https://community.mapswipe.org/
+    COMMUNITY_DASHBOARD_DOMAIN=str,  # Eg: https://community.mapswipe.org
+    WEBSITE_DOMAIN=str,  # Eg: https://mapswipe.org
     SESSION_COOKIE_DOMAIN=str,  # .example.com
     CSRF_COOKIE_DOMAIN=str,  # .example.com
     MAPSWIPE_ADDITIONAL_TRUSTED_ORIGINS=(list, []),  # https://app1.example.com,https://app2.example.com
@@ -143,6 +143,7 @@ APP_DOMAIN = urlparse(env("APP_DOMAIN"))
 MEDIA_STORAGE_DOMAIN = urlparse(env("MEDIA_STORAGE_DOMAIN")) or APP_DOMAIN
 MANAGER_DASHBOARD_DOMAIN = urlparse(env("MANAGER_DASHBOARD_DOMAIN"))
 COMMUNITY_DASHBOARD_DOMAIN = urlparse(env("COMMUNITY_DASHBOARD_DOMAIN"))
+WEBSITE_DOMAIN = urlparse(env("WEBSITE_DOMAIN"))
 APP_ENVIRONMENT = env("APP_ENVIRONMENT").upper()
 APP_TYPE = env("APP_TYPE").upper()
 APP_RELEASE = env("APP_RELEASE") or GIT_HELPER.commit_sha
@@ -434,6 +435,8 @@ MAPSWIPE_TRUSTED_ORIGINS = [
     APP_DOMAIN.geturl(),
     MANAGER_DASHBOARD_DOMAIN.geturl(),
     COMMUNITY_DASHBOARD_DOMAIN.geturl(),
+    # NOTE: We might not need to enable trused origin for website
+    # WEBSITE_DOMAIN.geturl(),
     *env("MAPSWIPE_ADDITIONAL_TRUSTED_ORIGINS"),
 ]
 
