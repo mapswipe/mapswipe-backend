@@ -46,6 +46,10 @@ def push_team_member_to_firebase(member: ContributorUser):
         usernameKey=member.username.lower().strip(),
         teamId=member.team.firebase_id if member.team else None,
         created=timezone.now(),
+        lastAppUse=timezone.now(),
+        taskContributionCount=0,
+        groupContributionCount=0,
+        projectContributionCount=0,
     )
     fb_reference.set(
         value=firebase_utils.serialize(team_member_data),

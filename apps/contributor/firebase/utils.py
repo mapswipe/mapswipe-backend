@@ -2,7 +2,7 @@ import logging
 import typing
 
 from firebase_admin.db import Reference
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from main.config import Config
 
@@ -34,6 +34,13 @@ def get_list_of_items_from_firebase[T: BaseModel](
             if not item:
                 raise LookupError(f"Item with key {key} not found")
             item_obj = model.model_validate(item)
+
+            class RelaxedModel(model):
+                model_config = ConfigDict(extra="ignore")
+
+            # NOTE: we want to ignore extra fields from firebase
+            item_obj = RelaxedModel.model_validate(item)
+            item_obj = model.model_validate(item_obj)
         except ValidationError:
             errored_count += 1
             logger.warning("Validation failed for item from firebase: %s", key)
