@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.0-dev5](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev4..v0.2.0-dev5) - 2025-09-01
+### Changes:
+
+#### 🚀  Features
+
+- *(cron)* Add cron to get user group membership data - ([d27fbd3](https://github.com/mapswipe/mapswipe-backend/commit/d27fbd35991cb3fe520dce104aed87c4dcfb74ba))
+
+#### 🐛 Bug Fixes
+
+- *(cron)* Fix task name for firebase user pull - ([1846a0e](https://github.com/mapswipe/mapswipe-backend/commit/1846a0ec777cb738bc917ee9ffda540cbd86aaef))
+
+### 🍻 Pull Requests (1)
+- (#136) [Fix task name for firebase user pull](https://github.com/mapswipe/mapswipe-backend/pull/136)
+
+
 ## [0.2.0-dev4](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev3..v0.2.0-dev4) - 2025-09-01
 ### Changes:
 
