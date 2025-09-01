@@ -13,7 +13,7 @@ from rest_framework import serializers
 from apps.common.models import AssetMimetypeEnum, FirebasePushStatusEnum
 from apps.common.serializers import ArchivableResourceSerializer, CommonAssetSerializer, UserResourceSerializer
 from apps.contributor.models import ContributorTeam
-from apps.project.firebase import FirebaseOrganizationPush
+from apps.project.firebase.push import FirebaseOrganizationPush
 from apps.tutorial.models import Tutorial
 from project_types.store import get_project_property
 from utils.common import clean_up_none_keys

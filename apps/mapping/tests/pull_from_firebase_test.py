@@ -2,7 +2,7 @@ import typing
 
 from apps.contributor.factories import ContributorUserFactory, ContributorUserGroupFactory
 from apps.contributor.models import ContributorUser
-from apps.mapping.firebase.firebase import pull_results_from_firebase
+from apps.mapping.firebase.pull import pull_results_from_firebase
 from apps.mapping.models import (
     MappingSession,
     MappingSessionResult,
