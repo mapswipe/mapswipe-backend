@@ -105,6 +105,91 @@ class TestContributorFirebase(TestCase):
         fb_reference = Config.FIREBASE_HELPER.ref(Config.FirebaseKeys.contributor_user_updates())
         return fb_reference.get()
 
+    def test_users_pull_from_firebase_raw(self):
+        users: list[tuple[str, dict[str, typing.Any]]] = [
+            (
+                "1a6tkl67iua5zpf0xdfUerNLTYi1",
+                {
+                    "created": "2025-08-25T04:49:49.082Z",
+                    "groupContributionCount": 0,
+                    "projectContributionCount": 0,
+                    "taskContributionCount": 0,
+                    "username": "barsha",
+                },
+            ),
+            (
+                "3jy9bxKxUsY6j3rvYMRm2zYqhxu1",
+                {
+                    "created": "2025-08-25T04:50:45.595Z",
+                    "groupContributionCount": 0,
+                    "lastAppUse": "2025-08-25T04:51:23.269Z",
+                    "projectContributionCount": 0,
+                    "taskContributionCount": 0,
+                    "username": "barkha",
+                },
+            ),
+            (
+                "68uL6PpiQoWrmny0HbgUBUcyDjf2",
+                {
+                    "created": "2025-08-21T09:55:02.659Z",
+                    "groupContributionCount": 0,
+                    "lastAppUse": "2025-08-25T06:11:35.851Z",
+                    "projectContributionCount": 0,
+                    "taskContributionCount": 0,
+                    "username": "ramesh",
+                    "usernameKey": "ramesh",
+                },
+            ),
+            (
+                "6PF7qylcJFSwPT1NVP2h7ZRf2r32",
+                {
+                    "contributions": {
+                        "01K21YDVN8DQHEV7RJRGXHB92H": {
+                            "g546": True,
+                            "g551": True,
+                            "taskContributionCount": 22,
+                        },
+                    },
+                    "created": "2025-08-07T10:33:20.022Z",
+                    "groupContributionCount": 2,
+                    "lastAppUse": "2025-08-08T06:17:31.873Z",
+                    "projectContributionCount": 1,
+                    "taskContributionCount": 22,
+                    "username": "hari",
+                    "usernameKey": "hari",
+                },
+            ),
+            (
+                "OFDRXP2WkYMwHW7gGsCqXcUhhel1",
+                {
+                    "contributions": {
+                        "01K3G7B2Y45S8F9V32KHZQCATW": {
+                            "g101": True,
+                            "taskContributionCount": 24,
+                        },
+                        "01K42775Q4VC01X0BS504JMD0S": {
+                            "g108": True,
+                            "taskContributionCount": 132,
+                        },
+                    },
+                    "created": "2025-08-27T04:15:16.179Z",
+                    "groupContributionCount": 5,
+                    "lastAppUse": "2025-09-01T08:51:36.920Z",
+                    "projectContributionCount": 5,
+                    "taskContributionCount": 227,
+                    "username": "gita",
+                },
+            ),
+        ]
+        for key, user in users:
+            user_ref = Config.FIREBASE_HELPER.ref(Config.FirebaseKeys.contributor_user(key))
+            user_ref.set(value=user)
+            user_update_ref = Config.FIREBASE_HELPER.ref(Config.FirebaseKeys.contributor_user_update(key))
+            user_update_ref.set(value=user)
+
+        pull_users_from_firebase()
+        assert ContributorUser.objects.all().count() == 5
+
     def test_users_pull_from_firebase(self):
         # Firebase Users:           Ram, Laxman, Shyam, Gita, Sita
         # Firebase User Updates:    Ram(u), Laxman(u), Gita(c), Sita(c), Hari(?), Ankit (?)
