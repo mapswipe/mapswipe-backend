@@ -24,10 +24,10 @@ class BaseProjectArgs(TypedDict):
     created_at: datetime
     cover_image: str
     is_private: bool
-
-
-class ProgressMessageArgs(BaseProjectArgs):
     progress: int
+
+
+class ProgressMessageArgs(BaseProjectArgs): ...
 
 
 class StatusUpdateMessageArgs(BaseProjectArgs):
@@ -125,6 +125,7 @@ class SlackMessage:
         created_by: User,
         created_at: datetime,
         cover_image: str,
+        progress: int,
         is_private: bool = True,
     ) -> dict:
         manager_dashboard_url = settings.MANAGER_DASHBOARD_DOMAIN.geturl()
@@ -140,8 +141,9 @@ class SlackMessage:
                     f"Tutorial ID: {tutorial_id}\n"
                     f"Requesting Organization: {requesting_organization}\n"
                     f"Created By: {created_by}\n"
-                    f"Created At: {created_at.strftime('%b. %d, %Y, %-I:%M %p')}\n\n"
-                    f"{'This is a private project :lock:' if is_private else ''}"
+                    f"Created At: {created_at.strftime('%b. %d, %Y, %-I:%M %p')}\n"
+                    f"Progress: {progress}%\n\n"
+                    f"{'This is a private project :lock:' if is_private else ''}\n"
                 ),
             },
             "accessory": {
@@ -194,6 +196,7 @@ class SlackMessage:
                     created_by,
                     created_at,
                     cover_image,
+                    progress,
                     is_private,
                 ),
                 {
@@ -242,6 +245,7 @@ class SlackMessage:
                     created_by,
                     created_at,
                     cover_image,
+                    progress,
                     is_private,
                 ),
                 {
@@ -295,8 +299,9 @@ class SlackMessage:
         created_at: datetime,
         cover_image: str,
         is_private: bool,
+        progress: int,
     ) -> MapswipeSlack.MapswipeSlackMessageArgumentType:
-        text = "Project Completion"
+        text = "Project Creation Successful"
 
         blocks = [
             {
@@ -323,6 +328,7 @@ class SlackMessage:
                 created_by,
                 created_at,
                 cover_image,
+                progress,
                 is_private,
             ),
             {"type": "divider"},
@@ -355,6 +361,7 @@ class SlackMessage:
         modified_at: datetime,
         cover_image: str,
         is_private: bool,
+        progress: int,
     ) -> MapswipeSlack.MapswipeSlackMessageArgumentType:
         created_user_slack_id = created_by.slack_user_id
         modified_user_slack_id = modified_by.slack_user_id
@@ -385,6 +392,7 @@ class SlackMessage:
                 created_by,
                 created_at,
                 cover_image,
+                progress,
                 is_private,
             ),
             {
@@ -420,6 +428,7 @@ def base_message_args(project: Project) -> BaseProjectArgs:
             else "https://pbs.twimg.com/profile_images/625633822235693056/lNGUneLX_400x400.jpg"
         ),
         "is_private": project.is_private,
+        "progress": project.progress,
     }
 
 
@@ -434,7 +443,6 @@ def status_message_args(project: Project) -> StatusUpdateMessageArgs:
 def progress_message_args(project: Project) -> ProgressMessageArgs:
     return {
         **base_message_args(project),
-        "progress": project.progress,
     }
 
 
@@ -450,6 +458,10 @@ def send_message_for_progress(project_id: int):
     mapslack = MapswipeSlack()
     message = SlackMessage.get_message_for_project_progress(**progress_message_args(project))
     mapslack.send_slack_message(**message, thread_ts=project.slack_thread_ts, reply_broadcast=True)
+    update_message = SlackMessage.get_message_for_project_creation(
+        **creation_message_args(project),
+    )
+    mapslack.update_slack_message(ts=project.slack_thread_ts, **update_message)
 
 
 @shared_task

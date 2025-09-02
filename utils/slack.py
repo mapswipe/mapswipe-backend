@@ -39,3 +39,16 @@ class MapswipeSlack:
             unfurl_links=False,
             reply_broadcast=reply_broadcast,
         )
+
+    def update_slack_message(
+        self,
+        ts: str,
+        text: str | None = None,
+        blocks: typing.Sequence[dict | Block] | None = None,
+    ) -> SlackResponse:
+        return self.client.chat_update(
+            channel=self.channel,
+            ts=ts,
+            text=text,
+            blocks=blocks,
+        )
