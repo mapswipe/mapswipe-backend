@@ -285,6 +285,7 @@ class CommonAsset(Model):
         help_text=gettext_lazy("The file associated with the asset"),
         null=True,
         blank=True,
+        max_length=255,
     )
 
     external_url = models.CharField[str | None, str | None](
