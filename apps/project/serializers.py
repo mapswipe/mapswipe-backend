@@ -16,6 +16,7 @@ from apps.contributor.models import ContributorTeam
 from apps.project.firebase.push import FirebaseOrganizationPush
 from apps.tutorial.models import Tutorial
 from project_types.store import get_project_property
+from utils.asset_types.models import AoiGeometryAssetProperty, ObjectImageAssetProperty
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
@@ -359,13 +360,16 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         if area * 10000 > 40:
             raise ValidationError("Area for AOI Geometry must have less than 40 sq. km")
 
-        attrs["mimetype"] = AssetMimetypeEnum.GEOJSON
-        attrs["asset_type_specifics"] = {
-            "bbox": geometry_collection.extent,
-            "center": center.coords,
-            # NOTE: converting the are in sq. km
-            "area": area,
+        asset_specifics = {
+            "aoi_geometry": {
+                "bbox": geometry_collection.extent,
+                "center": center.coords,
+                # NOTE: converting the are in sq. km
+                "area": area,
+            },
         }
+        attrs["asset_type_specifics"] = asset_specifics
+        attrs["mimetype"] = AssetMimetypeEnum.GEOJSON
 
     def _validate_cover_image(
         self,
@@ -399,12 +403,39 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         ]:
             raise ValidationError("Mimetype is should either be a Jpeg, Png or Gif")
 
+    def _validate_asset_type_specifics(
+        self,
+        attrs: dict[str, typing.Any],
+        model: tuple[str, type[pydantic.BaseModel]] | None,
+    ) -> None:
+        if model is None:
+            attrs["asset_type_specifics"] = {}
+            return
+
+        key, pydantic_model = model
+
+        raw_asset_type_specifics = attrs["asset_type_specifics"].get(key)
+
+        asset_type_specifics = clean_up_none_keys(raw_asset_type_specifics)
+
+        try:
+            pydantic_model.model_validate(
+                asset_type_specifics,
+                # FIXME(tnagorra): Do we need to add context?
+                # context={"project_id": self.instance.pk},
+            )
+        except pydantic.ValidationError as pydantic_error:
+            raise handle_pydantic_validation_error("asset_type_specifics", pydantic_error) from None
+
+        attrs["asset_type_specifics"] = asset_type_specifics
+
     @typing.override
     def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
         attrs = super().validate(attrs)
 
         input_type = attrs.get("input_type")
         mimetype = attrs.get("mimetype")
+        external_url = attrs.get("external_url")
 
         input_type_enum = ProjectAssetInputTypeEnum(input_type)
         mimetype_enum = AssetMimetypeEnum(mimetype) if mimetype else None
@@ -412,10 +443,16 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         match input_type_enum:
             case ProjectAssetInputTypeEnum.AOI_GEOMETRY:
                 self._validate_aoi_geometry(attrs, mimetype_enum)
+                self._validate_asset_type_specifics(attrs, ("aoi_geometry", AoiGeometryAssetProperty))
             case ProjectAssetInputTypeEnum.COVER_IMAGE:
                 self._validate_cover_image(attrs, mimetype_enum)
+                self._validate_asset_type_specifics(attrs, None)
             case ProjectAssetInputTypeEnum.OBJECT_IMAGE:
                 self._validate_object_image(attrs, mimetype_enum)
+                self._validate_asset_type_specifics(
+                    attrs,
+                    ("object_image", ObjectImageAssetProperty) if external_url else None,
+                )
             case _:
                 typing.assert_never(input_type_enum)
 
