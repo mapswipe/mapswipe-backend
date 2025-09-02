@@ -158,7 +158,7 @@ class TutorialScenarioPage(UserResource):
 
     success_description = models.CharField[str, str](max_length=255)
     success_icon: int = IntegerChoicesField(choices_enum=IconEnum)  # type: ignore[reportAssignmentType]
-    success_title = models.CharField[str , str](max_length=255)
+    success_title = models.CharField[str, str](max_length=255)
 
     # Type hints
     tutorial_id: int
@@ -174,16 +174,12 @@ class TutorialScenarioPage(UserResource):
         return IconEnum(self.instructions_icon)
 
     @property
-    def hint_icon_enum(self) -> IconEnum | None:
-        if self.hint_icon:
-            return IconEnum(self.hint_icon)
-        return None
+    def hint_icon_enum(self) -> IconEnum:
+        return IconEnum(self.hint_icon)
 
     @property
-    def success_icon_enum(self) -> IconEnum | None:
-        if self.success_icon:
-            return IconEnum(self.success_icon)
-        return None
+    def success_icon_enum(self) -> IconEnum:
+        return IconEnum(self.success_icon)
 
     @typing.override
     def __str__(self):

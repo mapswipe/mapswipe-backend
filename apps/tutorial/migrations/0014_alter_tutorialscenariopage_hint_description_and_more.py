@@ -7,7 +7,7 @@ from apps.common.models import IconEnum
 
 def set_hint_and_success(apps, schema_editor):
     Model = apps.get_model('tutorial', 'TutorialScenarioPage')
-    for obj in Model.objects.all():
+    for obj in Model.cte_objects.all():
         obj.hint_title = obj.hint_title or '?'
         obj.hint_description = obj.hint_description or '?'
         obj.hint_icon = obj.hint_icon or IconEnum.SQUARE_OUTLINE.value
