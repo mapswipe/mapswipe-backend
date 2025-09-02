@@ -437,14 +437,22 @@ class TutorialAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Tuto
     ) -> None:
         file: ContentFile[bytes] | None = attrs.get("file")
         if not file:
-            raise ValidationError("Required field file is not provided.")
+            raise ValidationError(
+                {
+                    "file": "Required field file is not provided.",
+                },
+            )
 
         if not mimetype or mimetype not in [
             AssetMimetypeEnum.IMAGE_GIF,
             AssetMimetypeEnum.IMAGE_JPEG,
             AssetMimetypeEnum.IMAGE_PNG,
         ]:
-            raise ValidationError("Mimetype is should either be a Jpeg, Png or Gif")
+            raise ValidationError(
+                {
+                    "file": "Mimetype is should either be a Jpeg, Png or Gif",
+                },
+            )
 
     @typing.override
     def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
