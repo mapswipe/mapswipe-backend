@@ -28,6 +28,7 @@ class MapswipeSlack:
         text: str | None = None,
         blocks: typing.Sequence[dict | Block] | None = None,
         thread_ts: str | None = None,
+        reply_broadcast: bool = True,
     ) -> SlackResponse:
         return self.client.chat_postMessage(
             channel=self.channel,
@@ -36,4 +37,5 @@ class MapswipeSlack:
             text=text,
             thread_ts=thread_ts,
             unfurl_links=False,
+            reply_broadcast=reply_broadcast,
         )

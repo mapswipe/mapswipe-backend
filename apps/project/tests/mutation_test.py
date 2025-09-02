@@ -131,6 +131,7 @@ class MapswipeSlackMock(MapswipeSlack):
         text: str | None = None,
         blocks: str | typing.Sequence[dict | Block] | None = None,
         thread_ts: str | None = None,
+        reply_broadcast: bool = True,
     ) -> SlackResponse:
         self.slack_thread_ts_counter += 1
         return typing.cast(

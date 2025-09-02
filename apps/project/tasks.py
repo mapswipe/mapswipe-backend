@@ -449,7 +449,7 @@ def send_message_for_progress(project_id: int):
     project = Project.objects.get(pk=project_id)
     mapslack = MapswipeSlack()
     message = SlackMessage.get_message_for_project_progress(**progress_message_args(project))
-    mapslack.send_slack_message(**message, thread_ts=project.slack_thread_ts)
+    mapslack.send_slack_message(**message, thread_ts=project.slack_thread_ts, reply_broadcast=True)
 
 
 @shared_task
@@ -457,7 +457,7 @@ def project_status_update_message(project_id: int):
     project = Project.objects.get(pk=project_id)
     mapslack = MapswipeSlack()
     message = SlackMessage.get_message_for_status_update(**status_message_args(project))
-    mapslack.send_slack_message(**message, thread_ts=project.slack_thread_ts)
+    mapslack.send_slack_message(**message, thread_ts=project.slack_thread_ts, reply_broadcast=True)
 
 
 @shared_task
