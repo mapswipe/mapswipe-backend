@@ -1,4 +1,5 @@
 import contextlib
+import csv
 import logging
 import re
 import time
@@ -14,6 +15,7 @@ from cachetools import LRUCache, cached
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandParser
 from django.db import models
+from django.db.models.functions import Trim
 from django.db.utils import IntegrityError
 from django.utils import timezone
 from ulid import ULID
@@ -46,6 +48,10 @@ from main.config import Config
 FH = Config.FIREBASE_HELPER
 
 logger = logging.getLogger(__name__)
+
+
+def sanitize_name(text: str) -> str:
+    return " ".join(text.replace("\n", " ").strip().split())
 
 
 def parse_datetime(
@@ -174,10 +180,18 @@ def get_contributor_user_group_id_by_old_id(old_id: str) -> int:
 
 
 @cached(cache=LRUCache(maxsize=1000))
-def get_organization_by_name(name: str) -> Organization:
-    if not name:
+def get_organization_by_name(name: str | None) -> Organization:
+    name_ = sanitize_name(name or "")
+    if not name_:
         return Organization.objects.get(name__iexact="Unknown")
-    return Organization.objects.get(name__iexact=name)
+    try:
+        return Organization.objects.annotate(
+            # XXX: Not same as sanitize_name, but it is working for now
+            trimmed_name=Trim("name"),
+        ).get(trimmed_name__iexact=name_)
+    except Organization.DoesNotExist:
+        logger.error("Organization name not found: <%s>", name_)
+        raise
 
 
 # TODO(thenav56): Cache?
@@ -206,45 +220,56 @@ def generate_django_content_file_from_url(
     return ContentFile(response.content, name=filename)
 
 
-# TODO: This is a partial solution, doesn't cover all cases
-def parse_project_name(name: str | None) -> tuple[str, str, int] | None:
+def parse_project_name(
+    pre_parsed_map: dict[str, tuple[str, str, int, str]],
+    name: str | None,
+) -> tuple[str, str, int, str] | None:
     if not name:
+        logger.error("Failed to parse project_name: Empty name")
         return None
-
-    def sanitize_name(name: str) -> str:
-        return " ".join(name.replace("\n", " ").strip().split())
 
     entry = sanitize_name(name)
 
-    # Remove any project type prefix (anything before the FIRST ' - ')
-    if entry.count("-") == 2:
-        parts = entry.split(" - ", 1)
-        entry = parts[1].strip()
+    parsed_value = pre_parsed_map.get(name, pre_parsed_map.get(entry))
+    if parsed_value is not None:
+        return parsed_value
 
-    if entry.count("-") == 1:
-        # Match pattern: "topic - region (project_number) organization"
-        pattern = r"^(.*?) - (.*?) \((\d+)\)"
-        match = re.match(pattern, entry)
+    logger.warning(
+        "Failed to parse project_name: Not in pre-parsed map: %s (sanitized: %s)",
+        name,
+        entry,
+    )
 
-        if match:
-            topic = match.group(1).strip()
-            region = match.group(2).strip()
-            project_number = int(match.group(3))
-            return topic, region, project_number
-        return None
+    # Regex pattern to match the main structure
+    match = re.match(r"(.+?)\s*-\s*(.+?)\s*\((\d+)\)\s*(.*)", name.strip())
 
-    if entry.count("-") == 0:
-        # Match pattern: "region (project_number) organization"
-        pattern = r"(.*?) \((\d+)\)"
-        match = re.match(pattern, entry)
+    if match:
+        topic = match.group(1).strip()
+        region = match.group(2).strip()
+        number = int(match.group(3).strip())
+        request_organization = match.group(4).strip()
+    else:
+        # Handle names without full match
+        # Try looser match: Look for last (number)
+        loose_match = re.search(r"\((\d+)\)", name)
+        if loose_match:
+            number = int(loose_match.group(1))
+            prefix = name[: loose_match.start()].strip()
+            suffix = name[loose_match.end() :].strip()
 
-        if match:
-            topic = "N/A"
-            region = match.group(1).strip()
-            project_number = int(match.group(2))
-            return topic, region, project_number
-        return None
-    return None
+            # Try to find last dash for splitting topic and region
+            dash_parts = prefix.split(" - ")
+            if len(dash_parts) > 1:
+                topic = dash_parts[0].strip()
+                region = dash_parts[1].strip()
+            else:
+                topic = prefix.strip()
+                region = ""
+            request_organization = suffix
+        else:
+            raise Exception(f"Failed to parse project name: {name}")
+
+    return topic, region, number, request_organization
 
 
 def create_project(
@@ -254,18 +279,18 @@ def create_project(
     region: str,
     project_number: int,
     existing_project: existing_db_models.Project,
+    requesting_organization: str,
     bot_user: User,
 ):
     try:
         assert existing_project.project_type is not None, "Project type should be defined"
-        assert existing_project.organization_name, "Organization name should be defined"
         project_metadata = dict(
             topic=topic,
             region=region,
             project_number=project_number,
             centroid=existing_project.geom and existing_project.geom.centroid,
             project_type=parse_existing_project_type(existing_project.project_type),
-            requesting_organization=get_organization_by_name(existing_project.organization_name),
+            requesting_organization=get_organization_by_name(requesting_organization),
             created_by_id=get_user_by_contributor_user_firebase_id(existing_project.created_by, fallback=bot_user),
             modified_by_id=get_user_by_contributor_user_firebase_id(existing_project.created_by, fallback=bot_user),
         )
@@ -290,6 +315,7 @@ def create_project(
             region=region,
             project_number=project_number + 1,
             existing_project=existing_project,
+            requesting_organization=requesting_organization,
             bot_user=bot_user,
         )
 
@@ -378,6 +404,7 @@ class Command(BaseCommand):
         super().__init__(*args, **kwargs)
         self.bulk_create_mgr = BulkCreateManager()
         self.bot_user = User.get_bot_user()
+        self._pre_parsed_project_names: dict[str, tuple[str, str, int, str]] | None = None
 
     @before_after_count(Organization)
     def handle_organization(self):
@@ -387,7 +414,7 @@ class Command(BaseCommand):
             flat=True,
         ).distinct()
 
-        current_organizations_set = {name.lower().strip() for name in Organization.objects.values_list("name", flat=True)}
+        current_organizations_set = {sanitize_name(name) for name in Organization.objects.values_list("name", flat=True)}
 
         unknown_organization, unknown_created = Organization.objects.get_or_create(
             name="Unknown",
@@ -401,12 +428,19 @@ class Command(BaseCommand):
         if unknown_created:
             logger.info("New: %s", unknown_organization)
 
-        total_existing = existing_organization_names_qs.count()
+        existing_organization_names = set(
+            [
+                *[sanitize_name(name_) for name_ in existing_organization_names_qs],
+                *[organization_name for _, _, _, organization_name in self._get_pre_parsed_project_names().values()],
+            ],
+        )
 
-        for i, name in enumerate(existing_organization_names_qs, start=1):
+        total_existing = len(existing_organization_names)
+
+        for i, name in enumerate(existing_organization_names, start=1):
             self.stdout.write(f"\rProcessing {i}/{total_existing}", ending="")
 
-            name_ = name.lower().strip()
+            name_ = sanitize_name(name)
             if not name_ or name_ in current_organizations_set:
                 continue
 
@@ -598,32 +632,26 @@ class Command(BaseCommand):
             ),
         )
 
-    # TODO: Remove this
-    def handle_db(self):
-        for model in [
-            existing_db_models.User,
-            existing_db_models.UserGroup,
-            existing_db_models.UserGroupUserMembership,
-            # existing_db_models.Project,
-            # existing_db_models.Task,
-            # existing_db_models.Group,
-            existing_db_models.MappingSession,
-            existing_db_models.MappingSessionResult,
-            existing_db_models.MappingSessionUserGroup,
-            # existing_db_models.Result,
-            # existing_db_models.UserGroupResult,
-        ]:
-            self.stdout.write(
-                self.style.NOTICE(
-                    f"Fetching for model {model.__name__}",
-                ),
-            )
-            first_obj = model.objects.last()
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"\t {first_obj}",
-                ),
-            )
+    def _get_pre_parsed_project_names(self) -> dict[str, tuple[str, str, int, str]]:
+        if self._pre_parsed_project_names:
+            return self._pre_parsed_project_names
+
+        self._pre_parsed_project_names = {}
+        with Path.open(
+            Config.BASE_DIR / "assets/migration/project-name-parsed.csv",
+            mode="r",
+            newline="",
+            encoding="utf-8",
+        ) as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                self._pre_parsed_project_names[sanitize_name(row["name"])] = (
+                    row["topic"],
+                    row["region"],
+                    int(row["number"]),
+                    sanitize_name(row["requesting organization"]),
+                )
+        return self._pre_parsed_project_names
 
     @before_after_count([Project, ProjectAsset])
     def handle_project(self):
@@ -637,7 +665,10 @@ class Command(BaseCommand):
             self.stdout.write(f"\rProcessing {i}/{total_existing}", ending="")
 
             client_id = str(ULID())
-            topic, region, project_number = parse_project_name(existing_project.name) or (client_id, "N/A", 0)
+            topic, region, project_number, requesting_organization = parse_project_name(
+                self._get_pre_parsed_project_names(),
+                existing_project.name,
+            ) or (client_id, "N/A", 0, "")
 
             project, project_created = create_project(
                 client_id=client_id,
@@ -645,6 +676,7 @@ class Command(BaseCommand):
                 region=region,
                 project_number=project_number,
                 existing_project=existing_project,
+                requesting_organization=requesting_organization,
                 bot_user=self.bot_user,
             )
 
@@ -782,7 +814,6 @@ class Command(BaseCommand):
         self.handle_firebase()
         self.bulk_create_mgr.done()
         self.stdout.write(f"Bulk create summary: {self.bulk_create_mgr.summary()}")
-        # self.handle_db()
 
     def setup_logger(self):
         # TODO(thenav56): This is not good enough... check again
