@@ -18,7 +18,7 @@ from apps.project.models import (
 from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
 from utils.asset_types.models import ObjectImageAnnotation, ObjectImageAssetProperty
-from utils.common import Grouping, to_groups
+from utils.common import Grouping, clean_up_none_keys, to_groups
 from utils.custom_options.models import CustomOption
 
 logger = logging.getLogger(__name__)
@@ -172,7 +172,7 @@ class ValidateImageProject(
                 progress=0,
                 finished_count=0,
                 required_count=0,
-                project_type_specifics=self.project_task_group_property_class().model_dump(),
+                project_type_specifics=clean_up_none_keys(self.project_task_group_property_class().model_dump()),
             )
 
             # Create new tasks for this group
@@ -197,13 +197,15 @@ class ValidateImageProject(
                     task_group_id=group.pk,
                     geometry=None,
                     # FIXME(tnagorra): Do we need to define all of these here?
-                    project_type_specifics=self.project_task_property_class(
-                        url=feature["url"],
-                        file_name=feature["file_name"],
-                        width=feature["width"],
-                        height=feature["height"],
-                        annotation=feature["annotation"],
-                    ).model_dump(),
+                    project_type_specifics=clean_up_none_keys(
+                        self.project_task_property_class(
+                            url=feature["url"],
+                            file_name=feature["file_name"],
+                            width=feature["width"],
+                            height=feature["height"],
+                            annotation=feature["annotation"],
+                        ).model_dump(),
+                    ),
                 ),
             )
             tasks_count += 1

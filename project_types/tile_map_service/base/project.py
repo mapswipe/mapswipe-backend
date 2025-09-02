@@ -27,7 +27,7 @@ from apps.project.models import (
 from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
 from utils import fields as custom_fields
-from utils.common import create_json_dump
+from utils.common import clean_up_none_keys, create_json_dump
 from utils.geo import tile_functions, tile_grouping
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
 
@@ -166,10 +166,12 @@ class TileMapServiceBaseProject[
                         firebase_id=f"{self.project_type_specifics.zoom_level}-{tile_x}-{tile_y}",
                         task_group_id=group.pk,
                         geometry=geometry,
-                        project_type_specifics=self.project_task_property_class(
-                            tile_x=tile_x,
-                            tile_y=tile_y,
-                        ).model_dump(),
+                        project_type_specifics=clean_up_none_keys(
+                            self.project_task_property_class(
+                                tile_x=tile_x,
+                                tile_y=tile_y,
+                            ).model_dump(),
+                        ),
                     ),
                 )
                 tasks_count += 1
@@ -197,12 +199,14 @@ class TileMapServiceBaseProject[
                 progress=0,
                 finished_count=0,
                 required_count=0,
-                project_type_specifics=self.project_task_group_property_class(
-                    x_max=raw_group["xMax"],
-                    x_min=raw_group["xMin"],
-                    y_max=raw_group["yMax"],
-                    y_min=raw_group["yMin"],
-                ).model_dump(),
+                project_type_specifics=clean_up_none_keys(
+                    self.project_task_group_property_class(
+                        x_max=raw_group["xMax"],
+                        x_min=raw_group["xMin"],
+                        y_max=raw_group["yMax"],
+                        y_min=raw_group["yMin"],
+                    ).model_dump(),
+                ),
             )
             # Create new tasks for this group
             total_tasks = self.create_tasks(new_group, raw_group)

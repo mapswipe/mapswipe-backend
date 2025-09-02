@@ -31,7 +31,7 @@ from project_types.base import project as base_project
 from project_types.tile_map_service.base.project import create_json_dump
 from project_types.validate.api_calls import ohsome
 from utils import fields as custom_fields
-from utils.common import Grouping, to_groups
+from utils.common import Grouping, clean_up_none_keys, to_groups
 from utils.custom_options.models import CustomOption
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
 
@@ -275,10 +275,12 @@ class ValidateProject(
                         firebase_id=f"t{f_id}",
                         task_group_id=group.pk,
                         geometry=geometry_str,
-                        project_type_specifics=self.project_task_property_class(
-                            task_id=f"t{f_id}",
-                            properties=feature.properties or {},
-                        ).model_dump(),
+                        project_type_specifics=clean_up_none_keys(
+                            self.project_task_property_class(
+                                task_id=f"t{f_id}",
+                                properties=feature.properties or {},
+                            ).model_dump(),
+                        ),
                     ),
                 )
                 tasks_count += 1
@@ -299,7 +301,7 @@ class ValidateProject(
                 progress=0,
                 finished_count=0,
                 required_count=0,
-                project_type_specifics=self.project_task_group_property_class().model_dump(),
+                project_type_specifics=clean_up_none_keys(self.project_task_group_property_class().model_dump()),
             )
 
             # Create new tasks for this group
