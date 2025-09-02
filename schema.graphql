@@ -2350,8 +2350,14 @@ input UserFilter {
   DISTINCT: Boolean
   NOT: UserFilter
   OR: UserFilter
+
+  """
+  The Contributor user associated with this User. This will also be used for authentication using firebase.
+  """
+  contributorUser: ContributorUserFilter
   displayName: String
   id: IDBaseFilterLookup
+  search: String
 }
 
 """
@@ -2364,6 +2370,11 @@ can be accurately synchronized back to Firebase with the correct user associatio
 """
 type UserMeType {
   anonymizeEmail: String!
+
+  """
+  The Contributor user associated with this User. This will also be used for authentication using firebase.
+  """
+  contributorUser: ContributorUserType
   displayName: String!
   email: String!
   firstName: String!
@@ -2394,6 +2405,11 @@ can be accurately synchronized back to Firebase with the correct user associatio
 """
 type UserType {
   anonymizeEmail: String!
+
+  """
+  The Contributor user associated with this User. This will also be used for authentication using firebase.
+  """
+  contributorUser: ContributorUserType
   displayName: String!
   firstName: String!
   id: ID!

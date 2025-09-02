@@ -1,6 +1,8 @@
 import typing
 
+from apps.contributor.factories import ContributorUserFactory
 from apps.user.factories import UserFactory
+from apps.user.models import User
 from main.tests import TestCase
 
 
@@ -42,15 +44,36 @@ class TestUserQuery(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = UserFactory.create(email="main-user@test.com")
+
         # Some other users as well
         cls.users = (
-            UserFactory.create(first_name="Test", last_name="Hero", email="sample@test.com"),
-            UserFactory.create(first_name="Example", last_name="Villain", email="sample@vil.com"),
-            UserFactory.create(first_name="Test", last_name="Hero", email="hero-user@sample.com"),
+            UserFactory.create(
+                first_name="Test",
+                last_name="Hero",
+                email="sample@test.com",
+            ),
+            UserFactory.create(
+                first_name="Example",
+                last_name="Villain",
+                email="sample@vil.com",
+                contributor_user=ContributorUserFactory.create(username="the-real-hero"),
+            ),
+            UserFactory.create(
+                first_name="Test",
+                last_name="Hero",
+                email="hero-user@sample.com",
+                contributor_user=ContributorUserFactory.create(username="player-01"),
+            ),
         )
+
         # Inactive users (For noise)
         cls.inactive_users = [
-            UserFactory.create(first_name="Inactive", last_name="Hero", email="inactive-user@sample.com", is_active=False),
+            UserFactory.create(
+                first_name="Inactive",
+                last_name="Hero",
+                email="inactive-user@sample.com",
+                is_active=False,
+            ),
         ]
 
     def test_me(self):
@@ -111,3 +134,52 @@ class TestUserQuery(TestCase):
                 for _user in all_users
             ],
         }
+
+    def test_users_search(self):
+        QUERY = """
+            query MyQuery($search: String!) {
+              users(filters: {search: $search}) {
+                totalCount
+                results {
+                  id
+                  lastName
+                  firstName
+                  displayName
+                  contributorUser {
+                    id
+                    username
+                  }
+                }
+              }
+            }
+        """
+
+        user = self.user
+        self.force_login(user)
+
+        def _check(search: str, expected_users: list[User]):
+            content = self.query_check(QUERY, variables=dict(search=search))
+            assert content["data"]["users"] == {
+                "totalCount": len(expected_users),
+                "results": [
+                    dict(
+                        id=self.gID(user.pk),
+                        lastName=user.last_name,
+                        firstName=user.first_name,
+                        displayName=user.display_name,
+                        contributorUser=user.contributor_user
+                        and dict(
+                            id=self.gID(user.contributor_user.pk),
+                            username=user.contributor_user.username,
+                        ),
+                    )
+                    for user in expected_users
+                ],
+            }
+
+        _check("", [self.user, *self.users])
+        _check("player", [self.users[2]])
+        _check("hero", [*self.users])
+        _check("villain", [self.users[1]])
+        _check("test", [self.users[0], self.users[2]])
+        _check("none-existing-name", [])
