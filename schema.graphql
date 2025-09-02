@@ -2137,16 +2137,16 @@ input TutorialOrder {
 """Model representing a scenario in the tutorial."""
 input TutorialScenarioPageCreateInput {
   clientId: String!
-  hintDescription: String
-  hintIcon: IconEnum
-  hintTitle: String
+  hintDescription: String!
+  hintIcon: IconEnum!
+  hintTitle: String!
   instructionsDescription: String!
   instructionsIcon: IconEnum!
   instructionsTitle: String!
   scenarioPageNumber: Int!
-  successDescription: String
-  successIcon: IconEnum
-  successTitle: String
+  successDescription: String!
+  successIcon: IconEnum!
+  successTitle: String!
   tasks: [TutorialTaskCreateInput!]!
 }
 
@@ -2162,9 +2162,9 @@ type TutorialScenarioPageType implements UserResourceTypeMixin {
   clientId: String!
   createdAt: DateTime!
   createdBy: UserType!
-  hintDescription: String
-  hintIcon: IconEnum
-  hintTitle: String
+  hintDescription: String!
+  hintIcon: IconEnum!
+  hintTitle: String!
   id: ID!
   instructionsDescription: String!
   instructionsIcon: IconEnum!
@@ -2172,9 +2172,9 @@ type TutorialScenarioPageType implements UserResourceTypeMixin {
   modifiedAt: DateTime!
   modifiedBy: UserType!
   scenarioPageNumber: Int!
-  successDescription: String
-  successIcon: IconEnum
-  successTitle: String
+  successDescription: String!
+  successIcon: IconEnum!
+  successTitle: String!
   tasks: [TutorialTaskType!]!
   tutorialId: ID!
 }

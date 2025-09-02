@@ -208,8 +208,8 @@ class BaseTutorial[
             screens=[
                 firebase_models.FbScreen(
                     hint=firebase_models.FbScreenBlock(
-                        title=scenario.hint_title or "?",
-                        description=scenario.hint_description or "?",
+                        title=scenario.hint_title,
+                        description=scenario.hint_description,
                         icon=str(scenario.hint_icon_enum.label)
                         if scenario.hint_icon_enum
                         else str(IconEnum.ALERT_OUTLINE.label),
@@ -220,8 +220,8 @@ class BaseTutorial[
                         icon=str(scenario.instructions_icon_enum.label),
                     ),
                     success=firebase_models.FbScreenBlock(
-                        title=scenario.success_title or "?",
-                        description=scenario.success_description or "?",
+                        title=scenario.success_title,
+                        description=scenario.success_description,
                         icon=str(scenario.success_icon_enum.label)
                         if scenario.success_icon_enum
                         else str(IconEnum.ALERT_OUTLINE.label),
@@ -289,19 +289,19 @@ class BaseTutorial[
             screens=[
                 firebase_models.FbScreen(
                     hint=firebase_models.FbScreenBlock(
-                        title=scenario.hint_title or "",
-                        description=scenario.hint_description or "",
-                        icon=str(scenario.hint_icon_enum.label) if scenario.hint_icon_enum else "",
+                        title=scenario.hint_title,
+                        description=scenario.hint_description,
+                        icon=str(scenario.hint_icon_enum.label),
                     ),
                     instructions=firebase_models.FbScreenBlock(
-                        title=scenario.instructions_title or "",
-                        description=scenario.instructions_description or "",
-                        icon=str(scenario.instructions_icon_enum.label) if scenario.instructions_icon_enum else "",
+                        title=scenario.instructions_title,
+                        description=scenario.instructions_description,
+                        icon=str(scenario.instructions_icon_enum.label),
                     ),
                     success=firebase_models.FbScreenBlock(
-                        title=scenario.success_title or "",
-                        description=scenario.success_description or "",
-                        icon=str(scenario.success_icon_enum.label) if scenario.success_icon_enum else "",
+                        title=scenario.success_title,
+                        description=scenario.success_description,
+                        icon=str(scenario.success_icon_enum.label),
                     ),
                 )
                 for scenario in scenarios
