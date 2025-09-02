@@ -3,7 +3,12 @@ import typing
 import strawberry
 import strawberry_django
 
-from apps.common.graphql.types import ArchivableResourceTypeMixin, CommonAssetTypeMixin, UserResourceTypeMixin
+from apps.common.graphql.types import (
+    ArchivableResourceTypeMixin,
+    CommonAssetTypeMixin,
+    FirebasePushResourceTypeMixin,
+    UserResourceTypeMixin,
+)
 from apps.contributor.graphql.types import ContributorTeamType
 from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum
 from apps.tutorial.graphql.types.types import TutorialType
@@ -31,7 +36,7 @@ from .project_types.validate_image import ValidateImageProjectPropertyType
 
 # Organization
 @strawberry_django.type(Organization)
-class OrganizationType(UserResourceTypeMixin, ArchivableResourceTypeMixin):
+class OrganizationType(UserResourceTypeMixin, ArchivableResourceTypeMixin, FirebasePushResourceTypeMixin):
     id: strawberry.ID
     name: strawberry.auto
     description: strawberry.auto
@@ -124,7 +129,7 @@ class ProjectExportAssetTypeMixin:
 
 
 @strawberry_django.type(Project)
-class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin):
+class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePushResourceTypeMixin):
     id: strawberry.ID
     project_type: strawberry.auto
     requesting_organization_id: strawberry.ID
@@ -148,6 +153,14 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin):
     progress: strawberry.auto
     team: ContributorTeamType | None
     is_private: strawberry.auto
+    required_results: strawberry.auto
+
+    @strawberry_django.field(
+        description="No. of unique contributors in this project",
+    )
+    def contributors_count(self) -> int:
+        # TODO(tnagorra): We need to implement this
+        return 0
 
     @strawberry_django.field(
         only=["topic", "region", "project_number", "requesting_organization__name"],
