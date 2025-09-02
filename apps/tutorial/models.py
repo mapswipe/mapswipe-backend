@@ -152,13 +152,13 @@ class TutorialScenarioPage(UserResource):
     instructions_icon: int = IntegerChoicesField(choices_enum=IconEnum)  # type: ignore[reportAssignmentType]
     instructions_title = models.CharField[str, str](max_length=255)
 
-    hint_description = models.CharField[str | None, str | None](max_length=255, null=True, blank=True)
-    hint_icon: int | None = IntegerChoicesField(choices_enum=IconEnum, null=True, blank=True)  # type: ignore[reportAssignmentType]
-    hint_title = models.CharField[str | None, str | None](max_length=255, null=True, blank=True)
+    hint_description = models.CharField[str, str](max_length=255)
+    hint_icon: int = IntegerChoicesField(choices_enum=IconEnum)  # type: ignore[reportAssignmentType]
+    hint_title = models.CharField[str, str](max_length=255)
 
-    success_description = models.CharField[str | None, str | None](max_length=255, null=True, blank=True)
-    success_icon: int | None = IntegerChoicesField(choices_enum=IconEnum, null=True, blank=True)  # type: ignore[reportAssignmentType]
-    success_title = models.CharField[str | None, str | None](max_length=255, null=True, blank=True)
+    success_description = models.CharField[str, str](max_length=255)
+    success_icon: int = IntegerChoicesField(choices_enum=IconEnum)  # type: ignore[reportAssignmentType]
+    success_title = models.CharField[str , str](max_length=255)
 
     # Type hints
     tutorial_id: int
