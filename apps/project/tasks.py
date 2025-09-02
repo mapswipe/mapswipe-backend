@@ -128,7 +128,14 @@ class SlackMessage:
         progress: int,
         is_private: bool = True,
     ) -> dict:
+        def generate_progress_bar(progress: int, bar_length: int = 8) -> str:
+            filled_length = int(round(bar_length * progress // 100))
+            bar = "█ " * filled_length + "░ " * (bar_length - filled_length)
+            return f"[{bar}] {progress}%"
+
         manager_dashboard_url = settings.MANAGER_DASHBOARD_DOMAIN.geturl()
+        progress_bar = generate_progress_bar(progress)
+
         return {
             "type": "section",
             "text": {
@@ -142,7 +149,7 @@ class SlackMessage:
                     f"Requesting Organization: {requesting_organization}\n"
                     f"Created By: {created_by}\n"
                     f"Created At: {created_at.strftime('%b. %d, %Y, %-I:%M %p')}\n"
-                    f"Progress: {progress}%\n\n"
+                    f"Progress: {progress_bar}\n\n"
                     f"{'This is a private project :lock:' if is_private else ''}\n"
                 ),
             },
@@ -267,18 +274,37 @@ class SlackMessage:
         text = "Project Progress"
         blocks = [
             {
-                "type": "header",
+                "type": "section",
                 "text": {
-                    "type": "plain_text",
-                    "text": f"ALMOST THERE! PROJECT REACHED {progress}% :hourglass_flowing_sand:",
+                    "type": "mrkdwn",
+                    "text": "Project Progress!",
                 },
+            },
+            {
+                "type": "divider",
+            },
+            SlackMessage.project_info_block(
+                project_name,
+                project_id,
+                project_type,
+                tutorial_id,
+                requesting_organization,
+                created_by,
+                created_at,
+                cover_image,
+                progress,
+                is_private,
+            ),
+            {
+                "type": "divider",
             },
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "The project is almost at completion!",
+                    "text": "Get your next projects ready.",
                 },
+                **cls.manager_dashboard_block,
             },
         ]
 
