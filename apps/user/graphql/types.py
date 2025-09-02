@@ -16,7 +16,6 @@ class UserType:
     last_name: strawberry.auto
     display_name: strawberry.auto
     anonymize_email: str
-    contributor_user: typing.Annotated["ContributorUserType", strawberry.lazy("apps.contributor.graphql.types")] | None
 
     contributor_user: typing.Annotated["ContributorUserType", strawberry.lazy("apps.contributor.graphql.types")] | None
 

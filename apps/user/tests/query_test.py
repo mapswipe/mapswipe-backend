@@ -33,7 +33,7 @@ class TestUserQuery(TestCase):
                   lastName
                   firstName
                   displayName
-                  anonymizeEmail
+                  anonymizedEmail
                 }
               }
             }
@@ -106,7 +106,7 @@ class TestUserQuery(TestCase):
             "totalCount": 0,
         }
 
-        expected_anonymize_email_map = {
+        expected_anonymized_email_map = {
             "sample@test.com": "s***e@test.com",
             "sample@vil.com": "s***e@vil.com",
             "hero-user@sample.com": "h***r@sample.com",
@@ -129,7 +129,7 @@ class TestUserQuery(TestCase):
                     firstName=_user.first_name,
                     lastName=_user.last_name,
                     displayName=f"{_user.first_name} {_user.last_name}",
-                    anonymizeEmail=expected_anonymize_email_map[_user.email],
+                    anonymizedEmail=expected_anonymized_email_map[_user.email],
                 )
                 for _user in all_users
             ],

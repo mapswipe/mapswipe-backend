@@ -49,7 +49,7 @@ class User(AbstractUser):
     contributor_user_id: int | None
 
     @property
-    def anonymize_email(self):
+    def anonymized_email(self):
         email_name, email_domain = self.email.split("@")
         email_name_first_char, email_name_last_char = email_name[:1], email_name[-1:]
         return f"{email_name_first_char}***{email_name_last_char}@{email_domain}"
