@@ -18,6 +18,8 @@ class UserType:
     anonymize_email: str
     contributor_user: typing.Annotated["ContributorUserType", strawberry.lazy("apps.contributor.graphql.types")] | None
 
+    contributor_user: typing.Annotated["ContributorUserType", strawberry.lazy("apps.contributor.graphql.types")] | None
+
 
 @strawberry_django.type(User)
 class UserMeType(UserType):
