@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from djangoql.admin import DjangoQLSearchMixin
 
-from apps.common.admin import ArchivableResourceAdmin, FirebaseResourceAdmin, ReadOnlyAdmin
+from apps.common.admin import ArchivableResourceAdmin, FirebaseResourceAdmin, UserResourceAdmin
 
 from .firebase.push import FirebaseContributorTeam, FirebaseContributorUser
 from .models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
@@ -13,12 +13,6 @@ from .models import ContributorTeam, ContributorUser, ContributorUserGroup, Cont
 
 @admin.register(ContributorUser)
 class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
-    list_display = (
-        "firebase_id",
-        "username",
-        "created_at",
-        "modified_at",
-    )
     readonly_fields = (
         "firebase_id",
         "old_id",
@@ -28,7 +22,12 @@ class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
         "created_at",
         "modified_at",
     )
-    list_filter = ("team",)
+    list_display = ("firebase_id", "username", "team", "created_at")
+    ordering = ("username", "team", "created_at")
+    search_fields = ("username",)
+    # list_filter = ("team",)
+    list_select_related = True
+    autocomplete_fields = ("team",)
 
     @typing.override
     def has_add_permission(self, *args, **kwargs):
@@ -45,25 +44,31 @@ class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
 
 
 @admin.register(ContributorUserGroup)
-class ContributorUserGroupAdmin(DjangoQLSearchMixin, ArchivableResourceAdmin, FirebaseResourceAdmin, ReadOnlyAdmin):
-    pass
+class ContributorUserGroupAdmin(
+    DjangoQLSearchMixin,
+    ArchivableResourceAdmin,
+    FirebaseResourceAdmin,
+    UserResourceAdmin,
+    admin.ModelAdmin,
+):
+    list_display = ("name",)
+    ordering = ("name",)
+    search_fields = ("name",)
+    list_select_related = True
 
 
 @admin.register(ContributorTeam)
 class ContributorTeamAdmin(
-    ArchivableResourceAdmin,
     DjangoQLSearchMixin,
+    ArchivableResourceAdmin,
     FirebaseResourceAdmin,
+    UserResourceAdmin,
     admin.ModelAdmin,
 ):
-    list_display = (
-        "name",
-        "is_archived",
-        "created_at",
-        "modified_at",
-        "view_team_members",
-    )
-    list_filter = ("is_archived",)
+    list_display = ("name", "view_team_members")
+    ordering = ("name",)
+    search_fields = ("name",)
+    list_select_related = True
 
     @typing.override
     def save_model(self, request, obj, form, change):
@@ -76,9 +81,12 @@ class ContributorTeamAdmin(
 
 
 @admin.register(ContributorUserGroupMembership)
-class ContributorUserGroupMembershipAdmin(DjangoQLSearchMixin, ReadOnlyAdmin, admin.ModelAdmin):
-    list_display = (
-        "user",
-        "user_group",
+class ContributorUserGroupMembershipAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    list_display = ("user", "user_group", "is_active")
+    list_filter = (
+        # "user",
+        # "user_group",
         "is_active",
     )
+    list_select_related = True
+    autocomplete_fields = ("user", "user_group")

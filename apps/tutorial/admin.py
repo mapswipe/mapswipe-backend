@@ -1,19 +1,32 @@
 from django.contrib import admin
 from djangoql.admin import DjangoQLSearchMixin
 
-from apps.common.admin import ReadOnlyAdmin
+from apps.common.admin import UserResourceAdmin
 
 from .models import Tutorial, TutorialAsset
 
 
 @admin.register(Tutorial)
-class TutorialAdmin(DjangoQLSearchMixin, ReadOnlyAdmin, admin.ModelAdmin):
+class TutorialAdmin(DjangoQLSearchMixin, UserResourceAdmin, admin.ModelAdmin):
     list_display = ("name", "project", "status")
-    list_filter = ("status",)
+    search_fields = ("name",)
+    ordering = ("name",)
+    list_filter = (
+        # "project",
+        "status",
+    )
     list_select_related = True
-    autocomplete_fields = ("project", "created_by")
+    autocomplete_fields = ("project",)
 
 
 @admin.register(TutorialAsset)
-class ProjectAssetAdmin(DjangoQLSearchMixin, ReadOnlyAdmin, admin.ModelAdmin):
-    pass
+class TutorialAssetAdmin(DjangoQLSearchMixin, UserResourceAdmin, admin.ModelAdmin):
+    list_display = ("tutorial", "mimetype", "type", "input_type", "file_size", "marked_as_deleted")
+    list_filter = (
+        # "tutorial",
+        "mimetype",
+        "type",
+        "input_type",
+    )
+    list_select_related = True
+    autocomplete_fields = ("tutorial",)

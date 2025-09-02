@@ -10,20 +10,20 @@ from apps.common.models import UserResource
 DjangoModel = typing.TypeVar("DjangoModel", bound=models.Model)
 
 
-# FIXME(tnagorra): Do we use Mixin or extend admin.ModelAdmin
-# TODO(tnagorra): Use readonly mixin
-class ReadOnlyMixin:
-    def has_add_permission(self, *args, **kwargs):
-        return False
-
-    def has_change_permission(self, *args, **kwargs):
-        return False
-
-    def has_delete_permission(self, *args, **kwargs):
-        return False
-
-
 class UserResourceAdmin(admin.ModelAdmin):
+    @typing.override
+    def get_autocomplete_fields(self, *args, **kwargs):
+        autocomplete_fields = super().get_autocomplete_fields(*args, **kwargs)
+        return [
+            *dict.fromkeys(
+                [
+                    *autocomplete_fields,
+                    "created_by",
+                    "modified_by",
+                ],
+            ),
+        ]
+
     @typing.override
     def get_readonly_fields(self, *args, **kwargs):
         readonly_fields = super().get_readonly_fields(*args, **kwargs)
@@ -33,9 +33,9 @@ class UserResourceAdmin(admin.ModelAdmin):
                 [
                     *readonly_fields,
                     "created_at",
-                    "created_by",
                     "modified_at",
-                    "modified_by",
+                    # "created_by",
+                    # "modified_by",
                 ],
             ),
         ]
@@ -68,7 +68,43 @@ class UserResourceAdmin(admin.ModelAdmin):
         return super().get_queryset(request).select_related("created_by", "modified_by")
 
 
-class ArchivableResourceAdmin(UserResourceAdmin, admin.ModelAdmin):
+class ArchivableResourceAdmin(admin.ModelAdmin):
+    @typing.override
+    def get_list_display(self, *args, **kwargs):
+        list_display = super().get_list_display(*args, **kwargs)
+        return [
+            *dict.fromkeys(
+                [
+                    *list_display,
+                    "is_archived",
+                ],
+            ),
+        ]
+
+    @typing.override
+    def get_list_filter(self, *args, **kwargs):
+        list_filter = super().get_list_filter(*args, **kwargs)
+        return [
+            *dict.fromkeys(
+                [
+                    *list_filter,
+                    "is_archived",
+                ],
+            ),
+        ]
+
+    @typing.override
+    def get_autocomplete_fields(self, *args, **kwargs):
+        autocomplete_fields = super().get_autocomplete_fields(*args, **kwargs)
+        return [
+            *dict.fromkeys(
+                [
+                    *autocomplete_fields,
+                    "archived_by",
+                ],
+            ),
+        ]
+
     @typing.override
     def get_readonly_fields(self, *args, **kwargs):
         readonly_fields = super().get_readonly_fields(*args, **kwargs)
@@ -96,7 +132,35 @@ class ArchivableResourceAdmin(UserResourceAdmin, admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-class FirebaseResourceAdmin(UserResourceAdmin, admin.ModelAdmin):
+class FirebaseResourceAdmin(admin.ModelAdmin):
+    # FIXME(tnagorra): Add ordering for firebase_last_pushed
+
+    @typing.override
+    def get_list_display(self, *args, **kwargs):
+        list_display = super().get_list_display(*args, **kwargs)
+        return [
+            *dict.fromkeys(
+                [
+                    "firebase_id",
+                    *list_display,
+                    "firebase_last_pushed",
+                    "firebase_push_status",
+                ],
+            ),
+        ]
+
+    @typing.override
+    def get_list_filter(self, *args, **kwargs):
+        list_filter = super().get_list_filter(*args, **kwargs)
+        return [
+            *dict.fromkeys(
+                [
+                    *list_filter,
+                    "firebase_push_status",
+                ],
+            ),
+        ]
+
     @typing.override
     def get_readonly_fields(self, *args, **kwargs):
         readonly_fields = super().get_readonly_fields(*args, **kwargs)
@@ -110,22 +174,3 @@ class FirebaseResourceAdmin(UserResourceAdmin, admin.ModelAdmin):
                 ],
             ),
         ]
-
-
-class ReadOnlyAdmin(admin.ModelAdmin):
-    @typing.override
-    def get_readonly_fields(self, request, obj=None):
-        # Get all model field names
-        return [f.name for f in self.model._meta.fields]
-
-    @typing.override
-    def has_add_permission(self, *args, **kwargs):
-        return False
-
-    @typing.override
-    def has_delete_permission(self, *args, **kwargs):
-        return False
-
-    @typing.override
-    def has_change_permission(self, request, obj=None):
-        return False

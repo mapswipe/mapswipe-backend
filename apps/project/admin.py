@@ -7,7 +7,7 @@ from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 from djangoql.admin import DjangoQLSearchMixin
 
-from apps.common.admin import ArchivableResourceAdmin, FirebaseResourceAdmin, ReadOnlyAdmin
+from apps.common.admin import ArchivableResourceAdmin, FirebaseResourceAdmin, UserResourceAdmin
 
 from .models import Organization, Project, ProjectAsset
 
@@ -40,21 +40,52 @@ class OrganizationAdmin(
     DjangoQLSearchMixin,
     ArchivableResourceAdmin,
     FirebaseResourceAdmin,
-    ReadOnlyAdmin,
+    UserResourceAdmin,
     admin.ModelAdmin,
 ):
-    list_display = ("name",)
-    list_filter = ("name",)
+    list_display = ("name", "abbreviation")
+    search_fields = ("name", "abbreviation")
+    ordering = ("name", "abbreviation")
+    list_select_related = True
 
 
 @admin.register(Project)
-class ProjectAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, ReadOnlyAdmin, admin.ModelAdmin):
-    list_display = ("topic", "requesting_organization", "project_type", "is_private", "region")
-    list_filter = (IncludedInTeamFilter, "topic", "project_type", "is_private", "region")
+class ProjectAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, UserResourceAdmin, admin.ModelAdmin):
+    list_display = (
+        "generate_name",
+        "requesting_organization",
+        "project_type",
+        "tutorial",
+        "team",
+        "is_private",
+        "status",
+        "processing_status",
+    )
+    readonly_fields = ("generate_name",)
+    search_fields = ("topic", "region")
+    ordering = ("topic", "region")
+    list_filter = (
+        IncludedInTeamFilter,
+        # "requesting_organization",
+        # "team",
+        "project_type",
+        "is_private",
+        "status",
+        "processing_status",
+    )
     list_select_related = True
-    autocomplete_fields = ("requesting_organization", "tutorial", "image", "created_by", "team")
+    autocomplete_fields = ("requesting_organization", "team", "tutorial", "image")
 
 
 @admin.register(ProjectAsset)
-class ProjectAssetAdmin(DjangoQLSearchMixin, ReadOnlyAdmin, admin.ModelAdmin):
-    pass
+class ProjectAssetAdmin(DjangoQLSearchMixin, UserResourceAdmin, admin.ModelAdmin):
+    list_display = ("project", "mimetype", "type", "input_type", "export_type", "file_size", "marked_as_deleted")
+    list_filter = (
+        # "project",
+        "mimetype",
+        "type",
+        "input_type",
+        "export_type",
+    )
+    list_select_related = True
+    autocomplete_fields = ("project",)
