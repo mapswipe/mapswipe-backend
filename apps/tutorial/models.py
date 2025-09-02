@@ -100,6 +100,10 @@ class Tutorial(UserResource, FirebasePushResource):  # type: ignore[reportIncomp
     scenarios: RelatedManager["TutorialScenarioPage"]
     information_pages: RelatedManager["TutorialInformationPage"]
 
+    @typing.override
+    def __str__(self) -> str:
+        return self.name
+
     @property
     def status_enum(self) -> TutorialStatusEnum:
         return TutorialStatusEnum(self.status)
