@@ -470,10 +470,8 @@ class TutorialStatusUpdateSerializer(UserResourceSerializer[Tutorial]):
         model = Tutorial
         fields = ("status",)
 
-    @typing.override
-    def validate(self, attrs: dict[str, typing.Any]):
+    def validate_status(self, new_status: Tutorial.Status | int) -> Tutorial.Status:
         assert self.instance is not None, "Tutorial does not exist."
-        new_status = attrs.get("status")
 
         if not isinstance(new_status, Tutorial.Status):
             new_status = Tutorial.Status(new_status)
@@ -489,7 +487,7 @@ class TutorialStatusUpdateSerializer(UserResourceSerializer[Tutorial]):
                     new_status.label,
                 ),
             )
-        return super().validate(attrs)
+        return new_status
 
     @typing.override
     def update(self, instance: Tutorial, validated_data: dict[typing.Any, typing.Any]):
