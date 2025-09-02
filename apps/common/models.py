@@ -369,3 +369,18 @@ class GlobalExportAsset(models.Model):
     @property
     def type_enum(self):
         return GlobalExportAssetTypeEnum(self.type)
+
+
+class Announcement(UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
+    """Model representing an annoucement.
+
+    Only one annoucement can be active at a time.
+    """
+
+    text = models.TextField[str, str]()
+    url = models.URLField[str, str](max_length=300)
+    is_active = models.BooleanField[bool, bool](default=False)
+
+    @typing.override
+    def __str__(self):
+        return self.text

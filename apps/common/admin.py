@@ -6,7 +6,8 @@ from django.db import models
 from django.http import HttpRequest
 from djangoql.admin import DjangoQLSearchMixin
 
-from apps.common.models import GlobalExportAsset, UserResource
+from apps.common.firebase.push import FirebaseAnnouncementPush
+from apps.common.models import Announcement, GlobalExportAsset, UserResource
 
 DjangoModel = typing.TypeVar("DjangoModel", bound=models.Model)
 
@@ -180,3 +181,22 @@ class FirebaseResourceAdmin(admin.ModelAdmin):
 @admin.register(GlobalExportAsset)
 class GlobalExportAssetAdmin(DjangoQLSearchMixin, admin.ModelAdmin[GlobalExportAsset]):
     list_display = ("type", "file_size", "file", "last_updated_at")
+
+
+@admin.register(Announcement)
+class AnnouncementAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, UserResourceAdmin, admin.ModelAdmin):
+    list_display = ("text", "is_active", "url")
+
+    @typing.override
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+
+        if obj.is_active:
+            previous_announcements = Announcement.objects.exclude(id=obj.id)
+            previous_announcements.update(is_active=False)
+            for announcement in previous_announcements:
+                FirebaseAnnouncementPush(announcement).handle_delete()
+
+            FirebaseAnnouncementPush(obj).trigger()
+        else:
+            FirebaseAnnouncementPush(obj).handle_delete()

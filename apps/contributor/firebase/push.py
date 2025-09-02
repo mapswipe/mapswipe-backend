@@ -6,7 +6,7 @@ from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
 
-from apps.common.firebase import FirebasePush
+from apps.common.firebase.base import FirebasePush
 from apps.contributor.models import ContributorTeam, ContributorUser, ContributorUserGroup
 from main.config import Config
 

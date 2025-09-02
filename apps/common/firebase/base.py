@@ -114,3 +114,9 @@ class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
             model_obj.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
         else:
             model_obj.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
+
+    def delete(self) -> None:
+        model_ref = Config.FIREBASE_HELPER.ref(
+            self.get_firebase_path(self.obj.firebase_id, self.model_class),
+        )
+        model_ref.delete()
