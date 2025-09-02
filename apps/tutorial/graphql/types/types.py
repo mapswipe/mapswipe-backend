@@ -4,7 +4,7 @@ import strawberry
 import strawberry_django
 from django.db import models
 
-from apps.common.graphql.types import CommonAssetTypeMixin, UserResourceTypeMixin
+from apps.common.graphql.types import CommonAssetTypeMixin, FirebasePushResourceTypeMixin, UserResourceTypeMixin
 from apps.project.models import Project, ProjectTypeEnum
 from apps.tutorial.models import (
     Tutorial,
@@ -133,7 +133,7 @@ class TutorialInformationPageType(UserResourceTypeMixin):
 
 
 @strawberry_django.type(Tutorial)
-class TutorialType(UserResourceTypeMixin):
+class TutorialType(UserResourceTypeMixin, FirebasePushResourceTypeMixin):
     id: strawberry.ID
     name: strawberry.auto
     # NOTE: Got circular import issue

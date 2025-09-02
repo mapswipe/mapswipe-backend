@@ -370,12 +370,17 @@ Team membership is managed exclusively by system managers; contributor users
 cannot join or leave teams on their own. Members of a team can only access
 projects linked to that team.
 """
-type ContributorTeamType implements UserResourceTypeMixin {
+type ContributorTeamType implements UserResourceTypeMixin & FirebasePushResourceTypeMixin {
   archivedAt: DateTime
   archivedBy: UserType
   clientId: String!
   createdAt: DateTime!
   createdBy: UserType!
+  firebaseId: String!
+
+  """The latest time when resource was pushed to firebase"""
+  firebaseLastPushed: DateTime
+  firebasePushStatus: FirebasePushStatusEnum
   id: ID!
   isArchived: Boolean!
   members(pagination: OffsetPaginationInput): ContributorUserTypeOffsetPaginated!
@@ -553,7 +558,7 @@ Model representing a group that contributor users can join or leave.
 Groups are used to aggregate contributions made by users within the group,
 facilitating management and organization of collective efforts.
 """
-type ContributorUserGroupType implements UserResourceTypeMixin {
+type ContributorUserGroupType implements UserResourceTypeMixin & FirebasePushResourceTypeMixin {
   archivedAt: DateTime
   archivedBy: UserType
   clientId: String!
@@ -561,6 +566,11 @@ type ContributorUserGroupType implements UserResourceTypeMixin {
   createdAt: DateTime!
   createdBy: UserType!
   description: String!
+  firebaseId: String!
+
+  """The latest time when resource was pushed to firebase"""
+  firebaseLastPushed: DateTime
+  firebasePushStatus: FirebasePushStatusEnum
   id: ID!
   isArchived: Boolean!
   membersCount: Int!
@@ -758,6 +768,19 @@ type FindTutorialTaskPropertyType {
   tileX: Int!
   tileY: Int!
   tileZ: Int!
+}
+
+interface FirebasePushResourceTypeMixin {
+  firebaseId: String!
+  firebaseLastPushed: DateTime
+  firebasePushStatus: FirebasePushStatusEnum
+}
+
+enum FirebasePushStatusEnum {
+  FAILED
+  PENDING
+  PROCESSING
+  SUCCESS
 }
 
 scalar GenericJSON
@@ -1011,7 +1034,7 @@ type OrganizationSwipeStatsType {
 }
 
 """Model representing the organization requesting the project."""
-type OrganizationType implements UserResourceTypeMixin {
+type OrganizationType implements UserResourceTypeMixin & FirebasePushResourceTypeMixin {
   abbreviation: String
   archivedAt: DateTime
   archivedBy: UserType
@@ -1019,6 +1042,11 @@ type OrganizationType implements UserResourceTypeMixin {
   createdAt: DateTime!
   createdBy: UserType!
   description: String
+  firebaseId: String!
+
+  """The latest time when resource was pushed to firebase"""
+  firebaseLastPushed: DateTime
+  firebasePushStatus: FirebasePushStatusEnum
   id: ID!
   isArchived: Boolean!
   modifiedAt: DateTime!
@@ -1553,12 +1581,15 @@ input ProjectStatusUpdateInput {
 }
 
 """Model representing the project."""
-type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin {
+type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin & FirebasePushResourceTypeMixin {
   """
   Provide an optional link to a resource with additional information on the project
   """
   additionalInfoUrl: String
   clientId: String!
+
+  """No. of unique contributors in this project"""
+  contributorsCount: Int!
   createdAt: DateTime!
   createdBy: UserType!
   description: String
@@ -1572,6 +1603,11 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   exportResults: ProjectAssetType
   exportTasks: ProjectAssetType
   exportUsers: ProjectAssetType
+  firebaseId: String!
+
+  """The latest time when resource was pushed to firebase"""
+  firebaseLastPushed: DateTime
+  firebasePushStatus: FirebasePushStatusEnum
 
   """
   How big should a mapping session be? Group size refers to the number of tasks per mapping session.
@@ -1613,6 +1649,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
 
   """Which group, institution or community is requesting this project?"""
   requestingOrganizationId: ID!
+  requiredResults: Int!
   status: ProjectStatusEnum!
   team: ContributorTeamType
   topic: String!
@@ -2273,10 +2310,15 @@ Model representing a tutorial associated with a specific project.
 Tutorial guides users through the process of contributing to a project.
 It includes instructions, and examples to help users understand how to complete tasks.
 """
-type TutorialType implements UserResourceTypeMixin {
+type TutorialType implements UserResourceTypeMixin & FirebasePushResourceTypeMixin {
   clientId: String!
   createdAt: DateTime!
   createdBy: UserType!
+  firebaseId: String!
+
+  """The latest time when resource was pushed to firebase"""
+  firebaseLastPushed: DateTime
+  firebasePushStatus: FirebasePushStatusEnum
   id: ID!
   informationPages: [TutorialInformationPageType!]!
   modifiedAt: DateTime!

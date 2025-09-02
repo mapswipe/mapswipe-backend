@@ -2,6 +2,7 @@ import datetime
 
 import strawberry
 
+from apps.common.models import FirebasePushStatusEnum
 from apps.user.graphql.types import UserType
 
 
@@ -21,6 +22,13 @@ class ArchivableResourceTypeMixin:
     is_archived: bool
     archived_at: datetime.datetime | None
     archived_by: UserType | None
+
+
+@strawberry.interface
+class FirebasePushResourceTypeMixin:
+    firebase_id: str
+    firebase_push_status: FirebasePushStatusEnum | None
+    firebase_last_pushed: datetime.datetime | None
 
 
 @strawberry.type
