@@ -2,7 +2,7 @@ import gzip
 import json
 import typing
 
-import pytest  # type: ignore[reportMissingImports]
+import pytest
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from pydantic_core import ValidationError as PydanticValidationError

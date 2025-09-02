@@ -1,6 +1,6 @@
 import typing
 
-import pytest  # type: ignore[reportMissingImports]
+import pytest
 from django.contrib.admin.sites import AdminSite
 from django.core.exceptions import ValidationError
 
