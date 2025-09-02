@@ -96,8 +96,10 @@ class FirebaseCleanup:
     def done(self):
         if self._mapping_sessions:
             logger.info("Cleanup up firebase results")
+
+            project_firebase_ids = set([mapping_session.split("/")[0] for mapping_session in self._mapping_sessions])
             # Trigger generate_project_exports for updated projects
-            for project_firebase_id in self._mapping_sessions:
+            for project_firebase_id in project_firebase_ids:
                 transaction.on_commit(
                     # XXX: we loose type check with s (signature)
                     generate_project_exports.s(project_firebase_id=project_firebase_id).delay,

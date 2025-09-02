@@ -258,7 +258,8 @@ class TestContributorFirebase(TestCase):
         # Firebase User Group:                          Ramayan
         # Firebase User Group Membership:               ...
         # Firebase User Group Membership Updates:       ...
-        now = int(datetime.datetime.now().timestamp())
+        now = int(datetime.datetime(year=2012, month=6, day=15).timestamp())
+        day = 86400
 
         # Create users in both firebase and database
         ram = ContributorUserFactory.create(username="ram")
@@ -321,7 +322,7 @@ class TestContributorFirebase(TestCase):
             laxman,
             ramayan,
             ContributorUserGroupMembershipLogActionEnum.JOIN,
-            now + 1,
+            now + day,
         )
         pull_user_group_memberships_from_firebase()
 
@@ -339,32 +340,32 @@ class TestContributorFirebase(TestCase):
             ram,
             ramayan,
             ContributorUserGroupMembershipLogActionEnum.LEAVE,
-            now + 2,
+            now + 2 * day,
         )
         self._send_membership_request_to_firebase(
             ram,
             ramayan,
             ContributorUserGroupMembershipLogActionEnum.JOIN,
-            now + 3,
+            now + 3 * day,
         )
         # Pull 3: Laxman leaves, joins and leaves again
         self._send_membership_request_to_firebase(
             laxman,
             ramayan,
             ContributorUserGroupMembershipLogActionEnum.LEAVE,
-            now + 2,
+            now + 2 * day,
         )
         self._send_membership_request_to_firebase(
             laxman,
             ramayan,
             ContributorUserGroupMembershipLogActionEnum.JOIN,
-            now + 3,
+            now + 3 * day,
         )
         self._send_membership_request_to_firebase(
             laxman,
             ramayan,
             ContributorUserGroupMembershipLogActionEnum.LEAVE,
-            now + 4,
+            now + 4 * day,
         )
         # Pull 3: Sita joins and leaves (but this action occurred on Pull 0)
         # NOTE: This should not deactivate Sita
@@ -372,13 +373,13 @@ class TestContributorFirebase(TestCase):
             sita,
             ramayan,
             ContributorUserGroupMembershipLogActionEnum.JOIN,
-            now - 2,
+            now - 2 * day,
         )
         self._send_membership_request_to_firebase(
             sita,
             ramayan,
             ContributorUserGroupMembershipLogActionEnum.LEAVE,
-            now - 1,
+            now - 1 * day,
         )
         pull_user_group_memberships_from_firebase()
 
@@ -407,19 +408,19 @@ class TestContributorFirebase(TestCase):
             yudhistir,
             ramayan,
             ContributorUserGroupMembershipLogActionEnum.JOIN,
-            now + 5,
+            now + 5 * day,
         )
         bheem_membership_key = self._send_membership_request_to_firebase(
             bheem,
             ramayan,
             ContributorUserGroupMembershipLogActionEnum.JOIN,
-            now + 5,
+            now + 5 * day,
         )
         self._send_membership_request_to_firebase(
             ravan,
             ramayan,
             ContributorUserGroupMembershipLogActionEnum.JOIN,
-            now + 5,
+            now + 5 * day,
         )
         pull_user_group_memberships_from_firebase()
 
