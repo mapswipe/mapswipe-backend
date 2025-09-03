@@ -1664,6 +1664,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   How many people do you want to see every tile before you consider it finished?
   """
   verificationNumber: Int!
+  websiteUrl: String!
 }
 
 type ProjectTypeAreaStatsType {

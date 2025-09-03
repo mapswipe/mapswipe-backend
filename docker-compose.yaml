@@ -23,7 +23,8 @@ x-server: &base_server_setup
     # Domain configs
     APP_DOMAIN: ${APP_DOMAIN:-http://localhost:8000}
     MANAGER_DASHBOARD_DOMAIN: ${MANAGER_DASHBOARD_DOMAIN:-http://localhost:3000}
-    COMMUNITY_DASHBOARD_DOMAIN: ${COMMUNITY_DASHBOARD_DOMAIN:-http://localhost:3100}
+    COMMUNITY_DASHBOARD_DOMAIN: ${COMMUNITY_DASHBOARD_DOMAIN:-http://localhost:3020}
+    WEBSITE_DOMAIN: ${WEBSITE_DOMAIN:-http://localhost:3200}
     SESSION_COOKIE_DOMAIN: ${SESSION_COOKIE_DOMAIN:-localhost}
     CSRF_COOKIE_DOMAIN: ${CSRF_COOKIE_DOMAIN:-localhost}
     # Postgres
