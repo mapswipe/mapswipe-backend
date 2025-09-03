@@ -149,7 +149,11 @@ class TileMapServiceBaseProject[
         # TODO(thenav56): Calculate: total_area, time_spent_max_allowed
 
     @typing.override
-    def create_tasks(self, group: ProjectTaskGroup, raw_group: tile_grouping.RawGroup) -> int:
+    def create_tasks(
+        self,
+        group: ProjectTaskGroup,
+        raw_group: tile_grouping.RawGroup,
+    ) -> int:
         """Create tasks for a group."""
         bulk_mgr = BulkCreateManager(chunk_size=1000)
 

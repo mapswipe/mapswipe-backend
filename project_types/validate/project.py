@@ -305,8 +305,10 @@ class ValidateProject(
             )
 
             # Create new tasks for this group
-            total_tasks = self.create_tasks(new_group, raw_group)
-            # FIXME(tnagorra): This is not correct
+            total_tasks = self.create_tasks(
+                group=new_group,
+                raw_group=raw_group,
+            )
             logger.info("Created %s tasks for group: %s", total_tasks, new_group.pk)
 
     @typing.override

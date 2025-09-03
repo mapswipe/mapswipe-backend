@@ -109,7 +109,9 @@ class ProjectTypeEnum(models.IntegerChoices):
 
     # MEDIA = 5, "Media"
     # DIGITIZATION = 6, "Digitization"
-    # STREET = 7, "Street"
+    STREET = 7, "Street"
+    """ Street project type. """
+
     # TODO(thenav56): Confirm if we have more/less
 
     @classmethod
@@ -130,6 +132,8 @@ class ProjectTypeEnum(models.IntegerChoices):
                 return firebase_models.FbEnumProjectType.VALIDATE
             case ProjectTypeEnum.VALIDATE_IMAGE:
                 return firebase_models.FbEnumProjectType.VALIDATE_IMAGE
+            case ProjectTypeEnum.STREET:
+                return firebase_models.FbEnumProjectType.STREET
 
 
 class ProjectStatusEnum(models.IntegerChoices):

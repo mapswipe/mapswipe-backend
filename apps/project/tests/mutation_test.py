@@ -8,6 +8,7 @@ from django.core.files.temp import NamedTemporaryFile
 from PIL import Image
 from ulid import ULID
 
+from apps.common.models import IconEnum
 from apps.contributor.factories import ContributorTeamFactory
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
@@ -25,6 +26,7 @@ from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
 from main.config import Config
 from main.tests import TestCase
+from project_types.street import project as street_project
 from project_types.tile_map_service.compare import project as compare_project
 from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
 
@@ -1546,3 +1548,103 @@ class TestProjectTypeMutation(TestCase):
         # project is sync to firebase after publish
         fb_project: typing.Any = project_ref.get()
         assert fb_project is not None
+
+    @patch("apps.project.serializers.process_project_task.delay")
+    def test_project_street(self, mock_requests):
+        self.force_login(self.user)
+        project_data = {
+            **self.project_data,
+            "clientId": str(ULID()),
+            "projectType": self.genum(ProjectTypeEnum.STREET),
+        }
+        content = self._create_project_mutation(project_data)
+        resp_data = content["data"]["createProject"]
+        assert resp_data["errors"] is None, content
+
+        project_id = resp_data["result"]["id"]
+        project_client_id = resp_data["result"]["clientId"]
+
+        # Creating AOI Project Asset
+        project_asset_data = {
+            "project": project_id,
+            "clientId": str(ULID()),
+        }
+
+        content = self._create_project_aoi_asset(project_asset_data, assert_errors=True)
+        resp_data = content["data"]["createProjectAsset"]
+        assert resp_data["errors"] is None, content
+        aoi_geometry_asset = resp_data["result"]
+
+        # Creating Project Image Asset
+        project_asset_data = {
+            "project": project_id,
+            "clientId": str(ULID()),
+        }
+        content = self._create_project_image_asset(project_asset_data, assert_errors=True)
+        resp_data = content["data"]["createProjectAsset"]
+        assert resp_data["errors"] is None, content
+        image_asset = resp_data["result"]
+
+        # Updating Project
+        project_data = {
+            "clientId": project_client_id,
+            "image": image_asset["id"],
+            "verificationNumber": 10,
+            "projectTypeSpecifics": {
+                "street": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
+                    "customOptions": {
+                        "clientId": str(ULID()),
+                        "description": "Street project description",
+                        "icon": self.genum(IconEnum.ADD_OUTLINE),
+                        "iconColor": "#FF0000",
+                        "title": "Street Project Title",
+                        "value": 1,
+                        "subOptions": [
+                            {
+                                "clientId": str(ULID()),
+                                "value": 1,
+                                "description": "Street sub option description",
+                            },
+                        ],
+                    },
+                    "mapillaryImageFilters": {
+                        "isPano": True,
+                        "creatorId": None,
+                        "organizationId": None,
+                        "startTime": None,
+                        "endTime": None,
+                        "randomizeOrder": False,
+                        "samplingThreshold": None,
+                    },
+                },
+            },
+        }
+        content = self._update_project_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProject"]
+        assert resp_data["errors"] is None, content
+
+        latest_project = Project.objects.get(pk=project_id)
+        assert latest_project.created_by_id == self.user.pk
+        assert latest_project.modified_by_id == self.user.pk
+        assert latest_project.image_id == int(image_asset["id"])
+        assert latest_project.project_type_specifics is not None
+
+        street_project.StreetProjectProperty.model_validate(
+            latest_project.project_type_specifics,
+            context={"project_id": latest_project.pk},
+        )
+
+        # Updating Project:
+        # Test project processing
+        project_data = {
+            "clientId": project_client_id,
+            "status": self.genum(Project.Status.MARKED_AS_READY),
+        }
+        content = self._update_project_status_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProjectStatus"]
+        assert resp_data["errors"] is None, content
+        assert resp_data["result"]["status"] == self.genum(Project.Status.MARKED_AS_READY)
+
+        mock_requests.assert_called_once()
+        mock_requests.assert_has_calls([call(int(project_id))])

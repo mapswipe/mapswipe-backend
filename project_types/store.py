@@ -1,6 +1,8 @@
 import typing
 
 from apps.project.models import ProjectTypeEnum
+from project_types.street.project import StreetProject, StreetProjectProperty
+from project_types.street.tutorial import StreetTutorial, StreetTutorialTaskProperty
 
 from .tile_map_service.compare.project import CompareProject, CompareProjectProperty
 from .tile_map_service.compare.tutorial import CompareTutorial, CompareTutorialTaskProperty
@@ -28,6 +30,8 @@ def get_tutorial_task_property(project_type: ProjectTypeEnum | None):
         return ("validate_image", ValidateImageTutorialTaskProperty)
     if project_type == ProjectTypeEnum.COMPLETENESS:
         return ("completeness", CompletenessTutorialTaskProperty)
+    if project_type == ProjectTypeEnum.STREET:
+        return ("street", StreetTutorialTaskProperty)
     typing.assert_never(project_type)
 
 
@@ -45,10 +49,14 @@ def get_project_property(project_type: ProjectTypeEnum | None):
         return ("validate_image", ValidateImageProjectProperty)
     if project_type == ProjectTypeEnum.COMPLETENESS:
         return ("completeness", CompletenessProjectProperty)
+    if project_type == ProjectTypeEnum.STREET:
+        return ("street", StreetProjectProperty)
     typing.assert_never(project_type)
 
 
-type ProjectTypeHandlers = type[CompareProject | ValidateProject | ValidateImageProject | FindProject | CompletenessProject]
+type ProjectTypeHandlers = type[
+    CompareProject | ValidateProject | ValidateImageProject | FindProject | CompletenessProject | StreetProject
+]
 
 
 @typing.overload
@@ -81,6 +89,12 @@ def get_project_type_handler(
 ) -> type[CompletenessProject]: ...
 
 
+@typing.overload
+def get_project_type_handler(
+    project_type: typing.Literal[ProjectTypeEnum.STREET],
+) -> type[StreetProject]: ...
+
+
 def get_project_type_handler(project_type: ProjectTypeEnum) -> ProjectTypeHandlers:
     match project_type:
         case ProjectTypeEnum.FIND:
@@ -93,10 +107,12 @@ def get_project_type_handler(project_type: ProjectTypeEnum) -> ProjectTypeHandle
             return CompletenessProject
         case ProjectTypeEnum.VALIDATE_IMAGE:
             return ValidateImageProject
+        case ProjectTypeEnum.STREET:
+            return StreetProject
 
 
 type TutorialTypeHandlers = type[
-    CompareTutorial | ValidateTutorial | FindTutorial | CompletenessTutorial | ValidateImageTutorial
+    CompareTutorial | ValidateTutorial | FindTutorial | CompletenessTutorial | ValidateImageTutorial | StreetTutorial
 ]
 
 
@@ -130,6 +146,13 @@ def get_tutorial_type_handler(
 ) -> type[ValidateImageTutorial]: ...
 
 
+# FIXME(susilnem): Handle street
+@typing.overload
+def get_tutorial_type_handler(
+    tutorial_type: typing.Literal[ProjectTypeEnum.STREET],
+) -> type[typing.Any]: ...
+
+
 def get_tutorial_type_handler(tutorial_type: ProjectTypeEnum) -> TutorialTypeHandlers:
     match tutorial_type:
         case ProjectTypeEnum.FIND:
@@ -142,3 +165,5 @@ def get_tutorial_type_handler(tutorial_type: ProjectTypeEnum) -> TutorialTypeHan
             return CompletenessTutorial
         case ProjectTypeEnum.VALIDATE_IMAGE:
             return ValidateImageTutorial
+        case ProjectTypeEnum.STREET:
+            return StreetTutorial

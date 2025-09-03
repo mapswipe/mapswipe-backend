@@ -294,7 +294,7 @@ type CompareProjectPropertyType {
   zoomLevel: Int!
 }
 
-union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyType = CompareProjectPropertyType | CompletenessProjectPropertyType | FindProjectPropertyType | ValidateImageProjectPropertyType | ValidateProjectPropertyType
+union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyTypeStreetProjectPropertyType = CompareProjectPropertyType | CompletenessProjectPropertyType | FindProjectPropertyType | StreetProjectPropertyType | ValidateImageProjectPropertyType | ValidateProjectPropertyType
 
 input CompareTutorialTaskPropertyInput {
   tileX: Int!
@@ -308,7 +308,7 @@ type CompareTutorialTaskPropertyType {
   tileZ: Int!
 }
 
-union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType = CompareTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | FindTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | ValidateTutorialTaskPropertyType
+union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyType = CompareTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | FindTutorialTaskPropertyType | StreetTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | ValidateTutorialTaskPropertyType
 
 input CompletenessProjectPropertyInput {
   aoiGeometry: String!
@@ -1641,7 +1641,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   projectInstruction: String
   projectNumber: Int!
   projectType: ProjectTypeEnum!
-  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyType
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyTypeStreetProjectPropertyType
   region: String!
 
   """Which group, institution or community is requesting this project?"""
@@ -1677,6 +1677,7 @@ enum ProjectTypeEnum {
   COMPARE
   COMPLETENESS
   FIND
+  STREET
   VALIDATE
   VALIDATE_IMAGE
 }
@@ -1749,6 +1750,7 @@ input ProjectTypeSpecificInput @oneOf {
   compare: CompareProjectPropertyInput
   completeness: CompletenessProjectPropertyInput
   find: FindProjectPropertyInput
+  street: StreetProjectPropertyInput
   validate: ValidateProjectPropertyInput
   validateImage: ValidateImageProjectPropertyInput
 }
@@ -1943,6 +1945,42 @@ input StrFilterLookup {
 
   """Case-sensitive starts-with. Filter will be skipped on `null` value"""
   startsWith: String
+}
+
+type StreetMapillaryImageFilters {
+  creatorId: String
+  endTime: String
+  isPano: Boolean
+  organizationId: String
+  randomizeOrder: Boolean!
+  samplingThreshold: Int
+  startTime: String
+}
+
+input StreetMapillaryImageFiltersInput {
+  creatorId: String = null
+  endTime: String = null
+  isPano: Boolean = false
+  organizationId: String = null
+  randomizeOrder: Boolean! = false
+  samplingThreshold: Int = null
+  startTime: String = null
+}
+
+input StreetProjectPropertyInput {
+  aoiGeometry: String!
+  customOptions: [CustomOptionInput!] = null
+  mapillaryImageFilters: StreetMapillaryImageFiltersInput!
+}
+
+type StreetProjectPropertyType {
+  aoiGeometry: String!
+  customOptions: [ProjectCustomOption!]
+  mapillaryImageFilters: StreetMapillaryImageFilters!
+}
+
+type StreetTutorialTaskPropertyType {
+  objectGeometry: String!
 }
 
 """Model representing assets for a tutorial."""
@@ -2292,7 +2330,7 @@ type TutorialTaskType implements UserResourceTypeMixin {
   id: ID!
   modifiedAt: DateTime!
   modifiedBy: UserType!
-  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType
+  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyType
   reference: Int!
   scenarioId: ID!
 }

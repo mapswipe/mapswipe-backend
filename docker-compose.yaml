@@ -53,6 +53,7 @@ x-server: &base_server_setup
     MAP_IMAGE_ESRI_BETA_API_KEY: ${MAP_IMAGE_ESRI_BETA_API_KEY:-dummy-esri-beta}
     # MAP_IMAGE_DIGITAL_GLOBE_API_KEY: ${MAP_IMAGE_DIGITAL_GLOBE_API_KEY:-dummy-digital-globe}
     OSMCHA_API_KEY: ${OSMCHA_API_KEY:-dummy-osmcha-api-key}
+    MAPILLARY_API_KEY: ${MAPILLARY_API_KEY:-dummy-mapillary-api-key}
     # Firebase
     FIREBASE_EMULATOR_USE: ${FIREBASE_EMULATOR_USE:-true}
     FIREBASE_EMULATOR_PROJECT_ID: ${FIREBASE_EMULATOR_PROJECT_ID:-dev-mapswipe}

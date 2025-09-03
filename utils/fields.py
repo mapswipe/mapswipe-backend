@@ -85,6 +85,15 @@ PydanticZoomLevel = typing.Annotated[int, Field(strict=True, ge=0, lt=23)]
 # FIXME(frozenhelium): add proper validation
 PydanticUlid = typing.Annotated[str, Field(strict=True, pattern=r"^[0-9A-Z]{26}$")]
 
+PydanticBool = typing.Annotated[bool, Field(strict=True)]
+
+PydanticDate = typing.Annotated[
+    str,
+    Field(
+        pattern=r"^\d{4}-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])$",
+    ),
+]
+
 
 def validate_percentage(value: float | int):
     if not (0 <= value <= 100):
