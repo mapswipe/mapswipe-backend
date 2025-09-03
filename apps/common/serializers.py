@@ -180,10 +180,20 @@ class CommonAssetSerializer(serializers.ModelSerializer[CommonAsset]):
         external_url: ContentFile[bytes] | None = attrs.get("external_url")
 
         if not file_content and not external_url:
-            raise serializers.ValidationError(gettext("Either file or external_url must be defined"))
+            raise serializers.ValidationError(
+                {
+                    "file": gettext("Either file or external_url must be defined"),
+                    "external_url": gettext("Either file or external_url must be defined"),
+                },
+            )
 
         if file_content and external_url:
-            raise serializers.ValidationError(gettext("Both file and external_url cannot be defined"))
+            raise serializers.ValidationError(
+                {
+                    "file": gettext("Both file and external_url cannot be defined"),
+                    "external_url": gettext("Both file and external_url cannot be defined"),
+                },
+            )
 
     def _validate_file_size(self, attrs: dict[str, typing.Any]) -> None:
         file_content: ContentFile[bytes] | None = attrs.get("file")
@@ -193,11 +203,13 @@ class CommonAssetSerializer(serializers.ModelSerializer[CommonAsset]):
 
         if file_content.size > CommonAsset.MAX_FILE_SIZE:
             raise serializers.ValidationError(
-                gettext("Filesize should be less than: %s. Current is: %s")
-                % (
-                    filesizeformat(CommonAsset.MAX_FILE_SIZE),
-                    filesizeformat(file_content.size),
-                ),
+                {
+                    "file": gettext("Filesize should be less than: %s. Current is: %s")
+                    % (
+                        filesizeformat(CommonAsset.MAX_FILE_SIZE),
+                        filesizeformat(file_content.size),
+                    ),
+                },
             )
         attrs["file_size"] = file_content.size
 
@@ -213,7 +225,9 @@ class CommonAssetSerializer(serializers.ModelSerializer[CommonAsset]):
         mimetype = magic.from_buffer(file_head, mime=True)
         if not CommonAsset.Mimetype.is_valid_mimetype(mimetype):
             raise serializers.ValidationError(
-                gettext("File mimetype is not supported: %s") % mimetype,
+                {
+                    "file": gettext("File mimetype is not supported: %s") % mimetype,
+                },
             )
 
         detected_mimetype = CommonAsset.Mimetype.get_mimetype_by_label(mimetype)

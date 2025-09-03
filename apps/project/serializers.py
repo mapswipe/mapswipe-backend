@@ -144,6 +144,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
 
     def _validate_project_instruction(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
+        # NOTE: project_instruction is not required in the database
         project_instruction = attrs.get("project_instruction") or self.instance.project_instruction
         if not project_instruction:
             raise serializers.ValidationError(
@@ -210,7 +211,11 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         assert self.instance is not None
 
         if self.instance.status_enum not in [Project.Status.DRAFT, Project.Status.FAILED]:
-            raise serializers.ValidationError(gettext("Cannot update project with status %s") % self.instance.status)
+            raise serializers.ValidationError(
+                {
+                    "status": gettext("Cannot update project with status %s") % self.instance.status,
+                },
+            )
 
         self._validate_project_instruction(attrs)
         self._validate_project_type_specifics(attrs)
@@ -285,6 +290,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
     def _validate_project_instruction(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
+        # NOTE: project_instruction is not required in the database
         project_instruction = attrs.get("project_instruction") or self.instance.project_instruction
         if not project_instruction:
             raise serializers.ValidationError(
@@ -298,7 +304,11 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
         assert self.instance is not None
 
         if self.instance.status_enum != Project.Status.READY:
-            raise serializers.ValidationError(gettext("Cannot update project with status %s") % self.instance.status)
+            raise serializers.ValidationError(
+                {
+                    "status": gettext("Cannot update project with status %s") % self.instance.status,
+                },
+            )
 
         self._validate_project_instruction(attrs)
 
@@ -325,22 +335,38 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
     ) -> None:
         file: ContentFile[bytes] | None = attrs.get("file")
         if not file:
-            raise ValidationError("Required field file is not provided.")
+            raise ValidationError(
+                {
+                    "file": "Required field file is not provided.",
+                },
+            )
 
         if not mimetype or mimetype not in [AssetMimetypeEnum.JSON, AssetMimetypeEnum.GEOJSON, AssetMimetypeEnum.PLAINTEXT]:
-            raise ValidationError("Mimetype is should either be a Text, JSON or GeoJSON")
+            raise ValidationError(
+                {
+                    "file": "Mimetype is should either be a Text, JSON or GeoJSON",
+                },
+            )
 
         try:
             geojson_data = json.load(file)
         except json.JSONDecodeError as e:
-            raise ValidationError("Invalid JSON format in the file.") from e
+            raise ValidationError(
+                {
+                    "file": "Invalid JSON format in the file.",
+                },
+            ) from e
 
         AoiGeometryFeature = Feature[Polygon | MultiPolygon, dict]
         AoiGeometryFeatureCollection = FeatureCollection[AoiGeometryFeature]
 
         feature_collection = AoiGeometryFeatureCollection.model_validate(geojson_data)
         if len(feature_collection.features) > 20:
-            raise ValidationError("AOI Geometry must have at max 20 features")
+            raise ValidationError(
+                {
+                    "file": "AOI Geometry must have at max 20 features",
+                },
+            )
 
         geometries: list[GEOSGeometry] = []
         for feature in feature_collection.features:
@@ -357,8 +383,13 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
 
         # FIXME(tnagorra): We need to change AOI geometry to 20 sq.km.
         # Increasing this to 40 because of failing tests
-        if area * 10000 > 40:
-            raise ValidationError("Area for AOI Geometry must have less than 40 sq. km")
+        MAX_AOI_GEOMETRY_AREA = 40
+        if area * 10000 > MAX_AOI_GEOMETRY_AREA:
+            raise ValidationError(
+                {
+                    "file": f"Area for AOI Geometry must have less than {MAX_AOI_GEOMETRY_AREA} sq. km",
+                },
+            )
 
         asset_specifics = {
             "aoi_geometry": {
@@ -378,14 +409,22 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
     ) -> None:
         file: ContentFile[bytes] | None = attrs.get("file")
         if not file:
-            raise ValidationError("Required field file is not provided.")
+            raise ValidationError(
+                {
+                    "file": "Required field file is not provided.",
+                },
+            )
 
         if not mimetype or mimetype not in [
             AssetMimetypeEnum.IMAGE_GIF,
             AssetMimetypeEnum.IMAGE_JPEG,
             AssetMimetypeEnum.IMAGE_PNG,
         ]:
-            raise ValidationError("Mimetype is should either be a Jpeg, Png or Gif")
+            raise ValidationError(
+                {
+                    "file": "Mimetype is should either be a Jpeg, Png or Gif",
+                },
+            )
 
     def _validate_object_image(
         self,
@@ -401,7 +440,11 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
             AssetMimetypeEnum.IMAGE_JPEG,
             AssetMimetypeEnum.IMAGE_PNG,
         ]:
-            raise ValidationError("Mimetype is should either be a Jpeg, Png or Gif")
+            raise ValidationError(
+                {
+                    "file": "Mimetype is should either be a Jpeg, Png or Gif",
+                },
+            )
 
     def _validate_asset_type_specifics(
         self,
@@ -512,14 +555,25 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
 
         # NOTE: This check should technically never be called.
         if not self.instance.project_instruction:
-            raise serializers.ValidationError(gettext("Project instruction is required."))
+            raise serializers.ValidationError(
+                {
+                    "project_instruction": gettext("Project instruction is required."),
+                },
+            )
 
         if new_status == Project.Status.MARKED_AS_READY and not self.instance.project_type_specifics:
             raise serializers.ValidationError(
-                gettext("project_type_specifics is required when project status is %s") % (new_status.label),
+                {
+                    "project_type_specifics": gettext("project_type_specifics is required when project status is %s")
+                    % (new_status.label),
+                },
             )
         if new_status == Project.Status.PUBLISHED and not self.instance.tutorial:
-            raise serializers.ValidationError(gettext("Tutorial is required before publishing a project."))
+            raise serializers.ValidationError(
+                {
+                    "tutorial": gettext("Tutorial is required before publishing a project."),
+                },
+            )
         return attrs
 
     @typing.override

@@ -803,7 +803,7 @@ class TestProjectMutation(TestCase):
             {
                 "array_errors": None,
                 "client_id": latest_project.client_id,
-                "field": "nonFieldErrors",
+                "field": "projectTypeSpecifics",
                 "messages": "project_type_specifics is required when project status is Marked as Ready",
                 "object_errors": None,
                 "pydantic_errors": None,
@@ -1505,7 +1505,7 @@ class TestProjectTypeMutation(TestCase):
             {
                 "array_errors": None,
                 "client_id": project_client_id,
-                "field": "nonFieldErrors",
+                "field": "tutorial",
                 "messages": "Tutorial is required before publishing a project.",
                 "object_errors": None,
                 "pydantic_errors": None,
