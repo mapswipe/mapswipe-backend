@@ -1,4 +1,5 @@
 # pyright: reportUninitializedInstanceVariable=false
+import datetime
 import typing
 from warnings import deprecated
 
@@ -391,9 +392,38 @@ class Project(UserResource, FirebasePushResource):
 
     # CALCULATED FIELDS
 
-    progress = models.PositiveSmallIntegerField[int, int](default=0, validators=[validate_percentage])
     required_results = models.IntegerField[int, int](default=0)
     result_count = models.IntegerField[int, int](default=0)  # NOTE: All project have 0 in production database
+
+    # -- After project is published
+
+    # TODO: Change this to float?
+    progress = models.PositiveSmallIntegerField[int, int](
+        default=0,
+        validators=[validate_percentage],
+        help_text=gettext_lazy("Percentage of the required contribution that has been completed"),
+    )
+
+    number_of_contributor_users = models.PositiveIntegerField[int, int](
+        default=0,
+        help_text=gettext_lazy("Number of users who made contributions to this project"),
+    )
+    number_of_results = models.PositiveIntegerField[int, int](
+        default=0,
+        help_text=gettext_lazy("Number of results contributed to this project"),
+    )
+    number_of_results_for_progress = models.PositiveIntegerField[int, int](
+        default=0,
+        help_text=gettext_lazy(
+            "Number of results contributed to this project that can be used to calculate the progress of this project. "
+            "Max no. of results per task that can be used to calculate progress is equal to the `verification number`",
+        ),
+    )
+    last_contribution_date = models.DateField[datetime.date | None, datetime.date | None](
+        null=True,
+        blank=True,
+        help_text=gettext_lazy("Last recent contribution date"),
+    )
 
     # Type hints
     requesting_organization_id: int

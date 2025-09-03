@@ -1623,6 +1623,9 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   """
   isPrivate: Boolean!
 
+  """Last recent contribution date"""
+  lastContributionDate: Date
+
   """What should the users look for (e.g. buildings, cars, trees)"""
   lookFor: String
 
@@ -1635,7 +1638,20 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   Project name generated from topic, region, project number, and requesting organization name.
   """
   name: String!
+
+  """Number of users who made contributions to this project"""
+  numberOfContributorUsers: Int!
+
+  """Number of results contributed to this project"""
+  numberOfResults: Int!
+
+  """
+  Number of results contributed to this project that can be used to calculate the progress of this project. Max no. of results per task that can be used to calculate progress is equal to the `verification number`
+  """
+  numberOfResultsForProgress: Int!
   processingStatus: ProjectProcessingStatusEnum
+
+  """Percentage of the required contribution that has been completed"""
   progress: Int!
 
   """Provide project instruction"""

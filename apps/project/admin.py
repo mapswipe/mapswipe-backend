@@ -60,6 +60,7 @@ class ProjectAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, UserResourceAdmin
         "is_private",
         "status",
         "processing_status",
+        "progress",
     )
     readonly_fields = ("generate_name",)
     search_fields = ("topic", "region")

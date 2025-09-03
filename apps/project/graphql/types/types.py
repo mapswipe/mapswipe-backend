@@ -153,12 +153,17 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
     is_featured: strawberry.auto
     status: strawberry.auto
     processing_status: strawberry.auto
-    progress: strawberry.auto
     team: ContributorTeamType | None
     is_private: strawberry.auto
     required_results: strawberry.auto
     aoi_geometry_input_asset: ProjectAssetType | None
     project_type_specific_output_asset: ProjectAssetType | None
+
+    progress: strawberry.auto
+    number_of_contributor_users: strawberry.auto
+    number_of_results: strawberry.auto
+    number_of_results_for_progress: strawberry.auto
+    last_contribution_date: strawberry.auto
 
     @strawberry_django.field(
         description="No. of unique contributors in this project",

@@ -122,7 +122,7 @@ def _export_project_data(project: Project, tmp_directory: Path):
             exc_info=True,
         )
 
-    get_project_history(
+    project_stats_by_date_df = get_project_history(
         results_df=results_df,
         groups_df=groups_df,
         project=project,
@@ -148,8 +148,23 @@ def _export_project_data(project: Project, tmp_directory: Path):
             hot_tm_destination_filename=tmp_tasking_manager_hot_tm_geojson,
         )
 
-    # TODO: is this required? from existing system
-    # create_project_stats_dict
+    if not project_stats_by_date_df.empty:
+        project.progress = project_stats_by_date_df["cum_progress"].iloc[-1] * 100
+        project.number_of_contributor_users = project_stats_by_date_df["cum_number_of_users"].iloc[-1]
+        project.number_of_results = project_stats_by_date_df["cum_number_of_results"].iloc[-1]
+        project.number_of_results_for_progress = project_stats_by_date_df["cum_number_of_results_progress"].iloc[-1]
+        project.last_contribution_date = project_stats_by_date_df.index[-1]
+
+    # TODO: Add test
+    project.save(
+        update_fields=(
+            "progress",
+            "number_of_contributor_users",
+            "number_of_results",
+            "number_of_results_for_progress",
+            "last_contribution_date",
+        ),
+    )
 
     for export_type, file in [
         (ProjectAssetExportTypeEnum.AGGREGATED_RESULTS, tmp_mapping_results_aggregate_by_task_csv),

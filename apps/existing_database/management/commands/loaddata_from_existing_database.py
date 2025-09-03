@@ -1,7 +1,9 @@
 import contextlib
 import csv
+import io
 import logging
 import re
+import sys
 import time
 import typing
 from collections import defaultdict
@@ -39,6 +41,7 @@ from apps.project.models import (
     Project,
     ProjectAsset,
     ProjectAssetExportTypeEnum,
+    ProjectStatusEnum,
     ProjectTypeEnum,
 )
 from apps.user.models import User
@@ -48,6 +51,14 @@ from main.config import Config
 FH = Config.FIREBASE_HELPER
 
 logger = logging.getLogger(__name__)
+
+
+class ProjectCsvMetadata(typing.TypedDict):
+    progress: float
+    number_of_users: int
+    number_of_results: int
+    number_of_results_progress: int
+    day: str
 
 
 def sanitize_name(text: str) -> str:
@@ -78,10 +89,8 @@ def parse_existing_project_type(project_type: int):
         return ProjectTypeEnum.COMPARE
     if project_type == 4:
         return ProjectTypeEnum.COMPLETENESS
-
-    # TODO(thenav56): THIS IS WRONG
     if project_type == 7:
-        return ProjectTypeEnum.FIND
+        return ProjectTypeEnum.STREET
 
     raise Exception(f"Existing project_type: {project_type} is not mappable to this system")
 
@@ -272,8 +281,22 @@ def parse_project_name(
     return topic, region, number, request_organization
 
 
+def parse_project_status(existing_project: existing_db_models.Project) -> ProjectStatusEnum:
+    assert existing_project.status is not None
+    # TODO Confirm this
+    return {
+        "inactive": ProjectStatusEnum.ARCHIVED,
+        "active": ProjectStatusEnum.PUBLISHED,
+        "private_active": ProjectStatusEnum.PUBLISHED,
+        "private_finished": ProjectStatusEnum.ARCHIVED,
+        "finished": ProjectStatusEnum.ARCHIVED,
+        "archived": ProjectStatusEnum.ARCHIVED,
+    }[existing_project.status]
+
+
 def create_project(
     *,
+    existing_projects_csv_data: dict[str, ProjectCsvMetadata],
     client_id: str,
     topic: str,
     region: str,
@@ -284,9 +307,11 @@ def create_project(
 ):
     try:
         assert existing_project.project_type is not None, "Project type should be defined"
+
         project_metadata = dict(
             topic=topic,
             region=region,
+            status=parse_project_status(existing_project),
             project_number=project_number,
             centroid=existing_project.geom and existing_project.geom.centroid,
             project_type=parse_existing_project_type(existing_project.project_type),
@@ -294,6 +319,18 @@ def create_project(
             created_by_id=get_user_by_contributor_user_firebase_id(existing_project.created_by, fallback=bot_user),
             modified_by_id=get_user_by_contributor_user_firebase_id(existing_project.created_by, fallback=bot_user),
         )
+
+        # Progress metadata
+        if existing_project_csv_data := existing_projects_csv_data.get(existing_project.project_id):
+            project_metadata["progress"] = int(float(existing_project_csv_data["progress"] or 0) * 100)
+            project_metadata["number_of_contributor_users"] = int(float(existing_project_csv_data["number_of_users"] or 0))
+            project_metadata["number_of_results"] = int(float(existing_project_csv_data["number_of_results"] or 0))
+            project_metadata["number_of_results_for_progress"] = int(
+                float(existing_project_csv_data["number_of_results_progress"] or 0),
+            )
+            if day_ := existing_project_csv_data["day"]:
+                # 2022-10-13 00:00:00 -> 2022-10-13
+                project_metadata["last_contribution_date"] = day_.split(" ")[0]
 
         return Project.objects.update_or_create(
             old_id=existing_project.project_id,
@@ -310,6 +347,7 @@ def create_project(
 
         # NOTE: Trying again with project_number + 1
         return create_project(
+            existing_projects_csv_data=existing_projects_csv_data,
             client_id=client_id,
             topic=topic,
             region=region,
@@ -405,6 +443,7 @@ class Command(BaseCommand):
         self.bulk_create_mgr = BulkCreateManager()
         self.bot_user = User.get_bot_user()
         self._pre_parsed_project_names: dict[str, tuple[str, str, int, str]] | None = None
+        self._existing_projects_csv_data: dict[str, ProjectCsvMetadata] | None = None
 
     @before_after_count(Organization)
     def handle_organization(self):
@@ -653,6 +692,24 @@ class Command(BaseCommand):
                 )
         return self._pre_parsed_project_names
 
+    def _get_existing_projects_csv_data(self) -> dict[str, ProjectCsvMetadata]:
+        if self._existing_projects_csv_data:
+            return self._existing_projects_csv_data
+
+        url = urljoin(Config.EXISTING_SYSTEM_API.geturl(), "/api/projects/projects.csv")
+        self.stdout.write(f"Downloading projects.csv from {url}")
+
+        response = httpx.get(url, verify=not Config.EXISTING_SYSTEM_API_INSECURE)
+        response.raise_for_status()
+        csv_text = response.text
+
+        csv.field_size_limit(sys.maxsize)
+        csv_file = io.StringIO(csv_text)
+        reader = csv.DictReader(csv_file)
+        self._existing_projects_csv_data = {row["project_id"]: typing.cast("ProjectCsvMetadata", row) for row in reader}
+
+        return self._existing_projects_csv_data
+
     @before_after_count([Project, ProjectAsset])
     def handle_project(self):
         existing_projects_qs = existing_db_models.Project.objects.all()
@@ -661,6 +718,7 @@ class Command(BaseCommand):
         # Project.objects.filter(project_type=2).delete()
 
         total_existing = existing_projects_qs.count()
+        existing_projects_csv_data = self._get_existing_projects_csv_data()
         for i, existing_project in enumerate(existing_projects_qs.iterator(chunk_size=10), start=1):
             self.stdout.write(f"\rProcessing {i}/{total_existing}", ending="")
 
@@ -671,6 +729,7 @@ class Command(BaseCommand):
             ) or (client_id, "N/A", 0, "")
 
             project, project_created = create_project(
+                existing_projects_csv_data=existing_projects_csv_data,
                 client_id=client_id,
                 topic=topic,
                 region=region,
