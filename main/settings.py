@@ -435,7 +435,7 @@ MAPSWIPE_TRUSTED_ORIGINS = [
     APP_DOMAIN.geturl(),
     MANAGER_DASHBOARD_DOMAIN.geturl(),
     COMMUNITY_DASHBOARD_DOMAIN.geturl(),
-    # NOTE: We might not need to enable trused origin for website
+    # NOTE: We might not need to enable trusted origin for website
     # WEBSITE_DOMAIN.geturl(),
     *env("MAPSWIPE_ADDITIONAL_TRUSTED_ORIGINS"),
 ]
