@@ -1,5 +1,52 @@
 # Changelog
 
+## [0.2.0-dev6](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev5..v0.2.0-dev6) - 2025-09-03
+### Changes:
+
+#### 🚀  Features
+
+- *(admin)* Make django form selection lazy - ([162e21f](https://github.com/mapswipe/mapswipe-backend/commit/162e21fbdef5bb4934dcaeac5fc317a588d63239))
+- *(asset)* Add validation for asset_specifics - ([0fb7b2b](https://github.com/mapswipe/mapswipe-backend/commit/0fb7b2bf1d62299e9e0aa44ffd354854579f8ded))
+- *(graphql)* Add contributor user in user type - ([40f8481](https://github.com/mapswipe/mapswipe-backend/commit/40f84810d2c70cc091134f38ccd9778df3c7cf8e))
+- *(project)* Add link to project in mapswipe website - ([8df3d8c](https://github.com/mapswipe/mapswipe-backend/commit/8df3d8c9fa47d944a6ef5cfecb24133e9d8ed349))
+- *(tutorial)* Make hint and success information mandatory on scenarios - ([ea59d9b](https://github.com/mapswipe/mapswipe-backend/commit/ea59d9bb695429ea5ba6d3a6f36bb3729dd31c9c))
+- *(user)* Add contributor user on user query - ([ea12812](https://github.com/mapswipe/mapswipe-backend/commit/ea1281232593e5494221e18da53822d4d73e8e9c))
+
+#### 🐛 Bug Fixes
+
+- *(export)* Use first part of the key to get projects for export - ([57c1389](https://github.com/mapswipe/mapswipe-backend/commit/57c138993ce50c39d6c967582fdc1eb3ccad8000))
+- *(file)* Set filename max length to 255 - ([0c660a1](https://github.com/mapswipe/mapswipe-backend/commit/0c660a139ff97e6c573b9ea7484ca333005fefd9))
+- *(test)* Update field level error checks on project - ([def1741](https://github.com/mapswipe/mapswipe-backend/commit/def1741263d3af10ee6218443b7aba76115627fe))
+- *(user)* Add anonymizedEmail to usertype - ([b68092c](https://github.com/mapswipe/mapswipe-backend/commit/b68092c9a77697462994385e63260eb3462d510c))
+- *(user)* Rename anonymize_email to anonymized_email - ([f2f7460](https://github.com/mapswipe/mapswipe-backend/commit/f2f74609db5cf000f08d65d82f04ea0eddbeb57c))
+- *(usergroup)* Fix syncing issue on user group and user group membership timestamp - ([1230e34](https://github.com/mapswipe/mapswipe-backend/commit/1230e34cf47090ba0959ad328974edeaa08444bc))
+- Pytest reportMissingImports - ([0566d2c](https://github.com/mapswipe/mapswipe-backend/commit/0566d2c7031719b9149030bb303d8ead2696e3c8))
+
+#### 🚜 Refactor
+
+- *(serializer)* Return field level validation errors where possible - ([db5db76](https://github.com/mapswipe/mapswipe-backend/commit/db5db769d5126ed9554d09210147572379132e75))
+- *(tutorial)* Use field level validation for tutorial status mutation - ([93077e1](https://github.com/mapswipe/mapswipe-backend/commit/93077e1a01f60e9f7c30cecd97fa3266e4024f56))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(main)* Fix typos - ([5e5d3e9](https://github.com/mapswipe/mapswipe-backend/commit/5e5d3e948e12e320f2afb160f89031646089a760))
+- *(migration)* Merge migrations - ([902b82b](https://github.com/mapswipe/mapswipe-backend/commit/902b82bebe5876e2450a2b17508a2ed9080eaf89))
+- *(migration)* Use cte_objects instead of default objects - ([0829d7c](https://github.com/mapswipe/mapswipe-backend/commit/0829d7c073b5b6f928b92dbd60e49679702b3ebb))
+- *(project)* Cleanup none keys for JSON field for group and task - ([8fefc64](https://github.com/mapswipe/mapswipe-backend/commit/8fefc644e5c77f84035afee8606e4912f98c2c30))
+- *(schema)* Add firebase_id in queries - ([6dcb5a6](https://github.com/mapswipe/mapswipe-backend/commit/6dcb5a6774ab8876058a55d7b3cba6de7b81cf87))
+
+### 🍻 Pull Requests (9)
+- (#137) [Add link to project in mapswipe website (query)](https://github.com/mapswipe/mapswipe-backend/pull/137)
+- (#138) [Set filename max length to 255](https://github.com/mapswipe/mapswipe-backend/pull/138)
+- (#139) [Add contributor user on user query](https://github.com/mapswipe/mapswipe-backend/pull/139)
+- (#140) [Fix sync issue with usergroup membership and project exports](https://github.com/mapswipe/mapswipe-backend/pull/140)
+- (#141) [Feat(admin): make django form selection lazy](https://github.com/mapswipe/mapswipe-backend/pull/141)
+- (#142) [Make hint and success information mandatory on scenarios](https://github.com/mapswipe/mapswipe-backend/pull/142)
+- (#143) [Add validation for asset_specifics](https://github.com/mapswipe/mapswipe-backend/pull/143)
+- (#144) [Feat(graphql): add contributor user in user type](https://github.com/mapswipe/mapswipe-backend/pull/144)
+- (#145) [Return field level validation on serializers where possible](https://github.com/mapswipe/mapswipe-backend/pull/145)
+
+
 ## [0.2.0-dev5](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev4..v0.2.0-dev5) - 2025-09-01
 ### Changes:
 
