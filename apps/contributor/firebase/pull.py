@@ -78,7 +78,7 @@ def pull_user_group_memberships_from_firebase():
             firebase_id=key,
             contributor_user_group_firebase_id=valid_membership_log.userGroupId,
             contributor_user_firebase_id=valid_membership_log.userId,
-            date=datetime.datetime.fromtimestamp(valid_membership_log.timestamp),
+            date=datetime.datetime.fromtimestamp(int(valid_membership_log.timestamp / 1000)),
             action=ContributorUserGroupMembershipLogActionEnum.from_firebase(valid_membership_log.action),
         )
         bulk_create_manager.add(membership_log)
