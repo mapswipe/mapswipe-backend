@@ -22,7 +22,7 @@ class BaseProjectArgs(TypedDict):
     requesting_organization: str
     created_by: User
     created_at: datetime
-    cover_image: str
+    cover_image: str | None
     is_private: bool
     progress: int
 
@@ -124,19 +124,27 @@ class SlackMessage:
         requesting_organization: str,
         created_by: User,
         created_at: datetime,
-        cover_image: str,
+        cover_image: str | None,
         progress: int,
         is_private: bool = True,
     ) -> dict:
-        def generate_progress_bar(progress: int, bar_length: int = 8) -> str:
+        def generate_progress_bar(progress: int, bar_length: int = 6) -> str:
             filled_length = int(round(bar_length * progress // 100))
-            bar = "█ " * filled_length + "░ " * (bar_length - filled_length)
-            return f"[{bar}] {progress}%"
+            bar = "⬛" * filled_length + "⬜" * (bar_length - filled_length)
+            return f"[{bar}]{progress}%"
 
         manager_dashboard_url = settings.MANAGER_DASHBOARD_DOMAIN.geturl()
         progress_bar = generate_progress_bar(progress)
 
-        return {
+        if tutorial_id is not None:
+            tutorial_text = (
+                f"Tutorial: <{manager_dashboard_url}/tutorials/{tutorial_id}/edit|Tutorial Link>\n"
+                f"Tutorial ID: {tutorial_id}\n"
+            )
+        else:
+            tutorial_text = "Tutorial: _No tutorial linked_\n"
+
+        section_block = {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
@@ -144,8 +152,7 @@ class SlackMessage:
                     f"Project Name: <{manager_dashboard_url}/project/{project_id}/edit|{project_name}>\n"
                     f"Project ID: {project_id}\n"
                     f"Project Type: {project_type}\n"
-                    f"Tutorial: <{manager_dashboard_url}/tutorials/{tutorial_id}/edit|Tutorial Link>\n"
-                    f"Tutorial ID: {tutorial_id}\n"
+                    f"{tutorial_text}"
                     f"Requesting Organization: {requesting_organization}\n"
                     f"Created By: {created_by}\n"
                     f"Created At: {created_at.strftime('%b. %d, %Y, %-I:%M %p')}\n"
@@ -153,12 +160,16 @@ class SlackMessage:
                     f"{'This is a private project :lock:' if is_private else ''}\n"
                 ),
             },
-            "accessory": {
+        }
+
+        if cover_image:
+            section_block["accessory"] = {
                 "type": "image",
                 "image_url": cover_image,
                 "alt_text": "Project Cover Image",
-            },
-        }
+            }
+
+        return section_block
 
     @classmethod
     def get_message_for_project_progress(
@@ -171,7 +182,7 @@ class SlackMessage:
         created_by: User,
         created_at: datetime,
         progress: int,
-        cover_image: str,
+        cover_image: str | None,
         is_private: bool,
     ) -> MapswipeSlack.MapswipeSlackMessageArgumentType:
         if progress == 100:
@@ -323,7 +334,7 @@ class SlackMessage:
         requesting_organization: str,
         created_by: User,
         created_at: datetime,
-        cover_image: str,
+        cover_image: str | None,
         is_private: bool,
         progress: int,
     ) -> MapswipeSlack.MapswipeSlackMessageArgumentType:
@@ -385,7 +396,7 @@ class SlackMessage:
         created_at: datetime,
         modified_by: User,
         modified_at: datetime,
-        cover_image: str,
+        cover_image: str | None,
         is_private: bool,
         progress: int,
     ) -> MapswipeSlack.MapswipeSlackMessageArgumentType:
@@ -448,11 +459,7 @@ def base_message_args(project: Project) -> BaseProjectArgs:
         "requesting_organization": project.requesting_organization.name,
         "created_by": project.created_by,
         "created_at": project.created_at,
-        "cover_image": (
-            get_absolute_file_url(project.image.file)
-            if project.image
-            else "https://pbs.twimg.com/profile_images/625633822235693056/lNGUneLX_400x400.jpg"
-        ),
+        "cover_image": (get_absolute_file_url(project.image.file) if project.image else None),
         "is_private": project.is_private,
         "progress": project.progress,
     }
