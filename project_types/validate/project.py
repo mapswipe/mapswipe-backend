@@ -355,8 +355,8 @@ class ValidateProject(
             created_by=self.project.modified_by,
             modified_by=self.project.modified_by,
         )
-        self.project.project_type_specific_output = asset
-        self.project.save(update_fields=("project_type_specific_output",))
+        self.project.project_type_specific_output_asset = asset
+        self.project.save(update_fields=("project_type_specific_output_asset",))
 
     @typing.override
     def get_max_time_spend_percentile(self) -> float:
