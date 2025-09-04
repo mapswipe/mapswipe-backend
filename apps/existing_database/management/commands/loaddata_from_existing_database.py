@@ -22,7 +22,7 @@ from django.db.utils import IntegrityError
 from django.utils import timezone
 from ulid import ULID
 
-from apps.common.models import AssetTypeEnum
+from apps.common.models import AssetTypeEnum, GlobalExportAsset, GlobalExportAssetTypeEnum
 from apps.community_dashboard.models import (
     AggregatedTracking,
     AggregatedTrackingTypeEnum,
@@ -860,6 +860,29 @@ class Command(BaseCommand):
             user.is_active = is_active
             user.save(update_fields=("email", "is_active"))
 
+    def handle_global_export_assets(self):
+        existing_api_map = {
+            GlobalExportAssetTypeEnum.PROJECT_STATS_BY_TYPES: "/api/stats.csv",
+            GlobalExportAssetTypeEnum.PROJECTS_CSV: "/api/projects/projects.csv",
+            GlobalExportAssetTypeEnum.PROJECTS_CENTROID_GEOJSON: "/api/projects/projects_centroid.geojson",
+            GlobalExportAssetTypeEnum.PROJECTS_GEOM_GEOJSON: "/api/projects/projects_geom.geojson",
+        }
+
+        self.stdout.write("Fetching global export assets")
+        for type_ in GlobalExportAssetTypeEnum:
+            url = urljoin(Config.EXISTING_SYSTEM_API.geturl(), existing_api_map[type_])
+            logger.info("Downloading %s from %s", type_.label, url)
+            response = httpx.get(url, verify=not Config.EXISTING_SYSTEM_API_INSECURE)
+            response.raise_for_status()
+            content_file = ContentFile(response.content, name=GlobalExportAssetTypeEnum.get_file_name(type_))
+            GlobalExportAsset.objects.update_or_create(
+                type=type_,
+                defaults={
+                    "file": content_file,
+                    "file_size": content_file.size,
+                },
+            )
+
     def _handle(self):
         self.handle_contributor_users()
         self.handle_organization()
@@ -871,6 +894,7 @@ class Command(BaseCommand):
         self.handle_project()
         self.handle_aggregated_dataset()
         self.handle_firebase()
+        self.handle_global_export_assets()
         self.bulk_create_mgr.done()
         self.stdout.write(f"Bulk create summary: {self.bulk_create_mgr.summary()}")
 

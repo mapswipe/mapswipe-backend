@@ -25,6 +25,8 @@ class CeleryLock:
         USERS_PULL_FROM_FIREBASE = "USERS_PULL_FROM_FIREBASE"
         USER_GROUP_MEMBERSHIPS_PULL_FROM_FIREBASE = "USER_GROUP_MEMBERSHIPS_PULL_FROM_FIREBASE"
 
+        GLOBAL_PROJECT_ASSETS = "GLOBAL_PROJECT_ASSETS"
+
     @staticmethod
     @contextmanager
     def redis_lock(lock_id: str):

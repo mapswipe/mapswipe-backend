@@ -25,6 +25,7 @@ type AppEnumCollection {
   AssetMimetypeEnum: [AppEnumCollectionAssetMimetypeEnum!]!
   AssetTypeEnum: [AppEnumCollectionAssetTypeEnum!]!
   ContributorUserGroupMembershipLogActionEnum: [AppEnumCollectionContributorUserGroupMembershipLogActionEnum!]!
+  GlobalExportAssetTypeEnum: [AppEnumCollectionGlobalExportAssetTypeEnum!]!
   IconEnum: [AppEnumCollectionIconEnum!]!
   MappingSessionClientTypeEnum: [AppEnumCollectionMappingSessionClientTypeEnum!]!
   OverlayLayerTypeEnum: [AppEnumCollectionOverlayLayerTypeEnum!]!
@@ -54,6 +55,11 @@ type AppEnumCollectionAssetTypeEnum {
 
 type AppEnumCollectionContributorUserGroupMembershipLogActionEnum {
   key: ContributorUserGroupMembershipLogActionEnum!
+  label: String!
+}
+
+type AppEnumCollectionGlobalExportAssetTypeEnum {
+  key: GlobalExportAssetTypeEnum!
   label: String!
 }
 
@@ -784,6 +790,24 @@ enum FirebasePushStatusEnum {
 }
 
 scalar GenericJSON
+
+"""Model representing a global export asset with associated metadata."""
+type GlobalExportAssetType {
+  """The file associated with the asset"""
+  file: MapswipeDjangoFileType
+
+  """The size of the file in bytes"""
+  fileSize: Int!
+  lastUpdatedAt: DateTime!
+  type: GlobalExportAssetTypeEnum!
+}
+
+enum GlobalExportAssetTypeEnum {
+  PROJECTS_CENTROID_GEOJSON
+  PROJECTS_CSV
+  PROJECTS_GEOM_GEOJSON
+  PROJECT_STATS_BY_TYPES
+}
 
 input IDBaseFilterLookup {
   """Exact match. Filter will be skipped on `null` value"""
@@ -1867,6 +1891,8 @@ type Query {
   contributorUsers(pagination: OffsetPaginationInput, filters: ContributorUserFilter, order: ContributorUserOrder): ContributorUserTypeOffsetPaginated!
   defaultCustomOptions(projectType: ProjectTypeEnum!): [CustomOptionType!]! @isAuthenticated
   enums: AppEnumCollection!
+  globalExportAsset(assetType: GlobalExportAssetTypeEnum!): GlobalExportAssetType!
+  globalExportAssets: [GlobalExportAssetType!]!
   me: UserMeType
   organization(id: ID!): OrganizationType! @isAuthenticated
   organizations(includeAll: Boolean! = false, filters: OrganizationFilter, order: OrganizationOrder, pagination: OffsetPaginationInput): OrganizationTypeOffsetPaginated! @isAuthenticated

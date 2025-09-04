@@ -1,16 +1,25 @@
 import datetime
 import typing
 
+import pytest
 from django.contrib.gis.geos import Point
 
+from apps.common.models import GlobalExportAsset
 from apps.contributor.factories import ContributorUserFactory
 from apps.mapping.factories import (
     MappingSessionFactory,
     MappingSessionResultFactory,
 )
 from apps.project.exports.exports import export_project_data
-from apps.project.factories import OrganizationFactory, ProjectFactory, ProjectTaskFactory, ProjectTaskGroupFactory
+from apps.project.factories import (
+    OrganizationFactory,
+    ProjectAssetFactory,
+    ProjectFactory,
+    ProjectTaskFactory,
+    ProjectTaskGroupFactory,
+)
 from apps.project.models import ProjectAsset, ProjectStatusEnum, ProjectTypeEnum
+from apps.project.tasks import regenerate_global_project_assets
 from apps.user.factories import UserFactory
 from main.tests import TestCase
 from project_types.tile_map_service.find.project import (
@@ -36,6 +45,20 @@ class TestProjectExport(TestCase):
         )
 
         cls.organization1 = OrganizationFactory.create(**cls.user_resource_kwargs)
+
+        # Dummy projects
+        ProjectFactory.create_batch(
+            5,
+            **cls.user_resource_kwargs,
+            requesting_organization=cls.organization1,
+            project_type=ProjectTypeEnum.FIND,
+        )
+        ProjectFactory.create_batch(
+            2,
+            **cls.user_resource_kwargs,
+            requesting_organization=cls.organization1,
+            project_type=ProjectTypeEnum.VALIDATE,
+        )
 
         cls.project = ProjectFactory.create(
             **cls.user_resource_kwargs,
@@ -75,6 +98,9 @@ class TestProjectExport(TestCase):
                 ).model_dump(),
             )
         ]
+        cls.project_image = ProjectAssetFactory.generate_image_asset(project=cls.project, **cls.user_resource_kwargs)
+        cls.project.image = cls.project_image
+        cls.project.save()
 
         cls.now = datetime.datetime(
             year=2025,
@@ -119,9 +145,10 @@ class TestProjectExport(TestCase):
             for contributor_user in contributor_users
         }
 
-    def test_filter_by_id(self):
-        assert ProjectAsset.objects.count() == 0
+    def test_exports(self):
+        assert ProjectAsset.objects.count() == 1
         export_project_data(self.project)
+
         new_project_assets_01 = {project_asset.pk: project_asset.file.name for project_asset in ProjectAsset.objects.all()}
         export_project_data(self.project)
 
@@ -129,3 +156,73 @@ class TestProjectExport(TestCase):
 
         # Exports name should't change on re-generate
         assert new_project_assets_02 == new_project_assets_01
+
+    def test_project_stats(self):
+        project = self.project
+
+        def _get_data():
+            project.refresh_from_db()
+            return {
+                "progress": project.progress,
+                "number_of_contributor_users": project.number_of_contributor_users,
+                "number_of_results": project.number_of_results,
+                "number_of_results_for_progress": project.number_of_results_for_progress,
+                "last_contribution_date": project.last_contribution_date,
+            }
+
+        assert _get_data() == {
+            "progress": 0,
+            "number_of_contributor_users": 0,
+            "number_of_results": 0,
+            "number_of_results_for_progress": 0,
+            "last_contribution_date": None,
+        }
+
+        export_project_data(self.project)
+
+        assert _get_data() == {
+            "progress": 10,
+            "number_of_contributor_users": 10,
+            "number_of_results": 4000,
+            "number_of_results_for_progress": 4000,
+            "last_contribution_date": datetime.date(2025, 5, 8),
+        }
+
+    def test_project_overall_global_assets(self):
+        # TODO: Add file content match
+        assert GlobalExportAsset.objects.count() == 0
+        export_project_data(self.project)
+        regenerate_global_project_assets()
+        assert GlobalExportAsset.objects.count() == 3
+
+        # XXX: To look at the preview
+        # for a in GlobalExportAsset.objects.all():
+        #     print(a.type_enum.label, "#" * 22)
+        #     print(a.file.read().decode("utf-8"))
+        #     print("-" * 22)
+        # assert False
+
+        assert [
+            {
+                "type": a.type_enum.label,
+                "file_name": a.file.name,
+                # "file_size": pytest.approx(a.file.size, rel=0.1),
+            }
+            for a in GlobalExportAsset.objects.all()
+        ] == [
+            {
+                "type": "All projects",
+                "file_name": "global/asset/projects.csv",
+                # "file_size": 1840,
+            },
+            {
+                "type": "Projects geojson with centroid",
+                "file_name": "global/asset/projects_centroid.geojson",
+                # "file_size": 4890,
+            },
+            {
+                "type": "Project Type Aggregates",
+                "file_name": "global/asset/project_stats_by_types.csv",
+                # "file_size": 200,
+            },
+        ]

@@ -27,6 +27,7 @@ ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     common_models.IconEnum,
     common_models.AssetMimetypeEnum,
     common_models.AssetTypeEnum,
+    common_models.GlobalExportAssetTypeEnum,
     tutorial_models.TutorialStatusEnum,
     tutorial_models.TutorialInformationPageBlockTypeEnum,
     tutorial_models.TutorialAssetInputTypeEnum,

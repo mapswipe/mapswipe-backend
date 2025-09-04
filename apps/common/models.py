@@ -10,6 +10,7 @@ from django_stubs_ext.db.models import TypedModelMeta
 from ulid import ULID
 
 from main.db import Model
+from main.fields import OverwritableFileField
 from utils.common import validate_ulid
 
 if typing.TYPE_CHECKING:
@@ -280,6 +281,7 @@ class CommonAsset(Model):
         help_text=gettext_lazy("If this flag is enabled, this asset will be deleted in the future"),
     )
 
+    # TODO: Use OverwritableFileField?
     file = models.FileField(
         upload_to=UploadHelper.common_asset,
         help_text=gettext_lazy("The file associated with the asset"),
@@ -305,3 +307,65 @@ class CommonAsset(Model):
     def usable_objects(cls):
         """Get objects that are mot marked for deletion."""
         return cls.objects.filter(marked_as_deleted=False)
+
+
+# Models
+
+
+class GlobalExportAssetTypeEnum(models.IntegerChoices):
+    """Enum representing the types of global export assets."""
+
+    PROJECT_STATS_BY_TYPES = 1, "Project Type Aggregates"
+    """Previously known as /api/stats.csv."""
+
+    PROJECTS_CSV = 2, "All projects"
+    """Previously known as /api/projects/projects.csv."""
+
+    PROJECTS_CENTROID_GEOJSON = 3, "Projects geojson with centroid"
+    """Previously known as /api/projects/projects_centroid.geojson."""
+
+    PROJECTS_GEOM_GEOJSON = 4, "Projects Geojson with GEOM"
+    """Previously known as /api/projects/projects_geom.geojson."""
+
+    @classmethod
+    def get_file_name(cls, enum_value: typing.Self):
+        if enum_value == cls.PROJECT_STATS_BY_TYPES:
+            return "project_stats_by_types.csv"
+        if enum_value == cls.PROJECTS_CSV:
+            return "projects.csv"
+        if enum_value == cls.PROJECTS_CENTROID_GEOJSON:
+            return "projects_centroid.geojson"
+        if enum_value == cls.PROJECTS_GEOM_GEOJSON:
+            return "projects_geom.geojson"
+        typing.assert_never(enum_value)
+
+
+class GlobalExportAsset(models.Model):
+    """Model representing a global export asset with associated metadata."""
+
+    type: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=GlobalExportAssetTypeEnum,
+        primary_key=True,
+    )
+
+    file_size = models.PositiveIntegerField[int, int](
+        help_text=gettext_lazy("The size of the file in bytes"),
+    )
+
+    file = OverwritableFileField(
+        upload_to="global/asset/",
+        help_text=gettext_lazy("The file associated with the asset"),
+        null=True,
+        blank=True,
+        max_length=255,
+    )
+
+    last_updated_at = models.DateTimeField(auto_now=True)
+
+    @typing.override
+    def __str__(self):
+        return f"{self.type_enum.label}"
+
+    @property
+    def type_enum(self):
+        return GlobalExportAssetTypeEnum(self.type)
