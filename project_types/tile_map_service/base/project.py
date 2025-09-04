@@ -8,7 +8,7 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
-from pydantic import BaseModel, ValidationInfo, model_validator
+from pydantic import BaseModel
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 from ulid import ULID
@@ -39,29 +39,6 @@ class TileMapServiceProjectProperty(base_project.BaseProjectProperty):
     tile_server_property: RasterTileServerConfig
     aoi_geometry: custom_fields.PydanticId
 
-    @model_validator(mode="after")
-    def check_aoi_geometry_exists(self, info: ValidationInfo) -> typing.Self:
-        if not isinstance(info.context, dict):
-            # Skipping validation in case context is not defined
-            return self
-
-        project_id = info.context.get("project_id")
-        asset_exists = (
-            ProjectAsset.usable_objects()
-            .filter(
-                id=self.aoi_geometry,
-                type=AssetTypeEnum.INPUT,
-                input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
-                project_id=project_id,
-            )
-            .exists()
-        )
-
-        # FIXME(tnagorra): Handle error
-        if not asset_exists:
-            raise ValueError(f"ProjectAsset with id {self.aoi_geometry} is invalid or does not exist.")
-        return self
-
 
 class TileMapServiceProjectTaskGroupProperty(base_project.BaseProjectTaskGroupProperty):
     x_max: int
@@ -91,6 +68,15 @@ class TileMapServiceBaseProject[
 ):
     def __init__(self, project: Project):
         super().__init__(project)
+
+    @typing.override
+    def get_aoi_geometry_asset(self) -> ProjectAsset | None:
+        return ProjectAsset.usable_objects().get(
+            id=int(self.project_type_specifics.aoi_geometry),
+            type=ProjectAsset.Type.INPUT,
+            input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
+            project_id=self.project.pk,
+        )
 
     @typing.override
     def post_create_groups(self):
@@ -142,8 +128,8 @@ class TileMapServiceBaseProject[
             created_by=self.project.modified_by,
             modified_by=self.project.modified_by,
         )
-        self.project.project_type_specific_output = asset
-        self.project.save(update_fields=("project_type_specific_output",))
+        self.project.project_type_specific_output_asset = asset
+        self.project.save(update_fields=("project_type_specific_output_asset",))
 
         # TODO(thenav56): Calculate centroid, bounding box, etc.
         # TODO(thenav56): Calculate: total_area, time_spent_max_allowed
@@ -222,13 +208,9 @@ class TileMapServiceBaseProject[
         """Validate project before creating groups."""
         self.project.update_processing_status(Project.ProcessingStatus.VALIDATING_GEOMETRY, True)
 
-        aoi_asset = ProjectAsset.usable_objects().get(
-            id=self.project_type_specifics.aoi_geometry,
-            type=AssetTypeEnum.INPUT,
-            input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
-            mimetype=AssetMimetypeEnum.GEOJSON,
-            project_id=self.project.pk,
-        )
+        aoi_asset = self.project.aoi_geometry_input_asset
+        if not aoi_asset:
+            raise Exception("Could not find AOI geometry asset")
 
         extension = Path(aoi_asset.file.name).suffix
         with tempfile.NamedTemporaryFile(suffix=extension, dir=settings.TEMP_DIR) as temp_file:

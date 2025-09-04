@@ -12,6 +12,7 @@ from utils.common import (
     compress_tasks,
     gzip_str,
     parse_b64gzjson_to_dict,
+    recursively_find_value,
     validate_geojson_file,
     validate_imagery_url,
     validate_ulid,
@@ -29,6 +30,36 @@ class TestUtils(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+
+    def test_recursively_find_value(self):
+        assert (
+            recursively_find_value(
+                {"id": 12},
+                "id",
+            )
+            == 12
+        )
+        assert (
+            recursively_find_value(
+                {"id": 12},
+                "fid",
+            )
+            is None
+        )
+        assert (
+            recursively_find_value(
+                {"id": 12, "meta": {"fid": 100}},
+                "fid",
+            )
+            == 100
+        )
+        assert (
+            recursively_find_value(
+                {"id": 12, "meta": [{"name": "ram"}, {"fid": 100}]},
+                "fid",
+            )
+            == 100
+        )
 
     def test_validate_imagery_url(self):
         """Test valid XYZ tile URL format."""

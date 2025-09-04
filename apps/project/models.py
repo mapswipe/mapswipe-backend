@@ -337,8 +337,14 @@ class Project(UserResource, FirebasePushResource):
     # Also, used in SQL queries
     project_type_specifics = models.JSONField(blank=True, null=True)
 
-    # FIXME(tnagorra): Do we need to reference this to project table?
-    project_type_specific_output = models.ForeignKey["ProjectAsset | None", "ProjectAsset | None"](
+    aoi_geometry_input_asset = models.ForeignKey["ProjectAsset | None", "ProjectAsset | None"](
+        "project.ProjectAsset",
+        related_name="+",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+    project_type_specific_output_asset = models.ForeignKey["ProjectAsset | None", "ProjectAsset | None"](
         "project.ProjectAsset",
         related_name="+",
         blank=True,
@@ -511,6 +517,7 @@ class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibl
 
     # Type hints
     project_id: int
+    id: int
 
 
 class ProjectTaskGroup(FirebasePushResource):

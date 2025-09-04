@@ -15,7 +15,7 @@ from apps.common.serializers import ArchivableResourceSerializer, CommonAssetSer
 from apps.contributor.models import ContributorTeam
 from apps.project.firebase.push import FirebaseOrganizationPush
 from apps.tutorial.models import Tutorial
-from project_types.store import get_project_property
+from project_types.store import get_project_property, get_project_type_handler
 from utils.asset_types.models import AoiGeometryAssetProperty, ObjectImageAssetProperty
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
@@ -76,7 +76,6 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
-            "project_type",
             "topic",
             "region",
             "project_number",
@@ -156,14 +155,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
     def _validate_project_type_specifics(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
 
-        project_type = attrs.get("project_type") or self.instance.project_type_enum
-        if project_type is None:
-            raise serializers.ValidationError(
-                {
-                    "project_type": gettext("Project type is required."),
-                },
-            )
-
+        project_type = self.instance.project_type_enum
         project_type_label = ProjectTypeEnum.get_display(project_type)
 
         project_property = get_project_property(project_type)
@@ -220,6 +212,18 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         self._validate_project_instruction(attrs)
         self._validate_project_type_specifics(attrs)
         return super().validate(attrs)
+
+    @typing.override
+    def update(self, instance: Project, validated_data: dict[typing.Any, typing.Any]):
+        proj = super().update(instance, validated_data)
+
+        # NOTE: We only need to attach aoi_geometry_input_asset if project_type_specifics is defined
+        if proj.project_type_specifics:
+            project_handler = get_project_type_handler(proj.project_type_enum)(proj)
+            proj.aoi_geometry_input_asset = project_handler.get_aoi_geometry_asset()
+            proj.save(update_fields=["aoi_geometry_input_asset"])
+
+        return proj
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
