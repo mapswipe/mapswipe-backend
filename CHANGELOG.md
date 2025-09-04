@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.2.0-dev7](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev6..v0.2.0-dev7) - 2025-09-04
+### Changes:
+
+#### 🚀  Features
+
+- *(docker)* Set MAPILLARY_API_KEY key on docker compose - ([f4a04b3](https://github.com/mapswipe/mapswipe-backend/commit/f4a04b35c82590911de2cdf1cc1aef02708c27d0))
+- *(project)* Update mapillary api calls - ([5620d2a](https://github.com/mapswipe/mapswipe-backend/commit/5620d2a9e8c9e3b6c63c3f0c6bdb71c1b70c2831))
+- *(project)* Add street project type - ([d149800](https://github.com/mapswipe/mapswipe-backend/commit/d149800573669fb717f4f4b32a92004737c475b5))
+- *(street)* Add max time spend percentile - ([a48328d](https://github.com/mapswipe/mapswipe-backend/commit/a48328d6036c042fbb5439d3c1dc6aa5e86d15aa))
+- *(street)* Add numberOfGroups for the street project - ([a274ca1](https://github.com/mapswipe/mapswipe-backend/commit/a274ca11d9458bfbdfe49d89f042c00d59e1fc91))
+- *(street)* Add tutorial schema for street - ([6836bf6](https://github.com/mapswipe/mapswipe-backend/commit/6836bf68ff8041de01599cd367929fe1523158c7))
+- *(street)* Tasks and groups for street project - ([8e04cf5](https://github.com/mapswipe/mapswipe-backend/commit/8e04cf5487571ed044bef84b20766c380a035513))
+- Use pre-parsed project names in loaddata - ([2720a07](https://github.com/mapswipe/mapswipe-backend/commit/2720a075e4bdec32fae4da18ac859fa34a835fdb))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(migration)* Merge migrations - ([08a0734](https://github.com/mapswipe/mapswipe-backend/commit/08a0734f6d4d95757e13df83889c4decf171937e))
+
+### 🍻 Pull Requests (2)
+- (#118) [Feature: Street project type](https://github.com/mapswipe/mapswipe-backend/pull/118)
+- (#147) [Feat: use pre-parsed project names in loaddata](https://github.com/mapswipe/mapswipe-backend/pull/147)
+
+
 ## [0.2.0-dev6](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev5..v0.2.0-dev6) - 2025-09-03
 ### Changes:
 
