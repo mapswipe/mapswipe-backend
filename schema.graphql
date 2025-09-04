@@ -326,7 +326,7 @@ type CompareTutorialTaskPropertyType {
   tileZ: Int!
 }
 
-union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyType = CompareTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | FindTutorialTaskPropertyType | StreetTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | ValidateTutorialTaskPropertyType
+union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType = CompareTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | FindTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | ValidateTutorialTaskPropertyType
 
 input CompletenessProjectPropertyInput {
   """Numeric value as string"""
@@ -2152,10 +2152,6 @@ type StreetProjectPropertyType {
   mapillaryImageFilters: StreetMapillaryImageFilters!
 }
 
-type StreetTutorialTaskPropertyType {
-  objectGeometry: String!
-}
-
 """Model representing assets for a tutorial."""
 input TutorialAssetCreateInput {
   clientId: String!
@@ -2505,7 +2501,7 @@ type TutorialTaskType implements UserResourceTypeMixin {
   id: ID!
   modifiedAt: DateTime!
   modifiedBy: UserType!
-  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyType
+  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType
   reference: Int!
   scenarioId: ID!
 }
