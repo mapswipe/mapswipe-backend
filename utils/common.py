@@ -17,6 +17,26 @@ from geojson_pydantic import FeatureCollection
 from ulid import ULID
 
 
+def recursively_find_value(data: typing.Any, target_key: str):
+    if isinstance(data, list):
+        for item in data:
+            value = recursively_find_value(item, target_key)
+            if value:
+                return value
+        return None
+
+    if isinstance(data, dict):
+        for key, item in data.items():
+            if key == target_key:
+                return item
+            value = recursively_find_value(item, target_key)
+            if value:
+                return value
+        return None
+
+    return None
+
+
 # NOTE: We are treating file with empty name as None as well
 def is_file_empty(file: files.FieldFile | None) -> typing.TypeIs[None]:
     if not file:

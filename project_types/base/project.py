@@ -86,6 +86,9 @@ class BaseProject[
         super().__init_subclass__(**kwargs)
         cls._inheritance_checks()
 
+    def get_aoi_geometry_asset(self) -> ProjectAsset | None:
+        return None
+
     def analyze_groups(self):
         # Update number_of_tasks
         self.project.update_processing_status(Project.ProcessingStatus.ANALYZING_GROUPS_AND_TASK, True)

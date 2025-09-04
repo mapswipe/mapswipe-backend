@@ -72,16 +72,22 @@ class StreetProject(
             assert project.project_type == ProjectTypeEnum.STREET, f"{type(self)} is defined for STREET"
 
     @typing.override
+    def get_aoi_geometry_asset(self) -> ProjectAsset | None:
+        return ProjectAsset.usable_objects().get(
+            id=int(self.project_type_specifics.aoi_geometry),
+            type=ProjectAsset.Type.INPUT,
+            input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
+            project_id=self.project.pk,
+        )
+
+    @typing.override
     def validate(self) -> Grouping[StreetFeature]:
         """Validate project before creating groups."""
         self.project.update_processing_status(Project.ProcessingStatus.VALIDATING_GEOMETRY, True)
 
-        aoi_asset = ProjectAsset.usable_objects().get(
-            id=self.project_type_specifics.aoi_geometry,
-            type=AssetTypeEnum.INPUT,
-            input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
-            project_id=self.project.pk,
-        )
+        aoi_asset = self.project.aoi_geometry_input_asset
+        if not aoi_asset:
+            raise Exception("Could not find AOI geometry asset")
 
         with aoi_asset.file.open() as aoi_file:
             aoi_geojson = json.loads(aoi_file.read())

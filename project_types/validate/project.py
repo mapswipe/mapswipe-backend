@@ -124,6 +124,20 @@ class ValidateProject(
     def __init__(self, project: Project):
         super().__init__(project)
 
+    @typing.override
+    def get_aoi_geometry_asset(self) -> ProjectAsset | None:
+        if self.project_type_specifics.object_source.source_type != ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
+            return None
+        if not self.project_type_specifics.object_source.aoi_geometry:
+            return None
+
+        return ProjectAsset.usable_objects().get(
+            id=int(self.project_type_specifics.object_source.aoi_geometry),
+            type=ProjectAsset.Type.INPUT,
+            input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
+            project_id=self.project.pk,
+        )
+
     def _process_polygons(self, geojson_data: dict[str, Any]) -> list[ValidFeature]:
         """We only want polygon and multipolygon features."""
         try:
@@ -164,12 +178,9 @@ class ValidateProject(
         if self.project_type_specifics.object_source.ohsome_filter is None:
             raise Exception("Ohsome filter is missing for validate geojson file")
 
-        aoi_asset = ProjectAsset.usable_objects().get(
-            id=self.project_type_specifics.object_source.aoi_geometry,
-            type=AssetTypeEnum.INPUT,
-            input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
-            project_id=self.project.pk,
-        )
+        aoi_asset = self.project.aoi_geometry_input_asset
+        if not aoi_asset:
+            raise Exception("Could not find AOI geometry asset")
 
         with aoi_asset.file.open() as aoi_file:
             aoi_geojson = json.loads(aoi_file.read())

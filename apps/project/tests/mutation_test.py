@@ -244,6 +244,9 @@ class Mutation:
                 tutorial {
                   id
                 }
+                aoiGeometryInputAsset {
+                  id
+                }
               }
             }
           }
@@ -685,7 +688,7 @@ class TestProjectMutation(TestCase):
             project_instruction="Buildings",
             additional_info_url="https://hi-there/about.html",
             description="The new **project** from hi-there.",
-            project_type_specifics=None,
+            project_type_specifics={},
         )
 
         project_data = {
@@ -724,6 +727,7 @@ class TestProjectMutation(TestCase):
                 clientId=latest_project.client_id,
                 projectType=self.genum(ProjectTypeEnum.FIND),
                 requestingOrganizationId=self.gID(latest_project.requesting_organization.pk),
+                aoiGeometryInputAsset=None,
                 requestingOrganization=dict(
                     id=self.gID(latest_project.requesting_organization.pk),
                     name=latest_project.requesting_organization.name,
@@ -915,6 +919,8 @@ class TestProjectMutation(TestCase):
 
         latest_project.refresh_from_db()
         assert latest_project.image_id == int(image_asset["id"])
+        assert latest_project.aoi_geometry_input_asset
+        assert latest_project.aoi_geometry_input_asset.id == int(aoi_geometry_asset["id"])
         assert latest_project.project_type_specifics == {
             "zoom_level": 15,
             "aoi_geometry": aoi_geometry_asset["id"],
@@ -1336,6 +1342,8 @@ class TestProjectTypeMutation(TestCase):
         assert latest_project.created_by_id == self.user.pk
         assert latest_project.modified_by_id == self.user.pk
         assert latest_project.image_id == int(image_asset["id"])
+        assert latest_project.aoi_geometry_input_asset
+        assert latest_project.aoi_geometry_input_asset.id == int(aoi_geometry_asset["id"])
         assert latest_project.project_type_specifics == {
             "aoi_geometry": aoi_geometry_asset["id"],
             "zoom_level": 15,
@@ -1629,6 +1637,8 @@ class TestProjectTypeMutation(TestCase):
         assert latest_project.modified_by_id == self.user.pk
         assert latest_project.image_id == int(image_asset["id"])
         assert latest_project.project_type_specifics is not None
+        assert latest_project.aoi_geometry_input_asset
+        assert latest_project.aoi_geometry_input_asset.id == int(aoi_geometry_asset["id"])
 
         street_project.StreetProjectProperty.model_validate(
             latest_project.project_type_specifics,
