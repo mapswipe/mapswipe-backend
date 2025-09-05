@@ -188,6 +188,13 @@ class ProjectStatusEnum(models.IntegerChoices):
     """
 
 
+class ProjectProgressStatusEnum(models.IntegerChoices):
+    """Enum representing the state of project's progress."""
+
+    ON_GOING = 1, "On going"
+    COMPLETED = 2, "Completed"
+
+
 class ProjectProcessingStatusEnum(models.IntegerChoices):
     """Enum representing the granular status of a project that is being processed."""
 
@@ -397,6 +404,11 @@ class Project(UserResource, FirebasePushResource):
 
     # -- After project is published
 
+    progress_status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=ProjectProgressStatusEnum,
+        default=ProjectProgressStatusEnum.ON_GOING,
+    )
+
     # TODO: Change this to float?
     progress = models.PositiveSmallIntegerField[int, int](
         default=0,
@@ -489,6 +501,10 @@ class Project(UserResource, FirebasePushResource):
     @property
     def status_enum(self):
         return ProjectStatusEnum(self.status)
+
+    @property
+    def progress_status_enum(self):
+        return ProjectProgressStatusEnum(self.progress_status)
 
     @typing.override
     def clean(self):

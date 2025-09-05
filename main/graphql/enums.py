@@ -20,6 +20,7 @@ ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     ValidateImageSourceTypeEnum,
     OverlayLayerTypeEnum,
     project_models.ProjectTypeEnum,
+    project_models.ProjectProgressStatusEnum,
     project_models.ProjectStatusEnum,
     project_models.ProjectProcessingStatusEnum,
     project_models.ProjectAssetInputTypeEnum,

@@ -159,6 +159,7 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
     aoi_geometry_input_asset: ProjectAssetType | None
     project_type_specific_output_asset: ProjectAssetType | None
 
+    progress_status: strawberry.auto
     progress: strawberry.auto
     number_of_contributor_users: strawberry.auto
     number_of_results: strawberry.auto

@@ -15,6 +15,7 @@ class ProjectFilter:
     status: strawberry.auto
     team: strawberry.auto
     is_private: strawberry.auto
+    progress_status: strawberry.auto
 
     topic = unaccented_filter("topic")
     region = unaccented_filter("region")

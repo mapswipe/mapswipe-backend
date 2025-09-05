@@ -32,6 +32,7 @@ type AppEnumCollection {
   ProjectAssetExportTypeEnum: [AppEnumCollectionProjectAssetExportTypeEnum!]!
   ProjectAssetInputTypeEnum: [AppEnumCollectionProjectAssetInputTypeEnum!]!
   ProjectProcessingStatusEnum: [AppEnumCollectionProjectProcessingStatusEnum!]!
+  ProjectProgressStatusEnum: [AppEnumCollectionProjectProgressStatusEnum!]!
   ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
   RasterTileServerNameEnum: [AppEnumCollectionRasterTileServerNameEnum!]!
@@ -90,6 +91,11 @@ type AppEnumCollectionProjectAssetInputTypeEnum {
 
 type AppEnumCollectionProjectProcessingStatusEnum {
   key: ProjectProcessingStatusEnum!
+  label: String!
+}
+
+type AppEnumCollectionProjectProgressStatusEnum {
+  key: ProjectProgressStatusEnum!
   label: String!
 }
 
@@ -1400,6 +1406,7 @@ input ProjectFilter {
   """
   isPrivate: BoolBaseFilterLookup
   name: String
+  progressStatus: ProjectProgressStatusEnumFilterLookup
   projectNumber: IntComparisonFilterLookup
   projectType: ProjectTypeEnumFilterLookup
   region: String
@@ -1504,6 +1511,59 @@ enum ProjectProcessingStatusEnum {
   GENERATING_TASKS_GEOJSON
   PREPARING
   VALIDATING_GEOMETRY
+}
+
+enum ProjectProgressStatusEnum {
+  COMPLETED
+  ON_GOING
+}
+
+input ProjectProgressStatusEnumFilterLookup {
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: ProjectProgressStatusEnum
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: ProjectProgressStatusEnum
+
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: ProjectProgressStatusEnum
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: ProjectProgressStatusEnum
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: ProjectProgressStatusEnum
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: ProjectProgressStatusEnum
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: ProjectProgressStatusEnum
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: ProjectProgressStatusEnum
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ProjectProgressStatusEnum!]
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: ProjectProgressStatusEnum
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: ProjectProgressStatusEnum
 }
 
 type ProjectRasterTileServerCommonConfig {
@@ -1677,6 +1737,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
 
   """Percentage of the required contribution that has been completed"""
   progress: Int!
+  progressStatus: ProjectProgressStatusEnum!
 
   """Provide project instruction"""
   projectInstruction: String

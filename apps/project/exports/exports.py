@@ -7,7 +7,7 @@ from ulid import ULID
 
 from apps.common.models import AssetTypeEnum
 from apps.project.exports.geojson import gzipped_csv_to_gzipped_geojson
-from apps.project.models import Project, ProjectAsset, ProjectAssetExportTypeEnum, ProjectTypeEnum
+from apps.project.models import Project, ProjectAsset, ProjectAssetExportTypeEnum, ProjectProgressStatusEnum, ProjectTypeEnum
 from apps.user.models import User
 from main.config import Config
 from main.logging import log_extra
@@ -150,15 +150,18 @@ def _export_project_data(project: Project, tmp_directory: Path):
 
     if not project_stats_by_date_df.empty:
         project.progress = project_stats_by_date_df["cum_progress"].iloc[-1] * 100
+        if project.progress == 100:
+            project.progress_status = ProjectProgressStatusEnum.COMPLETED
         project.number_of_contributor_users = project_stats_by_date_df["cum_number_of_users"].iloc[-1]
         project.number_of_results = project_stats_by_date_df["cum_number_of_results"].iloc[-1]
         project.number_of_results_for_progress = project_stats_by_date_df["cum_number_of_results_progress"].iloc[-1]
         project.last_contribution_date = project_stats_by_date_df.index[-1]
+        # TODO: Trigger slack notifications on progress change
 
-    # TODO: Add test
     project.save(
         update_fields=(
             "progress",
+            "progress_status",
             "number_of_contributor_users",
             "number_of_results",
             "number_of_results_for_progress",
