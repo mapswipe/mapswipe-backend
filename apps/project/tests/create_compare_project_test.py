@@ -159,7 +159,7 @@ class TestProjectE2E(TestCase):
         )
 
         # Load JSON5 file.
-        cls.filename = Path(settings.BASE_DIR) / "assets/tests/projects/find/create_find_project.json5"
+        cls.filename = Path(settings.BASE_DIR) / "assets/tests/projects/compare/create_compare_project.json5"
         with cls.filename.open("r", encoding="utf-8") as f:
             cls.data = json5.load(f)
 
@@ -224,7 +224,7 @@ class TestProjectE2E(TestCase):
         # Load update_project data and inject asset ids of image and AOI geometry.
         update_project_data = data["update_project"]
         update_project_data["image"] = image_id
-        update_project_data["projectTypeSpecifics"]["find"]["aoiGeometry"] = aoi_id
+        update_project_data["projectTypeSpecifics"]["compare"]["aoiGeometry"] = aoi_id
         update_project_data["requestingOrganization"] = organization.id
 
         # Run the update mutation.
@@ -315,7 +315,13 @@ class TestProjectE2E(TestCase):
 
         # Load task data to check if it is created correctly.
         project_tasks_ref = self.firebase_helper.ref(Config.FirebaseKeys.project_tasks(project_fb_id))
-        project_task_fb_data = project_tasks_ref.get()
+        project_task_fb_data_actual = project_tasks_ref.get()
 
-        # Since the task data is not stored in firebase it should be None.
-        assert project_task_fb_data is None
+        # JSON comparison for task data with ignored keys.
+        ignored_task_keys = {"projectId", "url", "urlB"}
+        sanitized_tasks_actual = remove_ignored_keys(project_task_fb_data_actual, ignored_task_keys)
+        sanitized_tasks_expected = remove_ignored_keys(data["final_task_data"], ignored_task_keys)
+
+        assert sanitized_tasks_actual == sanitized_tasks_expected, (
+            "Differences found between expected and actual tasks in firebase."
+        )
