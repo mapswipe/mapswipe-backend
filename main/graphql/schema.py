@@ -7,6 +7,7 @@ from strawberry_django.optimizer import DjangoOptimizerExtension
 # NOTE: We are importing monkey_patches for side-effect
 # The patch is required by the following graphql imports
 import utils.graphql.monkey_patches  # noqa: F401  # isort: skip # type: ignore[reportUnusedImport]
+from apps.common.graphql import queries as common_queries
 from apps.community_dashboard.graphql import queries as community_dashboard_queries
 from apps.contributor.graphql import mutations as contributor_mutations
 from apps.contributor.graphql import queries as contributor_queries
@@ -35,6 +36,7 @@ class CustomAsyncGraphQLView(AsyncGraphQLView):
 
 @strawberry.type
 class Query(
+    common_queries.Query,
     user_queries.Query,
     project_queries.Query,
     tutorial_queries.Query,

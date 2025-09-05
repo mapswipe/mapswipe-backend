@@ -4,6 +4,8 @@ import gzip
 import io
 import json
 import re
+import secrets
+import string
 import typing
 from warnings import deprecated
 
@@ -231,3 +233,7 @@ def to_groups[T](features: list[T], group_size: int, start_index: int = 100):
         groups[group_id_string]["features"].append(feature)
 
     return groups
+
+
+def get_random_string(length: int) -> str:
+    return "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(length))

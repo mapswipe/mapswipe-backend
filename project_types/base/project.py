@@ -4,9 +4,11 @@ import typing
 from abc import ABC, abstractmethod
 from collections import defaultdict
 
+from django.contrib.gis.db.models import GeometryField
 from django.contrib.gis.db.models.functions import Area
 from django.core.files.base import ContentFile
 from django.db import models
+from django.db.models.functions import Cast
 from firebase_admin.db import Reference as FbReference
 from pydantic import BaseModel, ConfigDict
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
@@ -104,7 +106,17 @@ class BaseProject[
             total_area=models.Subquery(
                 ProjectTask.objects.filter(task_group_id=models.OuterRef("id"))
                 .values("task_group_id")
-                .annotate(total_task_group_area=models.Sum(Area("geometry")))
+                .annotate(
+                    total_task_group_area=models.Sum(
+                        Area(
+                            Cast(
+                                "geometry",
+                                output_field=GeometryField(geography=True),
+                            ),
+                        ),
+                    )
+                    / 100_000,
+                )
                 .values("total_task_group_area")[:1],
             ),
         )

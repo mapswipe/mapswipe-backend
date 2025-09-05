@@ -1,8 +1,9 @@
 import datetime
 
 import strawberry
+import strawberry_django
 
-from apps.common.models import FirebasePushStatusEnum
+from apps.common.models import FirebasePushStatusEnum, GlobalExportAsset
 from apps.user.graphql.types import UserType
 
 
@@ -37,3 +38,14 @@ class CommonAssetTypeMixin:
     file_size: strawberry.auto
     mimetype: strawberry.auto
     marked_as_deleted: strawberry.auto
+
+
+# Types
+
+
+@strawberry_django.type(GlobalExportAsset)
+class GlobalExportAssetType:
+    type: strawberry.auto
+    file_size: strawberry.auto
+    file: strawberry.auto
+    last_updated_at: strawberry.auto

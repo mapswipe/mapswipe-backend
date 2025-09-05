@@ -1,4 +1,5 @@
 # pyright: reportUninitializedInstanceVariable=false
+import datetime
 import typing
 from warnings import deprecated
 
@@ -185,6 +186,13 @@ class ProjectStatusEnum(models.IntegerChoices):
     "Discarded" projects are not visible to the contributors.
     "Discarded" projects cannot be "un-discarded".
     """
+
+
+class ProjectProgressStatusEnum(models.IntegerChoices):
+    """Enum representing the state of project's progress."""
+
+    ON_GOING = 1, "On going"
+    COMPLETED = 2, "Completed"
 
 
 class ProjectProcessingStatusEnum(models.IntegerChoices):
@@ -391,9 +399,43 @@ class Project(UserResource, FirebasePushResource):
 
     # CALCULATED FIELDS
 
-    progress = models.PositiveSmallIntegerField[int, int](default=0, validators=[validate_percentage])
     required_results = models.IntegerField[int, int](default=0)
     result_count = models.IntegerField[int, int](default=0)  # NOTE: All project have 0 in production database
+
+    # -- After project is published
+
+    progress_status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=ProjectProgressStatusEnum,
+        default=ProjectProgressStatusEnum.ON_GOING,
+    )
+
+    # TODO: Change this to float?
+    progress = models.PositiveSmallIntegerField[int, int](
+        default=0,
+        validators=[validate_percentage],
+        help_text=gettext_lazy("Percentage of the required contribution that has been completed"),
+    )
+
+    number_of_contributor_users = models.PositiveIntegerField[int, int](
+        default=0,
+        help_text=gettext_lazy("Number of users who made contributions to this project"),
+    )
+    number_of_results = models.PositiveIntegerField[int, int](
+        default=0,
+        help_text=gettext_lazy("Number of results contributed to this project"),
+    )
+    number_of_results_for_progress = models.PositiveIntegerField[int, int](
+        default=0,
+        help_text=gettext_lazy(
+            "Number of results contributed to this project that can be used to calculate the progress of this project. "
+            "Max no. of results per task that can be used to calculate progress is equal to the `verification number`",
+        ),
+    )
+    last_contribution_date = models.DateField[datetime.date | None, datetime.date | None](
+        null=True,
+        blank=True,
+        help_text=gettext_lazy("Last recent contribution date"),
+    )
 
     # Type hints
     requesting_organization_id: int
@@ -459,6 +501,10 @@ class Project(UserResource, FirebasePushResource):
     @property
     def status_enum(self):
         return ProjectStatusEnum(self.status)
+
+    @property
+    def progress_status_enum(self):
+        return ProjectProgressStatusEnum(self.progress_status)
 
     @typing.override
     def clean(self):

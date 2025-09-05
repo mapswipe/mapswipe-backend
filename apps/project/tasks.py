@@ -2,6 +2,7 @@ import logging
 
 from celery import shared_task
 
+from apps.project.exports import overall_stats
 from apps.project.models import Project
 from main.cache import CeleryLock
 from project_types.store import get_project_type_handler
@@ -61,4 +62,15 @@ def generate_project_exports(
 
     project_type_handler = get_project_type_handler(project.project_type_enum)(project)
     project_type_handler.generate_exports()
+    return True
+
+
+@shared_task
+def regenerate_global_project_assets():
+    with CeleryLock.redis_lock(CeleryLock.Key.GLOBAL_PROJECT_ASSETS) as acquired:
+        if not acquired:
+            logger.warning("regenerate_global_project_assets already running")
+            return None
+
+    overall_stats.generate()
     return True

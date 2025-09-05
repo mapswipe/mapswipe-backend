@@ -4,8 +4,9 @@ from datetime import datetime
 from django.contrib import admin
 from django.db import models
 from django.http import HttpRequest
+from djangoql.admin import DjangoQLSearchMixin
 
-from apps.common.models import UserResource
+from apps.common.models import GlobalExportAsset, UserResource
 
 DjangoModel = typing.TypeVar("DjangoModel", bound=models.Model)
 
@@ -174,3 +175,8 @@ class FirebaseResourceAdmin(admin.ModelAdmin):
                 ],
             ),
         ]
+
+
+@admin.register(GlobalExportAsset)
+class GlobalExportAssetAdmin(DjangoQLSearchMixin, admin.ModelAdmin[GlobalExportAsset]):
+    list_display = ("type", "file_size", "file", "last_updated_at")

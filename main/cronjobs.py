@@ -77,6 +77,15 @@ SCHEDULES: dict[str, CronJob] = {
             max_runtime=2,
         ),
     ),
+    "regenerate_global_project_assets": CronJob(
+        task="apps.project.tasks.regenerate_global_project_assets",
+        schedule=crontab(hour="*"),  # Every hour
+        sentry_config=CronJobSentryConfig(
+            failure_issue_threshold=2,
+            checkin_margin=2,
+            max_runtime=2,
+        ),
+    ),
 }
 
 BEAT_SCHEDULES: dict[str, CeleryBeatSchedule] = {

@@ -8,9 +8,12 @@ from django.contrib.gis.geos import Point
 from factory.django import DjangoModelFactory
 from ulid import ULID
 
+from apps.common.models import AssetMimetypeEnum, AssetTypeEnum
+
 from .models import (
     Organization,
     Project,
+    ProjectAsset,
     ProjectTask,
     ProjectTaskGroup,
 )
@@ -25,6 +28,22 @@ class OrganizationFactory(DjangoModelFactory):
     name = factory.Sequence(lambda n: f"Organization {n}")
     description = "Test description"
     abbreviation = factory.Sequence(lambda n: f"ABBR {n}")
+
+
+class ProjectAssetFactory(DjangoModelFactory):
+    class Meta:
+        model = ProjectAsset
+
+    @classmethod
+    def generate_image_asset(cls, project: Project, **kwargs: typing.Any) -> ProjectAsset:
+        return cls.create(
+            project=project,
+            type=AssetTypeEnum.INPUT,
+            file=factory.django.FileField(filename=f"project_{project.pk}.jpeg"),
+            mimetype=AssetMimetypeEnum.IMAGE_JPEG,
+            file_size=factory.LazyAttribute(lambda obj: obj.file.size),
+            **kwargs,
+        )
 
 
 class ProjectFactory(DjangoModelFactory):
