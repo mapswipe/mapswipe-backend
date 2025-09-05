@@ -1,7 +1,6 @@
 import datetime
 import typing
 
-import pytest
 from django.contrib.gis.geos import Point
 
 from apps.common.models import GlobalExportAsset

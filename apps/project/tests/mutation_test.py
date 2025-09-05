@@ -1383,6 +1383,7 @@ class TestProjectTypeMutation(TestCase):
             firebase_id: str
             number_of_tasks: int
             required_count: int
+            total_area: float
             project_type_specifics: TaskGroupSpecificsType
 
         expected_task_groups: list[TaskGroupType] = [
@@ -1390,6 +1391,7 @@ class TestProjectTypeMutation(TestCase):
                 "firebase_id": "g101",
                 "number_of_tasks": 18,
                 "required_count": 18 * 10,
+                "total_area": 210.10735845202447,
                 "project_type_specifics": {
                     "x_max": 24152,
                     "x_min": 24147,
@@ -1401,6 +1403,7 @@ class TestProjectTypeMutation(TestCase):
                 "firebase_id": "g102",
                 "number_of_tasks": 24,
                 "required_count": 24 * 10,
+                "total_area": 280.2915392364502,
                 "project_type_specifics": {
                     "x_max": 24153,
                     "x_min": 24146,
@@ -1412,6 +1415,7 @@ class TestProjectTypeMutation(TestCase):
                 "firebase_id": "g103",
                 "number_of_tasks": 24,
                 "required_count": 24 * 10,
+                "total_area": 280.4398676951218,
                 "project_type_specifics": {
                     "x_max": 24153,
                     "x_min": 24146,
@@ -1423,6 +1427,7 @@ class TestProjectTypeMutation(TestCase):
                 "firebase_id": "g104",
                 "number_of_tasks": 6,
                 "required_count": 6 * 10,
+                "total_area": 70.14703242812156,
                 "project_type_specifics": {
                     "x_max": 24150,
                     "x_min": 24149,
@@ -1481,6 +1486,7 @@ class TestProjectTypeMutation(TestCase):
                     "firebase_id",
                     "number_of_tasks",
                     "required_count",
+                    "total_area",
                     "project_type_specifics",
                 ),
             ),
