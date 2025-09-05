@@ -7,15 +7,11 @@ import re
 import secrets
 import string
 import typing
-from urllib.parse import urlunparse
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.files.storage import FileSystemStorage, default_storage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models.fields import files
-from django.db.models.fields.files import FieldFile
 from django.utils.translation import gettext
 from ulid import ULID
 
@@ -215,10 +211,3 @@ def to_groups[T](features: list[T], group_size: int, start_index: int = 100):
 
 def get_random_string(length: int) -> str:
     return "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(length))
-
-
-def get_absolute_file_url(image_file: FieldFile) -> str:
-    url = image_file.url
-    if isinstance(default_storage, FileSystemStorage):
-        return f"{urlunparse(settings.APP_DOMAIN)}{url}"
-    return url

@@ -59,8 +59,8 @@ class Config:
 
     class CommunityDashboardKeys:
         @staticmethod
-        def contributor_user(firebae_id: str):
-            return f"{Config.COMMUNITY_DASHBOARD_DOMAIN.geturl()}/user/{firebae_id}"
+        def contributor_user(firebase_id: str):
+            return f"{Config.COMMUNITY_DASHBOARD_DOMAIN.geturl()}/user/{firebase_id}"
 
         @staticmethod
         def contributor_user_group(firebase_id: str):
@@ -70,6 +70,15 @@ class Config:
         @staticmethod
         def project(firebase_id: str):
             return f"{Config.WEBSITE_DOMAIN.geturl()}/en/projects/{firebase_id}"
+
+    class ManagerDashboardUrls:
+        @staticmethod
+        def project_url(project_id: int):
+            return f"{Config.MANAGER_DASHBOARD_DOMAIN.geturl()}/project/{project_id}/edit"
+
+        @staticmethod
+        def tutorial_url(tutorial_id: int):
+            return f"{Config.MANAGER_DASHBOARD_DOMAIN.geturl()}/tutorials/{tutorial_id}/edit"
 
     class FirebaseKeys:
         @staticmethod

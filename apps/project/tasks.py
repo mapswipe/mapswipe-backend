@@ -1,42 +1,15 @@
 import logging
-from datetime import datetime
-from typing import TypedDict
 
 from celery import shared_task
-from django.conf import settings
 
+from apps.common.utils import get_absolute_uri
 from apps.project.exports import overall_stats
-from apps.project.models import Project
+from apps.project.models import Project, ProjectStatusEnum, ProjectTypeEnum
 from apps.user.models import User
 from main.cache import CeleryLock
+from main.config import Config
 from project_types.store import get_project_type_handler
-from utils.common import get_absolute_file_url
 from utils.slack import MapswipeSlack
-
-
-class BaseProjectArgs(TypedDict):
-    project_name: str
-    project_id: int
-    project_type: int
-    tutorial_id: int | None
-    requesting_organization: str
-    created_by: User
-    created_at: datetime
-    cover_image: str | None
-    is_private: bool
-    progress: int
-
-
-class ProgressMessageArgs(BaseProjectArgs): ...
-
-
-class StatusUpdateMessageArgs(BaseProjectArgs):
-    modified_by: User
-    modified_at: datetime
-
-
-class CreationMessageArgs(BaseProjectArgs): ...
-
 
 logger = logging.getLogger(__name__)
 
@@ -100,72 +73,87 @@ def regenerate_global_project_assets():
 
     overall_stats.generate()
     return True
-class SlackMessage:
-    manager_dashboard_block = {
-        "accessory": {
-            "type": "button",
-            "text": {
-                "type": "plain_text",
-                "text": "Visit Dashboard",
-                "emoji": True,
-            },
-            "value": "manager-dashboard",
-            "url": settings.MANAGER_DASHBOARD_DOMAIN.geturl(),
-            "action_id": "button-action",
-        },
-    }
 
+
+class SlackMessage:
     @staticmethod
     def project_info_block(
-        project_name: str,
-        project_id: int,
-        project_type: int,
-        tutorial_id: int | None,
-        requesting_organization: str,
-        created_by: User,
-        created_at: datetime,
-        cover_image: str | None,
-        progress: int,
-        is_private: bool = True,
+        project: Project,
     ) -> dict:
-        def generate_progress_bar(progress: int, bar_length: int = 6) -> str:
-            filled_length = int(round(bar_length * progress // 100))
-            bar = "⬛" * filled_length + "⬜" * (bar_length - filled_length)
-            return f"[{bar}]{progress}%"
+        def generate_progress_bar(progress: int, bar_length: int = 10) -> str:
+            filled_length = int(bar_length * progress // 100)
+            bar = ":large_green_square:" * filled_length + ":white_square:" * (bar_length - filled_length)
+            return f"[{bar}] {progress}%"
 
-        manager_dashboard_url = settings.MANAGER_DASHBOARD_DOMAIN.geturl()
-        progress_bar = generate_progress_bar(progress)
+        def format_username(user: User) -> str:
+            slack_id = getattr(user, "slack_user_id", None)
+            username = getattr(user, "username", None)
 
-        if tutorial_id is not None:
-            tutorial_text = (
-                f"Tutorial: <{manager_dashboard_url}/tutorials/{tutorial_id}/edit|Tutorial Link>\n"
-                f"Tutorial ID: {tutorial_id}\n"
-            )
-        else:
-            tutorial_text = "Tutorial: _No tutorial linked_\n"
+            if slack_id:
+                return f"<@{slack_id}>"
+            if username:
+                return username
+            return getattr(user, "email", str(user))
 
-        section_block = {
+        def format_tutorial(tutorial_id: int | None) -> str:
+            if tutorial_id:
+                tutorial = project.tutorial
+                tutorial_url = Config.ManagerDashboardUrls.tutorial_url(tutorial_id=tutorial_id)
+                return f"Tutorial: <{tutorial_url}|{tutorial}>\n"
+            return "Tutorial: _N/A_\n"
+
+        def status_mapping(status_enum: ProjectStatusEnum):
+            label = status_enum.label
+
+            status_to_icon = {
+                Project.Status.PUBLISHED: ":mega:",
+                Project.Status.PAUSED: ":hand:",
+                Project.Status.ARCHIVED: ":archived:",
+            }
+            return f"{label} {status_to_icon.get(status_enum, '')}".strip()
+
+        def project_type_mapping(project_type_enum: ProjectTypeEnum) -> str:
+            label = project_type_enum.label
+
+            type_to_icon = {
+                Project.Type.FIND: ":find:",
+                Project.Type.COMPARE: ":compare:",
+                Project.Type.VALIDATE: ":validate:",
+                Project.Type.STREET: ":street:",
+                Project.Type.COMPLETENESS: ":completeness:",
+                Project.Type.VALIDATE_IMAGE: ":validate_image:",
+            }
+
+            return f"{label} {type_to_icon.get(project_type_enum, '')}".strip()
+
+        project_url = Config.ManagerDashboardUrls.project_url(project_id=project.id)
+        progress_bar = generate_progress_bar(project.progress)
+        username = format_username(project.created_by)
+        tutorial_text = format_tutorial(project.tutorial_id)
+        status = status_mapping(project.status_enum)
+        project_type = project_type_mapping(project.project_type_enum)
+
+        section_block: dict = {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
                 "text": (
-                    f"Project Name: <{manager_dashboard_url}/project/{project_id}/edit|{project_name}>\n"
-                    f"Project ID: {project_id}\n"
-                    f"Project Type: {project_type}\n"
+                    f"Project Name: <{project_url}|{project.generate_name()}>\n"
                     f"{tutorial_text}"
-                    f"Requesting Organization: {requesting_organization}\n"
-                    f"Created By: {created_by}\n"
-                    f"Created At: {created_at.strftime('%b. %d, %Y, %-I:%M %p')}\n"
-                    f"Progress: {progress_bar}\n\n"
-                    f"{'This is a private project :lock:' if is_private else ''}\n"
+                    f"Project Type: {project_type}\n"
+                    f"Requesting Organization: {project.requesting_organization.name}\n"
+                    f"Status: {status}\n"
+                    f"Created by: {username}\n"
+                    f"Created at: {project.created_at.strftime('%b. %d, %Y, %-I:%M %p')}\n\n"
+                    f"{progress_bar}"
                 ),
             },
         }
 
-        if cover_image:
+        if project.image:
             section_block["accessory"] = {
                 "type": "image",
-                "image_url": cover_image,
+                "image_url": get_absolute_uri(project.image.file),
                 "alt_text": "Project Cover Image",
             }
 
@@ -174,17 +162,12 @@ class SlackMessage:
     @classmethod
     def get_message_for_project_progress(
         cls,
-        project_name: str,
-        project_id: int,
-        project_type: int,
-        tutorial_id: int | None,
-        requesting_organization: str,
-        created_by: User,
-        created_at: datetime,
-        progress: int,
-        cover_image: str | None,
-        is_private: bool,
+        project: Project,
     ) -> MapswipeSlack.MapswipeSlackMessageArgumentType:
+        progress = project.progress
+        project_url = Config.ManagerDashboardUrls.project_url(project_id=project.id)
+        website_url = Config.WebsiteKeys.project(firebase_id=project.firebase_id)
+
         if progress == 100:
             text = "Project reached 100%"
             blocks = [
@@ -192,41 +175,33 @@ class SlackMessage:
                     "type": "header",
                     "text": {
                         "type": "plain_text",
-                        "text": "GREAT! PROJECT REACHED 100%  :tada:",
+                        "text": "Project reached 100% :tada:",
                     },
                 },
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "Congratulations on completing the project!",
+                        "text": "Congratulations! This project is now complete. Great work!",
                     },
-                },
-                {
-                    "type": "divider",
-                },
-                SlackMessage.project_info_block(
-                    project_name,
-                    project_id,
-                    project_type,
-                    tutorial_id,
-                    requesting_organization,
-                    created_by,
-                    created_at,
-                    cover_image,
-                    progress,
-                    is_private,
-                ),
-                {
-                    "type": "divider",
                 },
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "You can now set this project to _'finished'_ and create a another one.",
+                        "text": f"You can now _*finish*_ this <{project_url}|project> and create another one :mapswipe:",
                     },
-                    **cls.manager_dashboard_block,
+                    "accessory": {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Visit Website",
+                            "emoji": True,
+                        },
+                        "value": "website-link",
+                        "url": website_url,
+                        "action_id": "button-action",
+                    },
                 },
             ]
             return {
@@ -241,41 +216,15 @@ class SlackMessage:
                     "type": "header",
                     "text": {
                         "type": "plain_text",
-                        "text": "ALMOST THERE! PROJECT REACHED 90% :hourglass_flowing_sand:",
+                        "text": "Project reached 90% :rocket:",
                     },
                 },
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "The project is almost at completion!",
+                        "text": "Almost there! Get your next projects ready",
                     },
-                },
-                {
-                    "type": "divider",
-                },
-                SlackMessage.project_info_block(
-                    project_name,
-                    project_id,
-                    project_type,
-                    tutorial_id,
-                    requesting_organization,
-                    created_by,
-                    created_at,
-                    cover_image,
-                    progress,
-                    is_private,
-                ),
-                {
-                    "type": "divider",
-                },
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "Get your next projects ready.",
-                    },
-                    **cls.manager_dashboard_block,
                 },
             ]
             return {
@@ -291,32 +240,6 @@ class SlackMessage:
                     "text": "Project Progress!",
                 },
             },
-            {
-                "type": "divider",
-            },
-            SlackMessage.project_info_block(
-                project_name,
-                project_id,
-                project_type,
-                tutorial_id,
-                requesting_organization,
-                created_by,
-                created_at,
-                cover_image,
-                progress,
-                is_private,
-            ),
-            {
-                "type": "divider",
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "Get your next projects ready.",
-                },
-                **cls.manager_dashboard_block,
-            },
         ]
 
         return {
@@ -327,17 +250,10 @@ class SlackMessage:
     @classmethod
     def get_message_for_project_creation(
         cls,
-        project_name: str,
-        project_id: int,
-        project_type: int,
-        tutorial_id: int | None,
-        requesting_organization: str,
-        created_by: User,
-        created_at: datetime,
-        cover_image: str | None,
-        is_private: bool,
-        progress: int,
+        project: Project,
     ) -> MapswipeSlack.MapswipeSlackMessageArgumentType:
+        header_text = f"{project.generate_name()} :lock:" if project.is_private else f"{project.generate_name()}"
+        website_url = Config.WebsiteKeys.project(firebase_id=project.firebase_id)
         text = "Project Creation Successful"
 
         blocks = [
@@ -345,37 +261,31 @@ class SlackMessage:
                 "type": "header",
                 "text": {
                     "type": "plain_text",
-                    "text": "PROJECT CREATION SUCCESSFUL :confetti_ball:",
-                },
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "Congratulations on creating a new project!",
+                    "text": header_text,
                 },
             },
             {"type": "divider"},
             SlackMessage.project_info_block(
-                project_name,
-                project_id,
-                project_type,
-                tutorial_id,
-                requesting_organization,
-                created_by,
-                created_at,
-                cover_image,
-                progress,
-                is_private,
+                project,
             ),
             {"type": "divider"},
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "The project is published and now active. Happy Swiping! :slightly_smiling_face: :mapswipe:",
+                    "text": "Happy Swiping! :slightly_smiling_face: :mapswipe:",
                 },
-                **cls.manager_dashboard_block,
+                "accessory": {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Visit Website",
+                        "emoji": True,
+                    },
+                    "value": "website-link",
+                    "url": website_url,
+                    "action_id": "button-action",
+                },
             },
         ]
 
@@ -387,61 +297,51 @@ class SlackMessage:
     @classmethod
     def get_message_for_status_update(
         cls,
-        project_name: str,
-        project_id: int,
-        project_type: int,
-        tutorial_id: int | None,
-        requesting_organization: str,
-        created_by: User,
-        created_at: datetime,
-        modified_by: User,
-        modified_at: datetime,
-        cover_image: str | None,
-        is_private: bool,
-        progress: int,
+        project: Project,
     ) -> MapswipeSlack.MapswipeSlackMessageArgumentType:
-        created_user_slack_id = created_by.slack_user_id
-        modified_user_slack_id = modified_by.slack_user_id
+        modified_user_slack_id = project.modified_by.slack_user_id
+        modified_at = project.modified_at
+        status = project.status_enum
+        status_label = project.status_enum.label.lower()
+
         text = "Project status updated"
+
+        if status == Project.Status.PUBLISHED:
+            blocks = [
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Project published :raised_hands:",
+                    },
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"This project was published by <@{modified_user_slack_id}> at {modified_at.strftime('%b. %d, %Y, %-I:%M %p')}",  # noqa: E501
+                    },
+                },
+            ]
+            return {
+                "text": text,
+                "blocks": blocks,
+            }
 
         blocks = [
             {
                 "type": "header",
                 "text": {
                     "type": "plain_text",
-                    "text": "PROJECT STATUS UPDATED :mapswipe:",
+                    "text": "Project status update :pushpin:",
                 },
             },
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"Hey <@{created_user_slack_id}>. The status of the project you created has been updated by <@{modified_user_slack_id}> at {modified_at.strftime('%b. %d, %Y, %-I:%M %p')}",  # noqa: E501
+                    "text": f"The project was {status_label} by <@{modified_user_slack_id}> at {project.modified_at.strftime('%b. %d, %Y, %-I:%M %p')}",  # noqa: E501
                 },
-            },
-            {"type": "divider"},
-            SlackMessage.project_info_block(
-                project_name,
-                project_id,
-                project_type,
-                tutorial_id,
-                requesting_organization,
-                created_by,
-                created_at,
-                cover_image,
-                progress,
-                is_private,
-            ),
-            {
-                "type": "divider",
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "Please visit the manager dashboard if you want to change the status of the project or create another one :mapswipe:",  # noqa: E501
-                },
-                **cls.manager_dashboard_block,
             },
         ]
         return {
@@ -450,66 +350,56 @@ class SlackMessage:
         }
 
 
-def base_message_args(project: Project) -> BaseProjectArgs:
-    return {
-        "project_name": project.generate_name(),
-        "project_id": project.id,
-        "project_type": project.project_type,
-        "tutorial_id": project.tutorial_id,
-        "requesting_organization": project.requesting_organization.name,
-        "created_by": project.created_by,
-        "created_at": project.created_at,
-        "cover_image": (get_absolute_file_url(project.image.file) if project.image else None),
-        "is_private": project.is_private,
-        "progress": project.progress,
-    }
-
-
-def status_message_args(project: Project) -> StatusUpdateMessageArgs:
-    return {
-        **base_message_args(project),
-        "modified_by": project.modified_by,
-        "modified_at": project.modified_at,
-    }
-
-
-def progress_message_args(project: Project) -> ProgressMessageArgs:
-    return {
-        **base_message_args(project),
-    }
-
-
-def creation_message_args(project: Project) -> CreationMessageArgs:
-    return {
-        **base_message_args(project),
-    }
-
-
-@shared_task
-def send_message_for_progress(project_id: int):
+def base_slack_message(project_id: int, mapslack: MapswipeSlack):
     project = Project.objects.get(pk=project_id)
-    mapslack = MapswipeSlack()
-    message = SlackMessage.get_message_for_project_progress(**progress_message_args(project))
-    mapslack.send_slack_message(**message, thread_ts=project.slack_thread_ts, reply_broadcast=True)
-    update_message = SlackMessage.get_message_for_project_creation(
-        **creation_message_args(project),
-    )
-    mapslack.update_slack_message(ts=project.slack_thread_ts, **update_message)
-
-
-@shared_task
-def project_status_update_message(project_id: int):
-    project = Project.objects.get(pk=project_id)
-    mapslack = MapswipeSlack()
-    message = SlackMessage.get_message_for_status_update(**status_message_args(project))
-    mapslack.send_slack_message(**message, thread_ts=project.slack_thread_ts, reply_broadcast=True)
-
-
-@shared_task
-def project_creation_success_message(project_id: int):
-    project = Project.objects.get(pk=project_id)
-    mapslack = MapswipeSlack()
-    message = SlackMessage.get_message_for_project_creation(**creation_message_args(project))
+    message = SlackMessage.get_message_for_project_creation(project)
     slack_response = mapslack.send_slack_message(**message)
     project.slack_thread_ts = slack_response.get("ts")
     project.save(update_fields=("slack_thread_ts",))
+    return project.slack_thread_ts
+
+
+def check_slack_thread(project_id: int, mapslack: MapswipeSlack) -> str:
+    project = Project.objects.get(pk=project_id)
+    if project.slack_thread_ts:
+        return project.slack_thread_ts
+
+    return base_slack_message(project_id=project_id, mapslack=mapslack)
+
+
+def update_base_message(client: MapswipeSlack, project: Project, ts: str):
+    update_message = SlackMessage.get_message_for_project_creation(
+        project,
+    )
+    client.update_slack_message(ts=ts, **update_message)
+
+
+@shared_task
+def progress_change_message(project_id: int):
+    project = Project.objects.get(pk=project_id)
+    mapslack = MapswipeSlack()
+    message = SlackMessage.get_message_for_project_progress(project=project)
+    ts = check_slack_thread(project_id=project_id, mapslack=mapslack)
+    reply_broadcast = project.progress >= 90
+    if reply_broadcast:
+        mapslack.send_slack_message(**message, thread_ts=ts, reply_broadcast=reply_broadcast)
+    update_base_message(client=mapslack, project=project, ts=ts)
+
+
+@shared_task
+def status_update_message(project_id: int):
+    project = Project.objects.get(pk=project_id)
+    mapslack = MapswipeSlack()
+    message = SlackMessage.get_message_for_status_update(
+        project=project,
+    )
+    ts = check_slack_thread(project_id=project_id, mapslack=mapslack)
+    mapslack.send_slack_message(**message, thread_ts=ts, reply_broadcast=False)
+    update_base_message(client=mapslack, project=project, ts=ts)
+
+
+@shared_task
+def creation_success_message(project_id: int):
+    mapslack = MapswipeSlack()
+    base_slack_message(project_id=project_id, mapslack=mapslack)
+    status_update_message.delay(project_id=project_id)
