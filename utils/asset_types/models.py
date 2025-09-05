@@ -8,15 +8,15 @@ from utils import fields as custom_fields
 class AoiGeometryAssetProperty(BaseModel):
     bbox: tuple[
         custom_fields.PydanticLng,
-        custom_fields.PydanticLng,
         custom_fields.PydanticLat,
         custom_fields.PydanticLng,
+        custom_fields.PydanticLat,
     ]
     center: tuple[
         custom_fields.PydanticLng,
         custom_fields.PydanticLat,
     ]
-    # NOTE: The area is in square meter. Multiply by 10^4 to get square kilometer.
+    # NOTE: The area is in square km
     area: custom_fields.PydanticPositiveFloat
 
 
