@@ -360,7 +360,7 @@ class GlobalExportAsset(models.Model):
         max_length=255,
     )
 
-    last_updated_at = models.DateTimeField(auto_now=True)
+    last_updated_at = models.DateTimeField[datetime.datetime, datetime.datetime](auto_now=True)
 
     @typing.override
     def __str__(self):

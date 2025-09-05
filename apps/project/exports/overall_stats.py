@@ -44,7 +44,8 @@ def regenerate_project_stats_by_types_csv():
         "project_type": None,
         "project_type_display": MANUAL_FIELD,
         "projects_count": models.Count("*"),
-        # TODO: "total_area_sqkm": models.Sum(""),
+        # TODO: get this from project area
+        "total_area_sqkm": models.Value(99999),
         "total_number_of_results": models.Count("number_of_results"),
         "total_number_of_results_progress": models.Count("number_of_results_for_progress"),
         "average_number_of_users_per_project": models.Avg("number_of_contributor_users"),
@@ -90,7 +91,8 @@ def regenerate_projects_csv(temp_projects_csv: typing.IO):
         # TODO: "tile_server_names": None,
         "status": None,
         "status_display": MANUAL_FIELD,
-        # TODO: "area_sqkm": None,
+        # TODO: get this from project area
+        "area_sqkm": models.Value(99999),
         # TODO: "geom": None,
         "centroid": None,
         "progress": None,

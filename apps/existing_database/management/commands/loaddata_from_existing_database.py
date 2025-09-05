@@ -41,6 +41,7 @@ from apps.project.models import (
     Project,
     ProjectAsset,
     ProjectAssetExportTypeEnum,
+    ProjectProgressStatusEnum,
     ProjectStatusEnum,
     ProjectTypeEnum,
 )
@@ -283,11 +284,11 @@ def parse_project_name(
 
 def parse_project_status(existing_project: existing_db_models.Project) -> ProjectStatusEnum:
     assert existing_project.status is not None
-    # TODO Confirm this
     return {
-        "inactive": ProjectStatusEnum.ARCHIVED,
+        "inactive": ProjectStatusEnum.PAUSED,
         "active": ProjectStatusEnum.PUBLISHED,
         "private_active": ProjectStatusEnum.PUBLISHED,
+        # TODO(tnagorra): Add FINISHED status. Rename ARCHIVED to WITHDRAWN
         "private_finished": ProjectStatusEnum.ARCHIVED,
         "finished": ProjectStatusEnum.ARCHIVED,
         "archived": ProjectStatusEnum.ARCHIVED,
@@ -323,6 +324,8 @@ def create_project(
         # Progress metadata
         if existing_project_csv_data := existing_projects_csv_data.get(existing_project.project_id):
             project_metadata["progress"] = int(float(existing_project_csv_data["progress"] or 0) * 100)
+            if project_metadata["progress"] >= 100:
+                project_metadata["progress_status"] = ProjectProgressStatusEnum.COMPLETED
             project_metadata["number_of_contributor_users"] = int(float(existing_project_csv_data["number_of_users"] or 0))
             project_metadata["number_of_results"] = int(float(existing_project_csv_data["number_of_results"] or 0))
             project_metadata["number_of_results_for_progress"] = int(

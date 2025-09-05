@@ -150,7 +150,7 @@ def _export_project_data(project: Project, tmp_directory: Path):
 
     if not project_stats_by_date_df.empty:
         project.progress = project_stats_by_date_df["cum_progress"].iloc[-1] * 100
-        if project.progress == 100:
+        if project.progress >= 100:
             project.progress_status = ProjectProgressStatusEnum.COMPLETED
         project.number_of_contributor_users = project_stats_by_date_df["cum_number_of_users"].iloc[-1]
         project.number_of_results = project_stats_by_date_df["cum_number_of_results"].iloc[-1]
