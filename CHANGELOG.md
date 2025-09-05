@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.2.0-dev8](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev7..v0.2.0-dev8) - 2025-09-05
+### Changes:
+
+#### 🚀  Features
+
+- *(project)* Add project_type_specific_output_asset to project - ([47247e6](https://github.com/mapswipe/mapswipe-backend/commit/47247e6b0bc6caa2e738b5b282f921f4f0cde92f))
+
+#### 🐛 Bug Fixes
+
+- *(project)* Update aoi geometry area - ([069d665](https://github.com/mapswipe/mapswipe-backend/commit/069d665e7057d325b4d7098376d5c2bed8184ec6))
+- *(project)* Rename project_type_specific_output to project_type_specific_output_asset - ([49c90f4](https://github.com/mapswipe/mapswipe-backend/commit/49c90f464935bd92f8392e0bc261c7fd4c79fbf8))
+- *(project-migration)* Update project migration 25 to update asset id - ([60cf2c6](https://github.com/mapswipe/mapswipe-backend/commit/60cf2c635aa10be0746b6ab2391735b859d7eef8))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(submodule)* Update assets url to use ssh - ([d1fd46d](https://github.com/mapswipe/mapswipe-backend/commit/d1fd46da68059d9feb6ab1df09a016fdd70f34b1))
+
+### 🍻 Pull Requests (3)
+- (#150) [Attach AOI geometry to project](https://github.com/mapswipe/mapswipe-backend/pull/150)
+- (#152) [Update project migration 25 to update asset id](https://github.com/mapswipe/mapswipe-backend/pull/152)
+- (#154) [Update aoi geometry area](https://github.com/mapswipe/mapswipe-backend/pull/154)
+
+
 ## [0.2.0-dev7](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev6..v0.2.0-dev7) - 2025-09-04
 ### Changes:
 
