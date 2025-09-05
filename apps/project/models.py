@@ -92,24 +92,24 @@ class ProjectAssetExportTypeEnum(models.IntegerChoices):
 class ProjectTypeEnum(models.IntegerChoices):
     """Enum representing the types of project."""
 
-    FIND = 1, "Find"
+    FIND = 1, "Find Features"
     """ Find project type. Previously known as Classification / Build Area. """
 
-    VALIDATE = 2, "Validate"
+    VALIDATE = 2, "Validate Footprints"
     """ Validate project type. Previously known as Footprint """
 
-    VALIDATE_IMAGE = 10, "Validate Image"
+    VALIDATE_IMAGE = 10, "Assess Images"
     """ Validate image project type. """
 
-    COMPARE = 3, "Compare"
+    COMPARE = 3, "Compare Dates"
     """ Compare project type. Previously known as Change Detection. """
 
-    COMPLETENESS = 4, "Completeness"
+    COMPLETENESS = 4, "Check Completeness "
     """ Completeness project type. """
 
     # MEDIA = 5, "Media"
     # DIGITIZATION = 6, "Digitization"
-    STREET = 7, "Street"
+    STREET = 7, "View Streets"
     """ Street project type. """
 
     # TODO(thenav56): Confirm if we have more/less

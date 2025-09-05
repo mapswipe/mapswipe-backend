@@ -242,7 +242,7 @@ class TestCommunityDashboardQuery(TestCase):
                 "swipeByProjectType": [
                     {
                         "projectType": "COMPARE",
-                        "projectTypeDisplay": "Compare",
+                        "projectTypeDisplay": "Compare Dates",
                         "totalSwipes": 400,
                     },
                 ],

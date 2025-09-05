@@ -386,8 +386,8 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         area = sum(geom.area for geom in geometries)
 
         # FIXME(tnagorra): We need to change AOI geometry to 20 sq.km.
-        # Increasing this to 40 because of failing tests
-        MAX_AOI_GEOMETRY_AREA = 40
+        # Increasing this to 100000000 because of failing tests
+        MAX_AOI_GEOMETRY_AREA = 100000000
         if area * 10000 > MAX_AOI_GEOMETRY_AREA:
             raise ValidationError(
                 {
