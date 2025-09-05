@@ -10,8 +10,8 @@ def set_aoi_asset(apps, schema_editor):
     for obj in Model.cte_objects.all():
         aoi_id = recursively_find_value(obj.project_type_specifics, "aoi_geometry")
         if aoi_id:
-            obj.aoi_geometry_input_asset = int(aoi_id)
-            obj.save(update_fields=['aoi_geometry_input_asset'])
+            obj.aoi_geometry_input_asset_id = int(aoi_id)
+            obj.save(update_fields=['aoi_geometry_input_asset_id'])
 
 
 class Migration(migrations.Migration):
