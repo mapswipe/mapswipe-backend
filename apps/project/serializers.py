@@ -2,6 +2,7 @@ import json
 import typing
 
 import pydantic
+from django.contrib.gis.geos import Polygon, Point
 from django.contrib.gis.geos import GeometryCollection, GEOSGeometry
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -220,8 +221,32 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         # NOTE: We only need to attach aoi_geometry_input_asset if project_type_specifics is defined
         if proj.project_type_specifics:
             project_handler = get_project_type_handler(proj.project_type_enum)(proj)
-            proj.aoi_geometry_input_asset = project_handler.get_aoi_geometry_asset()
-            proj.save(update_fields=["aoi_geometry_input_asset"])
+
+            aoi_geom_asset = project_handler.get_aoi_geometry_asset()
+
+            proj.aoi_geometry_input_asset = aoi_geom_asset
+
+            if aoi_geom_asset:
+                asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_geom_asset)
+                lng, lat = asset_specific_data.center
+                proj.centroid = Point(lng, lat)
+
+                min_lng, min_lat, max_lng, max_lat = asset_specific_data.bbox
+                proj.bbox = Polygon((
+                    (min_lng, min_lat),
+                    (min_lng, max_lat),
+                    (max_lng, max_lat),
+                    (max_lng, min_lat),
+                    (min_lng, min_lat),
+                ))
+
+                proj.total_area = asset_specific_data.area
+            else:
+                proj.centroid = None
+                proj.bbox = None
+                proj.total_area = None
+
+            proj.save(update_fields=["aoi_geometry_input_asset", "centroid", "bbox", "total_area"])
 
         return proj
 

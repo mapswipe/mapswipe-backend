@@ -153,6 +153,9 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
     is_featured: strawberry.auto
     status: strawberry.auto
     processing_status: strawberry.auto
+    bbox: strawberry.auto
+    total_area: strawberry.auto
+    centroid: strawberry.auto
     team: ContributorTeamType | None
     is_private: strawberry.auto
     required_results: strawberry.auto

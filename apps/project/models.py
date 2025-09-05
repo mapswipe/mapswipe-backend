@@ -359,8 +359,11 @@ class Project(UserResource, FirebasePushResource):
         null=True,
         on_delete=models.SET_NULL,
     )
+
     # TODO(thenav56): Use srid=4326?
-    centroid = gis_models.PointField(blank=True, null=True)
+    centroid = gis_models.PointField(blank=True, null=True, spatial_index=True)
+    bbox = gis_models.PolygonField(blank=True, null=True, spatial_index=True)
+    total_area = models.FloatField[float | None, float | None](null=True, default=None)
 
     # STATUS
 
