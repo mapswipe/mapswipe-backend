@@ -420,7 +420,7 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
 
         area_m2: float = 0
         for geom in geometries:
-            # NOTE: srid=6933 is World Cylindrical Equal Area
+            # NOTE: srid=6933 for area calculation globally
             transformed_geom = geom.transform(6933, clone=True)
             area_m2 += transformed_geom.area
         area_km2 = area_m2 / 1000_000

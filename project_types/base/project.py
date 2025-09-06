@@ -127,10 +127,15 @@ class BaseProject[
         )
 
         self.project.required_results = (
-            ProjectTaskGroup.objects.filter(project_id=self.project.pk)
-            .values("project_id")
-            .aggregate(required_results=models.Sum("required_count"))
+            ProjectTaskGroup.objects.filter(project_id=self.project.pk).aggregate(
+                required_results=models.Sum("required_count"),
+            )
         )["required_results"] or 0
+
+        self.project.total_area = (
+            ProjectTaskGroup.objects.filter(project_id=self.project.pk).aggregate(agg_area=models.Sum("total_area"))
+        )["agg_area"] or 0
+
         self.project.save(update_fields=(["required_results"]))
 
         # FIXME: Throw error if no. of tasks is zero.

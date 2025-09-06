@@ -132,9 +132,6 @@ class TileMapServiceBaseProject[
         self.project.project_type_specific_output_asset = asset
         self.project.save(update_fields=("project_type_specific_output_asset",))
 
-        # TODO(thenav56): Calculate centroid, bounding box, etc.
-        # TODO(thenav56): Calculate: total_area, time_spent_max_allowed
-
     @typing.override
     def create_tasks(
         self,
