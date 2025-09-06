@@ -2,13 +2,13 @@ import json
 import typing
 
 import pydantic
-from django.contrib.gis.geos import Polygon, Point
-from django.contrib.gis.geos import GeometryCollection, GEOSGeometry
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, Point, Polygon
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import gettext
 from geojson_pydantic import Feature, FeatureCollection
-from geojson_pydantic.geometries import MultiPolygon, Polygon
+from geojson_pydantic.geometries import MultiPolygon as PydanticMultiPolygon
+from geojson_pydantic.geometries import Polygon as PydanticPolygon
 from rest_framework import serializers
 
 from apps.common.models import AssetMimetypeEnum, FirebasePushStatusEnum
@@ -227,18 +227,20 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             proj.aoi_geometry_input_asset = aoi_geom_asset
 
             if aoi_geom_asset:
-                asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_geom_asset)
+                asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_geom_asset.asset_type_specifics)
                 lng, lat = asset_specific_data.center
                 proj.centroid = Point(lng, lat)
 
                 min_lng, min_lat, max_lng, max_lat = asset_specific_data.bbox
-                proj.bbox = Polygon((
-                    (min_lng, min_lat),
-                    (min_lng, max_lat),
-                    (max_lng, max_lat),
-                    (max_lng, min_lat),
-                    (min_lng, min_lat),
-                ))
+                proj.bbox = Polygon(
+                    (
+                        (min_lng, min_lat),
+                        (min_lng, max_lat),
+                        (max_lng, max_lat),
+                        (max_lng, min_lat),
+                        (min_lng, min_lat),
+                    ),
+                )
 
                 proj.total_area = asset_specific_data.area
             else:
@@ -386,7 +388,7 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
                 },
             ) from e
 
-        AoiGeometryFeature = Feature[Polygon | MultiPolygon, dict]
+        AoiGeometryFeature = Feature[PydanticPolygon | PydanticMultiPolygon, dict]
         AoiGeometryFeatureCollection = FeatureCollection[AoiGeometryFeature]
 
         feature_collection = AoiGeometryFeatureCollection.model_validate(geojson_data)
@@ -401,22 +403,35 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         for feature in feature_collection.features:
             if not feature.geometry:
                 continue
-            geometry = GEOSGeometry(feature.geometry.model_dump_json())
+            geometry = GEOSGeometry(feature.geometry.model_dump_json(), srid=4326)
             geometries.append(geometry)
 
         geometry_collection = GeometryCollection(geometries)
 
         center = geometry_collection.centroid
 
-        area = sum(geom.area for geom in geometries)
-
-        # FIXME(tnagorra): We need to change AOI geometry to 20 sq.km.
-        # Increasing this to 100000000 because of failing tests
-        MAX_AOI_GEOMETRY_AREA = 100000000
-        if area * 10000 > MAX_AOI_GEOMETRY_AREA:
+        MAX_POLYGONS = 20
+        if len(geometries) > MAX_POLYGONS:
             raise ValidationError(
                 {
-                    "file": f"Area for AOI Geometry must have less than {MAX_AOI_GEOMETRY_AREA} sq. km",
+                    "file": f"AOI should not have more than {MAX_POLYGONS} polygons",
+                },
+            )
+
+        area_m2: float = 0
+        for geom in geometries:
+            # NOTE: srid=6933 is World Cylindrical Equal Area
+            transformed_geom = geom.transform(6933, clone=True)
+            area_m2 += transformed_geom.area
+        area_km2 = area_m2 / 1000_000
+
+        # NOTE: Using zoom 14 to calculate max area using formulae: 5 * (4 ** (23 - zoom_level))
+        # This area is almost equal to size of Peru
+        MAX_AOI_GEOMETRY_AREA = 1310720
+        if area_km2 > MAX_AOI_GEOMETRY_AREA:
+            raise ValidationError(
+                {
+                    "file": f"Area for AOI Geometry must be less than {MAX_AOI_GEOMETRY_AREA} sq. km",
                 },
             )
 
@@ -424,8 +439,7 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
             "aoi_geometry": {
                 "bbox": geometry_collection.extent,
                 "center": center.coords,
-                # NOTE: converting the are in sq. km
-                "area": area,
+                "area": area_km2,
             },
         }
         attrs["asset_type_specifics"] = asset_specifics

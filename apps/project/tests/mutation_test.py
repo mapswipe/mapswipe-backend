@@ -826,7 +826,7 @@ class TestProjectMutation(TestCase):
         assert resp_data["errors"] is None, content
         aoi_geometry_asset = resp_data["result"]
 
-        assert aoi_geometry_asset["assetTypeSpecifics"]["area"] == 0.003933815667455078
+        assert aoi_geometry_asset["assetTypeSpecifics"]["area"] == 42.995920243640064
         assert aoi_geometry_asset["assetTypeSpecifics"]["center"] == [85.31965030726025, 27.701474012628434]
         assert aoi_geometry_asset["assetTypeSpecifics"]["bbox"] == [
             85.28138075927546,

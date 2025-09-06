@@ -31,6 +31,7 @@ from project_types.base import project as base_project
 from project_types.tile_map_service.base.project import create_json_dump
 from project_types.validate.api_calls import ohsome
 from utils import fields as custom_fields
+from utils.asset_types.models import AoiGeometryAssetProperty
 from utils.common import Grouping, clean_up_none_keys, to_groups
 from utils.custom_options.models import CustomOption
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
@@ -182,6 +183,11 @@ class ValidateProject(
         if not aoi_asset:
             raise Exception("Could not find AOI geometry asset")
 
+        asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_asset.asset_type_specifics)
+        allowed_area = 20
+        if asset_specific_data.area > allowed_area:
+            raise Exception(f"Area for AOI Geometry must be less than {allowed_area} sq. km")
+
         with aoi_asset.file.open() as aoi_file:
             aoi_geojson = json.loads(aoi_file.read())
 
@@ -252,9 +258,11 @@ class ValidateProject(
             return self._validate_aoi_geojson_file()
 
         if self.project_type_specifics.object_source.source_type == ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL:
+            # TODO: Create an AOI using convex hull
             return self._validate_object_geojson_url()
 
         if self.project_type_specifics.object_source.source_type == ValidateObjectSourceTypeEnum.TASKING_MANAGER:
+            # TODO: Create an AOI from HOT
             return self._validate_tasking_manager()
 
         raise Exception("Invalid object source type")
@@ -330,7 +338,7 @@ class ValidateProject(
         tasks_qs = ProjectTask.objects.filter(task_group__project_id=self.project.pk)
 
         def get_feature(task: ProjectTask):
-            geom = GEOSGeometry(task.geometry)
+            geom = GEOSGeometry(task.geometry, srid=4326)
             geojson = json.loads(geom.geojson)
 
             return {
