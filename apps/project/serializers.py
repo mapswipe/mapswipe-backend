@@ -205,7 +205,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         if self.instance.status_enum not in [Project.Status.DRAFT, Project.Status.FAILED]:
             raise serializers.ValidationError(
                 {
-                    "status": gettext("Cannot update project with status %s") % self.instance.status,
+                    "status": gettext("Cannot update project with status %s") % self.instance.status_enum.label,
                 },
             )
 
@@ -310,7 +310,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
         if self.instance.status_enum != Project.Status.READY:
             raise serializers.ValidationError(
                 {
-                    "status": gettext("Cannot update project with status %s") % self.instance.status,
+                    "status": gettext("Cannot update project with status %s") % self.instance.status_enum.label,
                 },
             )
 

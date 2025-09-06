@@ -46,7 +46,7 @@ dependencies = [
     "python-magic>=0.4.27",
     "mercantile>=1.2.1",
     "vt2geojson",
-    "pandas~=2.3.1"
+    "pandas~=2.3.1",
 ]
 
 [dependency-groups]
@@ -59,6 +59,7 @@ dev = [
     "types-factory-boy>=0.4.1",
     "ipython",
     "colorlog",
+    "json5",
 ]
 test = [
     "pytest-django",
