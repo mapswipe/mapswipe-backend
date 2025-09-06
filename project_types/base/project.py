@@ -279,7 +279,9 @@ class BaseProject[
                 progress=0,
                 projectId=self.project.firebase_id,
                 numberOfTasks=group.number_of_tasks,
-                requiredCount=group.required_count,
+                # FIXME(tnagorra): need to confirm if group.required_count is calculated correctly
+                # requiredCount=group.required_count,
+                requiredCount=self.project.verification_number,
             )
             group_project_specific_data = self.get_group_specifics_for_firebase(group)
             fb_groups[group.firebase_id] = {
