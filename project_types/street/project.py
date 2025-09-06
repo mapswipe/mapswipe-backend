@@ -174,7 +174,7 @@ class StreetProject(
         tasks_qs = ProjectTask.objects.filter(task_group__project_id=self.project.pk)
 
         def get_feature(task: ProjectTask):
-            geom = GEOSGeometry(task.geometry)
+            geom = GEOSGeometry(task.geometry, srid=4326)
             geojson = json.loads(geom.geojson)
 
             return {

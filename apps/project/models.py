@@ -359,8 +359,10 @@ class Project(UserResource, FirebasePushResource):
         null=True,
         on_delete=models.SET_NULL,
     )
-    # TODO(thenav56): Use srid=4326?
-    centroid = gis_models.PointField(blank=True, null=True)
+
+    centroid = gis_models.PointField(blank=True, null=True, spatial_index=True, srid=4326)
+    bbox = gis_models.PolygonField(blank=True, null=True, spatial_index=True, srid=4326)
+    total_area = models.FloatField[float | None, float | None](null=True, default=None)
 
     # STATUS
 
@@ -628,7 +630,7 @@ class ProjectTask(FirebasePushResource):
 
     # NOTE(tnagorra): The geometry is only necessary for validate project type
     # FIXME(thenav56): Existing gid_models.MultiPolygonField(srid=4326, blank=True, null=True)
-    geometry: GEOSGeometry | None = gis_models.GeometryField(null=True, blank=True, default=None, dim=2)  # type: ignore[reportIncompatibleVariableOverride]
+    geometry: GEOSGeometry | None = gis_models.GeometryField(null=True, blank=True, default=None, dim=2, srid=4326)  # type: ignore[reportIncompatibleVariableOverride]
 
     # TODO(thenav56): Currently this field collects any data not stored by another fields, pulled from firebase.
     # Also, used in SQL queries

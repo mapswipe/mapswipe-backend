@@ -27,6 +27,7 @@ from apps.project.models import (
 from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
 from utils import fields as custom_fields
+from utils.asset_types.models import AoiGeometryAssetProperty
 from utils.common import clean_up_none_keys, create_json_dump
 from utils.geo import tile_functions, tile_grouping
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
@@ -86,7 +87,7 @@ class TileMapServiceBaseProject[
         tasks_qs = ProjectTask.objects.filter(task_group__project_id=self.project.pk)
 
         def get_feature(task: ProjectTask):
-            geom = GEOSGeometry(task.geometry)
+            geom = GEOSGeometry(task.geometry, srid=4326)
             geojson = json.loads(geom.geojson)
 
             task_specifics = self.project_task_property_class.model_validate(task.project_type_specifics)
@@ -130,9 +131,6 @@ class TileMapServiceBaseProject[
         )
         self.project.project_type_specific_output_asset = asset
         self.project.save(update_fields=("project_type_specific_output_asset",))
-
-        # TODO(thenav56): Calculate centroid, bounding box, etc.
-        # TODO(thenav56): Calculate: total_area, time_spent_max_allowed
 
     @typing.override
     def create_tasks(
@@ -212,6 +210,11 @@ class TileMapServiceBaseProject[
         if not aoi_asset:
             raise Exception("Could not find AOI geometry asset")
 
+        asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_asset.asset_type_specifics)
+        allowed_area = 5 * (4 ** (23 - self.project_type_specifics.zoom_level))
+        if asset_specific_data.area > allowed_area:
+            raise Exception(f"Area for AOI Geometry must be less than {allowed_area} sq. km")
+
         extension = Path(aoi_asset.file.name).suffix
         with tempfile.NamedTemporaryFile(suffix=extension, dir=settings.TEMP_DIR) as temp_file:
             # FIXME(frozenhelium): close the aoi_asset file?
@@ -219,20 +222,7 @@ class TileMapServiceBaseProject[
                 temp_file.write(aoi_file.read())
             temp_file.flush()
 
-            aoi_geometry = tile_grouping.get_geometry_from_file(temp_file.name)
-            aoi_polygons = aoi_geometry["polygons"]
-
-            POLYGON_COUNT_LIMIT = 20
-            if len(aoi_polygons) > POLYGON_COUNT_LIMIT:
-                raise base_project.ValidationException(f"AOI should not have more than {POLYGON_COUNT_LIMIT} polygons")
-
-            # NOTE: The formula was copied from the validation in manager dashboard
-            aoi_area = sum([polygon.area for polygon in aoi_polygons])
-            allowed_area = 5 * (4 ** (23 - self.project_type_specifics.zoom_level))
-            if aoi_area > allowed_area:
-                raise base_project.ValidationException(f"AOI should not have more than {allowed_area} area")
-
-            return aoi_geometry
+            return tile_grouping.get_geometry_from_file(temp_file.name)
 
     # FIREBASE
 

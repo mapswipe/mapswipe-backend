@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 class InvalidObjectPushException(Exception): ...
 
 
-# FIXME(tnagorra): Add inheritance_checks for model and firebase_model
 class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
     model_class: type[T]
     firebase_model_class: type[K]

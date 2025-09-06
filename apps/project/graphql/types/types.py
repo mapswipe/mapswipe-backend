@@ -110,7 +110,6 @@ class ProjectExportAssetTypeMixin:
 
     @strawberry.field
     async def export_area_of_interest(self, info: Info, project: strawberry.Parent[Project]) -> ProjectAssetType | None:
-        # TODO(tnagorra): We need to get the area of interest from aoi input project asset
         return await info.context.dl.project.export.area_of_interest.load(project.pk)
 
     # Find/Compare
@@ -153,6 +152,9 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
     is_featured: strawberry.auto
     status: strawberry.auto
     processing_status: strawberry.auto
+    bbox: strawberry.auto
+    total_area: strawberry.auto
+    centroid: strawberry.auto
     team: ContributorTeamType | None
     is_private: strawberry.auto
     required_results: strawberry.auto
