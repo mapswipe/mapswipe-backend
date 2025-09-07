@@ -37,6 +37,7 @@ def retry_get(url: str, retries: int | None = 3, timeout: int | None = 4, to_osm
         return session.get(url, timeout=timeout)
 
 
+# FIXME(rup): Not used anywhere
 def geojsonToFeatureCollection(geojson: dict) -> dict:
     """Take a GeoJson and wrap it in a FeatureCollection."""
     if geojson["type"] != "FeatureCollection":
