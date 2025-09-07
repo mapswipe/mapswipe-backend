@@ -597,7 +597,7 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
             new_status = Project.Status(new_status)
 
         # NOTE: This check should technically never be called.
-        if not self.instance.project_instruction:
+        if new_status == Project.Status.PUBLISHED and not self.instance.project_instruction:
             raise serializers.ValidationError(
                 {
                     "project_instruction": gettext("Project instruction is required."),
