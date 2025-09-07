@@ -27,13 +27,11 @@ class OverlayLayerTypeEnum(models.TextChoices):
                 return firebase_models.FbEnumOverlayTileServerType.VECTOR
 
 
-# FIXME(tnagorra): Add validations
 class OverlayRasterTileServerConfig(BaseModel):
     tile_server: RasterTileServerConfig
     opacity: custom_fields.PydanticOpacity
 
 
-# FIXME(tnagorra): Add validations
 class OverlayVectorTileServerConfig(BaseModel):
     tile_server: VectorTileServerConfig
 
@@ -55,7 +53,6 @@ class OverlayTileServerConfig(BaseModel):
     raster: OverlayRasterTileServerConfig | None = None
     vector: OverlayVectorTileServerConfig | None = None
 
-    # TODO(tnagorra): Do we need to have a validation here for type?
     @field_validator("type", mode="before")
     def ensure_name_enum(cls, value: str | OverlayLayerTypeEnum | None):
         if isinstance(value, str):

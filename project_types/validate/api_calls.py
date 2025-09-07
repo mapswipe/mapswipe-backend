@@ -48,12 +48,12 @@ def geojsonToFeatureCollection(geojson: dict) -> dict:
     return geojson
 
 
-def chunks(arr: list, n_objects: int):
+def chunks[T](arr: list[T], n_objects: int) -> list[list[T]]:
     """Return a list of list with n_objects in each sublist."""
     return [arr[i * n_objects : (i + 1) * n_objects] for i in range((len(arr) + n_objects - 1) // n_objects)]
 
 
-def query_osmcha(changeset_ids: list, changeset_results: dict):
+def query_osmcha(changeset_ids: list, changeset_results: dict[int, Any]):
     """Get data from changesetId."""
     id_string = ",".join(map(str, changeset_ids))
 

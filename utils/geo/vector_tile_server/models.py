@@ -78,7 +78,6 @@ class VectorTileServerConfig(BaseModel):
             }
         typing.assert_never(self.name)
 
-    # FIXME(tnagorra): Do we need this?
     @field_validator("name", mode="before")
     def ensure_name_enum(cls, value: str | VectorTileServerNameEnum | None):
         if isinstance(value, str):

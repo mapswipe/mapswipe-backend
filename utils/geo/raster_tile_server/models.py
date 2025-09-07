@@ -56,7 +56,6 @@ class RasterTileServerConfig(BaseModel):
             z=tile_z,
         )
 
-    # FIXME(tnagorra): Do we need this?
     @field_validator("name", mode="before")
     def ensure_name_enum(cls, value: str | RasterTileServerNameEnum | None):
         if isinstance(value, str):
