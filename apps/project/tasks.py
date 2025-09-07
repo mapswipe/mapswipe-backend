@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def process_project_task(project_id: int):
     with CeleryLock.redis_lock(CeleryLock.Key.PROJECT_LOAD_GEOMETRY.format(project_id)) as acquired:
         if not acquired:
-            logger.warning("Project(id: %s) geometry load is already running", project_id)
+            logger.warning("Project(id: %s) processing is already running", project_id)
             return None
 
     project = Project.objects.get(pk=project_id)
@@ -23,7 +23,11 @@ def process_project_task(project_id: int):
         project_type_handler.process_project()
         return True
     except Exception:
-        logger.error("Project geometry load failed", exc_info=True)
+        logger.error(
+            "Project(id: %s) processing is failed",
+            project_id,
+            exc_info=True,
+        )
         project.update_status(Project.Status.FAILED, True)
         return False
 

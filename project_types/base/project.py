@@ -166,7 +166,7 @@ class BaseProject[
     @abstractmethod
     def create_groups(self, resp: ValidatedData): ...
 
-    def process_project(self) -> bool:
+    def process_project(self):
         """Save all project info with groups and tasks in postgres."""
         if self.project.status not in [
             Project.Status.MARKED_AS_READY,
@@ -186,23 +186,13 @@ class BaseProject[
             type__in=[ProjectAsset.Type.OUTPUT, ProjectAsset.Type.EXPORT, ProjectAsset.Type.DEBUG],
         ).update(marked_as_deleted=True)
 
-        try:
-            resp = self.validate()
-            self.create_groups(resp)
-            self.analyze_groups()
-            self.post_create_groups()
+        resp = self.validate()
+        self.create_groups(resp)
+        self.analyze_groups()
+        self.post_create_groups()
 
-            self.project.update_processing_status(Project.ProcessingStatus.COMPLETED, True)
-            self.project.update_status(Project.Status.READY, True)
-            return True
-        except ValidationException:
-            logger.warning(
-                "process_project failed: %s",
-                self.project.id,
-                exc_info=True,
-            )
-            self.project.update_status(Project.Status.FAILED, True)
-            return False
+        self.project.update_processing_status(Project.ProcessingStatus.COMPLETED, True)
+        self.project.update_status(Project.Status.READY, True)
 
     # FIREBASE
 

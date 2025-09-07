@@ -67,7 +67,9 @@ class ProjectAssetType(UserResourceTypeMixin, CommonAssetTypeMixin):
         if project_asset.input_type_enum == ProjectAssetInputTypeEnum.AOI_GEOMETRY:
             return typing.cast("AoiGeometryAssetPropertyType", AoiGeometryAssetProperty.model_validate(data))
         if project_asset.input_type_enum == ProjectAssetInputTypeEnum.OBJECT_IMAGE:
-            return typing.cast("ObjectImageAssetPropertyType", ObjectImageAssetProperty.model_validate(data))
+            if project_asset.external_url:
+                return typing.cast("ObjectImageAssetPropertyType", ObjectImageAssetProperty.model_validate(data))
+            return None
         if project_asset.input_type_enum == ProjectAssetInputTypeEnum.COVER_IMAGE:
             return None
         typing.assert_never(project_asset.input_type_enum)
