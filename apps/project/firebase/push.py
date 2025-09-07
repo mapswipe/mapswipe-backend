@@ -5,7 +5,7 @@ from firebase_admin.db import Reference as FbReference
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
 
-from apps.common.firebase import FirebasePush
+from apps.common.firebase.base import FirebasePush
 from apps.project.models import Organization
 from main.config import Config
 

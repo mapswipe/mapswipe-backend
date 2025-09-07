@@ -46,6 +46,10 @@ class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
         super().__init_subclass__(**kwargs)
         cls._inheritance_checks()
 
+    # NOTE: Do not allow deletions by default
+    def allow_delete_object_on_firebase(self) -> bool:
+        return False
+
     @abc.abstractmethod
     def handle_new_object_on_firebase(self, model_obj: T, fb_reference: FbReference): ...
 
@@ -55,10 +59,52 @@ class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
     @abc.abstractmethod
     def get_firebase_path(self, firebase_id: str, model: type[T]) -> str: ...
 
-    def trigger(self) -> None:
+    def trigger(self, *, delete: bool | None = None) -> None:
         model_obj = self.obj
         model_obj.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
-        self._push(model_obj)
+
+        if delete:
+            if not self.allow_delete_object_on_firebase():
+                logger.error(
+                    "Firebase delete error: delete not enabled for %s",
+                    model_obj._meta.label,
+                    extra={"id": model_obj.pk},
+                )
+                return
+            self._delete(model_obj)
+        else:
+            self._push(model_obj)
+
+    def _delete(self, model_obj: T) -> None:
+        if model_obj.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
+            logger.warning(
+                "Firebase delete error: delete is not required for %s",
+                model_obj._meta.label,
+                extra={"id": model_obj.pk},
+            )
+            return
+
+        model_obj.update_firebase_push_status(FirebasePushStatusEnum.PROCESSING)
+
+        try:
+            model_ref = Config.FIREBASE_HELPER.ref(
+                self.get_firebase_path(model_obj.firebase_id, self.model_class),
+            )
+            model_ref.set({})
+        except Exception:
+            logger.error(
+                "Firebase delete error: Unexpected error occurred",
+                extra={"id": model_obj.pk},
+                exc_info=True,
+            )
+            model_obj.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
+        else:
+            # NOTE: We need to unuset these values
+            # If not, we will get validation error when we want to re-sync the object
+            # to firebase
+            model_obj.firebase_last_pushed = None
+            model_obj.firebase_push_status = None
+            model_obj.save(update_fields=["firebase_last_pushed", "firebase_push_status"])
 
     def _push(self, model_obj: T) -> None:
         if model_obj.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
@@ -114,3 +160,9 @@ class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
             model_obj.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
         else:
             model_obj.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
+
+    def delete(self) -> None:
+        model_ref = Config.FIREBASE_HELPER.ref(
+            self.get_firebase_path(self.obj.firebase_id, self.model_class),
+        )
+        model_ref.delete()

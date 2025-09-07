@@ -147,6 +147,10 @@ class Config:
         def results_project_groups(project_id: str):
             return f"/v2/results/{project_id}"
 
+        @staticmethod
+        def announcement():
+            return "/v2/announcement"
+
 
 # FIXME: Import utils/geo/raster_tile_server/config.py here
 # FIXME: Import utils/geo/vector_tile_server/config.py here
