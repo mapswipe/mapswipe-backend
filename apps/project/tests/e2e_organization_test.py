@@ -84,7 +84,7 @@ class TestOrganizationE2E(TestCase):
         create_data_list = test_data["create_organization"]
         update_data_list = test_data["update_organization"]
 
-        for create_data, update_data in zip(create_data_list, update_data_list):
+        for create_data, update_data in zip(create_data_list, update_data_list, strict=False):
             # Create Organization
             organization_content = self.query_check(
                 self.Mutation.CREATE_ORGANIZATION,
