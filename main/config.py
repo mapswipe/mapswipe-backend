@@ -148,8 +148,8 @@ class Config:
             return f"/v2/results/{project_id}"
 
         @staticmethod
-        def announcement(announcement_id: str):
-            return f"/v2/announcement/{announcement_id}"
+        def announcement():
+            return "/v2/announcement"
 
 
 # FIXME: Import utils/geo/raster_tile_server/config.py here

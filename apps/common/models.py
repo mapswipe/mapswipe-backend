@@ -372,9 +372,9 @@ class GlobalExportAsset(models.Model):
 
 
 class Announcement(UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
-    """Model representing an annoucement.
+    """Model representing an announcement.
 
-    Only one annoucement can be active at a time.
+    Only one announcement can be active at a time.
     """
 
     text = models.TextField[str, str]()

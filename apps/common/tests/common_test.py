@@ -28,9 +28,9 @@ class TestAnnouncement(TestCase):
 
         data = {
             "client_id": "01K44YMVYTKY1R3906XW3QQK05",
-            "text": "Announcement",
+            "text": "We have a new release v1.2.3",
             "is_active": True,
-            "url": "https://example.com",
+            "url": "https://play.google.com/store/apps/details?id=org.missingmaps.mapswipe",
             "created_by": self.admin_user.id,
             "modified_by": self.admin_user.id,
         }
@@ -39,16 +39,16 @@ class TestAnnouncement(TestCase):
         response = self.client.post(url, data, follow=True)
         assert response.status_code == 200
 
-        announcement_1 = Announcement.objects.get(text="Announcement")
+        announcement_1 = Announcement.objects.get(text="We have a new release v1.2.3")
         assert announcement_1.is_active
-        assert announcement_1.url == "https://example.com"
+        assert announcement_1.url == "https://play.google.com/store/apps/details?id=org.missingmaps.mapswipe"
 
         # test active only one announcement at once
         data = {
             "client_id": "01K44ZF3KMS6GV2AD93EG6WP9X",
-            "text": "Announcement Active",
+            "text": "Checkout the latest blog post about airstrips",
             "is_active": True,
-            "url": "https://example2.com",
+            "url": "https://mapswipe.org/en/blogs/2025-04-03-papua-new-guinea-swiping-to-find-airstrips",
             "created_by": self.admin_user.id,
             "modified_by": self.admin_user.id,
         }
@@ -57,9 +57,9 @@ class TestAnnouncement(TestCase):
         response = self.client.post(url, data, follow=True)
         assert response.status_code == 200
 
-        announcement_2 = Announcement.objects.get(text="Announcement Active")
+        announcement_2 = Announcement.objects.get(text="Checkout the latest blog post about airstrips")
         assert announcement_2.is_active
-        assert announcement_2.url == "https://example2.com"
+        assert announcement_2.url == "https://mapswipe.org/en/blogs/2025-04-03-papua-new-guinea-swiping-to-find-airstrips"
 
         # check only one active announcement
         assert Announcement.objects.filter(is_active=True).count() == 1

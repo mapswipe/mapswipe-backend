@@ -6,7 +6,7 @@ from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
 
 from apps.common.firebase.base import FirebasePush
-from apps.common.models import Announcement, FirebasePushStatusEnum
+from apps.common.models import Announcement
 from main.config import Config
 
 logger = logging.getLogger(__name__)
@@ -15,6 +15,10 @@ logger = logging.getLogger(__name__)
 class FirebaseAnnouncementPush(FirebasePush[Announcement, firebase_models.FbAnnouncement]):
     model_class = Announcement
     firebase_model_class = firebase_models.FbAnnouncement
+
+    @typing.override
+    def allow_delete_object_on_firebase(self) -> bool:
+        return True
 
     @typing.override
     def handle_new_object_on_firebase(self, model_obj: Announcement, fb_reference: FbReference):
@@ -42,12 +46,6 @@ class FirebaseAnnouncementPush(FirebasePush[Announcement, firebase_models.FbAnno
             ),
         )
 
-    def handle_delete(self):
-        super().delete()
-        self.obj.firebase_last_pushed = None
-        self.obj.firebase_push_status = FirebasePushStatusEnum.PENDING
-        self.obj.save(update_fields=["firebase_last_pushed", "firebase_push_status"])
-
     @typing.override
     def get_firebase_path(self, firebase_id: str, model=Announcement):
-        return Config.FirebaseKeys.announcement(firebase_id)
+        return Config.FirebaseKeys.announcement()
