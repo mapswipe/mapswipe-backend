@@ -1,5 +1,56 @@
 # Changelog
 
+## [0.2.0-dev9](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev8..v0.2.0-dev9) - 2025-09-07
+### Changes:
+
+#### 🚀  Features
+
+- *(project)* Re-calculate area on project from task group - ([d70e186](https://github.com/mapswipe/mapswipe-backend/commit/d70e1864ec05628c9b0601a5d22f0d22d32f37b3))
+- *(project)* Calculate geo info for projects - ([15550d0](https://github.com/mapswipe/mapswipe-backend/commit/15550d070819d68ef6fdbb656eb122fae1340219))
+- Add project progress status - ([d28db85](https://github.com/mapswipe/mapswipe-backend/commit/d28db856d067f72f8df2f3e3d3ab273ece4fb425))
+- Add globalExportAsset - ([cf49ba9](https://github.com/mapswipe/mapswipe-backend/commit/cf49ba9e51cfbf45338305932780fe91e71d0712))
+- Add project contribution progress stats - ([8a450dc](https://github.com/mapswipe/mapswipe-backend/commit/8a450dcd9790c96ab81f457c9cbd855655d8077f))
+
+#### 🐛 Bug Fixes
+
+- *(announcement)* Use correct firebase uri for announcement - ([84067c0](https://github.com/mapswipe/mapswipe-backend/commit/84067c091f66c5b4671d891719691913a79ccc76))
+- *(asset)* Area calculation for aoi assets - ([e4de22f](https://github.com/mapswipe/mapswipe-backend/commit/e4de22f30d9f39c0ad6bc6bc711c989bcd73914d))
+- *(asset)* Fix validation for bbox - ([b6726f6](https://github.com/mapswipe/mapswipe-backend/commit/b6726f60a6fd3cdb22bec6a85995721b78a6a3a8))
+- *(project)* Fix query for directly uploaded image object assets - ([ab5a713](https://github.com/mapswipe/mapswipe-backend/commit/ab5a7135f895985f11f0731f97a3740badaa1c5a))
+- *(project)* Validate image asset type specifics issue - ([4b3bcbb](https://github.com/mapswipe/mapswipe-backend/commit/4b3bcbb9e0e9166ca4442af35cfc0608d88a2f32))
+- *(project)* Use enum label on error message instead of enum value - ([be08f15](https://github.com/mapswipe/mapswipe-backend/commit/be08f15c63f457f4b3efd673d3798ffaea740708))
+- *(project)* Convert to geography before calculating group area - ([a759caf](https://github.com/mapswipe/mapswipe-backend/commit/a759cafb0e704041395be82de73f1bdbccd6301e))
+- *(project)* Set progress status when progress is 100 - ([ea71f53](https://github.com/mapswipe/mapswipe-backend/commit/ea71f537082940518c4e3c95e0b829ca27930393))
+- *(rastertile)* Add mkt param for bing url - ([1b0d564](https://github.com/mapswipe/mapswipe-backend/commit/1b0d5646da922e38681ff5fdcd0d298dafe09ebd))
+
+#### 🧪 Testing
+
+- *(project)* Merge e2e test for compare and find - ([f407238](https://github.com/mapswipe/mapswipe-backend/commit/f407238aa737b44508e5c82fd4929ac0047b7d90))
+- *(project)* Add test files for compare project type - ([d4474b3](https://github.com/mapswipe/mapswipe-backend/commit/d4474b3d7eac590abe17c0cc54517af5caa9fce6))
+- *(project)* Use new status api - ([349dfbb](https://github.com/mapswipe/mapswipe-backend/commit/349dfbb697140ffc2a412e62f63f34bb3adad056))
+- *(project)* Create test script for project creation - ([bb1ee6b](https://github.com/mapswipe/mapswipe-backend/commit/bb1ee6b50865ed37a081b18f4d43e9db250d3b3d))
+- *(validate)* Update tests with more real examples - ([08b28e0](https://github.com/mapswipe/mapswipe-backend/commit/08b28e04f8297742810abac67e7fb03def812bc6))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(announcement)* Add announcement - ([09bf774](https://github.com/mapswipe/mapswipe-backend/commit/09bf774353cb31ab315e8700a01a23575911af98))
+- *(migration)* Create merge migration - ([f0c25ab](https://github.com/mapswipe/mapswipe-backend/commit/f0c25abc735a709390bdaa4f42e64cb3a49ae95f))
+- *(script)* Add a script to run common checks - ([7f07402](https://github.com/mapswipe/mapswipe-backend/commit/7f07402f5bc40e64f86c91a35fd0960314c96f4f))
+- *(test)* Add additional tests - ([8c8a4a4](https://github.com/mapswipe/mapswipe-backend/commit/8c8a4a4b701d46caaf56cfdc6a5763a4bd76c7b2))
+
+### 🍻 Pull Requests (6)
+- (#107) [Add additional tests](https://github.com/mapswipe/mapswipe-backend/pull/107)
+- (#146) [Add announcement](https://github.com/mapswipe/mapswipe-backend/pull/146)
+- (#148) [E2E test for Project creation ](https://github.com/mapswipe/mapswipe-backend/pull/148)
+- (#151) [Feat: add project contribution progress stats](https://github.com/mapswipe/mapswipe-backend/pull/151)
+- (#153) [Calculate geo info for projects](https://github.com/mapswipe/mapswipe-backend/pull/153)
+- (#155) [Fix(project): Validate image asset type specifics issue](https://github.com/mapswipe/mapswipe-backend/pull/155)
+
+### :tada: New Contributors (2)
+
+- [@Shhhhhubh](https://github.com/Shhhhhubh) made their first contribution
+- [@babinkarmacharya79](https://github.com/babinkarmacharya79) made their first contribution
+
 ## [0.2.0-dev8](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev7..v0.2.0-dev8) - 2025-09-05
 ### Changes:
 
