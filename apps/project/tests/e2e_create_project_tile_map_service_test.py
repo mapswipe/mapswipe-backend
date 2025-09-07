@@ -159,7 +159,7 @@ class TestCompareProjectE2E(TestCase):
             "assets/tests/projects/find/project_data.json5",
         )
 
-    def test_completness_project_e2e(self):
+    def test_completeness_project_e2e(self):
         self._test_tile_map_service(
             "completeness",
             "assets/tests/projects/completeness/project_data.json5",
