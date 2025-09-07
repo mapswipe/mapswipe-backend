@@ -270,8 +270,8 @@ class TestUtils(TestCase):
 
         # check is_valid
         split_id = tutorial_firebase_id.split("_")
-        validate_ulid(str(split_id[1]))
+        validate_ulid(split_id[1])
 
         # check unique tutorial id
-        tutorial_firebase_id_a = generate_tutorial_firebase_id()
-        assert tutorial_firebase_id != tutorial_firebase_id_a
+        tutorial_firebase_id_2 = generate_tutorial_firebase_id()
+        assert tutorial_firebase_id != tutorial_firebase_id_2

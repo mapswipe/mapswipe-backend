@@ -15,7 +15,7 @@ from project_types.validate.api_calls import (
 )
 
 
-class TestProjectTypes(TestCase):
+class TestValidateProject(TestCase):
     @typing.override
     @classmethod
     def setUpClass(cls):
@@ -45,9 +45,9 @@ class TestProjectTypes(TestCase):
                 {
                     "id": "12345",
                     "properties": {
-                        "user": "Jhon Doe",
+                        "user": "Sita Devi",
                         "uid": 1001,
-                        "comment": "This is test comment",
+                        "comment": "Looks good!",
                         "editor": "Ram",
                     },
                 },
@@ -56,7 +56,7 @@ class TestProjectTypes(TestCase):
                     "properties": {
                         "user": "Hari",
                         "uid": 1002,
-                        "comment": "It's cold",
+                        "comment": "It's not a bridge",
                         "editor": "Shyam 'Bahadur'",
                     },
                 },
@@ -72,15 +72,15 @@ class TestProjectTypes(TestCase):
 
         assert changeset_results == {
             12345: {
-                "username": "Jhon Doe",
+                "username": "Sita Devi",
                 "userid": 1001,
-                "comment": "This is test comment",
+                "comment": "Looks good!",
                 "editor": "Ram",
             },
             67890: {
                 "username": "Hari",
                 "userid": 1002,
-                "comment": "Its cold",
+                "comment": "Its not a bridge",
                 "editor": "Shyam Bahadur",
             },
         }
@@ -103,13 +103,13 @@ class TestProjectTypes(TestCase):
 
         xml_response = """
         <osm>
-            <changeset id="12345" user='Jhon "Doe"' uid="1001">
-                <tag k="comment" v="This is a test comment"/>
+            <changeset id="12345" user='Sita "Devi"' uid="1001">
+                <tag k="comment" v="Looks good!"/>
                 <tag k="created_by" v="Ram"/>
             </changeset>
-            <changeset id="67890" user="Hari Bahadur" uid="1002">
-                <tag k="comment" v="test comment"/>
-                <tag k="created_by" v="Shyam"/>
+            <changeset id="67890" user="Hari" uid="1002">
+                <tag k="comment" v="It's not a bridge"/>
+                <tag k="created_by" v="Shyam Bahadur"/>
             </changeset>
         </osm>
         """
@@ -123,16 +123,16 @@ class TestProjectTypes(TestCase):
 
         assert result == {
             12345: {
-                "username": "Jhon Doe",
+                "username": "Sita Devi",
                 "userid": "1001",
-                "comment": "This is a test comment",
+                "comment": "Looks good!",
                 "editor": "Ram",
             },
             67890: {
-                "username": "Hari Bahadur",
+                "username": "Hari",
                 "userid": "1002",
-                "comment": "test comment",
-                "editor": "Shyam",
+                "comment": "Its not a bridge",
+                "editor": "Shyam Bahadur",
             },
         }
 
@@ -153,7 +153,7 @@ class TestProjectTypes(TestCase):
 
         mock_response_data = {
             "attribution": {
-                "url": "https: //ohsome.org/copyrights",
+                "url": "https://ohsome.org/copyrights",
                 "text": "© OpenStreetMap contributors",
             },
             "apiVersion": "1.10.4",
@@ -244,8 +244,8 @@ class TestProjectTypes(TestCase):
         }
         mock_osmcha_response = {
             12345: {
-                "username": "test_user_1",
-                "comment": "Test edit 1",
+                "username": "Sita",
+                "comment": "This is a test comment",
                 "editor": "iD",
                 "userid": 1001,
             },
@@ -256,16 +256,16 @@ class TestProjectTypes(TestCase):
 
         mock_query_osm.return_value = {
             12345: {
-                "username": "Jhon Doe",
+                "username": "Sita",
                 "userid": "1001",
-                "comment": "This is a test comment",
+                "comment": "This is an updated test comment",
                 "editor": "Ram",
             },
             12346: {
-                "username": "Jhon Doe 2",
+                "username": "Kiran",
                 "userid": "1002",
                 "comment": "This is a test comment",
-                "editor": "Ram Bahadur",
+                "editor": "Hari",
             },
         }
 
