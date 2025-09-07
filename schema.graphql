@@ -13,7 +13,7 @@ directive @isAuthenticated repeatable on FIELD_DEFINITION
 directive @oneOf on INPUT_OBJECT
 
 type AoiGeometryAssetPropertyType {
-  """A positive float value"""
+  """Positive float value"""
   area: Float!
   bbox: [Float!]!
   center: [Float!]!
@@ -293,16 +293,22 @@ type CommunityStatsType {
 }
 
 input CompareProjectPropertyInput {
+  """Numeric value as string"""
   aoiGeometry: String!
   tileServerBProperty: ProjectRasterTileServerConfigInput!
   tileServerProperty: ProjectRasterTileServerConfigInput!
+
+  """Zoom level from 14 to 22"""
   zoomLevel: Int!
 }
 
 type CompareProjectPropertyType {
+  """Numeric value as string"""
   aoiGeometry: String!
   tileServerBProperty: ProjectRasterTileServerConfig!
   tileServerProperty: ProjectRasterTileServerConfig!
+
+  """Zoom level from 14 to 22"""
   zoomLevel: Int!
 }
 
@@ -323,16 +329,22 @@ type CompareTutorialTaskPropertyType {
 union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyType = CompareTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | FindTutorialTaskPropertyType | StreetTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | ValidateTutorialTaskPropertyType
 
 input CompletenessProjectPropertyInput {
+  """Numeric value as string"""
   aoiGeometry: String!
   overlayTileServerProperty: ProjectOverlayTileServerConfigInput!
   tileServerProperty: ProjectRasterTileServerConfigInput!
+
+  """Zoom level from 14 to 22"""
   zoomLevel: Int!
 }
 
 type CompletenessProjectPropertyType {
+  """Numeric value as string"""
   aoiGeometry: String!
   overlayTileServerProperty: ProjectOverlayTileServerConfig!
   tileServerProperty: ProjectRasterTileServerConfig!
+
+  """Zoom level from 14 to 22"""
   zoomLevel: Int!
 }
 
@@ -706,16 +718,17 @@ union CreateTutorialPayload = OperationInfo | TutorialTypeMutationResponseType
 scalar CustomErrorType
 
 input CustomOptionInput {
+  """ULID value"""
   clientId: String!
   description: String!
   icon: IconEnum!
 
-  """A valid hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff'"""
   iconColor: String!
   subOptions: [CustomSubOptionInput!]
   title: String!
 
-  """A positive int value"""
+  """Positive integer value"""
   value: Int!
 }
 
@@ -728,10 +741,11 @@ type CustomOptionType {
 }
 
 input CustomSubOptionInput {
+  """ULID value"""
   clientId: String!
   description: String!
 
-  """A positive int value"""
+  """Positive integer value"""
   value: Int!
 }
 
@@ -759,14 +773,20 @@ input DjangoModelFilterInput {
 }
 
 input FindProjectPropertyInput {
+  """Numeric value as string"""
   aoiGeometry: String!
   tileServerProperty: ProjectRasterTileServerConfigInput!
+
+  """Zoom level from 14 to 22"""
   zoomLevel: Int!
 }
 
 type FindProjectPropertyType {
+  """Numeric value as string"""
   aoiGeometry: String!
   tileServerProperty: ProjectRasterTileServerConfig!
+
+  """Zoom level from 14 to 22"""
   zoomLevel: Int!
 }
 
@@ -938,7 +958,11 @@ input ObjectImageAnnotationInput {
   area: Float = null
   bbox: [Float!]!
   categoryId: String = null
+
+  """Numeric value as string"""
   id: String!
+
+  """Numeric value as string"""
   imageId: String!
   iscrowd: Int = null
   segmentation: [[Float!]!] = null
@@ -948,7 +972,11 @@ type ObjectImageAnnotationType {
   area: Float
   bbox: [Float!]!
   categoryId: String
+
+  """Numeric value as string"""
   id: String!
+
+  """Numeric value as string"""
   imageId: String!
   iscrowd: Int
   segmentation: [[Float!]!]
@@ -970,6 +998,8 @@ input ObjectImageInput {
   fileName: String!
   flickrUrl: String = null
   height: Int = null
+
+  """Numeric value as string"""
   id: String!
   license: Int = null
   width: Int = null
@@ -981,6 +1011,8 @@ type ObjectImageType {
   fileName: String!
   flickrUrl: String
   height: Int
+
+  """Numeric value as string"""
   id: String!
   license: Int
   width: Int
@@ -1366,24 +1398,26 @@ input ProjectCreateInput {
 }
 
 type ProjectCustomOption {
+  """ULID value"""
   clientId: String!
   description: String!
   icon: IconEnum!
 
-  """A valid hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff'"""
   iconColor: String!
   subOptions: [ProjectCustomSubOption!]
   title: String!
 
-  """A positive int value"""
+  """Positive integer value"""
   value: Int!
 }
 
 type ProjectCustomSubOption {
+  """ULID value"""
   clientId: String!
   description: String!
 
-  """A positive int value"""
+  """Positive integer value"""
   value: Int!
 }
 
@@ -1433,13 +1467,13 @@ input ProjectOrder {
 }
 
 type ProjectOverlayRasterTileServerConfig {
-  """A valid opacity like 0.2 or 1.0"""
+  """Float value from 0.0 to 1.0"""
   opacity: Float!
   tileServer: ProjectRasterTileServerConfig!
 }
 
 input ProjectOverlayRasterTileServerConfigInput {
-  """A valid opacity like 0.2 or 1.0"""
+  """Float value from 0.0 to 1.0"""
   opacity: Float!
   tileServer: ProjectRasterTileServerConfigInput!
 }
@@ -1457,57 +1491,57 @@ input ProjectOverlayTileServerConfigInput {
 }
 
 type ProjectOverlayVectorTileServerConfig {
-  """A valid hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff'"""
   circleColor: String!
 
-  """A valid opacity like 0.2 or 1.0"""
+  """Float value from 0.0 to 1.0"""
   circleOpacity: Float!
 
-  """A positive float value"""
+  """Positive float value"""
   circleRadius: Float!
 
-  """A valid hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff'"""
   fillColor: String!
 
-  """A valid opacity like 0.2 or 1.0"""
+  """Float value from 0.0 to 1.0"""
   fillOpacity: Float!
 
-  """A valid hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff'"""
   lineColor: String!
   lineDasharray: [Int!]!
 
-  """A valid opacity like 0.2 or 1.0"""
+  """Float value from 0.0 to 1.0"""
   lineOpacity: Float!
 
-  """A positive float value"""
+  """Positive float value"""
   lineWidth: Float!
   tileServer: ProjectVectorTileServerConfig!
 }
 
 input ProjectOverlayVectorTileServerConfigInput {
-  """A valid hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff'"""
   circleColor: String!
 
-  """A valid opacity like 0.2 or 1.0"""
+  """Float value from 0.0 to 1.0"""
   circleOpacity: Float!
 
-  """A positive float value"""
+  """Positive float value"""
   circleRadius: Float!
 
-  """A valid hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff'"""
   fillColor: String!
 
-  """A valid opacity like 0.2 or 1.0"""
+  """Float value from 0.0 to 1.0"""
   fillOpacity: Float!
 
-  """A valid hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff'"""
   lineColor: String!
   lineDasharray: [Int!]!
 
-  """A valid opacity like 0.2 or 1.0"""
+  """Float value from 0.0 to 1.0"""
   lineOpacity: Float!
 
-  """A positive float value"""
+  """Positive float value"""
   lineWidth: Float!
   tileServer: ProjectVectorTileServerConfigInput!
 }
@@ -1939,7 +1973,11 @@ input ProjectVectorTileServerConfigInput {
 
 type ProjectVectorTileServerCustomConfig {
   credits: String!
+
+  """Zoom level from 0 to 22"""
   maxZoom: Int!
+
+  """Zoom level from 0 to 22"""
   minZoom: Int!
   sourceLayer: String!
   url: String!
@@ -2084,12 +2122,14 @@ input StreetMapillaryImageFiltersInput {
 }
 
 input StreetProjectPropertyInput {
+  """Numeric value as string"""
   aoiGeometry: String!
   customOptions: [CustomOptionInput!] = null
   mapillaryImageFilters: StreetMapillaryImageFiltersInput!
 }
 
 type StreetProjectPropertyType {
+  """Numeric value as string"""
   aoiGeometry: String!
   customOptions: [ProjectCustomOption!]
   mapillaryImageFilters: StreetMapillaryImageFilters!
@@ -2705,7 +2745,11 @@ input VectorTileServerCommonConfigInput {
 
 input VectorTileServerCustomConfigInput {
   credits: String!
+
+  """Zoom level from 0 to 22"""
   maxZoom: Int!
+
+  """Zoom level from 0 to 22"""
   minZoom: Int!
   sourceLayer: String!
   url: String!

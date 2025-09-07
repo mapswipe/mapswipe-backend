@@ -41,15 +41,31 @@ PydanticVectorTileServerUrl = typing.Annotated[str, BeforeValidator(_validate_ve
 
 PydanticLongText = typing.Annotated[str, Field(strict=True, max_length=1000)]
 
-PydanticLat = typing.Annotated[float, Field(strict=True, ge=-90, le=90)]
-PydanticLng = typing.Annotated[float, Field(strict=True, ge=-180, le=180)]
+PydanticLat = typing.Annotated[
+    float,
+    Field(
+        strict=True,
+        ge=-90,
+        le=90,
+        description="Float value from -90 to 90",
+    ),
+]
+PydanticLng = typing.Annotated[
+    float,
+    Field(
+        strict=True,
+        ge=-180,
+        le=180,
+        description="Float value from -180 to 180",
+    ),
+]
 
 PydanticOpacity = typing.Annotated[
     float,
     Field(
         ge=0.0,
         le=1.0,
-        description="A valid opacity like 0.2 or 1.0",
+        description="Float value from 0.0 to 1.0",
     ),
 ]
 
@@ -57,14 +73,14 @@ PydanticPositiveFloat = typing.Annotated[
     float,
     Field(
         ge=0.0,
-        description="A positive float value",
+        description="Positive float value",
     ),
 ]
 PydanticPositiveInt = typing.Annotated[
     int,
     Field(
         ge=0,
-        description="A positive int value",
+        description="Positive integer value",
     ),
 ]
 
@@ -72,18 +88,48 @@ PydanticHexColor = typing.Annotated[
     str,
     Field(
         pattern=r"^#(?:[0-9a-fA-F]{3}){1,2}$",
-        description="A valid hex color string like '#fff' or '#ffffff'",
+        description="Hex color string like '#fff' or '#ffffff'",
     ),
 ]
 
-PydanticId = typing.Annotated[str, Field(strict=True, pattern=r"^\d+$")]
+PydanticId = typing.Annotated[
+    str,
+    Field(
+        strict=True,
+        pattern=r"^\d+$",
+        description="Numeric value as string",
+    ),
+]
 
-PydanticRestrictedZoomLevel = typing.Annotated[int, Field(strict=True, gt=13, lt=23)]
+PydanticRestrictedZoomLevel = typing.Annotated[
+    int,
+    Field(
+        strict=True,
+        gt=13,
+        lt=23,
+        description="Zoom level from 14 to 22",
+    ),
+]
 
-PydanticZoomLevel = typing.Annotated[int, Field(strict=True, ge=0, lt=23)]
+PydanticZoomLevel = typing.Annotated[
+    int,
+    Field(
+        strict=True,
+        ge=0,
+        lt=23,
+        description="Zoom level from 0 to 22",
+    ),
+]
 
 # FIXME(frozenhelium): add proper validation
-PydanticUlid = typing.Annotated[str, Field(strict=True, pattern=r"^[0-9A-Z]{26}$")]
+PydanticUlid = typing.Annotated[
+    str,
+    Field(
+        strict=True,
+        pattern=r"^[0-9A-Z]{26}$",
+        description="ULID value",
+    ),
+]
 
 PydanticBool = typing.Annotated[bool, Field(strict=True)]
 
@@ -91,6 +137,7 @@ PydanticDate = typing.Annotated[
     str,
     Field(
         pattern=r"^\d{4}-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])$",
+        description="Date value in format yyyy-mm-dd",
     ),
 ]
 
