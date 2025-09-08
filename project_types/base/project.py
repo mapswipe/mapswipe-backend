@@ -218,6 +218,7 @@ class BaseProject[
         try:
             self._process_project()
         except Exception as ex:
+            # TODO(tnagorra): Handle ValidationException: should send message to users
             logger.error(
                 "process_project failed",
                 extra=log_extra({"project": self.project.pk}),
@@ -437,7 +438,7 @@ class BaseProject[
             )
         if self.project.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
             raise ValidationException(
-                "Project can only be published if firebase push status is 'Pending'",
+                "Project can only be published if firebase push status is 'Ready to Process'",
             )
 
         self.project.update_firebase_push_status(FirebasePushStatusEnum.PROCESSING)
@@ -472,6 +473,7 @@ class BaseProject[
         try:
             self._push_project_on_firebase()
         except Exception as ex:
+            # TODO(tnagorra): Handle ValidationError separately
             logger.error(
                 "push_to_firebase for project failed",
                 extra=log_extra({"project": self.project.pk}),
@@ -483,7 +485,7 @@ class BaseProject[
             # NOTE: If project has already been published, we cannot update it's status
             if self.project.status_enum != Project.Status.PUBLISHED:
                 self.project.update_status(Project.Status.PUBLISHING_FAILED, False)
-
+                # TODO(tnagorra): We also need to clear any intermediate values for groups, tasks and projects
             self.project.save(
                 update_fields=[
                     "status",
@@ -495,7 +497,7 @@ class BaseProject[
         else:
             self.project.status_message = None
             self.project.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
-            self.project.update_status(Project.Status.PUBLISHED, True)
+            self.project.update_status(Project.Status.PUBLISHED, False)
             self.project.save(
                 update_fields=[
                     "status",
