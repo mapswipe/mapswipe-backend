@@ -12,7 +12,7 @@ CommandActionType = typing.Literal[
 
 
 class Command(BaseCommand):
-    help = "Test sending a Slack progress message for a given project"
+    help = "Send slack messages for a given project"
 
     @typing.override
     def add_arguments(self, parser):
@@ -20,12 +20,12 @@ class Command(BaseCommand):
             "--project-id",
             type=str,
             required=True,
-            help="ID of the project to test",
+            help="ID of the project",
         )
-        subparsers = parser.add_subparsers(dest="event", help="Event to trigger", required=True)
+        subparsers = parser.add_subparsers(dest="event", help="Events to trigger", required=True)
         subparsers.add_parser("project-creation", help="Send message for project creation")
-        subparsers.add_parser("status-update", help="Project status changed")
-        subparsers.add_parser("progress-change", help="Project progress change")
+        subparsers.add_parser("status-update", help="Send message for project status change")
+        subparsers.add_parser("progress-change", help="Send message for project progress change")
 
     @typing.override
     def handle(self, *args, **options):

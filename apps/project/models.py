@@ -466,7 +466,7 @@ class Project(UserResource, FirebasePushResource):
         help_text=gettext_lazy("Last recent contribution date"),
     )
     # SLACK THREAD TS
-    slack_thread_ts = models.CharField(max_length=20, null=True, blank=True)
+    slack_thread_ts = models.CharField(max_length=20, null=True, blank=True)  # NOTE: Timestamp of the base slack message
 
     # Type hints
     requesting_organization_id: int

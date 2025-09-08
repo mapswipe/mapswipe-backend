@@ -682,14 +682,11 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
             updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
             transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
 
-        if (
-            old_status_enum != updated_project.status_enum
-            and old_status_enum != Project.Status.PAUSED
-            and updated_project.status_enum == Project.Status.PUBLISHED
-        ):
-            creation_success_message.delay(project_id=instance.pk)
+        if old_status_enum != updated_project.status_enum:
+            if old_status_enum != Project.Status.PAUSED and updated_project.status_enum == Project.Status.PUBLISHED:
+                creation_success_message.delay(project_id=instance.pk)
 
-        if (old_status_enum == Project.Status.PUBLISHED) and old_status_enum != updated_project.status_enum:
-            status_update_message.delay(project_id=instance.pk)
+            if old_status_enum in {Project.Status.PUBLISHED, Project.Status.PAUSED}:
+                status_update_message.delay(project_id=instance.pk)
 
         return updated_project
