@@ -258,7 +258,7 @@ class TestCompareProjectE2E(TestCase):
         # Process project
         process_project_data = {
             "clientId": project_client_id,
-            "status": "MARKED_AS_READY",
+            "status": "READY_TO_PROCESS",
         }
         with self.captureOnCommitCallbacks(execute=True):
             process_project_content = self.query_check(
@@ -266,9 +266,9 @@ class TestCompareProjectE2E(TestCase):
                 variables={"pk": project_id, "data": process_project_data},
             )
         process_project_response = process_project_content["data"]["updateProjectStatus"]
-        assert process_project_response is not None, "Project mark as ready response is None"
+        assert process_project_response is not None, "Project ready to process response is None"
         assert process_project_response["ok"], process_project_response["errors"]
-        assert process_project_response["result"]["status"] == "MARKED_AS_READY", "Project should be marked as ready"
+        assert process_project_response["result"]["status"] == "READY_TO_PROCESS", "Project should be ready to process"
 
         # TODO: Use mutation to create tutorial
         # Create tutorial to attach to project before publishing
@@ -294,7 +294,7 @@ class TestCompareProjectE2E(TestCase):
         # Publish project
         publish_project_data = {
             "clientId": project_client_id,
-            "status": "PUBLISHED",
+            "status": "READY_TO_PUBLISH",
         }
         with self.captureOnCommitCallbacks(execute=True):
             publish_project_content = self.query_check(
@@ -304,7 +304,7 @@ class TestCompareProjectE2E(TestCase):
         publish_project_response = publish_project_content["data"]["updateProjectStatus"]
         assert publish_project_response["ok"], publish_project_response["errors"]
         assert publish_project_response is not None, "Processed project publish response is None"
-        assert publish_project_response["result"]["status"] == "PUBLISHED", "Project should be published"
+        assert publish_project_response["result"]["status"] == "READY_TO_PUBLISH", "Project should be ready to publish"
 
         # CHECK PROJECT, GROUP AND TASK CREATED IN FIREBASE
 

@@ -1642,14 +1642,17 @@ type ProjectRasterTileServerCustomConfig {
 }
 
 enum ProjectStatusEnum {
-  ARCHIVED
   DISCARDED
   DRAFT
-  FAILED
-  MARKED_AS_READY
+  FINISHED
   PAUSED
+  PROCESSED
+  PROCESSING_FAILED
   PUBLISHED
-  READY
+  PUBLISHING_FAILED
+  READY_TO_PROCESS
+  READY_TO_PUBLISH
+  WITHDRAWN
 }
 
 input ProjectStatusEnumFilterLookup {

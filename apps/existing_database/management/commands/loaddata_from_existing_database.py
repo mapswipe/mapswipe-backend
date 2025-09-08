@@ -288,10 +288,9 @@ def parse_project_status(existing_project: existing_db_models.Project) -> Projec
         "inactive": ProjectStatusEnum.PAUSED,
         "active": ProjectStatusEnum.PUBLISHED,
         "private_active": ProjectStatusEnum.PUBLISHED,
-        # TODO(tnagorra): Add FINISHED status. Rename ARCHIVED to WITHDRAWN
-        "private_finished": ProjectStatusEnum.ARCHIVED,
-        "finished": ProjectStatusEnum.ARCHIVED,
-        "archived": ProjectStatusEnum.ARCHIVED,
+        "private_finished": ProjectStatusEnum.FINISHED,
+        "finished": ProjectStatusEnum.FINISHED,
+        "archived": ProjectStatusEnum.WITHDRAWN,
     }[existing_project.status]
 
 

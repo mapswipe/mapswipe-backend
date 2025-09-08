@@ -18,18 +18,9 @@ def process_project_task(project_id: int):
             return None
 
     project = Project.objects.get(pk=project_id)
-    try:
-        project_type_handler = get_project_type_handler(project.project_type_enum)(project)
-        project_type_handler.process_project()
-        return True
-    except Exception:
-        logger.error(
-            "Project(id: %s) processing is failed",
-            project_id,
-            exc_info=True,
-        )
-        project.update_status(Project.Status.FAILED, True)
-        return False
+    project_type_handler = get_project_type_handler(project.project_type_enum)(project)
+    project_type_handler.process_project()
+    return True
 
 
 @shared_task
