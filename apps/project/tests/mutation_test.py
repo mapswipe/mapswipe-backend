@@ -956,7 +956,10 @@ class TestProjectMutation(TestCase):
             **self.user_resource_kwargs,
             is_archived=True,
         )
-        project_data["requestingOrganization"] = archived_organization.pk
+        project_data = {
+            "clientId": proj.client_id,
+            "requestingOrganization": archived_organization.pk,
+        }
         content = self._update_processed_project_mutation(str(latest_project.pk), project_data)
         assert content["data"]["updateProcessedProject"]["errors"] == [
             {
@@ -1040,8 +1043,10 @@ class TestProjectMutation(TestCase):
             **self.user_resource_kwargs,
             is_archived=True,
         )
-        # FIXME: This is not correct
-        project_data["team"] = archived_team.pk
+        project_data = {
+            "clientId": proj.client_id,
+            "team": archived_team.pk,
+        }
         content = self._update_processed_project_mutation(str(latest_project.pk), project_data)
         assert content["data"]["updateProcessedProject"]["errors"] == [
             {

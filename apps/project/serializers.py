@@ -275,6 +275,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             "image",
             "tutorial",
             "team",
+            "is_featured",
         )
 
     def validate_requesting_organization(self, requesting_organization: Organization | None) -> Organization | None:

@@ -1163,6 +1163,7 @@ input ProcessedProjectUpdateInput {
   clientId: String!
   description: String
   image: ID
+  isFeatured: Boolean
 
   """What should the users look for (e.g. buildings, cars, trees)"""
   lookFor: String
@@ -1174,7 +1175,6 @@ input ProcessedProjectUpdateInput {
 
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: ID
-  status: ProjectStatusEnum
   team: ID
   topic: String
 

@@ -99,8 +99,8 @@ class ProcessedProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
     look_for: strawberry.auto
     project_instruction: strawberry.auto
     additional_info_url: strawberry.auto
+    is_featured: strawberry.auto
     description: strawberry.auto
-    status: strawberry.auto
     tutorial: strawberry.ID | None = strawberry.UNSET
     requesting_organization: strawberry.ID | None = strawberry.UNSET
     image: strawberry.ID | None = strawberry.UNSET
