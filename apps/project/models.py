@@ -379,6 +379,11 @@ class Project(UserResource, FirebasePushResource):
         null=True,
         blank=True,
     )
+    status_message = models.CharField[str | None, str | None](
+        null=True,
+        blank=True,
+        max_length=510,
+    )
 
     # TEAM
 

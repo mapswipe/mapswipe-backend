@@ -217,17 +217,31 @@ class BaseProject[
     def process_project(self):
         try:
             self._process_project()
-        except Exception:
-            # TODO(tnagorra): Handle ValidationException: should send message to users
+        except Exception as ex:
             logger.error(
                 "process_project failed",
                 extra=log_extra({"project": self.project.pk}),
                 exc_info=True,
             )
-            self.project.update_status(Project.Status.PROCESSING_FAILED, True)
+            self.project.status_message = str(ex) if isinstance(ex, ValidationException) else None
+            self.project.update_status(Project.Status.PROCESSING_FAILED, False)
+            self.project.save(
+                update_fields=[
+                    "status",
+                    "status_message",
+                ],
+            )
         else:
-            self.project.update_processing_status(Project.ProcessingStatus.COMPLETED, True)
-            self.project.update_status(Project.Status.PROCESSED, True)
+            self.project.status_message = None
+            self.project.update_status(Project.Status.PROCESSED, False)
+            self.project.update_processing_status(Project.ProcessingStatus.COMPLETED, False)
+            self.project.save(
+                update_fields=[
+                    "status",
+                    "status_message",
+                    "processing_status",
+                ],
+            )
 
     # FIREBASE
 
@@ -457,21 +471,39 @@ class BaseProject[
     def push_project_on_firebase(self):
         try:
             self._push_project_on_firebase()
-        except Exception:
-            # TODO(tnagorra): Handle ValidationError separately
+        except Exception as ex:
             logger.error(
                 "push_to_firebase failed",
                 extra=log_extra({"project": self.project.pk}),
                 exc_info=True,
             )
-            self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
+            self.project.status_message = str(ex) if isinstance(ex, ValidationException) else None
+            self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED, False)
+            # TODO(tnagorra): We also need to clear any intermediate values for groups, tasks and projects in firebase
             # NOTE: If project has already been published, we cannot update it's status
             if self.project.status_enum != Project.Status.PUBLISHED:
-                self.project.update_status(Project.Status.PUBLISHING_FAILED, True)
-                # TODO(tnagorra): We also need to clear any intermediate values for groups, tasks and projects
+                self.project.update_status(Project.Status.PUBLISHING_FAILED, False)
+
+            self.project.save(
+                update_fields=[
+                    "status",
+                    "status_message",
+                    "firebase_push_status",
+                    "firebase_last_pushed",
+                ],
+            )
         else:
+            self.project.status_message = None
             self.project.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
             self.project.update_status(Project.Status.PUBLISHED, True)
+            self.project.save(
+                update_fields=[
+                    "status",
+                    "status_message",
+                    "firebase_push_status",
+                    "firebase_last_pushed",
+                ],
+            )
 
     # EXPORT
 

@@ -1801,6 +1801,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   requestingOrganizationId: ID!
   requiredResults: Int!
   status: ProjectStatusEnum!
+  statusMessage: String
   team: ContributorTeamType
   topic: String!
   totalArea: Float

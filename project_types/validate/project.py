@@ -144,7 +144,7 @@ class ValidateProject(
         try:
             fc = FeatureCollection.model_validate(geojson_data)
         except ValidationError as e:
-            raise ValueError("Invalid GeoJSON FeatureCollection") from e
+            raise base_project.ValidationException("Invalid GeoJSON FeatureCollection") from e
 
         polygon_types = (Polygon, MultiPolygon)
         filtered_features: list[ValidFeature] = [
@@ -169,15 +169,11 @@ class ValidateProject(
         )
 
     def _validate_aoi_geojson_file(self):
-        # FIXME: we need to move this outside of json
-        if self.project_type_specifics.object_source.source_type != ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
-            raise Exception("Invalid object source type for validate geojson file")
-
         if self.project_type_specifics.object_source.aoi_geometry is None:
-            raise Exception("AOI Geometry is missing for validate geojson file")
+            raise base_project.ValidationException("AOI Geometry is missing for validate geojson file")
 
         if self.project_type_specifics.object_source.ohsome_filter is None:
-            raise Exception("Ohsome filter is missing for validate geojson file")
+            raise base_project.ValidationException("Ohsome filter is missing for validate geojson file")
 
         aoi_asset = self.project.aoi_geometry_input_asset
         if not aoi_asset:
@@ -186,7 +182,7 @@ class ValidateProject(
         asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_asset.asset_type_specifics)
         allowed_area = 20
         if asset_specific_data.area > allowed_area:
-            raise Exception(f"Area for AOI Geometry must be less than {allowed_area} sq. km")
+            raise base_project.ValidationException(f"Area for AOI Geometry must be less than {allowed_area} sq. km")
 
         with aoi_asset.file.open() as aoi_file:
             aoi_geojson = json.loads(aoi_file.read())
@@ -198,7 +194,7 @@ class ValidateProject(
     def _validate_object_geojson_url(self):
         url = self.project_type_specifics.object_source.object_geojson_url
         if url is None:
-            raise Exception("Object Geojson URL is missing")
+            raise base_project.ValidationException("Object Geojson URL is missing")
 
         logger.info("Fetching object geojson from %s", url)
 
@@ -216,7 +212,7 @@ class ValidateProject(
         hot_tm_id = self.project_type_specifics.object_source.tasking_manager_project_id
 
         if hot_tm_id is None:
-            raise Exception("HOT Tasking Manager Project ID is missing")
+            raise base_project.ValidationException("HOT Tasking Manager Project ID is missing")
 
         hot_tm_url = f"{Config.HOT_TASKING_MANAGER_PROJECT_API_LINK}projects/{hot_tm_id}/queries/aoi/?as_file=false"
 
