@@ -1,6 +1,7 @@
 import typing
 from datetime import datetime
 from pathlib import Path
+from unittest import mock
 
 import json5
 from django.conf import settings
@@ -8,6 +9,7 @@ from ulid import ULID
 
 from apps.common.utils import remove_object_keys
 from apps.contributor.factories import ContributorUserFactory
+from apps.project.dummy_slack_client import MapswipeSlackMock
 from apps.project.factories import OrganizationFactory
 from apps.tutorial.factories import TutorialFactory
 from apps.tutorial.models import Tutorial
@@ -167,6 +169,7 @@ class TestCompareProjectE2E(TestCase):
             "assets/tests/projects/compare/project_data.json5",
         )
 
+    @mock.patch("apps.project.tasks.MapswipeSlack", MapswipeSlackMock)
     def _test_tile_map_service(self, projectKey: str, filename: str):
         self.force_login(self.user)
 
