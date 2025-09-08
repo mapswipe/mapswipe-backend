@@ -148,6 +148,7 @@ class TutorialType(UserResourceTypeMixin, FirebasePushResourceTypeMixin):
     project: typing.Annotated["ProjectType", strawberry.lazy("apps.project.graphql.types.types")]
     project_id: strawberry.ID
     status: strawberry.auto
+    status_message: strawberry.auto
 
     # FIXME(tnagorra): The ordering is not always being applied on queries
     # The tests are failing randomly.

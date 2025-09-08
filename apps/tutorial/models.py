@@ -48,6 +48,22 @@ class TutorialStatusEnum(models.IntegerChoices):
     Draft tutorials are not ready to be attached to projects.
     """
 
+    READY_TO_PUBLISH = 15, "Ready to Publish"
+    """Background processes and syncing to firebase will be triggered
+    once a tutorial is "Ready to Publish".
+    """
+
+    PUBLISHING_FAILED = 16, "Publishing Failed"
+    """If there are errors or issues with background processes,
+    then publishing of tutorial has failed
+    """
+
+    DISCARDED = 40, "Discarded"
+    """
+    "Discarded" tutorials cannot be attached to new projects.
+    "Discarded" tutorials cannot be "un-discarded".
+    """
+
     PUBLISHED = 20, "Published"
     """
     "Published" tutorials can be attached to projects.
@@ -57,12 +73,6 @@ class TutorialStatusEnum(models.IntegerChoices):
     """
     "Archived" tutorials cannot be attached to new projects.
     "Archived" tutorials cannot be "un-archived".
-    """
-
-    DISCARDED = 40, "Discarded"
-    """
-    "Discarded" tutorials cannot be attached to new projects.
-    "Discarded" tutorials cannot be "un-discarded".
     """
 
 
@@ -92,6 +102,11 @@ class Tutorial(UserResource, FirebasePushResource):  # type: ignore[reportIncomp
         choices_enum=TutorialStatusEnum,
         default=TutorialStatusEnum.DRAFT,
     )
+    status_message = models.CharField[str | None, str | None](
+        null=True,
+        blank=True,
+        max_length=510,
+    )
 
     firebase_id = models.CharField[str, str](max_length=40, unique=True, default=generate_tutorial_firebase_id)
 
@@ -107,6 +122,11 @@ class Tutorial(UserResource, FirebasePushResource):  # type: ignore[reportIncomp
     @property
     def status_enum(self) -> TutorialStatusEnum:
         return TutorialStatusEnum(self.status)
+
+    def update_status(self, status: TutorialStatusEnum, commit: bool = True):
+        self.status = status
+        if commit:
+            self.save(update_fields=("status",))
 
 
 class TutorialAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibleVariableOverride]

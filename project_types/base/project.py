@@ -437,7 +437,7 @@ class BaseProject[
             )
         if self.project.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
             raise ValidationException(
-                "Project can only be published if firebase push status is 'Ready to Process'",
+                "Project can only be published if firebase push status is 'Pending'",
             )
 
         self.project.update_firebase_push_status(FirebasePushStatusEnum.PROCESSING)
@@ -473,7 +473,7 @@ class BaseProject[
             self._push_project_on_firebase()
         except Exception as ex:
             logger.error(
-                "push_to_firebase failed",
+                "push_to_firebase for project failed",
                 extra=log_extra({"project": self.project.pk}),
                 exc_info=True,
             )

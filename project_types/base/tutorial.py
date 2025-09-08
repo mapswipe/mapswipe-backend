@@ -27,6 +27,9 @@ from .project import BaseProjectProperty
 logger = logging.getLogger(__name__)
 
 
+class TutorialValidationException(Exception): ...
+
+
 class InvalidTutorialPushException(Exception): ...
 
 
@@ -317,51 +320,77 @@ class BaseTutorial[
             },
         )
 
-    def push_tutorial_on_firebase(self):
+    def _push_tutorial_on_firebase(self):
+        if self.tutorial.status_enum not in [Tutorial.Status.READY_TO_PUBLISH, Tutorial.Status.PUBLISHED]:
+            raise TutorialValidationException(
+                "Tutorial can only be published if status is 'Ready to Process' or 'Published'",
+            )
         if self.tutorial.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
-            logger.warning("%s - push_to_firebase called when push is not required", self.tutorial.pk)
-            return
+            raise TutorialValidationException(
+                "Tutorial can only be published if firebase push status is 'Pending'",
+            )
 
         self.tutorial.update_firebase_push_status(FirebasePushStatusEnum.PROCESSING)
 
+        tutorial_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.tutorial(self.tutorial.firebase_id),
+        )
+        fb_tutorial: typing.Any = tutorial_ref.get()
+
+        if not self.tutorial.firebase_last_pushed:
+            if fb_tutorial is not None:
+                raise TutorialValidationException(
+                    "Tutorial already found in firebase when creating a tutorial",
+                )
+            self.create_tutorial_on_firebase(tutorial_ref)
+        else:
+            if fb_tutorial is None:
+                raise TutorialValidationException(
+                    "Did not find tutorial in firebase when updating a tutorial",
+                )
+
+            class RelaxedModel(firebase_models.FbBaseTutorial):
+                model_config = ConfigDict(extra="ignore")
+
+            # NOTE: we want to ignore extra fields from firebase
+            valid_tutorial = RelaxedModel.model_validate(obj=fb_tutorial)
+            valid_tutorial = firebase_models.FbBaseTutorial.model_validate(obj=valid_tutorial)
+
+            self.update_tutorial_on_firebase(tutorial_ref, valid_tutorial)
+
+    def push_tutorial_on_firebase(self):
         try:
-            tutorial_ref = self.firebase_helper.ref(
-                Config.FirebaseKeys.tutorial(self.tutorial.firebase_id),
-            )
-            fb_tutorial: typing.Any = tutorial_ref.get()
-
-            if not self.tutorial.firebase_last_pushed:
-                if fb_tutorial is not None:
-                    logger.error(
-                        "push_to_firebase found a tutorial already in firebase when creating a tutorial",
-                        extra=log_extra({"tutorial": self.tutorial.pk}),
-                    )
-                    raise InvalidTutorialPushException
-                self.create_tutorial_on_firebase(tutorial_ref)
-            else:
-                if fb_tutorial is None:
-                    logger.error(
-                        "push_to_firebase did not find tutorial in firebase when updating a tutorial",
-                        extra=log_extra({"tutorial": self.tutorial.pk}),
-                    )
-                    raise InvalidTutorialPushException
-
-                class RelaxedModel(firebase_models.FbBaseTutorial):
-                    model_config = ConfigDict(extra="ignore")
-
-                # NOTE: we want to ignore extra fields from firebase
-                valid_tutorial = RelaxedModel.model_validate(obj=fb_tutorial)
-                valid_tutorial = firebase_models.FbBaseTutorial.model_validate(obj=valid_tutorial)
-
-                self.update_tutorial_on_firebase(tutorial_ref, valid_tutorial)
-        except InvalidTutorialPushException:
-            self.tutorial.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
-        except Exception:
+            self._push_tutorial_on_firebase()
+        except Exception as ex:
             logger.error(
-                "push_to_firebase failed",
+                "push_to_firebase for tutorial failed",
                 extra=log_extra({"tutorial": self.tutorial.pk}),
                 exc_info=True,
             )
-            self.tutorial.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
+            self.tutorial.status_message = str(ex) if isinstance(ex, TutorialValidationException) else None
+            self.tutorial.update_firebase_push_status(FirebasePushStatusEnum.FAILED, False)
+            # TODO(tnagorra): We also need to clear any intermediate values for groups, tasks and tutorial in firebase
+            # NOTE: If tutorial has already been published, we cannot update it's status
+            if self.tutorial.status_enum != Tutorial.Status.PUBLISHED:
+                self.tutorial.update_status(Tutorial.Status.PUBLISHING_FAILED, False)
+
+            self.tutorial.save(
+                update_fields=[
+                    "status",
+                    "status_message",
+                    "firebase_push_status",
+                    "firebase_last_pushed",
+                ],
+            )
         else:
+            self.tutorial.status_message = None
             self.tutorial.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
+            self.tutorial.update_status(Tutorial.Status.PUBLISHED, True)
+            self.tutorial.save(
+                update_fields=[
+                    "status",
+                    "status_message",
+                    "firebase_push_status",
+                    "firebase_last_pushed",
+                ],
+            )

@@ -341,7 +341,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
     def validate(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
 
-        # FIXME(tnagorra): Should we be able to edit paused, withdrawn, and published project
+        # FIXME(tnagorra): Should we be able to edit paused and withdrawn project?
         if self.instance.status_enum not in [
             Project.Status.PROCESSED,
             Project.Status.PUBLISHED,
@@ -361,10 +361,9 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
         old_status_enum = instance.status_enum
         updated_project = super().update(instance, validated_data)
 
-        # FIXME(tnagorra): Should we be able to edit paused and withdrawn projects?
+        # FIXME(tnagorra): Should we be able to edit paused and withdrawn project?
         if old_status_enum == Project.Status.PUBLISHED and updated_project.status_enum == Project.Status.PUBLISHED:
             updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
-            # FIXME(tnagorra): Published project should not set state to PUBLISHING_FAILED
             transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
 
         return updated_project

@@ -2400,6 +2400,8 @@ enum TutorialStatusEnum {
   DISCARDED
   DRAFT
   PUBLISHED
+  PUBLISHING_FAILED
+  READY_TO_PUBLISH
 }
 
 input TutorialStatusEnumFilterLookup {
@@ -2531,6 +2533,7 @@ type TutorialType implements UserResourceTypeMixin & FirebasePushResourceTypeMix
   projectId: ID!
   scenarios: [TutorialScenarioPageType!]!
   status: TutorialStatusEnum!
+  statusMessage: String
 }
 
 type TutorialTypeMutationResponseType {
