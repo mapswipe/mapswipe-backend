@@ -16,7 +16,6 @@ from apps.mapping.models import (
     MappingSessionUserGroup,
     MappingSessionUserGroupTemp,
 )
-from apps.project.factories import OrganizationFactory
 from apps.user.factories import UserFactory
 from main.config import Config
 from main.tests import TestCase
@@ -168,6 +167,30 @@ class TestProjectE2E(TestCase):
             }
         """
 
+        CREATE_ORGANIZATION = """
+        mutation CreateOrganization($data: OrganizationCreateInput!) {
+            createOrganization(data: $data) {
+                ... on OperationInfo {
+                  __typename
+                  messages {
+                    code
+                    field
+                    kind
+                    message
+                  }
+                }
+                ... on OrganizationTypeMutationResponseType {
+                    errors
+                    ok
+                    result {
+                        id
+                        firebaseId
+                    }
+                }
+            }
+        }
+        """
+
         CREATE_TUTORIAL = """
             mutation CreateTutorial($data: TutorialCreateInput!) {
               createTutorial(data: $data) {
@@ -287,15 +310,36 @@ class TestProjectE2E(TestCase):
         # Load Project data initially.
         create_project_data = test_data["create_project"]
 
-        # TODO: Use mutation to create organization
         # Create an organization and attach to project
-        organization = OrganizationFactory.create(
-            name=create_project_data["requestingOrganization"],
-            **self.user_resource_kwargs,
+        create_organization_data = test_data["create_organization"]
+        with self.captureOnCommitCallbacks(execute=True):
+            organization_content = self.query_check(
+                self.Mutation.CREATE_ORGANIZATION,
+                variables={"data": create_organization_data},
+            )
+
+        organization_response = organization_content["data"]["createOrganization"]
+        assert organization_response is not None, "Organization create response is None"
+        assert organization_response["ok"]
+
+        organization_id = organization_response["result"]["id"]
+        organization_fb_id = organization_response["result"]["firebaseId"]
+
+        # CHECK ORGANIZATION in firebase
+
+        organization_fb_ref = self.firebase_helper.ref(f"/v2/organisations/{organization_fb_id}")
+        organization_fb_data = organization_fb_ref.get()
+
+        # Check organization in firebase
+        assert organization_fb_data is not None, "organization in firebase is None"
+        assert isinstance(organization_fb_data, dict), "organization in firebase should be a dictionary"
+
+        assert organization_fb_data == test_data["expected_organization_data"], (
+            "Difference found for organization data in firebase."
         )
-        create_project_data["requestingOrganization"] = organization.id
 
         # Create project
+        create_project_data["requestingOrganization"] = organization_id
         with self.captureOnCommitCallbacks(execute=True):
             project_content = self.query_check(
                 self.Mutation.CREATE_PROJECT,
@@ -350,7 +394,7 @@ class TestProjectE2E(TestCase):
         update_project_data = test_data["update_project"]
         update_project_data["image"] = image_id
         update_project_data["projectTypeSpecifics"][projectKey]["aoiGeometry"] = aoi_id
-        update_project_data["requestingOrganization"] = organization.id
+        update_project_data["requestingOrganization"] = organization_id
         with self.captureOnCommitCallbacks(execute=True):
             update_content = self.query_check(
                 self.Mutation.UPDATE_PROJECT,
@@ -469,7 +513,7 @@ class TestProjectE2E(TestCase):
         # Update processed project
         update_processed_project_data = test_data["update_processed_project"]
         update_processed_project_data["tutorial"] = tutorial_id
-        update_processed_project_data["requestingOrganization"] = organization.id
+        update_processed_project_data["requestingOrganization"] = organization_id
         with self.captureOnCommitCallbacks(execute=True):
             update_processed_project_content = self.query_check(
                 self.Mutation.UPDATE_PROCESSED_PROJECT,
