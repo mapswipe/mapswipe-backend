@@ -326,7 +326,7 @@ type CompareTutorialTaskPropertyType {
   tileZ: Int!
 }
 
-union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType = CompareTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | FindTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | ValidateTutorialTaskPropertyType
+union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyType = CompareTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | FindTutorialTaskPropertyType | StreetTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | ValidateTutorialTaskPropertyType
 
 input CompletenessProjectPropertyInput {
   """Numeric value as string"""
@@ -2152,6 +2152,16 @@ type StreetProjectPropertyType {
   mapillaryImageFilters: StreetMapillaryImageFilters!
 }
 
+input StreetTutorialTaskPropertyInput {
+  geometry: String!
+  mapillaryImageId: String!
+}
+
+type StreetTutorialTaskPropertyType {
+  geometry: String!
+  mapillaryImageId: String!
+}
+
 """Model representing assets for a tutorial."""
 input TutorialAssetCreateInput {
   clientId: String!
@@ -2489,6 +2499,7 @@ input TutorialTaskProjectTypeSpecificInput @oneOf {
   compare: CompareTutorialTaskPropertyInput
   completeness: CompletenessTutorialTaskPropertyInput
   find: FindTutorialTaskPropertyInput
+  street: StreetTutorialTaskPropertyInput
   validate: ValidateTutorialTaskPropertyInput
   validateImage: ValidateImageTutorialTaskPropertyInput
 }
@@ -2501,7 +2512,7 @@ type TutorialTaskType implements UserResourceTypeMixin {
   id: ID!
   modifiedAt: DateTime!
   modifiedBy: UserType!
-  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyType
+  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyType
   reference: Int!
   scenarioId: ID!
 }

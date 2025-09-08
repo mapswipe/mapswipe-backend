@@ -1,6 +1,5 @@
 import typing
 
-from osgeo import ogr
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 
@@ -8,10 +7,13 @@ from apps.project.models import ProjectTypeEnum
 from apps.tutorial.models import Tutorial, TutorialTask
 from project_types.base import tutorial as base_tutorial
 from project_types.street.project import StreetProjectProperty
-from utils.geo.transform import convert_json_str_to_wkt
+from utils import fields as custom_fields
 
 
-class StreetTutorialTaskProperty(base_tutorial.BaseTutorialTaskProperty): ...
+class StreetTutorialTaskProperty(base_tutorial.BaseTutorialTaskProperty):
+    mapillary_image_id: custom_fields.PydanticLongText
+    # NOTE: geometry is not used but we are saving this for the records
+    geometry: str
 
 
 class StreetTutorial(
@@ -32,10 +34,11 @@ class StreetTutorial(
 
     @typing.override
     def get_task_specifics_for_firebase(self, task: TutorialTask, index: int):
+        task_specifics = self.tutorial_task_property_class.model_validate(task.project_type_specifics)
         return firebase_models.FbStreetTutorialTask(
             projectId=self.tutorial.firebase_id,
             groupId=self.get_tutorial_group_key(),
-            taskId=f"{index}",
+            taskId=task_specifics.mapillary_image_id,
             geometry="",
             referenceAnswer=task.reference,
             screen=task.scenario.scenario_page_number,
