@@ -1,6 +1,7 @@
 import datetime
 import typing
 
+import pytest
 from django.contrib.gis.geos import Point
 
 from apps.common.models import GlobalExportAsset
@@ -192,7 +193,7 @@ class TestProjectExport(TestCase):
         assert GlobalExportAsset.objects.count() == 0
         export_project_data(self.project)
         regenerate_global_project_assets()
-        assert GlobalExportAsset.objects.count() == 3
+        assert GlobalExportAsset.objects.count() == 4
 
         # XXX: To look at the preview
         # for a in GlobalExportAsset.objects.all():
@@ -205,23 +206,28 @@ class TestProjectExport(TestCase):
             {
                 "type": a.type_enum.label,
                 "file_name": a.file.name,
-                # "file_size": pytest.approx(a.file.size, rel=0.1),
+                "file_size": pytest.approx(a.file.size, rel=0.1),
             }
             for a in GlobalExportAsset.objects.all()
         ] == [
             {
                 "type": "All projects",
                 "file_name": "global/asset/projects.csv",
-                # "file_size": 1840,
+                "file_size": 1859,
             },
             {
                 "type": "Projects geojson with centroid",
                 "file_name": "global/asset/projects_centroid.geojson",
-                # "file_size": 4890,
+                "file_size": 5110,
+            },
+            {
+                "file_name": "global/asset/projects_geom.geojson",
+                "type": "Projects Geojson with GEOM",
+                "file_size": 5110,
             },
             {
                 "type": "Project Type Aggregates",
                 "file_name": "global/asset/project_stats_by_types.csv",
-                # "file_size": 200,
+                "file_size": 216,
             },
         ]

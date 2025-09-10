@@ -197,5 +197,5 @@ def generate():
     with tempfile.NamedTemporaryFile(mode="w+", suffix=".csv", dir=Config.TEMP_DIR) as temp_projects_csv:
         regenerate_projects_csv(temp_projects_csv)
         regenerate_projects_centroid_geojson(Path(temp_projects_csv.name))
-        # TODO: regenerate_projects_geom_geojson(Path(temp_projects_csv.name))
+        regenerate_projects_geom_geojson(Path(temp_projects_csv.name))
     regenerate_project_stats_by_types_csv()
