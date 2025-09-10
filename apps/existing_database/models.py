@@ -100,7 +100,10 @@ class Project(Model):
     status = models.CharField[str | None, str | None](max_length=999, blank=True, null=True)
     verification_number = models.IntegerField[int | None, int | None](blank=True, null=True)
     # Database uses JSON instead of JSONB (not supported by django)
-    project_type_specifics = models.TextField[str | None, str | None](blank=True, null=True)
+    project_type_specifics = models.TextField[
+        dict[typing.Any, typing.Any] | None,
+        dict[typing.Any, typing.Any] | None,
+    ](blank=True, null=True)
     organization_name = models.CharField[str | None, str | None](max_length=1000, null=True, blank=True)
 
     # type hints
@@ -252,6 +255,10 @@ class MappingSession(Model):
     items_count = models.SmallIntegerField[int, int](null=False, default=0)
     app_version = models.CharField[str, str](max_length=999)
     client_type = models.CharField[str, str](max_length=999)
+
+    # Type hints
+    project_id: str
+    user_id: str
 
     class Meta:
         managed = False

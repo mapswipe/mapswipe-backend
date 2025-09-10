@@ -407,7 +407,7 @@ class Project(UserResource, FirebasePushResource):
     # TEAM
 
     # NOTE: If any team is attached to the project, then project should only visible to the team members.
-    team = models.OneToOneField[ContributorTeam | None, ContributorTeam | None](
+    team = models.ForeignKey[ContributorTeam | None, ContributorTeam | None](
         ContributorTeam,
         on_delete=models.SET_NULL,
         null=True,
