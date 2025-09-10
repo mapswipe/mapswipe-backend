@@ -331,6 +331,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
         # NOTE: project_instruction is not required in the database
         project_instruction = attrs.get("project_instruction") or self.instance.project_instruction
         if not project_instruction:
+            # FIXME: only validate on READY_TO_PROCESS
             raise serializers.ValidationError(
                 {
                     "project_instruction": gettext("Project instruction is required."),

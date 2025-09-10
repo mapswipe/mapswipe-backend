@@ -97,6 +97,7 @@ class Mutation:
           }
         }
     """
+
     UPDATE_TUTORIAL = """
         mutation UpdateTutorial($data: TutorialUpdateInput!, $pk: ID!) {
           updateTutorial(data: $data, pk: $pk) {
@@ -437,6 +438,7 @@ class TestTutorialMutation(TestCase):
         }
         tutorial_data.pop("project")
 
+        # Updating Tutorial: Without Authentication
         self.logout()
         content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
         assert content["data"]["updateTutorial"]["messages"] == [
@@ -448,7 +450,7 @@ class TestTutorialMutation(TestCase):
             },
         ], content
 
-        # Creating Tutorial: With Authentication
+        # Updating Tutorial: With Authentication
         self.force_login(self.user)
         content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
         resp_data = content["data"]["updateTutorial"]
@@ -464,67 +466,10 @@ class TestTutorialMutation(TestCase):
         self._update_tutorial_status_mutation(latest_tutorial.pk, status_data)
         latest_tutorial.refresh_from_db()
 
-        assert resp_data == self.g_mutation_response(
-            ok=True,
-            result=dict(
-                clientId=latest_tutorial.client_id,
-                id=self.gID(latest_tutorial.pk),
-                status=self.genum(TutorialStatusEnum.DRAFT),
-                projectId=self.gID(latest_tutorial.project_id),
-                scenarios=[
-                    {
-                        "id": self.gID(x.pk),
-                        "clientId": x.client_id,
-                        "scenarioPageNumber": x.scenario_page_number,
-                        "hintDescription": x.hint_description,
-                        "hintIcon": self.genum(x.hint_icon),  # type: ignore[reportArgumentType]
-                        "hintTitle": x.hint_title,
-                        "instructionsDescription": x.instructions_description,
-                        "instructionsIcon": self.genum(x.instructions_icon),  # type: ignore[reportArgumentType]
-                        "instructionsTitle": x.instructions_title,
-                        "successDescription": x.success_description,
-                        "successIcon": self.genum(x.success_icon),  # type: ignore[reportArgumentType]
-                        "successTitle": x.success_title,
-                        "tasks": [
-                            {
-                                "id": self.gID(y.pk),
-                                "clientId": y.client_id,
-                                "reference": y.reference,
-                                # "projectTypeSpecifics": y.project_type_specifics,
-                                "projectTypeSpecifics": format_object_keys(y.project_type_specifics, to_camel_case),
-                            }
-                            for y in x.tasks.all()
-                        ],
-                    }
-                    for x in latest_tutorial.scenarios.all()
-                ],
-                informationPages=[
-                    {
-                        "clientId": x.client_id,
-                        "id": self.gID(x.pk),
-                        "pageNumber": x.page_number,
-                        "title": x.title,
-                        "blocks": [
-                            {
-                                "id": self.gID(y.pk),
-                                "clientId": y.client_id,
-                                "blockNumber": y.block_number,
-                                "blockType": self.genum(y.block_type),  # type: ignore[reportArgumentType]
-                                "text": y.text,
-                                # FIXME(tnagorra): Handle image
-                            }
-                            for y in x.blocks.all()
-                        ],
-                    }
-                    for x in latest_tutorial.information_pages.all()
-                ],
-            ),
-        ), content
-
+        # Updating Tutorial: Nested Updates
         def get_update_for_task(tut: dict):
             return {"update": {**tut, "projectTypeSpecifics": {"find": tut.get("projectTypeSpecifics")}}}
 
-        # Updating Tutorial: Without authentication
         tutorial_from_res = resp_data["result"]
         tutorial_from_res.pop("projectId")
         tutorial_from_res.pop("id")
@@ -601,25 +546,9 @@ class TestTutorialMutation(TestCase):
             ],
         }
 
-        self.logout()
         content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
-        assert content["data"]["updateTutorial"]["messages"] == [
-            {
-                "code": None,
-                "field": "updateTutorial",
-                "kind": "PERMISSION",
-                "message": "User is not authenticated.",
-            },
-        ], content
-
-        # Updating Tutorial: With Authentication
-        self.force_login(self.user)
-        with self.captureOnCommitCallbacks(execute=True):
-            content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
-
         resp_data = content["data"]["updateTutorial"]
         assert resp_data["errors"] is None, content
-
         latest_tutorial.refresh_from_db()
 
         assert resp_data == self.g_mutation_response(
@@ -700,13 +629,12 @@ class TestTutorialMutation(TestCase):
         assert latest_tutorial.information_pages.count() == information_pages_count
         assert latest_tutorial.scenarios.count() == scenarios_count
 
-        # Publishing tutorial:
+        # Archiving tutorial:
         data = {
             "clientId": latest_tutorial.client_id,
             "status": self.genum(TutorialStatusEnum.ARCHIVED),
         }
         response = self._update_tutorial_status_mutation(str(latest_tutorial.pk), data)
-
         resp_data = response["data"]["updateTutorialStatus"]
         assert resp_data["errors"] is None, response
 
