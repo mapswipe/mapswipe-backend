@@ -8,13 +8,16 @@ from warnings import deprecated
 import mercantile
 import pandas as pd
 import requests
-from geojson_pydantic import FeatureCollection
+from geojson_pydantic import FeatureCollection as PydanticFeatureCollection
 from geojson_pydantic.geometries import MultiPolygon as PydanticMultiPolygon
 from geojson_pydantic.geometries import Polygon as PydanticPolygon
 from pydantic import ValidationError
-from shapely import MultiPolygon, Point, Polygon, box, unary_union
+from shapely import MultiPolygon as ShapelyMultiPolygon
+from shapely import Point as ShapelyPoint
+from shapely import Polygon as ShapelyPolygon
+from shapely import box, unary_union
 from shapely.geometry import shape
-from shapely.geometry.base import BaseGeometry
+from shapely.geometry.base import BaseGeometry as ShapelyBaseGeometry
 from vt2geojson import tools as vt2geojson_tools
 
 from main.config import Config
@@ -26,7 +29,7 @@ from utils.spatial_sampling import spatial_sampling
 logger = logging.getLogger(__name__)
 
 
-class StreetFeature(Point): ...
+class StreetFeature(ShapelyPoint): ...
 
 
 class StreetException(Exception):
@@ -35,14 +38,14 @@ class StreetException(Exception):
 
 def create_tiles(
     *,
-    polygon: BaseGeometry,
+    polygon: ShapelyBaseGeometry,
     level: int,
 ) -> pd.DataFrame:
-    if not isinstance(polygon, Polygon | MultiPolygon):
+    if not isinstance(polygon, ShapelyPolygon | ShapelyMultiPolygon):
         return pd.DataFrame(columns=pd.Index(["x", "y", "z", "geometry"]))
 
-    if isinstance(polygon, Polygon):
-        polygon = MultiPolygon([polygon])
+    if isinstance(polygon, ShapelyPolygon):
+        polygon = ShapelyMultiPolygon([polygon])
 
     tiles: set[mercantile.Tile] = set()
     for _, poly in enumerate(polygon.geoms):
@@ -71,7 +74,7 @@ def create_tiles(
 def geojson_to_polygon(geojson_data: dict[str, Any]):
     # NOTE: We might not need this, as we already check this
     try:
-        fc = FeatureCollection(**geojson_data)
+        fc = PydanticFeatureCollection(**geojson_data)
     except ValidationError as e:
         raise ValidationException("Invalid GeoJSON FeatureCollection") from e
 
@@ -86,7 +89,7 @@ def geojson_to_polygon(geojson_data: dict[str, Any]):
 
 def coordinate_download(
     *,
-    polygon: BaseGeometry,
+    polygon: ShapelyBaseGeometry,
     level: int,
     kwargs: dict[str, Any],
 ) -> pd.DataFrame:
@@ -118,7 +121,7 @@ def coordinate_download(
 def parallelized_processing(
     data: list[pd.DataFrame],
     kwargs: dict[str, Any],
-    polygon: BaseGeometry,
+    polygon: ShapelyBaseGeometry,
     tiles: pd.DataFrame,
     workers: int,
 ):
@@ -137,7 +140,7 @@ def parallelized_processing(
 def download_and_process_tile(
     *,
     row: dict[Hashable, Any],
-    polygon: BaseGeometry,
+    polygon: ShapelyBaseGeometry,
     kwargs: dict[str, Any],
     attempt_limit: int = 3,
 ) -> pd.DataFrame | None:
@@ -201,7 +204,7 @@ def get_mapillary_data(
     data.extend(
         [
             {
-                "geometry": Point(feature["geometry"]["coordinates"]),
+                "geometry": ShapelyPoint(feature["geometry"]["coordinates"]),
                 **feature.get("properties", {}),
             }
             for feature in features

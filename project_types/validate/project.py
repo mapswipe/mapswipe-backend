@@ -7,8 +7,10 @@ import requests
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
 from django.db import models
-from geojson_pydantic import Feature, FeatureCollection
-from geojson_pydantic.geometries import MultiPolygon, Polygon
+from geojson_pydantic import Feature as PydanticFeature
+from geojson_pydantic import FeatureCollection as PydanticFeatureCollection
+from geojson_pydantic.geometries import MultiPolygon as PydanticMultiPolygon
+from geojson_pydantic.geometries import Polygon as PydanticPolygon
 from pydantic import BaseModel, ValidationError, field_validator, model_validator
 from pyfirebase_mapswipe import models as firebase_models
 from ulid import ULID
@@ -39,7 +41,7 @@ from utils.geo.transform import convert_feature_to_wkt
 logger = logging.getLogger(__name__)
 
 
-class ValidFeature(Feature[Polygon | MultiPolygon, dict[str, Any]]): ...
+class ValidFeature(PydanticFeature[PydanticPolygon | PydanticMultiPolygon, dict[str, Any]]): ...
 
 
 class ValidateObjectSourceTypeEnum(models.TextChoices):
@@ -142,21 +144,19 @@ class ValidateProject(
     def _process_polygons(self, geojson_data: dict[str, Any]) -> list[ValidFeature]:
         """We only want polygon and multipolygon features."""
         try:
-            fc = FeatureCollection.model_validate(geojson_data)
+            fc = PydanticFeatureCollection.model_validate(geojson_data)
         except ValidationError as e:
             raise base_project.ValidationException("Invalid GeoJSON FeatureCollection") from e
 
-        polygon_types = (Polygon, MultiPolygon)
+        polygon_types = (PydanticPolygon, PydanticMultiPolygon)
         filtered_features: list[ValidFeature] = [
             feature for feature in fc.features if isinstance(feature.geometry, polygon_types)
         ]
 
         return filtered_features
 
-    def _get_object_geometry_from_ohsome(self, geojson: Any):
-        # FIXME(frozenhelium): add appropriate typing for geojson
-        # FIXME(tnagorra): Check if object spreading works with nested object and validation
-        feature_collection = FeatureCollection.model_validate(geojson)
+    def _get_object_geometry_from_ohsome(self, geojson: dict):
+        feature_collection = PydanticFeatureCollection.model_validate(geojson)
         ohsome_request = {
             "endpoint": "elements/geometry",
             "filter": self.project_type_specifics.object_source.ohsome_filter,
