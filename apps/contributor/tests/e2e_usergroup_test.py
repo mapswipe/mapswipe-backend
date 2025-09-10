@@ -38,6 +38,32 @@ class TestUserGroupE2E(TestCase):
             }
         }
         """
+        UPDATE = """
+        mutation UpdateContributorUserGroup($data: ContributorUserGroupUpdateInput!, $pk: ID!) {
+            updateContributorUserGroup(data: $data, pk: $pk) {
+                ... on OperationInfo {
+                    __typename
+                    messages {
+                        code
+                        field
+                        kind
+                        message
+                    }
+                }
+                ... on ContributorUserGroupTypeMutationResponseType {
+                    ok
+                    errors
+                    result {
+                        id
+                        name
+                        description
+                        clientId
+                        isArchived
+                    }
+                }
+            }
+        }
+    """
 
     @typing.override
     @classmethod
@@ -72,6 +98,25 @@ class TestUserGroupE2E(TestCase):
             contributor_user_group_ref = self.firebase_helper.ref(
                 Config.FirebaseKeys.contributor_user_group(firebase_id),
             )
+            contributor_user_group_data = contributor_user_group_ref.get()
+            assert contributor_user_group_data is not None, "firebase data is None"
+            assert type(contributor_user_group_data) is dict, "firebase data is not dict"
+            assert data["name"] == contributor_user_group_data["name"]
+
+            # test update
+            data["clientId"] = result["clientId"]
+            data["name"] = f"{data['name']} Updated"
+            with self.captureOnCommitCallbacks(execute=True):
+                content = self.query_check(
+                    self.Mutation.UPDATE,
+                    variables={"data": data, "pk": result["id"]},
+                )
+
+            resp = content["data"]["updateContributorUserGroup"]
+            assert resp is not None, "GraphQL response is None"
+            result = resp["result"]
+            assert result["name"] == data["name"]
+
             contributor_user_group_data = contributor_user_group_ref.get()
             assert contributor_user_group_data is not None, "firebase data is None"
             assert type(contributor_user_group_data) is dict, "firebase data is not dict"
