@@ -1,3 +1,6 @@
+import base64
+import gzip
+import json
 import typing
 
 from django.core.files.storage import FileSystemStorage
@@ -37,3 +40,10 @@ def remove_object_keys(obj: typing.Any, keys_to_ignore: list[str] | set[str]):
         for item in obj:
             remove_object_keys(item, keys_to_ignore)
     return obj
+
+
+def decode_tasks(encoded_task: str) -> list[dict[str, typing.Any]]:
+    """Decode compressed task string back into list of dicts."""
+    compressed_bytes = base64.b64decode(encoded_task)
+    json_bytes = gzip.decompress(compressed_bytes)
+    return json.loads(json_bytes.decode("utf-8"))
