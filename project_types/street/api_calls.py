@@ -19,6 +19,7 @@ from vt2geojson import tools as vt2geojson_tools
 
 from main.config import Config
 from main.logging import log_extra_response
+from project_types.base.project import ValidationException
 from utils.common import Grouping
 from utils.spatial_sampling import spatial_sampling
 
@@ -72,13 +73,13 @@ def geojson_to_polygon(geojson_data: dict[str, Any]):
     try:
         fc = FeatureCollection(**geojson_data)
     except ValidationError as e:
-        raise ValueError("Invalid GeoJSON FeatureCollection") from e
+        raise ValidationException("Invalid GeoJSON FeatureCollection") from e
 
     polygon_types = (PydanticPolygon, PydanticMultiPolygon)
     geometries = [shape(feature.geometry) for feature in fc.features if isinstance(feature.geometry, polygon_types)]
 
     if not geometries:
-        raise ValueError("No valid Polygon or MultiPolygon found in the GeoJSON FeatureCollection")
+        raise ValidationException("No valid Polygon or MultiPolygon found in the GeoJSON FeatureCollection")
 
     return unary_union(geometries)
 
@@ -281,7 +282,7 @@ def get_image_metadata(
         kwargs=kwargs,
     )
     if downloaded_metadata.empty or downloaded_metadata.isna().all() is True:
-        raise StreetException(
+        raise ValidationException(
             "No Mapillary features found in the area of interest with the provided filters.",
         )
     if sampling_threshold is not None:
@@ -297,7 +298,7 @@ def get_image_metadata(
 
     total_images = len(downloaded_metadata)
     if total_images > 100000:
-        raise StreetException(
+        raise ValidationException(
             f"Too many Images with selected filter options for the AoI: {total_images}",
         )
 

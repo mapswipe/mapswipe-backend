@@ -29,14 +29,20 @@ if typing.TYPE_CHECKING:
 
 VALID_PROJECT_STATUS_TRANSITIONS = set(
     [
-        (Project.Status.DRAFT, Project.Status.MARKED_AS_READY),
+        (Project.Status.DRAFT, Project.Status.READY_TO_PROCESS),
         (Project.Status.DRAFT, Project.Status.DISCARDED),
-        (Project.Status.FAILED, Project.Status.MARKED_AS_READY),
-        (Project.Status.FAILED, Project.Status.DISCARDED),
-        # NOTE: Transition from MARKED_AS_READY are updated by the system
-        (Project.Status.READY, Project.Status.PUBLISHED),
-        (Project.Status.READY, Project.Status.DISCARDED),
-        (Project.Status.PUBLISHED, Project.Status.ARCHIVED),
+        (Project.Status.PROCESSING_FAILED, Project.Status.DISCARDED),
+        (Project.Status.PROCESSING_FAILED, Project.Status.READY_TO_PROCESS),
+        # (Project.Status.READY_TO_PROCESS, Project.Status.PROCESSING_FAILED),  # auto on bg
+        # (Project.Status.READY_TO_PROCESS, Project.Status.PROCESSED),          # auto on bg
+        (Project.Status.PROCESSED, Project.Status.READY_TO_PUBLISH),
+        (Project.Status.PROCESSED, Project.Status.DISCARDED),
+        (Project.Status.PUBLISHING_FAILED, Project.Status.DISCARDED),
+        (Project.Status.PUBLISHING_FAILED, Project.Status.READY_TO_PUBLISH),
+        # (Project.Status.READY_TO_PUBLISH, Project.Status.PUBLISHING_FAILED),  # auto on bg
+        # (Project.Status.READY_TO_PUBLISH, Project.Status.PUBLISHED),          # auto on bg
+        (Project.Status.PUBLISHED, Project.Status.WITHDRAWN),
+        (Project.Status.PUBLISHED, Project.Status.FINISHED),
         (Project.Status.PUBLISHED, Project.Status.PAUSED),
         (Project.Status.PAUSED, Project.Status.PUBLISHED),
     ],
@@ -170,8 +176,8 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         field_name, pydantic_model = project_property
         raw_project_type_specifics = attrs.get("project_type_specifics")
 
-        if raw_project_type_specifics is None and attrs.get("status") != Project.Status.MARKED_AS_READY:
-            # NOTE: project_type_specifics is only required when project status is MARKED_AS_READY
+        if raw_project_type_specifics is None and attrs.get("status") != Project.Status.READY_TO_PROCESS:
+            # NOTE: project_type_specifics is only required when project status is READY_TO_PROCESS
             return
 
         if raw_project_type_specifics is not None:
@@ -203,7 +209,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
     def validate(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
 
-        if self.instance.status_enum not in [Project.Status.DRAFT, Project.Status.FAILED]:
+        if self.instance.status_enum not in [Project.Status.DRAFT, Project.Status.PROCESSING_FAILED]:
             raise serializers.ValidationError(
                 {
                     "status": gettext("Cannot update project with status %s") % self.instance.status_enum.label,
@@ -269,6 +275,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             "image",
             "tutorial",
             "team",
+            "is_featured",
         )
 
     def validate_requesting_organization(self, requesting_organization: Organization | None) -> Organization | None:
@@ -334,7 +341,12 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
     def validate(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
 
-        if self.instance.status_enum != Project.Status.READY:
+        # FIXME(tnagorra): Should we be able to edit paused and withdrawn project?
+        if self.instance.status_enum not in [
+            Project.Status.PROCESSED,
+            Project.Status.PUBLISHED,
+            Project.Status.PUBLISHING_FAILED,
+        ]:
             raise serializers.ValidationError(
                 {
                     "status": gettext("Cannot update project with status %s") % self.instance.status_enum.label,
@@ -343,6 +355,18 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
         self._validate_project_instruction(attrs)
         return super().validate(attrs)
+
+    @typing.override
+    def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:
+        old_status_enum = instance.status_enum
+        updated_project = super().update(instance, validated_data)
+
+        # FIXME(tnagorra): Should we be able to edit paused and withdrawn project?
+        if old_status_enum == Project.Status.PUBLISHED and updated_project.status_enum == Project.Status.PUBLISHED:
+            updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+            transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
+
+        return updated_project
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
@@ -603,14 +627,14 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
                 },
             )
 
-        if new_status == Project.Status.MARKED_AS_READY and not self.instance.project_type_specifics:
+        if new_status == Project.Status.READY_TO_PROCESS and not self.instance.project_type_specifics:
             raise serializers.ValidationError(
                 {
                     "project_type_specifics": gettext("project_type_specifics is required when project status is %s")
                     % (new_status.label),
                 },
             )
-        if new_status == Project.Status.PUBLISHED and not self.instance.tutorial:
+        if new_status == Project.Status.READY_TO_PUBLISH and not self.instance.tutorial:
             raise serializers.ValidationError(
                 {
                     "tutorial": gettext("Tutorial is required before publishing a project."),
@@ -624,13 +648,15 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
         updated_project = super().update(instance, validated_data)
 
         if (
-            old_status_enum != Project.Status.MARKED_AS_READY
-            and updated_project.status_enum == Project.Status.MARKED_AS_READY
+            old_status_enum != Project.Status.READY_TO_PROCESS
+            and updated_project.status_enum == Project.Status.READY_TO_PROCESS
         ):
             transaction.on_commit(lambda: process_project_task.delay(updated_project.pk))
+
         elif (
-            old_status_enum != Project.Status.PUBLISHED and updated_project.status_enum == Project.Status.PUBLISHED
-        ) or old_status_enum == Project.Status.PUBLISHED:
+            old_status_enum != Project.Status.READY_TO_PUBLISH
+            and updated_project.status_enum == Project.Status.READY_TO_PUBLISH
+        ):
             updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
             transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
 

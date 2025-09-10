@@ -33,9 +33,6 @@ from utils.common import compress_tasks
 logger = logging.getLogger(__name__)
 
 
-class InvalidProjectPushException(Exception): ...
-
-
 class BaseProjectProperty(BaseModel, ABC): ...
 
 
@@ -87,6 +84,28 @@ class BaseProject[
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         cls._inheritance_checks()
+
+    @staticmethod
+    def get_firebase_status(status: ProjectStatusEnum, no_team: bool):
+        match status:
+            case ProjectStatusEnum.FINISHED:
+                return (
+                    firebase_models.FbEnumProjectStatus.FINISHED
+                    if no_team
+                    else firebase_models.FbEnumProjectStatus.PRIVATE_FINISHED
+                )
+            case ProjectStatusEnum.READY_TO_PUBLISH | ProjectStatusEnum.PUBLISHED:
+                return (
+                    firebase_models.FbEnumProjectStatus.ACTIVE
+                    if no_team
+                    else firebase_models.FbEnumProjectStatus.PRIVATE_ACTIVE
+                )
+            case _:
+                return (
+                    firebase_models.FbEnumProjectStatus.INACTIVE
+                    if no_team
+                    else firebase_models.FbEnumProjectStatus.PRIVATE_INACTIVE
+                )
 
     def get_aoi_geometry_asset(self) -> ProjectAsset | None:
         return None
@@ -154,6 +173,21 @@ class BaseProject[
         """
         ...
 
+    def prepare(self):
+        self.project.update_processing_status(Project.ProcessingStatus.PREPARING, True)
+
+        # Cleanup tasks and groups
+        ProjectTaskGroup.objects.filter(project=self.project.pk).delete()
+
+        # Cleanup assets
+        # FIXME(tnagorra): We need to add a CRON to delete these project assets
+        # FIXME(tnagorra): Do we also clean up the user INPUT?
+        # We need to be careful not to delete assets that are currently used
+        ProjectAsset.usable_objects().filter(
+            project=self.project.pk,
+            type__in=[ProjectAsset.Type.OUTPUT, ProjectAsset.Type.EXPORT, ProjectAsset.Type.DEBUG],
+        ).update(marked_as_deleted=True)
+
     @abstractmethod
     def post_create_groups(self): ...
 
@@ -166,33 +200,48 @@ class BaseProject[
     @abstractmethod
     def create_groups(self, resp: ValidatedData): ...
 
-    def process_project(self):
-        """Save all project info with groups and tasks in postgres."""
-        if self.project.status not in [
-            Project.Status.MARKED_AS_READY,
-            Project.Status.FAILED,
-        ]:
-            raise Exception("Project can only be processed if is either 'Marked as ready' or 'Failed'")
+    def _process_project(self):
+        if self.project.status_enum != Project.Status.READY_TO_PROCESS:
+            raise ValidationException(
+                "Project can only be processed if current state is 'Ready to Process'",
+            )
 
         logger.info("%s - start creating a project", self.project.pk)
 
-        self.project.update_processing_status(Project.ProcessingStatus.PREPARING, True)
-        ProjectTaskGroup.objects.filter(project=self.project.pk).delete()
-        # TODO(tnagorra): We need to add a CRON to delete these project assets
-        # FIXME(tnagorra): Do we also clean up the user INPUT?
-        # We need to be careful not to delete assets that are currently used
-        ProjectAsset.usable_objects().filter(
-            project=self.project.pk,
-            type__in=[ProjectAsset.Type.OUTPUT, ProjectAsset.Type.EXPORT, ProjectAsset.Type.DEBUG],
-        ).update(marked_as_deleted=True)
-
+        self.prepare()
         resp = self.validate()
         self.create_groups(resp)
         self.analyze_groups()
         self.post_create_groups()
 
-        self.project.update_processing_status(Project.ProcessingStatus.COMPLETED, True)
-        self.project.update_status(Project.Status.READY, True)
+    def process_project(self):
+        try:
+            self._process_project()
+        except Exception as ex:
+            logger.error(
+                "process_project failed",
+                extra=log_extra({"project": self.project.pk}),
+                exc_info=True,
+            )
+            self.project.status_message = str(ex) if isinstance(ex, ValidationException) else None
+            self.project.update_status(Project.Status.PROCESSING_FAILED, False)
+            self.project.save(
+                update_fields=[
+                    "status",
+                    "status_message",
+                ],
+            )
+        else:
+            self.project.status_message = None
+            self.project.update_status(Project.Status.PROCESSED, False)
+            self.project.update_processing_status(Project.ProcessingStatus.COMPLETED, False)
+            self.project.save(
+                update_fields=[
+                    "status",
+                    "status_message",
+                    "processing_status",
+                ],
+            )
 
     # FIREBASE
 
@@ -307,19 +356,6 @@ class BaseProject[
             Config.FirebaseKeys.project_tasks(self.project.firebase_id),
         )
 
-        if self.project.status_enum == ProjectStatusEnum.PUBLISHED:
-            status = (
-                firebase_models.FbEnumProjectStatus.ACTIVE
-                if not self.project.team_id
-                else firebase_models.FbEnumProjectStatus.PRIVATE_ACTIVE
-            )
-        else:
-            status = (
-                firebase_models.FbEnumProjectStatus.INACTIVE
-                if not self.project.team_id
-                else firebase_models.FbEnumProjectStatus.PRIVATE_INACTIVE
-            )
-
         if not self.skip_tasks_on_firebase():
             self.create_tasks_on_firebase(task_ref)
         self.create_groups_on_firebase(group_ref)
@@ -348,9 +384,9 @@ class BaseProject[
             projectTopicKey=self.project.generate_name().lower().strip(),
             projectType=self.project.project_type_enum.to_firebase(),
             # project_type=self.project.project_type_enum.to_firebase(), # not needed here
-            requestingOrganisation=self.project.requesting_organization.name,  # str
+            requestingOrganisation=self.project.requesting_organization.name,
             requiredResults=self.project.required_results,
-            status=status,
+            status=BaseProject.get_firebase_status(self.project.status_enum, not self.project.team_id),
             teamId=self.project.team.firebase_id if self.project.team else None,
             # FIXME(tnagorra): Need to check how we get this?
             language="en-us",
@@ -371,31 +407,6 @@ class BaseProject[
         assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
         assert self.project.tutorial is not None, "Tutorial is required before project can be pushed to firebase"
 
-        # NOTE: We need to add this validation so that "FINISHED" is not overridden
-        status = fb_project.status
-        if (
-            status
-            in [
-                firebase_models.FbEnumProjectStatus.INACTIVE,
-                firebase_models.FbEnumProjectStatus.PRIVATE_INACTIVE,
-            ]
-            and self.project.status_enum == ProjectStatusEnum.PUBLISHED
-        ):
-            status = (
-                firebase_models.FbEnumProjectStatus.ACTIVE
-                if not self.project.team_id
-                else firebase_models.FbEnumProjectStatus.PRIVATE_ACTIVE
-            )
-        elif status in [
-            firebase_models.FbEnumProjectStatus.ACTIVE,
-            firebase_models.FbEnumProjectStatus.PRIVATE_ACTIVE,
-        ] and self.project.status_enum in [ProjectStatusEnum.ARCHIVED, ProjectStatusEnum.PAUSED]:
-            status = (
-                firebase_models.FbEnumProjectStatus.INACTIVE
-                if not self.project.team_id
-                else firebase_models.FbEnumProjectStatus.PRIVATE_INACTIVE
-            )
-
         project_ref.update(
             value=firebase_utils.serialize(
                 firebase_models.FbProjectUpdateInput(
@@ -411,7 +422,7 @@ class BaseProject[
                     projectDetails=self.project.description or "n/a",
                     requestingOrganisation=self.project.requesting_organization.name,
                     tutorialId=self.project.tutorial.firebase_id,
-                    status=status,
+                    status=BaseProject.get_firebase_status(self.project.status_enum, not self.project.team_id),
                     teamId=self.project.team.firebase_id if self.project.team else None,
                     # FIXME(tnagorra): Need to check how we get this?
                     language="en-us",
@@ -419,54 +430,82 @@ class BaseProject[
             ),
         )
 
-    def push_project_on_firebase(self):
+    def _push_project_on_firebase(self):
+        if self.project.status_enum not in [Project.Status.READY_TO_PUBLISH, Project.Status.PUBLISHED]:
+            raise ValidationException(
+                "Project can only be published if project status is 'Ready to Process' or 'Published'",
+            )
         if self.project.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
-            logger.warning("%s - push_to_firebase called when push is not required", self.project.pk)
-            return
+            raise ValidationException(
+                "Project can only be published if firebase push status is 'Pending'",
+            )
 
         self.project.update_firebase_push_status(FirebasePushStatusEnum.PROCESSING)
 
+        project_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.project(self.project.firebase_id),
+        )
+        fb_project: typing.Any = project_ref.get()
+
+        if not self.project.firebase_last_pushed:
+            if fb_project is not None:
+                raise ValidationException(
+                    "Project already found in firebase when creating a project",
+                )
+            self.create_project_on_firebase(project_ref)
+        else:
+            if fb_project is None:
+                raise ValidationException(
+                    "Did not find project in firebase when updating a project",
+                )
+
+            class RelaxedModel(firebase_ext_models.FbProject):
+                model_config = ConfigDict(extra="ignore")
+
+            # NOTE: we want to ignore extra fields from firebase
+            valid_project = RelaxedModel.model_validate(obj=fb_project)
+            valid_project = firebase_ext_models.FbProject.model_validate(obj=valid_project)
+
+            self.update_project_on_firebase(project_ref, valid_project)
+
+    def push_project_on_firebase(self):
         try:
-            project_ref = self.firebase_helper.ref(
-                Config.FirebaseKeys.project(self.project.firebase_id),
-            )
-            fb_project: typing.Any = project_ref.get()
-
-            if not self.project.firebase_last_pushed:
-                if fb_project is not None:
-                    logger.error(
-                        "push_to_firebase found a project already in firebase when creating a project",
-                        extra=log_extra({"project": self.project.pk}),
-                    )
-                    raise InvalidProjectPushException
-                self.create_project_on_firebase(project_ref)
-            else:
-                if fb_project is None:
-                    logger.error(
-                        "push_to_firebase did not find project in firebase when updating a project",
-                        extra=log_extra({"project": self.project.pk}),
-                    )
-                    raise InvalidProjectPushException
-
-                class RelaxedModel(firebase_ext_models.FbProject):
-                    model_config = ConfigDict(extra="ignore")
-
-                # NOTE: we want to ignore extra fields from firebase
-                valid_project = RelaxedModel.model_validate(obj=fb_project)
-                valid_project = firebase_ext_models.FbProject.model_validate(obj=valid_project)
-
-                self.update_project_on_firebase(project_ref, valid_project)
-        except InvalidProjectPushException:
-            self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
-        except Exception:
+            self._push_project_on_firebase()
+        except Exception as ex:
             logger.error(
-                "push_to_firebase failed",
+                "push_to_firebase for project failed",
                 extra=log_extra({"project": self.project.pk}),
                 exc_info=True,
             )
-            self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
+            self.project.status_message = str(ex) if isinstance(ex, ValidationException) else None
+            self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED, False)
+            # TODO(tnagorra): We also need to clear any intermediate values for groups, tasks and projects in firebase
+            # NOTE: If project has already been published, we cannot update it's status
+            if self.project.status_enum != Project.Status.PUBLISHED:
+                self.project.update_status(Project.Status.PUBLISHING_FAILED, False)
+
+            self.project.save(
+                update_fields=[
+                    "status",
+                    "status_message",
+                    "firebase_push_status",
+                    "firebase_last_pushed",
+                ],
+            )
         else:
+            self.project.status_message = None
             self.project.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
+            self.project.update_status(Project.Status.PUBLISHED, True)
+            self.project.save(
+                update_fields=[
+                    "status",
+                    "status_message",
+                    "firebase_push_status",
+                    "firebase_last_pushed",
+                ],
+            )
+
+    # EXPORT
 
     def generate_exports(self):
         from apps.project.exports.exports import export_project_data

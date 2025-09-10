@@ -154,6 +154,8 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
     is_featured: strawberry.auto
     status: strawberry.auto
     processing_status: strawberry.auto
+    status_message: strawberry.auto
+
     bbox: strawberry.auto
     total_area: strawberry.auto
     centroid: strawberry.auto

@@ -57,7 +57,7 @@ class TestProjectFiltersAndOrders(TestCase):
             requesting_organization=cls.organization1,
             project_type=ProjectTypeEnum.FIND,
             is_featured=True,
-            status=ProjectStatusEnum.READY,
+            status=ProjectStatusEnum.PROCESSED,
             look_for="buildings",
         )
 
@@ -67,7 +67,7 @@ class TestProjectFiltersAndOrders(TestCase):
             requesting_organization=cls.organization1,
             project_type=ProjectTypeEnum.COMPARE,
             is_featured=False,
-            status=ProjectStatusEnum.READY,
+            status=ProjectStatusEnum.PROCESSED,
             look_for="roads",
         )
 
@@ -77,7 +77,7 @@ class TestProjectFiltersAndOrders(TestCase):
             requesting_organization=cls.organization2,
             project_type=ProjectTypeEnum.COMPLETENESS,
             is_featured=True,
-            status=ProjectStatusEnum.READY,
+            status=ProjectStatusEnum.PROCESSED,
             look_for="buildings",
         )
 
@@ -87,17 +87,17 @@ class TestProjectFiltersAndOrders(TestCase):
             requesting_organization=cls.organization2,
             project_type=ProjectTypeEnum.FIND,
             is_featured=False,
-            status=ProjectStatusEnum.MARKED_AS_READY,
+            status=ProjectStatusEnum.READY_TO_PROCESS,
             look_for="water",
         )
 
-        cls.archived_project = ProjectFactory.create(
+        cls.withdrawn_project = ProjectFactory.create(
             **cls.user_resource_kwargs,
-            topic="Archived Project",
+            topic="Withdrawn Project",
             requesting_organization=cls.organization2,
             project_type=ProjectTypeEnum.VALIDATE,
             is_featured=False,
-            status=ProjectStatusEnum.ARCHIVED,
+            status=ProjectStatusEnum.WITHDRAWN,
             look_for="water",
         )
 
@@ -158,14 +158,14 @@ class TestProjectFiltersAndOrders(TestCase):
         self.force_login(self.user)
         content = self._query(
             filters={
-                "status": {"exact": self.genum(ProjectStatusEnum.READY)},
+                "status": {"exact": self.genum(ProjectStatusEnum.PROCESSED)},
             },
         )
         assert content["data"]["projects"]["totalCount"] == 3
 
         content = self._query(
             filters={
-                "status": {"exact": self.genum(ProjectStatusEnum.ARCHIVED)},
+                "status": {"exact": self.genum(ProjectStatusEnum.WITHDRAWN)},
             },
         )
         assert content["data"]["projects"]["totalCount"] == 1
@@ -178,11 +178,11 @@ class TestProjectFiltersAndOrders(TestCase):
             },
         )
         assert [project["topic"] for project in content["data"]["projects"]["results"]] == [
-            self.archived_project.topic,
             self.compare_project.topic,
             self.completeness_project.topic,
             self.find_project.topic,
             self.find_project_2.topic,
+            self.withdrawn_project.topic,
         ]
 
     def test_ordering_by_id(self):
@@ -193,7 +193,7 @@ class TestProjectFiltersAndOrders(TestCase):
             },
         )
         assert [project["id"] for project in content["data"]["projects"]["results"]] == [
-            self.gID(self.archived_project.pk),
+            self.gID(self.withdrawn_project.pk),
             self.gID(self.find_project_2.pk),
             self.gID(self.completeness_project.pk),
             self.gID(self.compare_project.pk),
@@ -210,11 +210,11 @@ class TestProjectFiltersAndOrders(TestCase):
             },
         )
         assert [project["name"] for project in content["data"]["projects"]["results"]] == [
-            self.archived_project.generate_name(),
             self.compare_project.generate_name(),
             self.completeness_project.generate_name(),
             self.find_project.generate_name(),
             self.find_project_2.generate_name(),
+            self.withdrawn_project.generate_name(),
         ]
 
         # Descending order by name
@@ -224,9 +224,9 @@ class TestProjectFiltersAndOrders(TestCase):
             },
         )
         assert [project["name"] for project in content["data"]["projects"]["results"]] == [
+            self.withdrawn_project.generate_name(),
             self.find_project_2.generate_name(),
             self.find_project.generate_name(),
             self.completeness_project.generate_name(),
             self.compare_project.generate_name(),
-            self.archived_project.generate_name(),
         ]

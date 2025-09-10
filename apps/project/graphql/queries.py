@@ -124,7 +124,7 @@ class Query:
             return Project.objects.all()
         return Project.objects.filter(
             status__in=[
-                Project.Status.READY,
+                Project.Status.PROCESSED,
                 Project.Status.PUBLISHED,
                 Project.Status.PAUSED,
             ],

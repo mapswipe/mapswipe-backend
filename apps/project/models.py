@@ -137,54 +137,60 @@ class ProjectTypeEnum(models.IntegerChoices):
                 return firebase_models.FbEnumProjectType.STREET
 
 
+# TODO(tnagorra): Reset the values later
 class ProjectStatusEnum(models.IntegerChoices):
     """Enum representing the status of a project."""
 
     DRAFT = 10, "Draft"
-    """
-    Background processes and validations will not be triggered for a "Draft" project.
-    """
+    """Background processes and validations will not be triggered for a "Draft" project."""
 
-    MARKED_AS_READY = 20, "Marked as Ready"
-    """
-    Background processes and validations will be triggered
-    once a project is "Marked as Ready".
-    """
-
-    FAILED = 30, "Failed"
-    """
-    If there are validation errors or issues with background processes,
-    then creation of project has "Failed"
-    """
-
-    READY = 40, "Ready"
-    """
-    If there are no validation errors or issues with background processes,
-    then the project is "Ready"
-    These projects are not be yet visible to the contributors.
-    """
-
-    PUBLISHED = 50, "Published"
-    """
-    "Published" projects is be visible to the contributors.
-    """
-
-    PAUSED = 60, "Paused"
-    """
-    "Paused" projects are visible to the contributors.
-    "Paused" projects can be "un-paused".
-    """
-
-    ARCHIVED = 70, "Archived"
-    """
-    "Archived" projects are not visible to the contributors.
-    "Archived" projects cannot be "un-archived".
+    READY_TO_PROCESS = 20, "Ready to Process"
+    """Background processes and validations will be triggered
+    once a project is "Ready to Process".
     """
 
     DISCARDED = 80, "Discarded"
-    """
-    "Discarded" projects are not visible to the contributors.
+    """Discarded projects are not visible to the contributors.
     "Discarded" projects cannot be "un-discarded".
+    """
+
+    PROCESSING_FAILED = 30, "Processing Failed"
+    """If there are validation errors or issues with background processes,
+    then processing of project has failed
+    """
+
+    PROCESSED = 40, "Processed"
+    """If there are no validation errors or issues with background processes,
+    then the project is "Processed"
+    These projects are not be yet visible to the contributors.
+    """
+
+    READY_TO_PUBLISH = 45, "Ready to Publish"
+    """Background processes and syncing to firebase will be triggered
+    once a project is "Ready to Publish".
+    """
+
+    PUBLISHING_FAILED = 46, "Publishing Failed"
+    """If there are errors or issues with background processes,
+    then publishing of project has failed
+    """
+
+    PUBLISHED = 50, "Published"
+    """"Published" project is be visible to the contributors."""
+
+    PAUSED = 60, "Paused"
+    """Paused projects are visible to the contributors.
+    "Paused" projects can be "un-paused" again.
+    """
+
+    WITHDRAWN = 70, "Withdrawn"
+    """Withdrawn projects are not visible to the contributors.
+    "Withdrawn" projects cannot be "un-widthdrawn" again.
+    """
+
+    FINISHED = 75, "Finished"
+    """Finished projects are not visible to the contributors.
+    "Finished" projects cannot be "un-finished" again.
     """
 
 
@@ -372,6 +378,11 @@ class Project(UserResource, FirebasePushResource):
         choices_enum=ProjectProcessingStatusEnum,
         null=True,
         blank=True,
+    )
+    status_message = models.CharField[str | None, str | None](
+        null=True,
+        blank=True,
+        max_length=510,
     )
 
     # TEAM

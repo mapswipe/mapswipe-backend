@@ -294,8 +294,12 @@ class TutorialInformationPageSerializer(
 
 VALID_TUTORIAL_STATUS_TRANSITIONS: set[tuple[Tutorial.Status, Tutorial.Status]] = set(
     [
-        (Tutorial.Status.DRAFT, Tutorial.Status.PUBLISHED),
+        (Tutorial.Status.DRAFT, Tutorial.Status.READY_TO_PUBLISH),
         (Tutorial.Status.DRAFT, Tutorial.Status.DISCARDED),
+        (Tutorial.Status.PUBLISHING_FAILED, Tutorial.Status.DISCARDED),
+        (Tutorial.Status.PUBLISHING_FAILED, Tutorial.Status.READY_TO_PUBLISH),
+        # (Tutorial.Status.READY_TO_PUBLISH, Tutorial.Status.PUBLISHING_FAILED),    # auto on bg
+        # (Tutorial.Status.READY_TO_PUBLISH, Tutorial.Status.PUBLISHED),            # auto on bg
         (Tutorial.Status.PUBLISHED, Tutorial.Status.ARCHIVED),
         (Tutorial.Status.ARCHIVED, Tutorial.Status.PUBLISHED),
     ],
@@ -370,6 +374,7 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
 
     @typing.override
     def update(self, instance: Tutorial, validated_data: dict[typing.Any, typing.Any]):
+        old_status_enum = instance.status_enum
         scenarios_data = self.initial_data.get("scenarios") or []
         information_pages_data = self.initial_data.get("information_pages") or []
         validated_data.pop("scenarios", None)
@@ -415,6 +420,10 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
             )
             information_page_serializer.is_valid(raise_exception=True)
             information_page_serializer.save()
+
+        if old_status_enum == Tutorial.Status.PUBLISHED and updated_tutorial.status_enum == Tutorial.Status.PUBLISHED:
+            updated_tutorial.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+            transaction.on_commit(lambda: push_tutorial_to_firebase.delay(updated_tutorial.pk))
 
         return updated_tutorial
 
@@ -503,10 +512,10 @@ class TutorialStatusUpdateSerializer(UserResourceSerializer[Tutorial]):
         updated_tutorial = super().update(instance, validated_data)
 
         if (
-            old_status_enum != Tutorial.Status.PUBLISHED and updated_tutorial.status_enum == Tutorial.Status.PUBLISHED
-        ) or old_status_enum == Tutorial.Status.PUBLISHED:
+            old_status_enum != Tutorial.Status.READY_TO_PUBLISH
+            and updated_tutorial.status_enum == Tutorial.Status.READY_TO_PUBLISH
+        ):
             updated_tutorial.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
-            # FIXME: We can call this on batch later as well or handle error scenario
             transaction.on_commit(lambda: push_tutorial_to_firebase.delay(updated_tutorial.pk))
 
         return updated_tutorial

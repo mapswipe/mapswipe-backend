@@ -1163,6 +1163,7 @@ input ProcessedProjectUpdateInput {
   clientId: String!
   description: String
   image: ID
+  isFeatured: Boolean
 
   """What should the users look for (e.g. buildings, cars, trees)"""
   lookFor: String
@@ -1174,7 +1175,6 @@ input ProcessedProjectUpdateInput {
 
   """Which group, institution or community is requesting this project?"""
   requestingOrganization: ID
-  status: ProjectStatusEnum
   team: ID
   topic: String
 
@@ -1642,14 +1642,17 @@ type ProjectRasterTileServerCustomConfig {
 }
 
 enum ProjectStatusEnum {
-  ARCHIVED
   DISCARDED
   DRAFT
-  FAILED
-  MARKED_AS_READY
+  FINISHED
   PAUSED
+  PROCESSED
+  PROCESSING_FAILED
   PUBLISHED
-  READY
+  PUBLISHING_FAILED
+  READY_TO_PROCESS
+  READY_TO_PUBLISH
+  WITHDRAWN
 }
 
 input ProjectStatusEnumFilterLookup {
@@ -1798,6 +1801,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   requestingOrganizationId: ID!
   requiredResults: Int!
   status: ProjectStatusEnum!
+  statusMessage: String
   team: ContributorTeamType
   topic: String!
   totalArea: Float
@@ -2396,6 +2400,8 @@ enum TutorialStatusEnum {
   DISCARDED
   DRAFT
   PUBLISHED
+  PUBLISHING_FAILED
+  READY_TO_PUBLISH
 }
 
 input TutorialStatusEnumFilterLookup {
@@ -2527,6 +2533,7 @@ type TutorialType implements UserResourceTypeMixin & FirebasePushResourceTypeMix
   projectId: ID!
   scenarios: [TutorialScenarioPageType!]!
   status: TutorialStatusEnum!
+  statusMessage: String
 }
 
 type TutorialTypeMutationResponseType {
