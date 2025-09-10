@@ -90,8 +90,9 @@ def regenerate_projects_csv(temp_projects_csv: typing.IO):
         # TODO: "tile_server_names": None,
         "status": None,
         "status_display": MANUAL_FIELD,
-        "area_sqkm": models.F("total_area"),
-        "centroid": None,
+        "area_sqkm": models.F("aoi_geometry__total_area"),
+        "centroid": None,  # TODO: use this after removing from model models.F("aoi_geometry__centroid"),
+        "geom": models.F("aoi_geometry__geometry"),
         "progress": None,
         "number_of_contributor_users": None,
         "number_of_results": None,
@@ -196,5 +197,5 @@ def generate():
     with tempfile.NamedTemporaryFile(mode="w+", suffix=".csv", dir=Config.TEMP_DIR) as temp_projects_csv:
         regenerate_projects_csv(temp_projects_csv)
         regenerate_projects_centroid_geojson(Path(temp_projects_csv.name))
-        # TODO: regenerate_projects_geom_geojson(Path(temp_projects_csv.name))
+        regenerate_projects_geom_geojson(Path(temp_projects_csv.name))
     regenerate_project_stats_by_types_csv()

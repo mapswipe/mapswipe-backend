@@ -44,7 +44,7 @@ app:
 
   api:
     containerPort: 80
-    command: ["gunicorn", "main.wsgi:application", "--timeout=40", "--bind", "0.0.0.0:80"]
+    command: ["misc/prod/run_web.sh"]
     resources:
       requests:
         cpu: "0.2"

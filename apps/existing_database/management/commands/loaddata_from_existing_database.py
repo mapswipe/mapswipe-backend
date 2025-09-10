@@ -10,14 +10,16 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from functools import wraps
 from pathlib import Path
-from urllib.parse import urljoin, urlparse
+from urllib.parse import unquote, urljoin, urlparse
 
 import httpx
 from cachetools import LRUCache, cached
+from django.contrib.gis.db.models import GeometryField
+from django.contrib.gis.db.models.functions import Area
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandParser
 from django.db import models
-from django.db.models.functions import Trim
+from django.db.models.functions import Cast, Trim
 from django.db.utils import IntegrityError
 from django.utils import timezone
 from ulid import ULID
@@ -36,13 +38,19 @@ from apps.contributor.models import (
     ContributorUserGroupMembership,
 )
 from apps.existing_database import models as existing_db_models
+from apps.mapping.firebase.utils import transfer_results_from_temp_tables
+from apps.mapping.models import MappingSession, MappingSessionClientTypeEnum, MappingSessionResultTemp
 from apps.project.models import (
+    Geometry,
     Organization,
     Project,
     ProjectAsset,
     ProjectAssetExportTypeEnum,
+    ProjectAssetInputTypeEnum,
     ProjectProgressStatusEnum,
     ProjectStatusEnum,
+    ProjectTask,
+    ProjectTaskGroup,
     ProjectTypeEnum,
 )
 from apps.user.models import User
@@ -52,6 +60,14 @@ from main.config import Config
 FH = Config.FIREBASE_HELPER
 
 logger = logging.getLogger(__name__)
+
+if typing.TYPE_CHECKING:
+    from apps.mapping.firebase.utils import FirebaseCleanup
+
+
+class FakeFirebaseCleanup:
+    def undo_mark_as_delete(self, *args, **kwargs):
+        return
 
 
 class ProjectCsvMetadata(typing.TypedDict):
@@ -162,6 +178,11 @@ def get_project_id_by_old_id(old_id: str) -> int:
 
 
 @cached(cache=LRUCache(maxsize=1000))
+def get_team_id_by_old_id(old_id: str) -> int:
+    return ContributorTeam.objects.get(old_id=old_id).pk
+
+
+@cached(cache=LRUCache(maxsize=1000))
 def get_user_by_contributor_user_firebase_id(
     firebase_id: str | None,
     *,
@@ -212,7 +233,7 @@ def generate_django_content_file_from_url(
 
     response = None
     try:
-        response = httpx.get(file_url, verify=not Config.EXISTING_SYSTEM_API_INSECURE)
+        response = httpx.get(file_url, follow_redirects=True, verify=not Config.EXISTING_SYSTEM_API_INSECURE)
         response.raise_for_status()
     except httpx.HTTPStatusError:
         logger.warning(
@@ -228,6 +249,158 @@ def generate_django_content_file_from_url(
 
     # Wrap the content in Django ContentFile
     return ContentFile(response.content, name=filename)
+
+
+def store_project_image(
+    project: Project,
+    existing_project: existing_db_models.Project,
+) -> None:
+    image_url = existing_project.image
+    if image_url is None:
+        return
+
+    response = None
+    try:
+        response = httpx.get(image_url, follow_redirects=True)
+        response.raise_for_status()
+    except Exception:
+        logger.warning(
+            "Failed to download project image: %s. (status code: %s)",
+            image_url,
+            response and response.status_code,
+        )
+        return
+
+    path = urlparse(image_url).path  # Get the path part of the URL
+    decoded_path = unquote(path)  # Decode any percent-encoded characters
+    file_name = decoded_path.split("/")[-1]  # Get the last part after the last slash
+
+    content_file = ContentFile(response.content, name=file_name)
+
+    project_image = ProjectAsset.objects.create(
+        client_id=str(ULID()),
+        project=project,
+        type=ProjectAsset.Type.INPUT,
+        input_type=ProjectAssetInputTypeEnum.COVER_IMAGE,
+        created_by=project.created_by,
+        modified_by=project.created_by,
+        file=content_file,
+        file_size=content_file.size,
+    )
+    project.image = project_image
+    project.save(update_fields=("image",))
+
+
+def _process_project_results(
+    bulk_create_manager: BulkCreateManager,
+    existing_project: existing_db_models.Project,
+):
+    existing_ms_result_qs = existing_db_models.MappingSessionResult.objects.filter(
+        mapping_session__project_id=existing_project.project_id,
+    ).select_related("mapping_session")
+
+    # TODO: user groups
+
+    for existing_ms_result in existing_ms_result_qs.iterator():
+        existing_ms = existing_ms_result.mapping_session
+
+        client_type = MappingSessionClientTypeEnum.get_client_type(existing_ms.client_type)
+
+        bulk_create_manager.add(
+            MappingSessionResultTemp(
+                project_firebase_id=existing_ms.project_id,
+                group_firebase_id=existing_ms.group_id,
+                task_firebase_id=existing_ms_result.task_id,
+                contributor_user_firebase_id=existing_ms.user_id,
+                start_time=parse_datetime(existing_ms.start_time),
+                end_time=parse_datetime(existing_ms.end_time),
+                result=existing_ms_result.result,
+                app_version=existing_ms.app_version,
+                client_type=client_type,
+            ),
+        )
+
+
+def process_mapping_data_for_project(
+    project: Project,
+    existing_project: existing_db_models.Project,
+) -> None:
+    if MappingSession.objects.filter(project_task_group__project=project).exists():
+        logger.info("Project - %s: Raw mapping data already exists", project.generate_name())
+        return
+
+    logger.info("Project - %s: Fetching raw mapping data", project.generate_name())
+
+    start_time = time.time()
+    last_start_time = time.time()
+    existing_group_qs = existing_db_models.Group.objects.filter(
+        project_id=existing_project.project_id,
+    )
+
+    bulk_create_manager = BulkCreateManager(chunk_size=1000)
+
+    for existing_group in existing_group_qs.iterator():
+        project_task_group, _ = ProjectTaskGroup.objects.get_or_create(
+            project=project,
+            firebase_id=existing_group.group_id,
+            defaults=dict(
+                number_of_tasks=existing_group.number_of_tasks,
+                required_count=existing_group.required_count,
+                finished_count=existing_group.finished_count,
+                progress=existing_group.progress,
+                total_area=existing_group.total_area,
+                time_spent_max_allowed=existing_group.time_spent_max_allowed,
+                project_type_specifics=existing_group.project_type_specifics,
+            ),
+        )
+
+        existing_task_qs = existing_db_models.Task.objects.filter(
+            project_id=existing_project.project_id,
+            group_id=existing_group.group_id,
+        )
+
+        for existing_task in existing_task_qs.iterator():
+            ProjectTask.objects.get_or_create(
+                task_group=project_task_group,
+                firebase_id=existing_task.task_id,
+                defaults=dict(
+                    geometry=existing_task.geom,
+                    project_type_specifics=existing_task.project_type_specifics,
+                ),
+            )
+
+    logger.info(
+        "Project - %s: Created groups/tasks (runtime %s)",
+        project.generate_name(),
+        timedelta(seconds=time.time() - last_start_time),
+    )
+    last_start_time = time.time()
+
+    _process_project_results(bulk_create_manager, existing_project)
+    logger.info(
+        "Project - %s: Created temp mapping data (runtime %s)",
+        project.generate_name(),
+        timedelta(seconds=time.time() - last_start_time),
+    )
+    last_start_time = time.time()
+
+    bulk_create_manager.done()
+
+    transfer_results_from_temp_tables(
+        typing.cast("FirebaseCleanup", FakeFirebaseCleanup()),
+    )
+    logger.info(
+        "Project - %s: Stored mapping data (runtime %s)",
+        project.generate_name(),
+        timedelta(seconds=time.time() - last_start_time),
+    )
+    last_start_time = time.time()
+
+    logger.info(
+        "Project - %s: Raw mapping success (runtime %s)",
+        project.generate_name(),
+        timedelta(seconds=time.time() - start_time),
+    )
 
 
 def parse_project_name(
@@ -308,9 +481,17 @@ def create_project(
     try:
         assert existing_project.project_type is not None, "Project type should be defined"
 
+        contributor_team = None
+        if existing_project.project_type_specifics and (
+            team_old_id := existing_project.project_type_specifics.get("teamId")
+        ):
+            contributor_team = get_team_id_by_old_id(team_old_id)
+
         project_metadata = dict(
             topic=topic,
             region=region,
+            team_id=contributor_team,
+            look_for=existing_project.look_for,
             status=parse_project_status(existing_project),
             project_number=project_number,
             centroid=existing_project.geom and existing_project.geom.centroid,
@@ -446,6 +627,8 @@ class Command(BaseCommand):
         self.bot_user = User.get_bot_user()
         self._pre_parsed_project_names: dict[str, tuple[str, str, int, str]] | None = None
         self._existing_projects_csv_data: dict[str, ProjectCsvMetadata] | None = None
+        # This is set using cli arguments
+        self.migrate_project_active_results = False
 
     @before_after_count(Organization)
     def handle_organization(self):
@@ -701,7 +884,7 @@ class Command(BaseCommand):
         url = urljoin(Config.EXISTING_SYSTEM_API.geturl(), "/api/projects/projects.csv")
         self.stdout.write(f"Downloading projects.csv from {url}")
 
-        response = httpx.get(url, verify=not Config.EXISTING_SYSTEM_API_INSECURE)
+        response = httpx.get(url, follow_redirects=True, verify=not Config.EXISTING_SYSTEM_API_INSECURE)
         response.raise_for_status()
         csv_text = response.text
 
@@ -744,7 +927,37 @@ class Command(BaseCommand):
             if project_created:
                 logger.info("Project - New %s/%s: %s", i, total_existing, project.generate_name())
 
+            if existing_project.geom and project.aoi_geometry is None:
+                project.aoi_geometry = Geometry.objects.create(
+                    geometry=existing_project.geom,
+                    centroid=existing_project.geom.centroid,
+                    bbox=existing_project.geom.envelope,
+                    total_area=0,  # NOTE: Calculated below
+                )
+                project.save(update_fields=("aoi_geometry",))
+
+            if project.image is None:
+                store_project_image(project, existing_project)
+            if project.status_enum == ProjectStatusEnum.PUBLISHED:
+                if self.migrate_project_active_results:
+                    process_mapping_data_for_project(project, existing_project)
+                else:
+                    logger.info(
+                        "Project - %s: Active project found. Migrate mapping data using --migrate-active-results",
+                        project.generate_name(),
+                    )
             create_project_assets(project)
+
+        # Use postgres to calculate project aoi_geometry area
+        Geometry.objects.update(
+            total_area=Area(
+                Cast(
+                    "geometry",
+                    output_field=GeometryField(geography=True),
+                ),
+            )
+            / 100_000,
+        )
 
         self.stdout.write("\n")
         self.stdout.write(f"Processed {total_existing}")
@@ -874,7 +1087,7 @@ class Command(BaseCommand):
         for type_ in GlobalExportAssetTypeEnum:
             url = urljoin(Config.EXISTING_SYSTEM_API.geturl(), existing_api_map[type_])
             logger.info("Downloading %s from %s", type_.label, url)
-            response = httpx.get(url, verify=not Config.EXISTING_SYSTEM_API_INSECURE)
+            response = httpx.get(url, follow_redirects=True, verify=not Config.EXISTING_SYSTEM_API_INSECURE)
             response.raise_for_status()
             content_file = ContentFile(response.content, name=GlobalExportAssetTypeEnum.get_file_name(type_))
             GlobalExportAsset.objects.update_or_create(
@@ -949,12 +1162,15 @@ class Command(BaseCommand):
             type=str,
             help="specify a target host for memray live server",
         )
+        parser.add_argument("--migrate-active-results", action="store_true", help="Migrate results data for active projects")
         # TODO(thenav56): Add argument to skip few steps... but we still need a dependency to avoid not found error if used
 
     @typing.override
     def handle(self, *args: typing.Any, **options: typing.Any):
         assert Config.EXISTING_SYSTEM_CONNECT_ENABLED is True, "Config EXISTING_SYSTEM_CONNECT_ENABLED is False"
         assert Config.ENABLE_DANGER_MODE is True, "ENABLE_DANGER_MODE needs to be enabled to use this command"
+
+        self.migrate_project_active_results = options.get("migrate_active_results")
 
         self.setup_logger()
 
