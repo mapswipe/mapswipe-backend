@@ -25,6 +25,7 @@ type AppEnumCollection {
   AssetMimetypeEnum: [AppEnumCollectionAssetMimetypeEnum!]!
   AssetTypeEnum: [AppEnumCollectionAssetTypeEnum!]!
   ContributorUserGroupMembershipLogActionEnum: [AppEnumCollectionContributorUserGroupMembershipLogActionEnum!]!
+  FirebasePushStatusEnum: [AppEnumCollectionFirebasePushStatusEnum!]!
   GlobalExportAssetTypeEnum: [AppEnumCollectionGlobalExportAssetTypeEnum!]!
   IconEnum: [AppEnumCollectionIconEnum!]!
   MappingSessionClientTypeEnum: [AppEnumCollectionMappingSessionClientTypeEnum!]!
@@ -56,6 +57,11 @@ type AppEnumCollectionAssetTypeEnum {
 
 type AppEnumCollectionContributorUserGroupMembershipLogActionEnum {
   key: ContributorUserGroupMembershipLogActionEnum!
+  label: String!
+}
+
+type AppEnumCollectionFirebasePushStatusEnum {
+  key: FirebasePushStatusEnum!
   label: String!
 }
 
