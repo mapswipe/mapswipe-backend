@@ -25,6 +25,7 @@ ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     project_models.ProjectProcessingStatusEnum,
     project_models.ProjectAssetInputTypeEnum,
     project_models.ProjectAssetExportTypeEnum,
+    common_models.FirebasePushStatusEnum,
     common_models.IconEnum,
     common_models.AssetMimetypeEnum,
     common_models.AssetTypeEnum,
