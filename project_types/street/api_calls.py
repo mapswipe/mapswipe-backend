@@ -71,6 +71,7 @@ def create_tiles(
     )
 
 
+# FIXME: move this to utils
 def geojson_to_polygon(geojson_data: dict[str, Any]):
     # NOTE: We might not need this, as we already check this
     try:

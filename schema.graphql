@@ -817,16 +817,10 @@ enum FirebasePushStatusEnum {
 
 scalar GenericJSON
 
-"""
-An arbitrary geographical object. One of Point, LineString, LinearRing, Polygon, MultiPoint, MultiLineString, MultiPolygon.
-"""
-scalar Geometry
-
 """Model representing an area."""
 type GeometryType {
   bbox: Polygon
   centroid: Point
-  geometry: Geometry!
   id: ID!
   totalArea: Float
 }

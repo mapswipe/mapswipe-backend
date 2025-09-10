@@ -41,7 +41,7 @@ from .project_types.validate_image import ValidateImageProjectPropertyType
 @strawberry_django.type(Geometry)
 class GeometryType:
     id: strawberry.ID
-    geometry: strawberry.auto
+    # geometry: strawberry.auto
     centroid: strawberry.auto
     bbox: strawberry.auto
     total_area: strawberry.auto

@@ -2,7 +2,7 @@ import json
 from typing import Any
 from warnings import deprecated
 
-from django.contrib.gis.geos import GeometryCollection, GEOSGeometry
+from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, Polygon
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from geojson_pydantic import Feature as PydanticFeature
@@ -10,6 +10,24 @@ from geojson_pydantic import FeatureCollection as PydanticFeatureCollection
 from geojson_pydantic.geometries import MultiPolygon as PydanticMultiPolygon
 from geojson_pydantic.geometries import Polygon as PydanticPolygon
 from osgeo import ogr
+
+
+def get_area_of_geometry(geom: GeometryCollection | GEOSGeometry):
+    area_m2: float = geom.transform(6933, clone=True).area
+    return area_m2 / 1000_000
+
+
+def get_polygon_of_extent(extent: tuple[float, float, float, float]):
+    min_lng, min_lat, max_lng, max_lat = extent
+    return Polygon(
+        (
+            (min_lng, min_lat),
+            (min_lng, max_lat),
+            (max_lng, max_lat),
+            (max_lng, min_lat),
+            (min_lng, min_lat),
+        ),
+    )
 
 
 def convert_json_str_to_wkt(geometry: str):
@@ -49,14 +67,24 @@ def validate_geojson_file(file: ContentFile) -> None:
         raise ValidationError("GeoJSON 'features' list cannot be empty.")
 
 
-def convert_json_dict_to_geometry_collection(geojson_dict: dict):
-    AoiGeometryFeature = PydanticFeature[PydanticPolygon | PydanticMultiPolygon, dict]
-    AoiGeometryFeatureCollection = PydanticFeatureCollection[AoiGeometryFeature]
+AoiFeature = PydanticFeature[PydanticPolygon | PydanticMultiPolygon, dict[str, Any]]
 
-    feature_collection = AoiGeometryFeatureCollection.model_validate(geojson_dict)
+
+def convert_json_dict_to_features(geojson_dict: dict):
+    feature_collection = PydanticFeatureCollection.model_validate(geojson_dict)
+
+    polygon_types = (PydanticPolygon, PydanticMultiPolygon)
+    filtered_features: list[AoiFeature] = [
+        feature for feature in feature_collection.features if isinstance(feature.geometry, polygon_types)
+    ]
+    return filtered_features
+
+
+def convert_json_dict_to_geometry_collection(geojson_dict: dict):
+    filtered_features = convert_json_dict_to_features(geojson_dict)
 
     geometries: list[GEOSGeometry] = []
-    for feature in feature_collection.features:
+    for feature in filtered_features:
         if not feature.geometry:
             continue
         geometry = GEOSGeometry(feature.geometry.model_dump_json(), srid=4326)
@@ -64,4 +92,5 @@ def convert_json_dict_to_geometry_collection(geojson_dict: dict):
 
     geometry_collection = GeometryCollection(geometries)
     geometry_collection.srid = 4326
-    return geometry_collection
+
+    return filtered_features, geometry_collection
