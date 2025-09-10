@@ -23,6 +23,7 @@ from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
 from project_types.street.api_calls import StreetFeature, get_image_metadata
 from utils import fields as custom_fields
+from utils.asset_types.models import AoiGeometryAssetProperty
 from utils.common import Grouping, create_json_dump
 from utils.custom_options.models import CustomOption
 
@@ -88,6 +89,11 @@ class StreetProject(
         aoi_asset = self.project.aoi_geometry_input_asset
         if not aoi_asset:
             raise Exception("Could not find AOI geometry asset")
+
+        asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_asset.asset_type_specifics)
+        allowed_area = 20
+        if asset_specific_data.area > allowed_area:
+            raise base_project.ValidationException(f"Area for AOI Geometry must be less than {allowed_area} sq. km")
 
         with aoi_asset.file.open() as aoi_file:
             aoi_geojson = json.loads(aoi_file.read())
