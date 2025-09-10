@@ -259,9 +259,6 @@ class Project(UserResource, FirebasePushResource):
         help_text=gettext_lazy("Which group, institution or community is requesting this project?"),
     )
 
-    # TODO(tnagorra): Do we also store project topic, region and number?
-    # TODO(tnagorra): Do we add uniqueness on project topic?
-
     # Generate in manager dashboard based on topic, region, project number, requesting org
     topic = models.CharField[str, str](max_length=255)
     region = models.CharField[str, str](max_length=255)

@@ -342,7 +342,6 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
             )
 
         self._validate_project_instruction(attrs)
-
         return super().validate(attrs)
 
 
@@ -597,7 +596,7 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
             new_status = Project.Status(new_status)
 
         # NOTE: This check should technically never be called.
-        if not self.instance.project_instruction:
+        if new_status == Project.Status.PUBLISHED and not self.instance.project_instruction:
             raise serializers.ValidationError(
                 {
                     "project_instruction": gettext("Project instruction is required."),
@@ -633,7 +632,6 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
             old_status_enum != Project.Status.PUBLISHED and updated_project.status_enum == Project.Status.PUBLISHED
         ) or old_status_enum == Project.Status.PUBLISHED:
             updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
-            # FIXME: We can call this on batch later as well or handle error scenario
             transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
 
         return updated_project

@@ -17,6 +17,7 @@ class AoiGeometryAssetProperty(BaseModel):
         custom_fields.PydanticLat,
     ]
     # NOTE: The area is in square km
+    # FIXME: Use PydanticSqKm type later
     area: custom_fields.PydanticPositiveFloat
 
 
