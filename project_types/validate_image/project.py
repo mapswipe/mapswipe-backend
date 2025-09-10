@@ -77,21 +77,31 @@ class ValidateImageProject(
         super().__init__(project)
 
     def _validate_direct_images(self) -> list[ValidImage]:
-        image_assets = ProjectAsset.usable_objects().filter(
+        all_image_assets_qs = ProjectAsset.usable_objects().filter(
             project_id=self.project.pk,
             type=AssetTypeEnum.INPUT,
             input_type=ProjectAssetInputTypeEnum.OBJECT_IMAGE,
-            file__isnull=False,
         )
 
-        image_assets_count = image_assets.count()
+        # NOTE: cleanup assets we don't use
+        all_image_assets_qs.filter(
+            file__isnull=True,
+            external_url__isnull=False,
+        ).update(marked_as_deleted=True)
+
+        direct_images_assets_qs = all_image_assets_qs.filter(
+            file__isnull=False,
+            external_url__isnull=True,
+        )
+
+        image_assets_count = direct_images_assets_qs.count()
         if image_assets_count <= 0:
             raise base_project.ValidationException("There should be at least 1 image")
         if image_assets_count > 100:
             raise base_project.ValidationException("There should be at most 100 images")
 
         inputs: list[ValidImage] = []
-        for image_asset in image_assets.iterator():
+        for image_asset in direct_images_assets_qs.iterator():
             valid_image: ValidImage = {
                 "url": get_absolute_uri(image_asset.file),
                 "file_name": image_asset.file.name,
@@ -103,21 +113,31 @@ class ValidateImageProject(
         return inputs
 
     def _validate_dataset_file(self) -> list[ValidImage]:
-        image_assets = ProjectAsset.usable_objects().filter(
+        all_image_assets_qs = ProjectAsset.usable_objects().filter(
             project_id=self.project.pk,
             type=AssetTypeEnum.INPUT,
             input_type=ProjectAssetInputTypeEnum.OBJECT_IMAGE,
+        )
+
+        # NOTE: cleanup assets we don't use
+        dataset_assets_qs = all_image_assets_qs.filter(
+            file__isnull=True,
             external_url__isnull=False,
         )
 
-        image_assets_count = image_assets.count()
+        all_image_assets_qs.filter(
+            file__isnull=False,
+            external_url__isnull=True,
+        ).update(marked_as_deleted=True)
+
+        image_assets_count = dataset_assets_qs.count()
         if image_assets_count <= 0:
             raise base_project.ValidationException("There should be at least 1 image")
         if image_assets_count > 10000:
             raise base_project.ValidationException("There should be at most 10000 images")
 
         inputs: list[ValidImage] = []
-        for image_asset in image_assets.iterator():
+        for image_asset in dataset_assets_qs.iterator():
             # NOTE: We can assert this because we are filtering by external_url__is_null=False
             assert image_asset.external_url is not None, "External URL is required"
 
