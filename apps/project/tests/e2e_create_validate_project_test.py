@@ -8,6 +8,7 @@ from ulid import ULID
 
 from apps.common.utils import decode_tasks, remove_object_keys
 from apps.contributor.factories import ContributorUserFactory
+from apps.tutorial.factories import TutorialFactory
 from apps.user.factories import UserFactory
 from main.config import Config
 from main.tests import TestCase
@@ -249,13 +250,12 @@ class TestValidateProjectE2E(TestCase):
 
     def test_validate_project_e2e(self):
         self._test_project(
-            "validate",
             "assets/tests/projects/validate/project_data.json5",
         )
-    # TODO(susilnem): Add street data here too
+
     # TODO(susilnem): Add more test with filters
 
-    def _test_project(self, projectKey: str, filename: str):
+    def _test_project(self, filename: str):
         self.force_login(self.user)
 
         # Load test data file
@@ -308,7 +308,7 @@ class TestValidateProjectE2E(TestCase):
 
         project_response = project_content["data"]["createProject"]
         assert project_response is not None, "Project create response is None"
-        assert project_response["ok"]
+        assert project_response["ok"], project_response["errors"]
 
         project_id = project_response["result"]["id"]
         project_fb_id = project_response["result"]["firebaseId"]
@@ -332,29 +332,32 @@ class TestValidateProjectE2E(TestCase):
         assert image_response["ok"]
         image_id = image_response["result"]["id"]
 
-        # Create GeoJSON Asset for AOI Geometry
-        aoi_asset_data = {
-            "clientId": str(ULID()),
-            "inputType": "AOI_GEOMETRY",
-            "project": project_id,
-        }
-        with aoi_geometry_filename.open("rb") as geo_file:
-            aoi_content = self.query_check(
-                self.Mutation.UPLOAD_PROJECT_ASSET,
-                variables={"data": aoi_asset_data},
-                files={"geoFile": geo_file},
-                map={"geoFile": ["variables.data.file"]},
-            )
-        aoi_response = aoi_content["data"]["createProjectAsset"]
-        assert aoi_response is not None, "AOI create response is None"
-        assert aoi_response["ok"]
-        aoi_id = aoi_response["result"]["id"]
-
         # Update project
         update_project_data = test_data["update_project"]
-        update_project_data["image"] = image_id
-        update_project_data["projectTypeSpecifics"][projectKey]["objectSource"]["aoiGeometry"] = aoi_id
         update_project_data["requestingOrganization"] = organization_id
+        update_project_data["image"] = image_id
+
+        # Create GeoJSON Asset for AOI Geometry
+        if update_project_data["projectTypeSpecifics"]["validate"]["objectSource"]["sourceType"] == "AOI_GEOJSON_FILE":
+            aoi_asset_data = {
+                "clientId": str(ULID()),
+                "inputType": "AOI_GEOMETRY",
+                "project": project_id,
+            }
+            with aoi_geometry_filename.open("rb") as geo_file:
+                aoi_content = self.query_check(
+                    self.Mutation.UPLOAD_PROJECT_ASSET,
+                    variables={"data": aoi_asset_data},
+                    files={"geoFile": geo_file},
+                    map={"geoFile": ["variables.data.file"]},
+                )
+            aoi_response = aoi_content["data"]["createProjectAsset"]
+            assert aoi_response is not None, "AOI create response is None"
+            assert aoi_response["ok"]
+            aoi_id = aoi_response["result"]["id"]
+
+            update_project_data["projectTypeSpecifics"]["validate"]["objectSource"]["aoiGeometry"] = aoi_id
+
         with self.captureOnCommitCallbacks(execute=True):
             update_content = self.query_check(
                 self.Mutation.UPDATE_PROJECT,
@@ -477,10 +480,14 @@ class TestValidateProjectE2E(TestCase):
         assert sanitized_tasks_actual_sorted == sanitized_tasks_expected_sorted, (
             "Differences found between expected and actual tasks on tutorial in firebase."
         )
+        tutorial = TutorialFactory.create(
+            project_id=project_id,
+            **self.user_resource_kwargs,
+        )
 
         # Update processed project
         update_processed_project_data = test_data["update_processed_project"]
-        update_processed_project_data["tutorial"] = tutorial_id
+        update_processed_project_data["tutorial"] = tutorial.id
         update_processed_project_data["requestingOrganization"] = organization_id
         with self.captureOnCommitCallbacks(execute=True):
             update_processed_project_content = self.query_check(
@@ -518,7 +525,7 @@ class TestValidateProjectE2E(TestCase):
         assert project_fb_data["created"] is not None, "Field 'created' should be defined"
         assert datetime.fromisoformat(project_fb_data["created"]), "Field 'created' should be a timestamp"
         assert project_fb_data["projectId"] == project_fb_id, "Field 'projectId' should match firebaseId"
-        assert project_fb_data["tutorialId"] == tutorial_fb_id, "Field 'tutorialId' should match tutorial's firebaseId"
+        assert project_fb_data["tutorialId"] == tutorial.firebase_id, "Field 'tutorialId' should match tutorial's firebaseId"
         assert project_fb_data["createdBy"] == self.contributor_user.firebase_id, (
             "Field 'createdBy' should match contributor user's firebaseId"
         )
