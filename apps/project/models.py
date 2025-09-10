@@ -22,6 +22,7 @@ from apps.common.models import (
     UserResource,
 )
 from apps.contributor.models import ContributorTeam
+from main.db import Model
 from main.fields import OverwritableFileField
 from utils.fields import validate_percentage
 
@@ -233,7 +234,6 @@ class Organization(UserResource, ArchivableResource, FirebasePushResource):  # t
     name = models.CharField[str, str](max_length=255)
     description = models.TextField[str | None, str | None](null=True, blank=True)
     abbreviation = models.CharField[str, str](max_length=50, null=True, blank=True)
-    # TODO(Rup-Narayan-Rajbanshi): Add icon?
 
     unique_name = models.GeneratedField(
         expression=Lower("name"),
@@ -245,6 +245,15 @@ class Organization(UserResource, ArchivableResource, FirebasePushResource):  # t
     @typing.override
     def __str__(self) -> str:
         return self.name
+
+
+class Geometry(Model):
+    """Model representing an area."""
+
+    geometry: GEOSGeometry | None = gis_models.GeometryField(dim=2, srid=4326)  # type: ignore[reportIncompatibleVariableOverride]
+    centroid = gis_models.PointField(blank=True, null=True, spatial_index=True, srid=4326)
+    bbox = gis_models.PolygonField(blank=True, null=True, spatial_index=True, srid=4326)
+    total_area = models.FloatField[float | None, float | None](null=True, default=None)
 
 
 class Project(UserResource, FirebasePushResource):
@@ -363,6 +372,8 @@ class Project(UserResource, FirebasePushResource):
         on_delete=models.SET_NULL,
     )
 
+    # TODO(tnagorra): remove centroid and bbox
+    # Use centroid and bbox from aoi_geometry.centroid and aoi_geometry.bbox
     centroid = gis_models.PointField(blank=True, null=True, spatial_index=True, srid=4326)
     bbox = gis_models.PolygonField(blank=True, null=True, spatial_index=True, srid=4326)
     total_area = models.FloatField[float | None, float | None](null=True, default=None)
@@ -383,6 +394,14 @@ class Project(UserResource, FirebasePushResource):
         null=True,
         blank=True,
         max_length=510,
+    )
+
+    aoi_geometry = models.OneToOneField[Geometry | None, Geometry | None](
+        Geometry,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="+",
     )
 
     # TEAM

@@ -2,13 +2,10 @@ import json
 import typing
 
 import pydantic
-from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, Point, Polygon
+from django.contrib.gis.geos import Point, Polygon
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import gettext
-from geojson_pydantic import Feature, FeatureCollection
-from geojson_pydantic.geometries import MultiPolygon as PydanticMultiPolygon
-from geojson_pydantic.geometries import Polygon as PydanticPolygon
 from rest_framework import serializers
 
 from apps.common.models import AssetMimetypeEnum, FirebasePushStatusEnum
@@ -19,9 +16,10 @@ from apps.tutorial.models import Tutorial
 from project_types.store import get_project_property, get_project_type_handler
 from utils.asset_types.models import AoiGeometryAssetProperty, ObjectImageAssetProperty
 from utils.common import clean_up_none_keys
+from utils.geo.transform import convert_json_dict_to_geometry_collection
 from utils.graphql.drf import handle_pydantic_validation_error
 
-from .models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
+from .models import Geometry, Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
 from .tasks import process_project_task, push_project_to_firebase
 
 if typing.TYPE_CHECKING:
@@ -234,11 +232,12 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
 
             if aoi_geom_asset:
                 asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_geom_asset.asset_type_specifics)
+
                 lng, lat = asset_specific_data.center
-                proj.centroid = Point(lng, lat)
+                centroid = Point(lng, lat)
 
                 min_lng, min_lat, max_lng, max_lat = asset_specific_data.bbox
-                proj.bbox = Polygon(
+                bbox = Polygon(
                     (
                         (min_lng, min_lat),
                         (min_lng, max_lat),
@@ -248,13 +247,48 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
                     ),
                 )
 
-                proj.total_area = asset_specific_data.area
-            else:
-                proj.centroid = None
-                proj.bbox = None
-                proj.total_area = None
+                total_area = asset_specific_data.area
 
-            proj.save(update_fields=["aoi_geometry_input_asset", "centroid", "bbox", "total_area"])
+                try:
+                    geojson_data = json.load(aoi_geom_asset.file)
+                except json.JSONDecodeError as e:
+                    raise serializers.ValidationError(
+                        {
+                            "file": "Invalid JSON format in the AOI file.",
+                        },
+                    ) from e
+
+                try:
+                    geometry_collection = convert_json_dict_to_geometry_collection(geojson_data)
+                except Exception as e:
+                    raise serializers.ValidationError(
+                        {
+                            "file": "Invalid AOI Feature Collection",
+                        },
+                    ) from e
+
+                proj_aoi_geometry = proj.aoi_geometry
+                if not proj_aoi_geometry:
+                    aoi_geometry = Geometry(
+                        bbox=bbox,
+                        centroid=centroid,
+                        geometry=geometry_collection,
+                        total_area=total_area,
+                    )
+                    aoi_geometry.save()
+                    proj.aoi_geometry = aoi_geometry
+                else:
+                    proj_aoi_geometry.bbox = bbox
+                    proj_aoi_geometry.centroid = centroid
+                    proj_aoi_geometry.geometry = geometry_collection
+                    proj_aoi_geometry.total_area = total_area
+                    proj_aoi_geometry.save()
+            else:
+                proj_aoi_geometry = proj.aoi_geometry
+                if proj_aoi_geometry:
+                    proj_aoi_geometry.delete()
+
+            proj.save(update_fields=["aoi_geometry", "aoi_geometry_input_asset", "total_area"])
 
         return proj
 
@@ -331,6 +365,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
         # NOTE: project_instruction is not required in the database
         project_instruction = attrs.get("project_instruction") or self.instance.project_instruction
         if not project_instruction:
+            # FIXME: only validate on READY_TO_PROCESS
             raise serializers.ValidationError(
                 {
                     "project_instruction": gettext("Project instruction is required."),
@@ -341,7 +376,7 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
     def validate(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
 
-        # FIXME(tnagorra): Should we be able to edit paused and withdrawn project?
+        # FIXME(tnagorra): Should we be able to edit paused, withdrawn, and published project
         if self.instance.status_enum not in [
             Project.Status.PROCESSED,
             Project.Status.PUBLISHED,
@@ -361,9 +396,10 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
         old_status_enum = instance.status_enum
         updated_project = super().update(instance, validated_data)
 
-        # FIXME(tnagorra): Should we be able to edit paused and withdrawn project?
+        # FIXME(tnagorra): Should we be able to edit paused and withdrawn projects?
         if old_status_enum == Project.Status.PUBLISHED and updated_project.status_enum == Project.Status.PUBLISHED:
             updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+            # FIXME(tnagorra): Published project should not set state to PUBLISHING_FAILED
             transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
 
         return updated_project
@@ -381,7 +417,6 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
             "asset_type_specifics",
         )
 
-    # FIXME(tnagorra): Add validation for all input types here
     def _validate_aoi_geometry(
         self,
         attrs: dict[str, typing.Any],
@@ -411,43 +446,26 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
                 },
             ) from e
 
-        AoiGeometryFeature = Feature[PydanticPolygon | PydanticMultiPolygon, dict]
-        AoiGeometryFeatureCollection = FeatureCollection[AoiGeometryFeature]
-
-        feature_collection = AoiGeometryFeatureCollection.model_validate(geojson_data)
-        if len(feature_collection.features) > 20:
+        try:
+            geometry_collection = convert_json_dict_to_geometry_collection(geojson_data)
+        except Exception as e:
             raise ValidationError(
                 {
-                    "file": "AOI Geometry must have at max 20 features",
+                    "file": "Invalid feature collection",
                 },
-            )
+            ) from e
 
-        geometries: list[GEOSGeometry] = []
-        for feature in feature_collection.features:
-            if not feature.geometry:
-                continue
-            geometry = GEOSGeometry(feature.geometry.model_dump_json(), srid=4326)
-            geometries.append(geometry)
-
-        geometry_collection = GeometryCollection(geometries)
-
-        center = geometry_collection.centroid
-
+        polygons_count = geometry_collection.num_geom
         MAX_POLYGONS = 20
-        if len(geometries) > MAX_POLYGONS:
+        if polygons_count > MAX_POLYGONS:
             raise ValidationError(
                 {
                     "file": f"AOI should not have more than {MAX_POLYGONS} polygons",
                 },
             )
 
-        area_m2: float = 0
-        for geom in geometries:
-            # NOTE: srid=6933 for area calculation globally
-            transformed_geom = geom.transform(6933, clone=True)
-            area_m2 += transformed_geom.area
+        area_m2: float = geometry_collection.transform(6933, clone=True).area
         area_km2 = area_m2 / 1000_000
-
         # NOTE: Using zoom 14 to calculate max area using formulae: 5 * (4 ** (23 - zoom_level))
         # This area is almost equal to size of Peru
         MAX_AOI_GEOMETRY_AREA = 1310720
@@ -457,6 +475,8 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
                     "file": f"Area for AOI Geometry must be less than {MAX_AOI_GEOMETRY_AREA} sq. km",
                 },
             )
+
+        center = geometry_collection.centroid
 
         asset_specifics = {
             "aoi_geometry": {
