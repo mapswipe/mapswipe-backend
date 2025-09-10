@@ -1,20 +1,21 @@
 import typing
 
+from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import ProjectTypeEnum
 from apps.tutorial.models import Tutorial, TutorialTask
 from project_types.base import tutorial as base_tutorial
 from project_types.street.project import StreetProjectProperty
-from utils.geo.transform import convert_json_str_to_wkt
+from utils import fields as custom_fields
 
 
 class StreetTutorialTaskProperty(base_tutorial.BaseTutorialTaskProperty):
-    # FIXME(tnagorra): Use geometry from TutorialTask
-    object_geometry: str
+    mapillary_image_id: custom_fields.PydanticLongText
+    # NOTE: geometry is not used but we are saving this for the records
+    geometry: str
 
 
-# TODO(susilnem): This is not finalized
 class StreetTutorial(
     base_tutorial.BaseTutorial[
         StreetProjectProperty,
@@ -28,19 +29,24 @@ class StreetTutorial(
         super().__init__(tutorial)
 
     @typing.override
+    def compress_tasks_on_firebase(self) -> bool:
+        return True
+
+    @typing.override
     def get_task_specifics_for_firebase(self, task: TutorialTask, index: int):
-        task_specifics = self.tutorial_task_property_class(
-            **task.project_type_specifics,
-        )
-
-        geometry_wkt = convert_json_str_to_wkt(task_specifics.object_geometry)
-
+        task_specifics = self.tutorial_task_property_class.model_validate(task.project_type_specifics)
         return firebase_models.FbStreetTutorialTask(
-            taskId=f"t{index}",
-            geometry=geometry_wkt,
-            screen=task.scenario.scenario_page_number,
+            projectId=self.tutorial.firebase_id,
+            groupId=self.get_tutorial_group_key(),
+            taskId=task_specifics.mapillary_image_id,
+            geometry="",
             referenceAnswer=task.reference,
+            screen=task.scenario.scenario_page_number,
         )
+
+    @typing.override
+    def get_group_specifics_for_firebase(self):
+        return firebase_ext_models.FbEmptyModel()
 
     @typing.override
     def get_tutorial_specifics_for_firebase(self):
@@ -50,7 +56,6 @@ class StreetTutorial(
         assert projectType == 7, "Project Street should be 7"
 
         return firebase_models.FbStreetTutorial(
-            zoomLevel=14,
             projectType=projectType,
             customOptions=[
                 firebase_models.FbObjCustomOption(
