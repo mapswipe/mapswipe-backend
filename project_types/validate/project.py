@@ -9,7 +9,6 @@ from django.core.files.base import ContentFile
 from django.db import models
 from geojson_pydantic import Feature, FeatureCollection
 from geojson_pydantic.geometries import MultiPolygon, Polygon
-from osgeo import ogr
 from pydantic import BaseModel, ValidationError, field_validator, model_validator
 from pyfirebase_mapswipe import models as firebase_models
 from ulid import ULID
@@ -35,6 +34,7 @@ from utils.asset_types.models import AoiGeometryAssetProperty
 from utils.common import Grouping, clean_up_none_keys, to_groups
 from utils.custom_options.models import CustomOption
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
+from utils.geo.transform import convert_feature_to_wkt
 
 logger = logging.getLogger(__name__)
 
@@ -274,17 +274,9 @@ class ValidateProject(
 
         for i, f_id in enumerate(f_ids):
             feature = features[i]
+            geometry_str = convert_feature_to_wkt(feature)
 
-            if feature.geometry is not None:
-                geom = ogr.CreateGeometryFromJson(
-                    feature.geometry.model_dump_json(),
-                )
-
-                if geom.GetCoordinateDimension() == 3:
-                    geom.FlattenTo2D()
-
-                geometry_str = geom.ExportToWkt()
-
+            if geometry_str is not None:
                 bulk_mgr.add(
                     ProjectTask(
                         firebase_id=f"t{f_id}",

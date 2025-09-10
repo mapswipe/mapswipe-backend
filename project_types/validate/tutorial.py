@@ -2,7 +2,6 @@ import json
 import logging
 import typing
 
-from osgeo import ogr
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 
@@ -10,6 +9,7 @@ from apps.project.models import ProjectTypeEnum
 from apps.tutorial.models import Tutorial, TutorialTask
 from project_types.base import tutorial as base_tutorial
 from project_types.base.tutorial import BaseTutorialTaskProperty
+from utils.geo.transform import convert_json_str_to_wkt
 
 from .project import ValidateProjectProperty
 
@@ -44,8 +44,7 @@ class ValidateTutorial(
         task_specifics = self.tutorial_task_property_class.model_validate(task.project_type_specifics)
 
         geojson = json.loads(task_specifics.object_geometry)
-        geometry_ogr = ogr.CreateGeometryFromJson(task_specifics.object_geometry)
-        geometry_wkt = geometry_ogr.ExportToWkt()
+        geometry_wkt = convert_json_str_to_wkt(task_specifics.object_geometry)
 
         return firebase_models.FbValidateTutorialTask(
             taskId=f"t{index}",

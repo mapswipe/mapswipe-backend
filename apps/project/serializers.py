@@ -2,13 +2,10 @@ import json
 import typing
 
 import pydantic
-from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, Point, Polygon
+from django.contrib.gis.geos import Point, Polygon
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import gettext
-from geojson_pydantic import Feature, FeatureCollection
-from geojson_pydantic.geometries import MultiPolygon as PydanticMultiPolygon
-from geojson_pydantic.geometries import Polygon as PydanticPolygon
 from rest_framework import serializers
 
 from apps.common.models import AssetMimetypeEnum, FirebasePushStatusEnum
@@ -19,6 +16,7 @@ from apps.tutorial.models import Tutorial
 from project_types.store import get_project_property, get_project_type_handler
 from utils.asset_types.models import AoiGeometryAssetProperty, ObjectImageAssetProperty
 from utils.common import clean_up_none_keys
+from utils.geo.transform import convert_json_dict_to_geometry_collection
 from utils.graphql.drf import handle_pydantic_validation_error
 
 from .models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
@@ -383,7 +381,6 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
             "asset_type_specifics",
         )
 
-    # FIXME(tnagorra): Add validation for all input types here
     def _validate_aoi_geometry(
         self,
         attrs: dict[str, typing.Any],
@@ -413,43 +410,26 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
                 },
             ) from e
 
-        AoiGeometryFeature = Feature[PydanticPolygon | PydanticMultiPolygon, dict]
-        AoiGeometryFeatureCollection = FeatureCollection[AoiGeometryFeature]
-
-        feature_collection = AoiGeometryFeatureCollection.model_validate(geojson_data)
-        if len(feature_collection.features) > 20:
+        try:
+            geometry_collection = convert_json_dict_to_geometry_collection(geojson_data)
+        except Exception as e:
             raise ValidationError(
                 {
-                    "file": "AOI Geometry must have at max 20 features",
+                    "file": "Invalid feature collection",
                 },
-            )
+            ) from e
 
-        geometries: list[GEOSGeometry] = []
-        for feature in feature_collection.features:
-            if not feature.geometry:
-                continue
-            geometry = GEOSGeometry(feature.geometry.model_dump_json(), srid=4326)
-            geometries.append(geometry)
-
-        geometry_collection = GeometryCollection(geometries)
-
-        center = geometry_collection.centroid
-
+        polygons_count = geometry_collection.num_geom
         MAX_POLYGONS = 20
-        if len(geometries) > MAX_POLYGONS:
+        if polygons_count > MAX_POLYGONS:
             raise ValidationError(
                 {
                     "file": f"AOI should not have more than {MAX_POLYGONS} polygons",
                 },
             )
 
-        area_m2: float = 0
-        for geom in geometries:
-            # NOTE: srid=6933 for area calculation globally
-            transformed_geom = geom.transform(6933, clone=True)
-            area_m2 += transformed_geom.area
+        area_m2: float = geometry_collection.transform(6933, clone=True).area
         area_km2 = area_m2 / 1000_000
-
         # NOTE: Using zoom 14 to calculate max area using formulae: 5 * (4 ** (23 - zoom_level))
         # This area is almost equal to size of Peru
         MAX_AOI_GEOMETRY_AREA = 1310720
@@ -459,6 +439,8 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
                     "file": f"Area for AOI Geometry must be less than {MAX_AOI_GEOMETRY_AREA} sq. km",
                 },
             )
+
+        center = geometry_collection.centroid
 
         asset_specifics = {
             "aoi_geometry": {

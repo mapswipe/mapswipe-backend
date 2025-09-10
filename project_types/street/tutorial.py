@@ -1,15 +1,16 @@
 import typing
 
-from osgeo import ogr
 from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import ProjectTypeEnum
 from apps.tutorial.models import Tutorial, TutorialTask
 from project_types.base import tutorial as base_tutorial
 from project_types.street.project import StreetProjectProperty
+from utils.geo.transform import convert_json_str_to_wkt
 
 
 class StreetTutorialTaskProperty(base_tutorial.BaseTutorialTaskProperty):
+    # FIXME(tnagorra): Use geometry from TutorialTask
     object_geometry: str
 
 
@@ -32,8 +33,7 @@ class StreetTutorial(
             **task.project_type_specifics,
         )
 
-        geometry_ogr = ogr.CreateGeometryFromJson(task_specifics.object_geometry)
-        geometry_wkt = geometry_ogr.ExportToWkt()
+        geometry_wkt = convert_json_str_to_wkt(task_specifics.object_geometry)
 
         return firebase_models.FbStreetTutorialTask(
             taskId=f"t{index}",

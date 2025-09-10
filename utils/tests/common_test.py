@@ -14,7 +14,6 @@ from utils.common import (
     gzip_str,
     parse_b64gzjson_to_dict,
     recursively_find_value,
-    validate_geojson_file,
     validate_imagery_url,
     validate_ulid,
 )
@@ -24,6 +23,7 @@ from utils.fields import (
     _validate_vector_tile_url,  # type: ignore[reportPrivateUsage]
     validate_percentage,
 )
+from utils.geo.transform import validate_geojson_file
 
 
 class TestUtils(TestCase):
