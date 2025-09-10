@@ -206,7 +206,7 @@ class BaseProject[
                 "Project can only be processed if current state is 'Ready to Process'",
             )
 
-        logger.info("%s - start creating a project", self.project.pk)
+        logger.info("project:%s - start creating a project", self.project.pk)
 
         self.prepare()
         resp = self.validate()
@@ -218,13 +218,23 @@ class BaseProject[
         try:
             self._process_project()
         except Exception as ex:
-            # TODO(tnagorra): Handle ValidationException: should send message to users
-            logger.error(
-                "process_project failed",
-                extra=log_extra({"project": self.project.pk}),
-                exc_info=True,
-            )
-            self.project.status_message = str(ex) if isinstance(ex, ValidationException) else None
+            if isinstance(ex, ValidationException):
+                logger.warning(
+                    "process_project failed",
+                    extra=log_extra({"project": self.project.pk}),
+                    exc_info=True,
+                )
+                self.project.status_message = str(ex)
+            else:
+                logger.error(
+                    "process_project failed",
+                    extra=log_extra({"project": self.project.pk}),
+                    exc_info=True,
+                )
+                self.project.status_message = (
+                    "Something unexpected happened! Please reach out on the MapSwipe slack for any further assistance."
+                )
+
             self.project.update_status(Project.Status.PROCESSING_FAILED, False)
             self.project.save(
                 update_fields=[
@@ -473,13 +483,23 @@ class BaseProject[
         try:
             self._push_project_on_firebase()
         except Exception as ex:
-            # TODO(tnagorra): Handle ValidationError separately
-            logger.error(
-                "push_to_firebase for project failed",
-                extra=log_extra({"project": self.project.pk}),
-                exc_info=True,
-            )
-            self.project.status_message = str(ex) if isinstance(ex, ValidationException) else None
+            if isinstance(ex, ValidationException):
+                logger.warning(
+                    "push_to_firebase for project failed",
+                    extra=log_extra({"project": self.project.pk}),
+                    exc_info=True,
+                )
+                self.project.status_message = str(ex)
+            else:
+                logger.error(
+                    "push_to_firebase for project failed",
+                    extra=log_extra({"project": self.project.pk}),
+                    exc_info=True,
+                )
+                self.project.status_message = (
+                    "Something unexpected happened! Please reach out on the MapSwipe slack for any further assistance."
+                )
+
             self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED, False)
             # TODO(tnagorra): We also need to clear any intermediate values for groups, tasks and projects in firebase
             # NOTE: If project has already been published, we cannot update it's status
