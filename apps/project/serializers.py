@@ -119,7 +119,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
 
         # NOTE: If tutorial is provided, project attached to the tutorial should match the current project type
         if tutorial and tutorial.project and tutorial.project.project_type_enum != self.instance.project_type_enum:
-            raise serializers.ValidationError("Tutorial project type does not match the project type.")
+            raise serializers.ValidationError(gettext("Tutorial project type does not match the project type."))
 
         # FIXME(tnagorra): We should also check if the parameters are the same. eg. zoomLevel, ...
         return tutorial
@@ -248,7 +248,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
                 except json.JSONDecodeError as e:
                     raise serializers.ValidationError(
                         {
-                            "file": "Invalid JSON format in the AOI file.",
+                            "file": gettext("Invalid JSON format in the AOI file."),
                         },
                     ) from e
 
@@ -257,7 +257,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
                 except Exception as e:
                     raise serializers.ValidationError(
                         {
-                            "file": "Invalid AOI Feature Collection",
+                            "file": gettext("Invalid AOI Feature Collection"),
                         },
                     ) from e
 
@@ -637,7 +637,7 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
             new_status = Project.Status(new_status)
 
         # NOTE: This check should technically never be called.
-        if new_status == Project.Status.PUBLISHED and not self.instance.project_instruction:
+        if new_status == Project.Status.READY_TO_PROCESS and not self.instance.project_instruction:
             raise serializers.ValidationError(
                 {
                     "project_instruction": gettext("Project instruction is required."),
