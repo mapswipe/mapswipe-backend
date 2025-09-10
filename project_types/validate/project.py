@@ -228,7 +228,10 @@ class ValidateProject(
             proj_aoi_geometry.geometry = hull
             proj_aoi_geometry.total_area = area_km2
             proj_aoi_geometry.save()
-        self.project.save(update_fields=["aoi_geometry"])
+        self.project.total_area = area_km2
+        self.project.bbox = hull_bbox
+        self.project.centroid = hull_center
+        self.project.save(update_fields=["aoi_geometry", "total_area", "bbox", "centroid"])
 
         return features
 
@@ -289,7 +292,10 @@ class ValidateProject(
             proj_aoi_geometry.geometry = geometry
             proj_aoi_geometry.total_area = area_km2
             proj_aoi_geometry.save()
-        self.project.save(update_fields=["aoi_geometry"])
+        self.project.total_area = area_km2
+        self.project.bbox = geometry_bbox
+        self.project.centroid = geometry_center
+        self.project.save(update_fields=["aoi_geometry", "total_area", "bbox", "centroid"])
 
         geojson_result = self._get_object_geometry_from_ohsome(aoi_geojson)
 

@@ -229,6 +229,10 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
 
             proj.aoi_geometry_input_asset = aoi_geom_asset
 
+            total_area = 0
+            bbox = None
+            centroid = None
+
             if aoi_geom_asset:
                 asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_geom_asset.asset_type_specifics)
 
@@ -278,6 +282,10 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
                 if proj_aoi_geometry:
                     proj_aoi_geometry.delete()
 
+            # FIXME(tnagorra): remove these later
+            proj.total_area = total_area
+            proj.bbox = bbox
+            proj.centroid = centroid
             proj.save(update_fields=["aoi_geometry", "aoi_geometry_input_asset", "total_area"])
 
         return proj
