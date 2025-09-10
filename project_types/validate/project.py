@@ -7,11 +7,8 @@ import requests
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
 from django.db import models
-from geojson_pydantic import Feature as PydanticFeature
 from geojson_pydantic import FeatureCollection as PydanticFeatureCollection
-from geojson_pydantic.geometries import MultiPolygon as PydanticMultiPolygon
-from geojson_pydantic.geometries import Polygon as PydanticPolygon
-from pydantic import BaseModel, ValidationError, field_validator, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 from pyfirebase_mapswipe import models as firebase_models
 from ulid import ULID
 
@@ -20,6 +17,7 @@ from apps.common.models import (
     AssetTypeEnum,
 )
 from apps.project.models import (
+    Geometry,
     Project,
     ProjectAsset,
     ProjectAssetInputTypeEnum,
@@ -36,12 +34,16 @@ from utils.asset_types.models import AoiGeometryAssetProperty
 from utils.common import Grouping, clean_up_none_keys, to_groups
 from utils.custom_options.models import CustomOption
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
-from utils.geo.transform import convert_feature_to_wkt
+from utils.geo.transform import (
+    AoiFeature,
+    convert_feature_to_wkt,
+    convert_json_dict_to_features,
+    convert_json_dict_to_geometry_collection,
+    get_area_of_geometry,
+    get_polygon_of_extent,
+)
 
 logger = logging.getLogger(__name__)
-
-
-class ValidFeature(PydanticFeature[PydanticPolygon | PydanticMultiPolygon, dict[str, Any]]): ...
 
 
 class ValidateObjectSourceTypeEnum(models.TextChoices):
@@ -116,8 +118,8 @@ class ValidateProject(
         ValidateProjectProperty,
         ValidateProjectTaskGroupProperty,
         ValidateProjectTaskProperty,
-        list[ValidFeature],
-        Grouping[ValidFeature],
+        list[AoiFeature],
+        Grouping[AoiFeature],
     ],
 ):
     project_property_class = ValidateProjectProperty
@@ -140,20 +142,6 @@ class ValidateProject(
             input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
             project_id=self.project.pk,
         )
-
-    def _process_polygons(self, geojson_data: dict[str, Any]) -> list[ValidFeature]:
-        """We only want polygon and multipolygon features."""
-        try:
-            fc = PydanticFeatureCollection.model_validate(geojson_data)
-        except ValidationError as e:
-            raise base_project.ValidationException("Invalid GeoJSON FeatureCollection") from e
-
-        polygon_types = (PydanticPolygon, PydanticMultiPolygon)
-        filtered_features: list[ValidFeature] = [
-            feature for feature in fc.features if isinstance(feature.geometry, polygon_types)
-        ]
-
-        return filtered_features
 
     def _get_object_geometry_from_ohsome(self, geojson: dict):
         feature_collection = PydanticFeatureCollection.model_validate(geojson)
@@ -189,7 +177,12 @@ class ValidateProject(
 
         geojson_result = self._get_object_geometry_from_ohsome(aoi_geojson)
 
-        return self._process_polygons(geojson_data=geojson_result)
+        # TODO(tnagorra): Also store intermediate geometries?
+
+        try:
+            return convert_json_dict_to_features(geojson_result)
+        except Exception as e:
+            raise base_project.ValidationException("Invalid Feature Collection") from e
 
     def _validate_object_geojson_url(self):
         url = self.project_type_specifics.object_source.object_geojson_url
@@ -206,7 +199,38 @@ class ValidateProject(
         logger.info("Successfully fetched object geojson from %s", url)
         geojson = response.json()
 
-        return self._process_polygons(geojson)
+        try:
+            features, geometry_collection = convert_json_dict_to_geometry_collection(geojson)
+        except Exception as e:
+            raise base_project.ValidationException("Invalid Feature Collection") from e
+
+        # TODO(tnagorra): Also store intermediate geometries?
+        # TODO(tnagorra): Also create a input geometry?
+        hull = geometry_collection.convex_hull
+        hull_extent = hull.extent
+        hull_bbox = get_polygon_of_extent(hull_extent)
+        hull_center = hull.centroid
+        area_km2 = get_area_of_geometry(geometry_collection)
+
+        proj_aoi_geometry = self.project.aoi_geometry
+        if not proj_aoi_geometry:
+            aoi_geometry = Geometry(
+                bbox=hull_bbox,
+                centroid=hull_center,
+                geometry=hull,
+                total_area=area_km2,
+            )
+            aoi_geometry.save()
+            self.project.aoi_geometry = aoi_geometry
+        else:
+            proj_aoi_geometry.bbox = hull_bbox
+            proj_aoi_geometry.centroid = hull_center
+            proj_aoi_geometry.geometry = hull
+            proj_aoi_geometry.total_area = area_km2
+            proj_aoi_geometry.save()
+        self.project.save(update_fields=["aoi_geometry"])
+
+        return features
 
     def _validate_tasking_manager(self):
         hot_tm_id = self.project_type_specifics.object_source.tasking_manager_project_id
@@ -241,12 +265,41 @@ class ValidateProject(
             ],
         }
 
+        # TODO(tnagorra): Also create a input geometry?
+        # TODO(tnagorra): Also store intermediate geometries?
+        geometry = GEOSGeometry(aoi_result, srid=4326)
+        geometry_extent = geometry.extent
+        geometry_bbox = get_polygon_of_extent(geometry_extent)
+        geometry_center = geometry.centroid
+        area_km2 = get_area_of_geometry(geometry)
+
+        proj_aoi_geometry = self.project.aoi_geometry
+        if not proj_aoi_geometry:
+            aoi_geometry = Geometry(
+                bbox=geometry_bbox,
+                centroid=geometry_center,
+                geometry=geometry,
+                total_area=area_km2,
+            )
+            aoi_geometry.save()
+            self.project.aoi_geometry = aoi_geometry
+        else:
+            proj_aoi_geometry.bbox = geometry_bbox
+            proj_aoi_geometry.centroid = geometry_center
+            proj_aoi_geometry.geometry = geometry
+            proj_aoi_geometry.total_area = area_km2
+            proj_aoi_geometry.save()
+        self.project.save(update_fields=["aoi_geometry"])
+
         geojson_result = self._get_object_geometry_from_ohsome(aoi_geojson)
 
-        return self._process_polygons(geojson_data=geojson_result)
+        try:
+            return convert_json_dict_to_features(geojson_result)
+        except Exception as e:
+            raise base_project.ValidationException("Invalid Feature Collection") from e
 
     @typing.override
-    def validate(self) -> list[ValidFeature]:
+    def validate(self) -> list[AoiFeature]:
         """Validate project before creating groups."""
         self.project.update_processing_status(Project.ProcessingStatus.VALIDATING_GEOMETRY, True)
 
@@ -254,17 +307,15 @@ class ValidateProject(
             return self._validate_aoi_geojson_file()
 
         if self.project_type_specifics.object_source.source_type == ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL:
-            # TODO: Create an AOI using convex hull
             return self._validate_object_geojson_url()
 
         if self.project_type_specifics.object_source.source_type == ValidateObjectSourceTypeEnum.TASKING_MANAGER:
-            # TODO: Create an AOI from HOT
             return self._validate_tasking_manager()
 
         raise Exception("Invalid object source type")
 
     @typing.override
-    def create_tasks(self, group: ProjectTaskGroup, raw_group: Grouping[ValidFeature]) -> int:
+    def create_tasks(self, group: ProjectTaskGroup, raw_group: Grouping[AoiFeature]) -> int:
         """Create tasks for a group."""
         bulk_mgr = BulkCreateManager(chunk_size=1000)
 
@@ -296,7 +347,7 @@ class ValidateProject(
         return tasks_count
 
     @typing.override
-    def create_groups(self, resp: list[ValidFeature]):
+    def create_groups(self, resp: list[AoiFeature]):
         self.project.update_processing_status(Project.ProcessingStatus.GENERATING_GROUPS_AND_TASKS, True)
         raw_groups = to_groups(resp, self.project.group_size)
 

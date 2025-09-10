@@ -2,8 +2,7 @@ import json
 import typing
 
 import pydantic
-from django.contrib.gis.geos import Point, Polygon
-from django.core.exceptions import ValidationError
+from django.contrib.gis.geos import Point
 from django.db import transaction
 from django.utils.translation import gettext
 from rest_framework import serializers
@@ -16,7 +15,7 @@ from apps.tutorial.models import Tutorial
 from project_types.store import get_project_property, get_project_type_handler
 from utils.asset_types.models import AoiGeometryAssetProperty, ObjectImageAssetProperty
 from utils.common import clean_up_none_keys
-from utils.geo.transform import convert_json_dict_to_geometry_collection
+from utils.geo.transform import convert_json_dict_to_geometry_collection, get_area_of_geometry, get_polygon_of_extent
 from utils.graphql.drf import handle_pydantic_validation_error
 
 from .models import Geometry, Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
@@ -236,16 +235,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
                 lng, lat = asset_specific_data.center
                 centroid = Point(lng, lat)
 
-                min_lng, min_lat, max_lng, max_lat = asset_specific_data.bbox
-                bbox = Polygon(
-                    (
-                        (min_lng, min_lat),
-                        (min_lng, max_lat),
-                        (max_lng, max_lat),
-                        (max_lng, min_lat),
-                        (min_lng, min_lat),
-                    ),
-                )
+                bbox = get_polygon_of_extent(asset_specific_data.bbox)
 
                 total_area = asset_specific_data.area
 
@@ -259,7 +249,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
                     ) from e
 
                 try:
-                    geometry_collection = convert_json_dict_to_geometry_collection(geojson_data)
+                    features, geometry_collection = convert_json_dict_to_geometry_collection(geojson_data)
                 except Exception as e:
                     raise serializers.ValidationError(
                         {
@@ -424,14 +414,14 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
     ) -> None:
         file: ContentFile[bytes] | None = attrs.get("file")
         if not file:
-            raise ValidationError(
+            raise serializers.ValidationError(
                 {
                     "file": "Required field file is not provided.",
                 },
             )
 
         if not mimetype or mimetype not in [AssetMimetypeEnum.JSON, AssetMimetypeEnum.GEOJSON, AssetMimetypeEnum.PLAINTEXT]:
-            raise ValidationError(
+            raise serializers.ValidationError(
                 {
                     "file": "Mimetype is should either be a Text, JSON or GeoJSON",
                 },
@@ -440,16 +430,16 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         try:
             geojson_data = json.load(file)
         except json.JSONDecodeError as e:
-            raise ValidationError(
+            raise serializers.ValidationError(
                 {
                     "file": "Invalid JSON format in the file.",
                 },
             ) from e
 
         try:
-            geometry_collection = convert_json_dict_to_geometry_collection(geojson_data)
+            features, geometry_collection = convert_json_dict_to_geometry_collection(geojson_data)
         except Exception as e:
-            raise ValidationError(
+            raise serializers.ValidationError(
                 {
                     "file": "Invalid feature collection",
                 },
@@ -458,19 +448,18 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         polygons_count = geometry_collection.num_geom
         MAX_POLYGONS = 20
         if polygons_count > MAX_POLYGONS:
-            raise ValidationError(
+            raise serializers.ValidationError(
                 {
                     "file": f"AOI should not have more than {MAX_POLYGONS} polygons",
                 },
             )
 
-        area_m2: float = geometry_collection.transform(6933, clone=True).area
-        area_km2 = area_m2 / 1000_000
+        area_km2 = get_area_of_geometry(geometry_collection)
         # NOTE: Using zoom 14 to calculate max area using formulae: 5 * (4 ** (23 - zoom_level))
         # This area is almost equal to size of Peru
         MAX_AOI_GEOMETRY_AREA = 1310720
         if area_km2 > MAX_AOI_GEOMETRY_AREA:
-            raise ValidationError(
+            raise serializers.ValidationError(
                 {
                     "file": f"Area for AOI Geometry must be less than {MAX_AOI_GEOMETRY_AREA} sq. km",
                 },
@@ -495,7 +484,7 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
     ) -> None:
         file: ContentFile[bytes] | None = attrs.get("file")
         if not file:
-            raise ValidationError(
+            raise serializers.ValidationError(
                 {
                     "file": "Required field file is not provided.",
                 },
@@ -506,7 +495,7 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
             AssetMimetypeEnum.IMAGE_JPEG,
             AssetMimetypeEnum.IMAGE_PNG,
         ]:
-            raise ValidationError(
+            raise serializers.ValidationError(
                 {
                     "file": "Mimetype is should either be a Jpeg, Png or Gif",
                 },
@@ -526,7 +515,7 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
             AssetMimetypeEnum.IMAGE_JPEG,
             AssetMimetypeEnum.IMAGE_PNG,
         ]:
-            raise ValidationError(
+            raise serializers.ValidationError(
                 {
                     "file": "Mimetype is should either be a Jpeg, Png or Gif",
                 },
