@@ -6,14 +6,14 @@ import json5
 from django.conf import settings
 from ulid import ULID
 
-from apps.common.utils import decode_tasks, remove_object_keys
+from apps.common.utils import remove_object_keys
 from apps.contributor.factories import ContributorUserFactory
 from apps.user.factories import UserFactory
 from main.config import Config
 from main.tests import TestCase
 
 
-class TestStreetProjectE2E(TestCase):
+class TestValidateImageProjectE2E(TestCase):
     class Mutation:
         CREATE_PROJECT = """
         mutation CreateProject($data: ProjectCreateInput!) {
@@ -243,13 +243,12 @@ class TestStreetProjectE2E(TestCase):
             contributor_user=cls.contributor_user,
         )
 
-    def test_street_project_e2e(self):
+    def test_validate_image_project_e2e(self):
         self._test_project(
-            "assets/tests/projects/street/project_data.json5",
+            "assets/tests/projects/validate_image/project_data.json5",
         )
 
     # TODO(susilnem): Add more test with filters
-
     def _test_project(self, filename: str):
         self.force_login(self.user)
 
@@ -260,7 +259,7 @@ class TestStreetProjectE2E(TestCase):
 
         # Define full path for image and AOI files
         image_filename = Path(settings.BASE_DIR) / test_data["assets"]["image"]
-        aoi_geometry_filename = Path(settings.BASE_DIR) / test_data["assets"]["aoi"]
+        coco_filename = Path(settings.BASE_DIR) / test_data["assets"]["coco_dataset"]
 
         # Load Project data initially.
         create_project_data = test_data["create_project"]
@@ -332,24 +331,35 @@ class TestStreetProjectE2E(TestCase):
         update_project_data["requestingOrganization"] = organization_id
         update_project_data["image"] = image_id
 
-        # Create GeoJSON Asset for AOI Geometry
-        aoi_asset_data = {
-            "clientId": str(ULID()),
-            "inputType": "AOI_GEOMETRY",
-            "project": project_id,
-        }
-        with aoi_geometry_filename.open("rb") as geo_file:
-            aoi_content = self.query_check(
-                self.Mutation.UPLOAD_PROJECT_ASSET,
-                variables={"data": aoi_asset_data},
-                files={"geoFile": geo_file},
-                map={"geoFile": ["variables.data.file"]},
-            )
-        aoi_response = aoi_content["data"]["createProjectAsset"]
-        assert aoi_response is not None, "AOI create response is None"
-        assert aoi_response["ok"]
-        aoi_id = aoi_response["result"]["id"]
-        update_project_data["projectTypeSpecifics"]["street"]["aoiGeometry"] = aoi_id
+        # Create COCO dataset assets
+        if update_project_data["projectTypeSpecifics"]["validateImage"]["sourceType"] == "DATASET_FILE":
+            with coco_filename.open("r", encoding="utf-8") as f:
+                coco_data = json5.load(f)
+                for image in iter(coco_data["images"]):
+                    aoi_asset_data = {
+                        "clientId": str(ULID()),
+                        "inputType": "OBJECT_IMAGE",
+                        "project": project_id,
+                        "assetTypeSpecifics": {
+                            "objectImage": {
+                                "image": {
+                                    "cocoUrl": image["coco_url"],
+                                    "fileName": image["file_name"],
+                                    "height": image["height"],
+                                    "id": str(image["id"]),
+                                    "width": image["width"],
+                                },
+                            },
+                        },
+                        "externalUrl": image["coco_url"],
+                    }
+                    aoi_content = self.query_check(
+                        self.Mutation.UPLOAD_PROJECT_ASSET,
+                        variables={"data": aoi_asset_data},
+                    )
+                    aoi_response = aoi_content["data"]["createProjectAsset"]
+                    assert aoi_response is not None, "AOI create response is None"
+                    assert aoi_response["ok"]
 
         with self.captureOnCommitCallbacks(execute=True):
             update_content = self.query_check(
@@ -409,7 +419,7 @@ class TestStreetProjectE2E(TestCase):
         # Publish Tutorial
         publish_tutorial_data = {
             "clientId": tutorial_client_id,
-            "status": "PUBLISHED",
+            "status": "READY_TO_PUBLISH",
         }
         with self.captureOnCommitCallbacks(execute=True):
             publish_tutorial_content = self.query_check(
@@ -419,7 +429,7 @@ class TestStreetProjectE2E(TestCase):
         publish_tutorial_response = publish_tutorial_content["data"]["updateTutorialStatus"]
         assert publish_tutorial_response["ok"], publish_tutorial_response["errors"]
         assert publish_tutorial_response is not None, "Processed tutorial publish response is None"
-        assert publish_tutorial_response["result"]["status"] == "PUBLISHED", "tutorial should be published"
+        assert publish_tutorial_response["result"]["status"] == "READY_TO_PUBLISH", "tutorial should be ready to published"
 
         # CHECK TUTORIAL, GROUP AND TASK CREATED IN FIREBASE
 
@@ -453,24 +463,17 @@ class TestStreetProjectE2E(TestCase):
         tutorial_tasks_ref = self.firebase_helper.ref(f"/v2/tasks/{tutorial_fb_id}/")
         tutorial_task_fb_data = tutorial_tasks_ref.get()
 
-        ignored_task_keys: set[str] = {"projectId"}
-        sanitized_tutorial_tasks_actual: list[dict[str, typing.Any]] = []
-        sanitized_tutorial_tasks_expected: list[dict[str, typing.Any]] = []
+        if tutorial_task_fb_data:
+            for groups in iter(tutorial_task_fb_data.values()):  # type: ignore[reportAttributeAccessIssue]
+                for task in groups:
+                    assert task["projectId"] == tutorial_fb_id, "Field 'projectId' of each task should match firebaseId"
 
-        for group in iter(tutorial_task_fb_data.values()):  # type: ignore[reportAttributeAccessIssue]
-            for task_fb in decode_tasks(group):
-                sanitized_tutorial_tasks_actual.append(remove_object_keys(task_fb, ignored_task_keys))  # type: ignore[reportGeneralTypeIssues]
+        ignored_task_keys = {"projectId"}
+        sanitized_tasks_actual = remove_object_keys(tutorial_task_fb_data, ignored_task_keys)
+        sanitized_tasks_expected = remove_object_keys(test_data["expected_tutorial_tasks_data"], ignored_task_keys)
 
-        for group in iter(test_data["expected_tutorial_tasks_data"].values()):
-            for task in decode_tasks(group):
-                sanitized_tutorial_tasks_expected.append(remove_object_keys(task, ignored_task_keys))  # type: ignore[reportGeneralTypeIssues]
-
-        # Sorting and comparing tasks
-        sanitized_tasks_actual_sorted = sorted(sanitized_tutorial_tasks_actual, key=lambda t: t["taskId"])
-        sanitized_tasks_expected_sorted = sorted(sanitized_tutorial_tasks_expected, key=lambda t: t["taskId"])
-
-        assert sanitized_tasks_actual_sorted == sanitized_tasks_expected_sorted, (
-            "Differences found between expected and actual tasks on tutorial in firebase."
+        assert sanitized_tasks_actual == sanitized_tasks_expected, (
+            "Differences found between expected and actual tasks in firebase."
         )
 
         # Update processed project
@@ -489,7 +492,7 @@ class TestStreetProjectE2E(TestCase):
         # Publish project
         publish_project_data = {
             "clientId": project_client_id,
-            "status": "PUBLISHED",
+            "status": "READY_TO_PUBLISH",
         }
         with self.captureOnCommitCallbacks(execute=True):
             publish_project_content = self.query_check(
@@ -499,7 +502,7 @@ class TestStreetProjectE2E(TestCase):
         publish_project_response = publish_project_content["data"]["updateProjectStatus"]
         assert publish_project_response["ok"], publish_project_response["errors"]
         assert publish_project_response is not None, "Processed project publish response is None"
-        assert publish_project_response["result"]["status"] == "PUBLISHED", "Project should be published"
+        assert publish_project_response["result"]["status"] == "READY_TO_PUBLISH", "Project should be ready to published"
 
         # CHECK PROJECT, GROUP AND TASK CREATED IN FIREBASE
 
@@ -537,9 +540,8 @@ class TestStreetProjectE2E(TestCase):
         assert filtered_group_actual == filtered_group_expected, "Difference found for group data on project in firebase."
 
         # Check tasks in firebase
-        tasks_ref = self.firebase_helper.ref(Config.FirebaseKeys.project_tasks(project_fb_id))
-        project_tasks_fb_data = tasks_ref.get()
-
+        project_tasks_ref = self.firebase_helper.ref(f"/v2/tasks/{project_fb_id}/")
+        project_tasks_fb_data = project_tasks_ref.get()
         if project_tasks_fb_data:
             for groups in iter(project_tasks_fb_data.values()):  # type: ignore[reportAttributeAccessIssue]
                 for task in groups:

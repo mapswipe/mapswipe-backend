@@ -8,7 +8,6 @@ from ulid import ULID
 
 from apps.common.utils import decode_tasks, remove_object_keys
 from apps.contributor.factories import ContributorUserFactory
-from apps.tutorial.factories import TutorialFactory
 from apps.user.factories import UserFactory
 from main.config import Config
 from main.tests import TestCase
@@ -243,10 +242,6 @@ class TestValidateProjectE2E(TestCase):
         cls.user = UserFactory.create(
             contributor_user=cls.contributor_user,
         )
-        cls.user_resource_kwargs = dict(
-            created_by=cls.user,
-            modified_by=cls.user,
-        )
 
     def test_validate_project_e2e(self):
         self._test_project(
@@ -370,7 +365,7 @@ class TestValidateProjectE2E(TestCase):
         # Process project
         process_project_data = {
             "clientId": project_client_id,
-            "status": "MARKED_AS_READY",
+            "status": "READY_TO_PROCESS",
         }
         with self.captureOnCommitCallbacks(execute=True):
             process_project_content = self.query_check(
@@ -380,7 +375,7 @@ class TestValidateProjectE2E(TestCase):
         process_project_response = process_project_content["data"]["updateProjectStatus"]
         assert process_project_response is not None, "Project mark as ready response is None"
         assert process_project_response["ok"], process_project_response["errors"]
-        assert process_project_response["result"]["status"] == "MARKED_AS_READY", "Project should be marked as ready"
+        assert process_project_response["result"]["status"] == "READY_TO_PROCESS", "Project should be marked as ready"
 
         # Load Tutorial data initially.
         create_tutorial_data = test_data["create_tutorial"]
@@ -480,14 +475,10 @@ class TestValidateProjectE2E(TestCase):
         assert sanitized_tasks_actual_sorted == sanitized_tasks_expected_sorted, (
             "Differences found between expected and actual tasks on tutorial in firebase."
         )
-        tutorial = TutorialFactory.create(
-            project_id=project_id,
-            **self.user_resource_kwargs,
-        )
 
         # Update processed project
         update_processed_project_data = test_data["update_processed_project"]
-        update_processed_project_data["tutorial"] = tutorial.id
+        update_processed_project_data["tutorial"] = tutorial_id
         update_processed_project_data["requestingOrganization"] = organization_id
         with self.captureOnCommitCallbacks(execute=True):
             update_processed_project_content = self.query_check(
@@ -519,13 +510,12 @@ class TestValidateProjectE2E(TestCase):
         project_fb_data = project_fb_ref.get()
 
         # Check project in firebase
-        # tutorial.refresh_from_db()
         assert project_fb_data is not None, "Project in firebase is None"
         assert isinstance(project_fb_data, dict), "Project in firebase should be a dictionary"
         assert project_fb_data["created"] is not None, "Field 'created' should be defined"
         assert datetime.fromisoformat(project_fb_data["created"]), "Field 'created' should be a timestamp"
         assert project_fb_data["projectId"] == project_fb_id, "Field 'projectId' should match firebaseId"
-        assert project_fb_data["tutorialId"] == tutorial.firebase_id, "Field 'tutorialId' should match tutorial's firebaseId"
+        assert project_fb_data["tutorialId"] == tutorial_fb_id, "Field 'tutorialId' should match tutorial's firebaseId"
         assert project_fb_data["createdBy"] == self.contributor_user.firebase_id, (
             "Field 'createdBy' should match contributor user's firebaseId"
         )
