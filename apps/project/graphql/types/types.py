@@ -10,7 +10,7 @@ from apps.common.graphql.types import (
     UserResourceTypeMixin,
 )
 from apps.contributor.graphql.types import ContributorTeamType
-from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum
+from apps.project.models import Geometry, Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum
 from apps.tutorial.graphql.types.types import TutorialType
 from main.config import Config
 from main.graphql.context import Info
@@ -35,6 +35,16 @@ from .project_types.find import FindProjectPropertyType
 from .project_types.street import StreetProjectPropertyType
 from .project_types.validate import ValidateProjectPropertyType
 from .project_types.validate_image import ValidateImageProjectPropertyType
+
+
+# Geometry
+@strawberry_django.type(Geometry)
+class GeometryType:
+    id: strawberry.ID
+    geometry: strawberry.auto
+    centroid: strawberry.auto
+    bbox: strawberry.auto
+    total_area: strawberry.auto
 
 
 # Organization
@@ -156,14 +166,13 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
     processing_status: strawberry.auto
     status_message: strawberry.auto
 
-    bbox: strawberry.auto
     total_area: strawberry.auto
-    centroid: strawberry.auto
     team: ContributorTeamType | None
     is_private: strawberry.auto
     required_results: strawberry.auto
     aoi_geometry_input_asset: ProjectAssetType | None
     project_type_specific_output_asset: ProjectAssetType | None
+    aoi_geometry: GeometryType | None
 
     progress_status: strawberry.auto
     progress: strawberry.auto

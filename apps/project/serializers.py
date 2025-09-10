@@ -19,7 +19,7 @@ from utils.common import clean_up_none_keys
 from utils.geo.transform import convert_json_dict_to_geometry_collection
 from utils.graphql.drf import handle_pydantic_validation_error
 
-from .models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
+from .models import Geometry, Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
 from .tasks import process_project_task, push_project_to_firebase
 
 if typing.TYPE_CHECKING:
@@ -232,11 +232,12 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
 
             if aoi_geom_asset:
                 asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_geom_asset.asset_type_specifics)
+
                 lng, lat = asset_specific_data.center
-                proj.centroid = Point(lng, lat)
+                centroid = Point(lng, lat)
 
                 min_lng, min_lat, max_lng, max_lat = asset_specific_data.bbox
-                proj.bbox = Polygon(
+                bbox = Polygon(
                     (
                         (min_lng, min_lat),
                         (min_lng, max_lat),
@@ -246,13 +247,48 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
                     ),
                 )
 
-                proj.total_area = asset_specific_data.area
-            else:
-                proj.centroid = None
-                proj.bbox = None
-                proj.total_area = None
+                total_area = asset_specific_data.area
 
-            proj.save(update_fields=["aoi_geometry_input_asset", "centroid", "bbox", "total_area"])
+                try:
+                    geojson_data = json.load(aoi_geom_asset.file)
+                except json.JSONDecodeError as e:
+                    raise serializers.ValidationError(
+                        {
+                            "file": "Invalid JSON format in the AOI file.",
+                        },
+                    ) from e
+
+                try:
+                    geometry_collection = convert_json_dict_to_geometry_collection(geojson_data)
+                except Exception as e:
+                    raise serializers.ValidationError(
+                        {
+                            "file": "Invalid AOI Feature Collection",
+                        },
+                    ) from e
+
+                proj_aoi_geometry = proj.aoi_geometry
+                if not proj_aoi_geometry:
+                    aoi_geometry = Geometry(
+                        bbox=bbox,
+                        centroid=centroid,
+                        geometry=geometry_collection,
+                        total_area=total_area,
+                    )
+                    aoi_geometry.save()
+                    proj.aoi_geometry = aoi_geometry
+                else:
+                    proj_aoi_geometry.bbox = bbox
+                    proj_aoi_geometry.centroid = centroid
+                    proj_aoi_geometry.geometry = geometry_collection
+                    proj_aoi_geometry.total_area = total_area
+                    proj_aoi_geometry.save()
+            else:
+                proj_aoi_geometry = proj.aoi_geometry
+                if proj_aoi_geometry:
+                    proj_aoi_geometry.delete()
+
+            proj.save(update_fields=["aoi_geometry", "aoi_geometry_input_asset", "total_area"])
 
         return proj
 
