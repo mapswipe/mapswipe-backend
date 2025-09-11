@@ -1,5 +1,61 @@
 # Changelog
 
+## [0.2.1-dev0](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev9..v0.2.1-dev0) - 2025-09-11
+### Changes:
+
+#### 🚀  Features
+
+- *(db)* Fixes - ([2330dfa](https://github.com/mapswipe/mapswipe-backend/commit/2330dfa5584f58e7cb0d0331d8a6c65192ad904d))
+- *(enums)* Add firebase status enum to the list - ([b60f589](https://github.com/mapswipe/mapswipe-backend/commit/b60f58988c9eb3f271bccd2ba2f6c4f8c018b601))
+- *(export)* Enable generation of project geom - ([0b42a70](https://github.com/mapswipe/mapswipe-backend/commit/0b42a70b48e633090b3ff716523cc5ecd2123c68))
+- *(project)* Exclude actual geometry from graphql - ([3d9ac2a](https://github.com/mapswipe/mapswipe-backend/commit/3d9ac2ada74992b74b7a834cd04f354cdb13180b))
+- *(project)* Add one-on-one mapping from project to geometry - ([aeda988](https://github.com/mapswipe/mapswipe-backend/commit/aeda9888a1e15fdcde5464debfbda80c98e52476))
+- *(project)* Add new project status and renamed existing - ([26f5a7b](https://github.com/mapswipe/mapswipe-backend/commit/26f5a7b902932f126f3899eabf07dd9dfffcbb0d))
+- *(project)* Add is_featured on project processed mutation - ([a717c05](https://github.com/mapswipe/mapswipe-backend/commit/a717c056286f37eec9e9d57805fea13f2c0db2b1))
+- *(project)* Add status_message for capturing errors for background tasks - ([1220178](https://github.com/mapswipe/mapswipe-backend/commit/12201782ab3eedfdfcec5d85141c91cb2cb9b32d))
+- *(project)* Add new project status and renamed existing - ([6c62b69](https://github.com/mapswipe/mapswipe-backend/commit/6c62b693befda8ed7d6a59576ec4883e4bd4f3f8))
+- *(street)* Add AOI area validation - ([ba25894](https://github.com/mapswipe/mapswipe-backend/commit/ba258949d7ceaac016c0cdf8f47986259662344f))
+- *(street)* Add tutorial task property for the street project - ([b806244](https://github.com/mapswipe/mapswipe-backend/commit/b8062444acdcf755dd1e4fd481b76106e7acc68e))
+- *(street)* Street tutorial task generation - ([276665b](https://github.com/mapswipe/mapswipe-backend/commit/276665bd4c4a71a4e1eee3359892cf4670c55153))
+- *(tutorial)* Add new tutorial status - ([e0ca4e5](https://github.com/mapswipe/mapswipe-backend/commit/e0ca4e5d1f3e6d97634069b30887bba177b5bd12))
+- *(validate)* Save aoi geometry for all validate type projects - ([cd719fa](https://github.com/mapswipe/mapswipe-backend/commit/cd719fabe0dcd509ab55c12e9f95f560d72726b8))
+- *(validate-image)* Mark input assets as deleted if not required - ([4832af0](https://github.com/mapswipe/mapswipe-backend/commit/4832af08fe0a82b817f805eb67c1551cce2e1908))
+- Include existing data for existing project migration - ([5425669](https://github.com/mapswipe/mapswipe-backend/commit/54256696cf03e3f334e48432bdaf609439a3040d))
+- Add script for running in non-dev environment - ([179e32f](https://github.com/mapswipe/mapswipe-backend/commit/179e32f8747c2137eb3d82a5b7292206cc0a3d5a))
+
+#### 🐛 Bug Fixes
+
+- *(project)* Error logging for background process - ([4ef2a40](https://github.com/mapswipe/mapswipe-backend/commit/4ef2a4092dabf214a84c519f87255a3ac6e1a351))
+- *(project)* Use gettext for validation errors - ([908d0b1](https://github.com/mapswipe/mapswipe-backend/commit/908d0b1b5d0bf948d723150bfc54ea1f2993fc1d))
+- *(project)* Set bbox, centorid and area in project for the time being - ([c372df7](https://github.com/mapswipe/mapswipe-backend/commit/c372df7d645655474f3edbbde372f9b3061f24b0))
+- *(project)* Only validate for project_instructionwhen publishing a project - ([4b84405](https://github.com/mapswipe/mapswipe-backend/commit/4b8440596cea92148a9222da2712b78cbd401a06))
+
+#### 🚜 Refactor
+
+- *(geo)* Create utilities for geo transformation - ([bd2db06](https://github.com/mapswipe/mapswipe-backend/commit/bd2db066e0d02f2b2e780693b786e42ce64a5b58))
+- *(project)* Prefix pydantic and shapely types - ([0fb1f89](https://github.com/mapswipe/mapswipe-backend/commit/0fb1f897ae04455c4c7db9de963275c98ee4b160))
+
+#### 🧪 Testing
+
+- *(tutorial)* Fix tests for tutorial and project - ([e8ab4af](https://github.com/mapswipe/mapswipe-backend/commit/e8ab4af4a29900f13f82de732fcc9cf80fe0d257))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(comments)* Add/remove comments - ([6704ea3](https://github.com/mapswipe/mapswipe-backend/commit/6704ea340bd9571e7cf4c80a4d4d915d58d1c7c9))
+- *(migrations)* [**breaking**] Force squash migrations - ([de159e6](https://github.com/mapswipe/mapswipe-backend/commit/de159e66a7e342c8029384ee9e3462edb8529d96))
+- *(pydantic)* Update description for custom pydantic defs - ([15d6b31](https://github.com/mapswipe/mapswipe-backend/commit/15d6b31613a38d44c7f3880cf00a0c197b9a8275))
+
+### 🍻 Pull Requests (8)
+- (#149) [Feat(street): Street tutorial task generation](https://github.com/mapswipe/mapswipe-backend/pull/149)
+- (#157) [Only validate for project_instruction when publishing project](https://github.com/mapswipe/mapswipe-backend/pull/157)
+- (#158) [Add new project status and renamed existing](https://github.com/mapswipe/mapswipe-backend/pull/158)
+- (#160) [Feat/pre deployment setup](https://github.com/mapswipe/mapswipe-backend/pull/160)
+- (#161) [Add one-on-one mapping from project to geometry](https://github.com/mapswipe/mapswipe-backend/pull/161)
+- (#163) [Asset generations for project types](https://github.com/mapswipe/mapswipe-backend/pull/163)
+- (#164) [Feat(enums): add firebase status enum to the list](https://github.com/mapswipe/mapswipe-backend/pull/164)
+- (#165) [Error logging for background process](https://github.com/mapswipe/mapswipe-backend/pull/165)
+
+
 ## [0.2.0-dev9](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev8..v0.2.0-dev9) - 2025-09-07
 ### Changes:
 
@@ -21,7 +77,6 @@
 - *(project)* Use enum label on error message instead of enum value - ([be08f15](https://github.com/mapswipe/mapswipe-backend/commit/be08f15c63f457f4b3efd673d3798ffaea740708))
 - *(project)* Convert to geography before calculating group area - ([a759caf](https://github.com/mapswipe/mapswipe-backend/commit/a759cafb0e704041395be82de73f1bdbccd6301e))
 - *(project)* Set progress status when progress is 100 - ([ea71f53](https://github.com/mapswipe/mapswipe-backend/commit/ea71f537082940518c4e3c95e0b829ca27930393))
-- *(rastertile)* Add mkt param for bing url - ([1b0d564](https://github.com/mapswipe/mapswipe-backend/commit/1b0d5646da922e38681ff5fdcd0d298dafe09ebd))
 
 #### 🧪 Testing
 
