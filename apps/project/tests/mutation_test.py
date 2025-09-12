@@ -1,7 +1,6 @@
 import typing
 from io import BytesIO
 from pathlib import Path
-from unittest import mock
 from unittest.mock import call, patch
 
 from django.conf import settings
@@ -11,7 +10,6 @@ from ulid import ULID
 
 from apps.common.models import IconEnum
 from apps.contributor.factories import ContributorTeamFactory
-from apps.project.dummy_slack_client import MapswipeSlackMock
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
     Organization,
@@ -479,7 +477,6 @@ class TestOrganizationMutation(TestCase):
         assert fb_organization.get("isArchived")
 
 
-@mock.patch("apps.project.tasks.MapswipeSlack", MapswipeSlackMock)
 class TestProjectMutation(TestCase):
     @typing.override
     @classmethod
@@ -1055,7 +1052,6 @@ class TestProjectMutation(TestCase):
         ], content
 
 
-@mock.patch("apps.project.tasks.MapswipeSlack", MapswipeSlackMock)
 class TestProjectTypeMutation(TestCase):
     @typing.override
     @classmethod

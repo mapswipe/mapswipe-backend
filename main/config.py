@@ -189,4 +189,6 @@ class Slack:
                 channel=settings.SLACK_BOT_CHANNEL,
                 bot_name=settings.SLACK_BOT_NAME,
             )
+        if not settings.SLACK_FALLBACK_TO_CONSOLE:
+            raise Exception("Enable SLACK_FALLBACK_TO_CONSOLE when SLACK_BOT_ENABLED is False")
         return cls.SlackConfigDisabled(enabled=False)

@@ -133,6 +133,7 @@ env = environ.Env(
     ENABLE_DANGER_MODE=(bool, False),
     # Slack
     SLACK_BOT_ENABLED=(bool, False),
+    SLACK_FALLBACK_TO_CONSOLE=(bool, False),
     SLACK_BOT_NAME=(str, None),
     SLACK_BOT_TOKEN=str,
     SLACK_BOT_CHANNEL=str,

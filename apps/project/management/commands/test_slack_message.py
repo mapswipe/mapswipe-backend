@@ -2,12 +2,11 @@ import typing
 
 from django.core.management.base import BaseCommand
 
-from apps.project.tasks import creation_success_message, progress_change_message, status_update_message
+from apps.project.tasks import send_slack_message_for_project
 
 CommandActionType = typing.Literal[
-    "project-creation",
-    "status-update",
-    "progress-change",
+    "project-status-update",
+    "project-progress-change",
 ]
 
 
@@ -23,21 +22,19 @@ class Command(BaseCommand):
             help="ID of the project",
         )
         subparsers = parser.add_subparsers(dest="event", help="Events to trigger", required=True)
-        subparsers.add_parser("project-creation", help="Send message for project creation")
-        subparsers.add_parser("status-update", help="Send message for project status change")
-        subparsers.add_parser("progress-change", help="Send message for project progress change")
+        subparsers.add_parser("project-status-update", help="Send message for project status change")
+        subparsers.add_parser("project-progress-change", help="Send message for project progress change")
 
     @typing.override
     def handle(self, *args, **options):
-        project_id = options["project_id"]
-        event = options["event"]
-        match event:
-            case "project-creation":
-                creation_success_message(project_id=project_id)
-            case "status-update":
-                status_update_message(project_id=project_id)
-            case "progress-change":
-                progress_change_message(project_id=project_id)
+        project_id = typing.cast("str", options["project_id"])
+        project_id = int(project_id)
 
+        event = typing.cast("CommandActionType", options["event"])
+        match event:
+            case "project-status-update":
+                send_slack_message_for_project(project_id, "status-change")
+            case "project-progress-change":
+                send_slack_message_for_project(project_id, "progress-change")
             case _:
                 typing.assert_never(event)

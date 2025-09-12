@@ -1,10 +1,15 @@
 import logging
+from typing import Literal, assert_never
 
 from celery import shared_task
 
 from apps.project.exports import overall_stats
 from apps.project.models import Project
-from apps.project.slack_messages import SlackMessage, base_slack_message, check_slack_thread, update_base_message
+from apps.project.slack_messages import (
+    SlackMessage,
+    get_or_create_base_slack_message,
+    update_base_slack_message,
+)
 from main.cache import CeleryLock
 from project_types.store import get_project_type_handler
 from utils.slack import MapswipeSlack
@@ -74,31 +79,24 @@ def regenerate_global_project_assets():
 
 
 @shared_task
-def progress_change_message(project_id: int):
+def send_slack_message_for_project(project_id: int, action: Literal["progress-change"] | Literal["status-change"]):
+    mapslack = MapswipeSlack()
     project = Project.objects.get(pk=project_id)
-    mapslack = MapswipeSlack()
-    message = SlackMessage.get_message_for_project_progress(project=project)
-    ts = check_slack_thread(project_id=project_id, mapslack=mapslack)
-    reply_broadcast = project.progress >= 90
-    if reply_broadcast:
-        mapslack.send_slack_message(**message, thread_ts=ts, reply_broadcast=reply_broadcast)
-    update_base_message(client=mapslack, project=project, ts=ts)
 
+    match action:
+        case "progress-change":
+            message = SlackMessage.get_message_for_project_progress(project=project)
+        case "status-change":
+            message = SlackMessage.get_message_for_project_status(project=project)
+        case _:
+            assert_never(action)
 
-@shared_task
-def status_update_message(project_id: int):
-    project = Project.objects.get(pk=project_id)
-    mapslack = MapswipeSlack()
-    message = SlackMessage.get_message_for_status_update(
-        project=project,
-    )
-    ts = check_slack_thread(project_id=project_id, mapslack=mapslack)
-    mapslack.send_slack_message(**message, thread_ts=ts, reply_broadcast=False)
-    update_base_message(client=mapslack, project=project, ts=ts)
+    # Create a base message if it doesn't exist
+    base_slack_message_ts = get_or_create_base_slack_message(project_id=project_id, mapslack=mapslack)
 
+    if not base_slack_message_ts:
+        base_slack_message_ts = "mock_ts"
 
-@shared_task
-def creation_success_message(project_id: int):
-    mapslack = MapswipeSlack()
-    base_slack_message(project_id=project_id, mapslack=mapslack)
-    status_update_message.delay(project_id=project_id)
+    # FIXME(tnagorra): What does reply_broadcast do?
+    mapslack.send_slack_message(**message, thread_ts=base_slack_message_ts, reply_broadcast=False)
+    update_base_slack_message(client=mapslack, project=project, ts=base_slack_message_ts)

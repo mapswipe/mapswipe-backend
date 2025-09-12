@@ -20,10 +20,8 @@ from utils.graphql.drf import handle_pydantic_validation_error
 
 from .models import Geometry, Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
 from .tasks import (
-    creation_success_message,
     process_project_task,
     push_project_to_firebase,
-    status_update_message,
 )
 
 if typing.TYPE_CHECKING:
@@ -681,12 +679,5 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
         ):
             updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
             transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
-
-        if old_status_enum != updated_project.status_enum:
-            if old_status_enum != Project.Status.PAUSED and updated_project.status_enum == Project.Status.PUBLISHED:
-                creation_success_message.delay(project_id=instance.pk)
-
-            if old_status_enum in {Project.Status.PUBLISHED, Project.Status.PAUSED}:
-                status_update_message.delay(project_id=instance.pk)
 
         return updated_project
