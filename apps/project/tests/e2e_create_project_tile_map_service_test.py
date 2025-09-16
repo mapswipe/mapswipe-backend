@@ -8,9 +8,18 @@ from ulid import ULID
 
 from apps.common.utils import remove_object_keys
 from apps.contributor.factories import ContributorUserFactory
+from apps.mapping.firebase.pull import pull_results_from_firebase
+from apps.mapping.models import (
+    MappingSession,
+    MappingSessionResult,
+    MappingSessionResultTemp,
+    MappingSessionUserGroup,
+    MappingSessionUserGroupTemp,
+)
 from apps.project.factories import OrganizationFactory
 from apps.tutorial.factories import TutorialFactory
 from apps.tutorial.models import Tutorial
+from apps.project.models import Project
 from apps.user.factories import UserFactory
 from main.config import Config
 from main.tests import TestCase
@@ -133,6 +142,33 @@ class TestCompareProjectE2E(TestCase):
             }
           }
         }
+        """
+        CREATE_CONTRIBUTOR_USER_GROUP = """
+            mutation CreateContributorUserGroup($data: ContributorUserGroupCreateInput!) {
+                createContributorUserGroup(data: $data) {
+                    ... on OperationInfo {
+                      __typename
+                      messages {
+                        code
+                        field
+                        kind
+                        message
+                      }
+                    }
+                    ... on ContributorUserGroupTypeMutationResponseType {
+                        errors
+                        ok
+                        result {
+                            id
+                            name
+                            description
+                            clientId
+                            isArchived
+                            firebaseId
+                        }
+                    }
+                }
+            }
         """
 
     @typing.override
@@ -357,3 +393,78 @@ class TestCompareProjectE2E(TestCase):
         assert sanitized_tasks_actual == sanitized_tasks_expected, (
             "Differences found between expected and actual tasks in firebase."
         )
+
+        # Test push tasks results to firebase
+        # Creating ContributorUserGroup: Without authentication
+        old_contributor_user_group_data = test_data["create_contributor_user_group_data"]
+        new_contributor_user_group_data = []
+        for input_data in old_contributor_user_group_data:
+            content = self.query_check(
+                self.Mutation.CREATE_CONTRIBUTOR_USER_GROUP,
+                variables={
+                    "data": input_data,
+                },
+            )
+            new_contributor_user_group_data.append(content["data"]["createContributorUserGroup"]["result"])
+
+        input_data = test_data["results_firebase_input_data"]
+
+        # Change project_fb_id to real firebase id
+        input_data[project_fb_id] = input_data.pop("project_firebase_id")
+
+        user_groups_input = {str(ug["firebaseId"]): True for ug in new_contributor_user_group_data}
+
+        for _, group_value in input_data[project_fb_id].items():
+            contributor_keys = list(group_value.keys())
+
+            for old_key in contributor_keys:
+                new_key = self.contributor_user.firebase_id
+
+                # Change group_firebase_id to real firebase id
+                group_value[new_key] = group_value.pop(old_key)
+
+                # Replace userGroups
+                group_value[new_key]["userGroups"] = user_groups_input
+
+        ref_results = Config.FIREBASE_HELPER.ref(Config.FirebaseKeys.results_projects())
+        ref_results.set(input_data)
+        fb_results_data = ref_results.get()
+        assert fb_results_data is not None
+
+        # Check for empty data before data pull from firebase
+        assert [
+            MappingSession.objects.count(),
+            MappingSessionResult.objects.count(),
+            MappingSessionUserGroup.objects.count(),
+            MappingSessionUserGroupTemp.objects.count(),
+            MappingSessionResultTemp.objects.count(),
+        ] == [0, 0, 0, 0, 0], "Mapping session data should be empty before pull from firebase"
+
+        project = Project.objects.get(id=project_id)
+        assert project.progress == 0
+
+        with self.captureOnCommitCallbacks(execute=True):
+            pull_results_from_firebase()
+
+        # Check if data is pulled
+        assert [
+            MappingSession.objects.count(),
+            MappingSessionResult.objects.count(),
+            MappingSessionUserGroup.objects.count(),
+            MappingSessionUserGroupTemp.objects.count(),
+            MappingSessionResultTemp.objects.count(),
+        ] != [0, 0, 0, 0, 0]
+
+        # TODO replace this with mapping session query
+        mapping_session = MappingSession.objects.first()
+        assert mapping_session is not None
+
+        pull_firebase_data = {
+            "mapping_session_count": MappingSession.objects.count(),
+            "results_count": MappingSessionResult.objects.count(),
+            "user_groups_count": MappingSessionUserGroup.objects.count(),
+        }
+
+        assert pull_firebase_data == test_data["expected_pulled_results_data"], "Difference found for pulled results data."
+        project.refresh_from_db()
+        assert project.progress > 0

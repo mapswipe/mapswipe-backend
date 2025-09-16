@@ -75,6 +75,7 @@ def _export_project_data(project: Project, tmp_directory: Path):
         {"value": 0},
         {"value": 1},
         {"value": 2},
+        {"value": 3},
     ]
 
     # TODO: Cache tasks and groups as they don't change (if cached, make sure to remove Unnamed column)
