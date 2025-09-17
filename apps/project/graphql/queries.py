@@ -80,6 +80,7 @@ class Query:
 
     # Private --------------------
     project: ProjectType = strawberry_django.field(extensions=[IsAuthenticated()])
+    public_project: ProjectType = strawberry_django.field()
 
     project_asset: ProjectAssetType = strawberry_django.field(extensions=[IsAuthenticated()])
 
@@ -91,6 +92,7 @@ class Query:
     )
 
     organization: OrganizationType = strawberry_django.field(extensions=[IsAuthenticated()])
+    public_organization: OrganizationType = strawberry_django.field()
 
     # --- Paginated
     @strawberry_django.offset_paginated(
@@ -106,6 +108,16 @@ class Query:
     ) -> QuerySet[Organization]:
         if include_all:
             return Organization.objects.all()
+        return Organization.objects.exclude(is_archived=True).all()
+
+    @strawberry_django.offset_paginated(
+        OffsetPaginated[OrganizationType],
+        order=OrganizationOrder,
+        filters=OrganizationFilter,
+    )
+    def public_organizations(
+        self,
+    ) -> QuerySet[Organization]:
         return Organization.objects.exclude(is_archived=True).all()
 
     # --- Paginated
@@ -127,5 +139,20 @@ class Query:
                 Project.Status.PROCESSED,
                 Project.Status.PUBLISHED,
                 Project.Status.PAUSED,
+            ],
+        ).all()
+
+    @strawberry_django.offset_paginated(
+        OffsetPaginated[ProjectType],
+        order=ProjectOrder,
+        filters=ProjectFilter,
+    )
+    def public_projects(
+        self,
+    ) -> QuerySet[Project]:
+        return Project.objects.filter(
+            status__in=[
+                Project.Status.FINISHED,
+                Project.Status.PUBLISHED,
             ],
         ).all()
