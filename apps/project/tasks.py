@@ -1,11 +1,18 @@
 import logging
+from typing import Literal, assert_never
 
 from celery import shared_task
 
 from apps.project.exports import overall_stats
 from apps.project.models import Project
+from apps.project.slack_messages import (
+    SlackMessage,
+    get_or_create_base_slack_message,
+    update_base_slack_message,
+)
 from main.cache import CeleryLock
 from project_types.store import get_project_type_handler
+from utils.slack import MapswipeSlack
 
 logger = logging.getLogger(__name__)
 
@@ -69,3 +76,27 @@ def regenerate_global_project_assets():
 
     overall_stats.generate()
     return True
+
+
+@shared_task
+def send_slack_message_for_project(project_id: int, action: Literal["progress-change"] | Literal["status-change"]):
+    mapslack = MapswipeSlack()
+    project = Project.objects.get(pk=project_id)
+
+    match action:
+        case "progress-change":
+            message = SlackMessage.get_message_for_project_progress(project=project)
+        case "status-change":
+            message = SlackMessage.get_message_for_project_status(project=project)
+        case _:
+            assert_never(action)
+
+    # Create a base message if it doesn't exist
+    base_slack_message_ts = get_or_create_base_slack_message(project_id=project_id, mapslack=mapslack)
+
+    if not base_slack_message_ts:
+        base_slack_message_ts = "mock_ts"
+
+    # FIXME(tnagorra): What does reply_broadcast do?
+    mapslack.send_slack_message(**message, thread_ts=base_slack_message_ts, reply_broadcast=False)
+    update_base_slack_message(client=mapslack, project=project, ts=base_slack_message_ts)

@@ -131,6 +131,12 @@ env = environ.Env(
     PYTEST_XDIST_WORKER=(str, None),
     # Test
     ENABLE_DANGER_MODE=(bool, False),
+    # Slack
+    SLACK_BOT_ENABLED=(bool, False),
+    SLACK_FALLBACK_TO_CONSOLE=(bool, False),
+    SLACK_BOT_NAME=(str, None),
+    SLACK_BOT_TOKEN=str,
+    SLACK_BOT_CHANNEL=str,
 )
 
 ENABLE_DANGER_MODE = env("ENABLE_DANGER_MODE")
@@ -150,7 +156,6 @@ APP_ENVIRONMENT = env("APP_ENVIRONMENT").upper()
 APP_TYPE = env("APP_TYPE").upper()
 APP_RELEASE = env("APP_RELEASE") or GIT_HELPER.commit_sha
 SECRET_KEY = env("SECRET_KEY")
-
 DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = [
@@ -514,6 +519,13 @@ if SENTRY_ENABLED:
         monitor_celery_beat_tasks=env("SENTRY_MONITOR_CELERY_BEAT_TASKS"),
     )
     SENTRY_CONFIG.init_sentry()
+
+# Slack
+SLACK_BOT_ENABLED = env("SLACK_BOT_ENABLED")
+if SLACK_BOT_ENABLED:
+    SLACK_BOT_NAME = env("SLACK_BOT_NAME")
+    SLACK_BOT_TOKEN = env("SLACK_BOT_TOKEN")
+    SLACK_BOT_CHANNEL = env("SLACK_BOT_CHANNEL")
 
 # Strawberry
 ENABLE_STRAWBERRY_GRAPHIQL = env("ENABLE_STRAWBERRY_GRAPHIQL")

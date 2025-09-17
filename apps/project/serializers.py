@@ -19,7 +19,10 @@ from utils.geo.transform import convert_json_dict_to_geometry_collection, get_ar
 from utils.graphql.drf import handle_pydantic_validation_error
 
 from .models import Geometry, Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
-from .tasks import process_project_task, push_project_to_firebase
+from .tasks import (
+    process_project_task,
+    push_project_to_firebase,
+)
 
 if typing.TYPE_CHECKING:
     from django.core.files.base import ContentFile

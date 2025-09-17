@@ -1,5 +1,6 @@
 import os
 import typing
+from dataclasses import dataclass
 
 from django.conf import settings
 
@@ -58,8 +59,8 @@ class Config:
 
     class CommunityDashboardKeys:
         @staticmethod
-        def contributor_user(firebae_id: str):
-            return f"{Config.COMMUNITY_DASHBOARD_DOMAIN.geturl()}/user/{firebae_id}"
+        def contributor_user(firebase_id: str):
+            return f"{Config.COMMUNITY_DASHBOARD_DOMAIN.geturl()}/user/{firebase_id}"
 
         @staticmethod
         def contributor_user_group(firebase_id: str):
@@ -69,6 +70,15 @@ class Config:
         @staticmethod
         def project(firebase_id: str):
             return f"{Config.WEBSITE_DOMAIN.geturl()}/en/projects/{firebase_id}"
+
+    class ManagerDashboardUrls:
+        @staticmethod
+        def project_url(project_id: int):
+            return f"{Config.MANAGER_DASHBOARD_DOMAIN.geturl()}/project/{project_id}/edit"
+
+        @staticmethod
+        def tutorial_url(tutorial_id: int):
+            return f"{Config.MANAGER_DASHBOARD_DOMAIN.geturl()}/tutorials/{tutorial_id}/edit"
 
     class FirebaseKeys:
         @staticmethod
@@ -154,3 +164,31 @@ class Config:
 
 # FIXME: Import utils/geo/raster_tile_server/config.py here
 # FIXME: Import utils/geo/vector_tile_server/config.py here
+
+
+class Slack:
+    @dataclass
+    class SlackConfigDisabled:
+        enabled: typing.Literal[False]
+
+    @dataclass
+    class SlackConfigEnabled:
+        enabled: typing.Literal[True]
+        token: str
+        channel: str
+        bot_name: str | None
+
+    SlackConfig = SlackConfigEnabled | SlackConfigDisabled
+
+    @classmethod
+    def load_slack_config(cls) -> SlackConfig:
+        if settings.SLACK_BOT_ENABLED:
+            return cls.SlackConfigEnabled(
+                enabled=True,
+                token=settings.SLACK_BOT_TOKEN,
+                channel=settings.SLACK_BOT_CHANNEL,
+                bot_name=settings.SLACK_BOT_NAME,
+            )
+        if not settings.SLACK_FALLBACK_TO_CONSOLE:
+            raise Exception("Enable SLACK_FALLBACK_TO_CONSOLE when SLACK_BOT_ENABLED is False")
+        return cls.SlackConfigDisabled(enabled=False)
