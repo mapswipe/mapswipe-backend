@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.2.1-dev1](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.1-dev0..v0.2.1-dev1) - 2025-09-18
+### Changes:
+
+#### 🚀  Features
+
+- *(organization)* Add firebase data validation - ([5d74f82](https://github.com/mapswipe/mapswipe-backend/commit/5d74f82a31bd4eb600c0d3cd8ce4046e3eae96bc))
+- *(organization)* Precommit fix - ([54f166a](https://github.com/mapswipe/mapswipe-backend/commit/54f166af0a3658e079cc22e3f1ff311d628038a3))
+- *(organization)* E2E test for organization - ([6866ac4](https://github.com/mapswipe/mapswipe-backend/commit/6866ac48f57dd58320e3f06ca5cf6766102e981e))
+- *(query)* Add public endpoints for queries - ([a7247e0](https://github.com/mapswipe/mapswipe-backend/commit/a7247e07ad9f0ae79480c697e2de7046c31fef3f))
+- *(serializer)* Slack integration for all cases - ([622dd14](https://github.com/mapswipe/mapswipe-backend/commit/622dd14a839651202ce56ca1146b049a4653a93f))
+- *(slack)* Add progress bar - ([0f3d59b](https://github.com/mapswipe/mapswipe-backend/commit/0f3d59b30bd0c613c4c663d7459b7e2480ffffb1))
+- *(slack)* Dynamic parent message - ([e2b38be](https://github.com/mapswipe/mapswipe-backend/commit/e2b38be3ee3c07b097abb28979e7ce9e1db1dcd5))
+- *(slack)* Broadcast thread message to the channel - ([d8621f9](https://github.com/mapswipe/mapswipe-backend/commit/d8621f9749f8727eb12aad0e22f5c08bf8a3bee9))
+- *(slack)* Convert all async functions to sync and use celery - ([1b7448d](https://github.com/mapswipe/mapswipe-backend/commit/1b7448dead27b213da27fb6c53f0a1fa1eb345e6))
+- *(slack)* Base command for testing slack message - ([7938415](https://github.com/mapswipe/mapswipe-backend/commit/7938415ea9e654de26f904eaab00435e04c0d31d))
+- *(slack)* Add function for slack message - ([30a99ad](https://github.com/mapswipe/mapswipe-backend/commit/30a99add7715f98225c59f66cbcf3c465ebc5eb0))
+- *(slack)* Setup slack-sdk using webhooks - ([830cc75](https://github.com/mapswipe/mapswipe-backend/commit/830cc7528b68f2da805e44030233b5e464379fc2))
+- *(test)* Add dummy slack client in new tests - ([2483ea8](https://github.com/mapswipe/mapswipe-backend/commit/2483ea8403ed57aab4c39d9766ed7832b88ad693))
+- *(test)* Add dummy slack client in mutation test - ([ccd8997](https://github.com/mapswipe/mapswipe-backend/commit/ccd89976dd343658b31509ab1717336ff9018cc6))
+
+#### 🐛 Bug Fixes
+
+- *(model)* Overwrite get_prep_value to remove empty string - ([58f2719](https://github.com/mapswipe/mapswipe-backend/commit/58f27193b6d8e2bf0b779c2d4bc3618deffef807))
+- *(slack)* Remove calls to slack tasks and update migrations - ([a569bc9](https://github.com/mapswipe/mapswipe-backend/commit/a569bc99aa687c47e365267ca6126c563f4f4d26))
+
+#### 🚜 Refactor
+
+- *(serializer)* Combine logic and cleanup - ([da1f064](https://github.com/mapswipe/mapswipe-backend/commit/da1f064e983a04ce6fed3b54e6851f4bb81213d2))
+- *(slack)* Implement final design changes - ([8f1bedd](https://github.com/mapswipe/mapswipe-backend/commit/8f1bedd1fcc82f8b973b96ba0eb62bafc12afeb3))
+- *(tasks)* Separate tasks and messages - ([11b6c07](https://github.com/mapswipe/mapswipe-backend/commit/11b6c0761987244917e260eb9916def641626241))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(model)* Add slack_user_id and slack_thread_ts fields. - ([922a24d](https://github.com/mapswipe/mapswipe-backend/commit/922a24d1e0857272e7540e468028c3c67eab5246))
+- *(organization)* Update assets on organization - ([8665fe8](https://github.com/mapswipe/mapswipe-backend/commit/8665fe89fed7259f7f210479434decf36ca74ac5))
+- *(slack)* Accept None type for tutorial_id and cover_image - ([c0d3f60](https://github.com/mapswipe/mapswipe-backend/commit/c0d3f6095a487676d2f8ddbc222ff283b8814d65))
+- *(slack)* Base setup for slack webclient - ([3968127](https://github.com/mapswipe/mapswipe-backend/commit/3968127750939eb06ef9f4abacf8f6b01cf6b4be))
+- *(test)* Test commands for all cases - ([5ecd5e7](https://github.com/mapswipe/mapswipe-backend/commit/5ecd5e77277662899a097190657e3ca755c91462))
+
+### 🍻 Pull Requests (4)
+- (#122) [E2E Test for Organization](https://github.com/mapswipe/mapswipe-backend/pull/122)
+- (#134) [Feat/slack phase ii](https://github.com/mapswipe/mapswipe-backend/pull/134)
+- (#169) [Fix(model): overwrite get_prep_value to remove empty string](https://github.com/mapswipe/mapswipe-backend/pull/169)
+- (#170) [Feat(query): add public endpoints for queries](https://github.com/mapswipe/mapswipe-backend/pull/170)
+
+
 ## [0.2.1-dev0](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev9..v0.2.1-dev0) - 2025-09-11
 ### Changes:
 
@@ -101,10 +147,6 @@
 - (#153) [Calculate geo info for projects](https://github.com/mapswipe/mapswipe-backend/pull/153)
 - (#155) [Fix(project): Validate image asset type specifics issue](https://github.com/mapswipe/mapswipe-backend/pull/155)
 
-### :tada: New Contributors (2)
-
-- [@Shhhhhubh](https://github.com/Shhhhhubh) made their first contribution
-- [@babinkarmacharya79](https://github.com/babinkarmacharya79) made their first contribution
 
 ## [0.2.0-dev8](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.0-dev7..v0.2.0-dev8) - 2025-09-05
 ### Changes:
