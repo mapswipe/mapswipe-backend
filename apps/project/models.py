@@ -473,6 +473,8 @@ class Project(UserResource, FirebasePushResource):
         help_text=gettext_lazy("Timestamp of the base slack message"),
     )
 
+    slack_progress_notifications = models.JSONField(blank=True, null=True)
+
     # Type hints
     requesting_organization_id: int
     tutorial_id: int | None
