@@ -6,7 +6,6 @@ import tempfile
 import typing
 from pathlib import Path
 
-from django.core.files import File
 from django.core.files.base import ContentFile
 from django.db import models
 from django.db.models.fields.files import FieldFile
@@ -121,10 +120,9 @@ def regenerate_projects_csv(temp_projects_csv: typing.IO):
         writer.writerow(data)
 
     temp_projects_csv.seek(0)
-    csv_file = File(
-        temp_projects_csv,
-        name=GlobalExportAssetTypeEnum.get_file_name(GlobalExportAssetTypeEnum.PROJECTS_CSV),
-    )
+    csv_file = ContentFile(temp_projects_csv.read().encode("utf-8"))
+    csv_file.name = GlobalExportAssetTypeEnum.get_file_name(GlobalExportAssetTypeEnum.PROJECTS_CSV)
+
     GlobalExportAsset.objects.update_or_create(
         type=GlobalExportAssetTypeEnum.PROJECTS_CSV,
         defaults={
@@ -161,10 +159,9 @@ def _regenerate_projects_centroid_for_geometry_field(
     )
 
     with Path.open(tmp_geojson_outfile, "rb") as fp:
-        geojson_file = File(
-            fp,
-            name=GlobalExportAssetTypeEnum.get_file_name(asset_type),
-        )
+        geojson_file = ContentFile(fp.read())
+        geojson_file.name = GlobalExportAssetTypeEnum.get_file_name(asset_type)
+
         GlobalExportAsset.objects.update_or_create(
             type=asset_type,
             defaults={

@@ -188,6 +188,8 @@ def _export_project_data(project: Project, tmp_directory: Path):
 
         with Path.open(file, "rb") as fp:
             django_file = File(fp, name=file.name)
+            django_file_size = django_file.size
+            fp.seek(0)
 
             project_asset, _ = ProjectAsset.objects.update_or_create(
                 project=project,
@@ -199,14 +201,14 @@ def _export_project_data(project: Project, tmp_directory: Path):
                     modified_by=bot_user,
                     mimetype=ProjectAssetExportTypeEnum.get_mimetype(export_type),
                     file=django_file,
-                    file_size=django_file.size,
+                    file_size=django_file_size,
                 ),
                 # the following values are used for update
                 defaults=dict(
                     mimetype=ProjectAssetExportTypeEnum.get_mimetype(export_type),
                     modified_by=bot_user,
                     file=django_file,
-                    file_size=django_file.size,
+                    file_size=django_file_size,
                 ),
             )
 
