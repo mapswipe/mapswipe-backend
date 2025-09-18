@@ -9,6 +9,7 @@ from apps.common.models import AssetTypeEnum
 from apps.project.custom_options import get_fallback_custom_options_for_export
 from apps.project.exports.geojson import gzipped_csv_to_gzipped_geojson
 from apps.project.models import Project, ProjectAsset, ProjectAssetExportTypeEnum, ProjectProgressStatusEnum, ProjectTypeEnum
+from apps.project.tasks import send_slack_message_for_project
 from apps.user.models import User
 from main.config import Config
 from main.logging import log_extra
@@ -168,6 +169,7 @@ def _export_project_data(project: Project, tmp_directory: Path):
             "last_contribution_date",
         ),
     )
+    send_slack_message_for_project.delay(project_id=project.id, action="progress-change")
 
     for export_type, file in [
         (ProjectAssetExportTypeEnum.AGGREGATED_RESULTS, tmp_mapping_results_aggregate_by_task_csv),
