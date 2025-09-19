@@ -629,7 +629,7 @@ class TestProjectMutation(TestCase):
                 description=latest_project.description,
                 verificationNumber=3,
                 groupSize=10,
-                maxTasksPerUser=10,
+                maxTasksPerUser=None,
                 isFeatured=latest_project.is_featured,
                 status=self.genum(Project.Status.DRAFT),
                 processingStatus=None,

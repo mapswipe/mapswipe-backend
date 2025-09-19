@@ -350,7 +350,6 @@ class Project(UserResource, FirebasePushResource):
         help_text=gettext_lazy("How many tasks each user is allowed to work on for this project"),
         null=True,
         blank=True,
-        default=10,
     )
 
     # TODO(tnagorra): Currently this field collects any data not stored by another fields, pulled from firebase.
