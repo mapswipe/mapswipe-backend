@@ -1474,6 +1474,13 @@ input ProjectFilter {
   topic: String
 }
 
+input ProjectNameInput {
+  projectNumber: Int!
+  region: String!
+  requestingOrganizationId: ID!
+  topic: String!
+}
+
 input ProjectOrder {
   id: Ordering
   name: Ordering
@@ -2026,6 +2033,7 @@ type Query {
   project(id: ID!): ProjectType! @isAuthenticated
   projectAsset(id: ID!): ProjectAssetType! @isAuthenticated
   projectAssets(pagination: OffsetPaginationInput, filters: ProjectAssetFilter, order: ProjectAssetOrder): ProjectAssetTypeOffsetPaginated! @isAuthenticated
+  projectName(params: ProjectNameInput): String!
   projects(includeAll: Boolean! = false, filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated! @isAuthenticated
   publicOrganization(id: ID!): OrganizationType!
   publicOrganizations(filters: OrganizationFilter, order: OrganizationOrder, pagination: OffsetPaginationInput): OrganizationTypeOffsetPaginated!

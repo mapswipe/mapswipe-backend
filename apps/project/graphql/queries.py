@@ -1,6 +1,7 @@
 import strawberry
 import strawberry_django
 from django.db.models import QuerySet
+from graphql import GraphQLError
 from strawberry_django.pagination import OffsetPaginated
 from strawberry_django.permissions import IsAuthenticated
 
@@ -162,7 +163,10 @@ class Query:
     @strawberry_django.field()
     def project_name(
         self,
-        params: ProjectNameInput,
+        params: ProjectNameInput | None,
     ) -> str:
+        if not params:
+            raise GraphQLError("params is required to build project name")
+
         organization_name = Organization.objects.get(pk=params.requesting_organization_id)
-        return f"{params.project_type.label} {params.topic} - {params.region} ({params.project_number}) {organization_name}"
+        return f"{params.topic} - {params.region} ({params.project_number}) {organization_name}"

@@ -325,7 +325,7 @@ class TestProjectQuery(TestCase):
                 total_count=4,
                 results=[
                     dict(
-                        name=f"{project.project_type_enum.label} {project.topic} - {project.region} ({project.project_number}) {project.requesting_organization.name}",  # noqa: E501
+                        name=f"{project.topic} - {project.region} ({project.project_number}) {project.requesting_organization.name}",  # noqa: E501
                         topic=project.topic,
                         region=project.region,
                         projectNumber=project.project_number,

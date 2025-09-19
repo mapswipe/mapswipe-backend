@@ -6,7 +6,7 @@ from warnings import deprecated
 from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.geos import GEOSGeometry
 from django.db import models
-from django.db.models import Case, CharField, ExpressionWrapper, Q, When
+from django.db.models import ExpressionWrapper, Q
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat, Lower
 from django.utils.translation import gettext_lazy
@@ -504,18 +504,12 @@ class Project(UserResource, FirebasePushResource):
         Use select_related to avoid N+1 queries.
         """
         # Format: "{topic} - {region} ({project_number}) {requesting_organization.name}"
-        return f"{self.project_type_enum.label} {self.topic} - {self.region} ({self.project_number}) {self.requesting_organization.name}"  # noqa: E501
+        return f"{self.topic} - {self.region} ({self.project_number}) {self.requesting_organization.name}"
 
     @staticmethod
     def generate_name_query(prefix: str = ""):
         """Get a Django QuerySet expression to generate the project name."""
-        project_type_label = Case(
-            *[When(**{f"{prefix}project_type": choice.value}, then=Value(choice.label)) for choice in ProjectTypeEnum],
-            output_field=CharField(),
-        )
         return Concat(
-            project_type_label,
-            Value(" "),
             models.F(f"{prefix}topic"),
             Value(" - "),
             models.F(f"{prefix}region"),
