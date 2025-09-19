@@ -8,6 +8,7 @@ from apps.project.models import Organization, Project, ProjectAsset
 @strawberry_django.filters.filter(Project, lookups=True)
 class ProjectFilter:
     id: strawberry.auto
+    old_id: strawberry.auto
     project_number: strawberry.auto
     project_type: strawberry.auto
     requesting_organization_id: strawberry.auto

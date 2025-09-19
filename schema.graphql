@@ -1462,6 +1462,7 @@ input ProjectFilter {
   """
   isPrivate: BoolBaseFilterLookup
   name: String
+  oldId: StrFilterLookup
   progressStatus: ProjectProgressStatusEnumFilterLookup
   projectNumber: IntComparisonFilterLookup
   projectType: ProjectTypeEnumFilterLookup
@@ -1800,6 +1801,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   Number of results contributed to this project that can be used to calculate the progress of this project. Max no. of results per task that can be used to calculate progress is equal to the `verification number`
   """
   numberOfResultsForProgress: Int!
+  oldId: ID!
   processingStatus: ProjectProcessingStatusEnum
 
   """Percentage of the required contribution that has been completed"""

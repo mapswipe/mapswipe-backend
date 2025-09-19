@@ -145,6 +145,7 @@ class ProjectExportAssetTypeMixin:
 @strawberry_django.type(Project)
 class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePushResourceTypeMixin):
     id: strawberry.ID
+    old_id: strawberry.ID
     project_type: strawberry.auto
     requesting_organization_id: strawberry.ID
     requesting_organization: OrganizationType
