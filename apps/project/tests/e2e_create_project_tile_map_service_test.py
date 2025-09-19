@@ -234,6 +234,7 @@ class TestProjectE2E(TestCase):
                   ok
                   result {
                     id
+                    status
                   }
                 }
               }
@@ -455,6 +456,21 @@ class TestProjectE2E(TestCase):
         assert update_tutorial_response["ok"], update_tutorial_response["errors"]
         assert update_tutorial_response is not None, "Tutorial update response is None"
 
+        # Ready to Publish Tutorial
+        publish_tutorial_data = {
+            "clientId": tutorial_client_id,
+            "status": "READY_TO_PUBLISH",
+        }
+        with self.captureOnCommitCallbacks(execute=True):
+            publish_tutorial_content = self.query_check(
+                self.Mutation.UPDATE_TUTORIAL_STATUS,
+                variables={"pk": tutorial_id, "data": publish_tutorial_data},
+            )
+        publish_tutorial_response = publish_tutorial_content["data"]["updateTutorialStatus"]
+        assert publish_tutorial_response["ok"], publish_tutorial_response["errors"]
+        assert publish_tutorial_response is not None, "Processed tutorial publish response is None"
+        assert publish_tutorial_response["result"]["status"] == "READY_TO_PUBLISH", "tutorial should be published"
+
         # Publish Tutorial
         publish_tutorial_data = {
             "clientId": tutorial_client_id,
@@ -467,8 +483,8 @@ class TestProjectE2E(TestCase):
             )
         publish_tutorial_response = publish_tutorial_content["data"]["updateTutorialStatus"]
         assert publish_tutorial_response["ok"], publish_tutorial_response["errors"]
-        assert publish_tutorial_response is not None, "Processed tutorial publish response is None"
-        assert publish_tutorial_response["result"]["status"] == "PUBLISHED", "tutorial should be published"
+        assert publish_tutorial_response is not None, "Processed tutorial ready to publish response is None"
+        assert publish_tutorial_response["result"]["status"] == "PUBLISHED", "tutorial should be ready to published"
 
         # CHECK TUTORIAL, GROUP AND TASK CREATED IN FIREBASE
 
