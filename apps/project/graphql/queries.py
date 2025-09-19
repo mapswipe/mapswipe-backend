@@ -5,6 +5,7 @@ from strawberry_django.pagination import OffsetPaginated
 from strawberry_django.permissions import IsAuthenticated
 
 from apps.project.custom_options import get_custom_options
+from apps.project.graphql.inputs.inputs import ProjectNameInput
 from apps.project.models import Organization, Project, ProjectTypeEnum
 from utils.geo.raster_tile_server.config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNameEnumWithoutCustom
 from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum, VectorTileServerNameEnumWithoutCustom
@@ -156,3 +157,12 @@ class Query:
                 Project.Status.PUBLISHED,
             ],
         ).all()
+
+    # NOTE: This query is only for type hint.
+    @strawberry_django.field()
+    def project_name(
+        self,
+        params: ProjectNameInput,
+    ) -> str:
+        organization_name = Organization.objects.get(pk=params.requesting_organization_id)
+        return f"{params.project_type.label} {params.topic} - {params.region} ({params.project_number}) {organization_name}"
