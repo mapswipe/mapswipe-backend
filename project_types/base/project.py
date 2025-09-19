@@ -442,7 +442,13 @@ class BaseProject[
         )
 
     def _push_project_on_firebase(self):
-        if self.project.status_enum not in [Project.Status.READY_TO_PUBLISH, Project.Status.PUBLISHED]:
+        if self.project.status_enum not in [
+            Project.Status.READY_TO_PUBLISH,
+            Project.Status.PUBLISHED,
+            Project.Status.WITHDRAWN,
+            Project.Status.PAUSED,
+            Project.Status.FINISHED,
+        ]:
             raise ValidationException(
                 "Project can only be published if project status is 'Ready to Process' or 'Published'",
             )
