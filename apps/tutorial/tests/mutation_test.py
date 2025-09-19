@@ -7,7 +7,11 @@ from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
     ProjectTypeEnum,
 )
-from apps.tutorial.factories import TutorialFactory
+from apps.tutorial.factories import (
+    TutorialFactory,
+    TutorialInformationPageFactory,
+    TutorialScenarioPageFactory,
+)
 from apps.tutorial.models import (
     Tutorial,
     TutorialStatusEnum,
@@ -653,6 +657,17 @@ class TestTutorialMutation(TestCase):
             created_by=self.user,
             modified_by=self.user,
             status=TutorialStatusEnum.DRAFT,
+        )
+        TutorialScenarioPageFactory.create(
+            tutorial=tutorial,
+            created_by=self.user,
+            modified_by=self.user,
+        )
+
+        TutorialInformationPageFactory.create(
+            tutorial=tutorial,
+            created_by=self.user,
+            modified_by=self.user,
         )
 
         # Checking with authenticated user

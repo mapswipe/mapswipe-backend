@@ -507,6 +507,29 @@ class TutorialStatusUpdateSerializer(UserResourceSerializer[Tutorial]):
         return new_status
 
     @typing.override
+    def validate(self, attrs: dict[str, typing.Any]):
+        assert self.instance is not None
+
+        new_status = attrs.get("status")
+
+        if (
+            new_status == Tutorial.Status.READY_TO_PUBLISH
+            and not TutorialInformationPage.objects.filter(tutorial=self.instance).exists()
+        ):
+            raise serializers.ValidationError(
+                {"information_pages": gettext("At least one information page is required before publishing.")},
+            )
+
+        if (
+            new_status == Tutorial.Status.READY_TO_PUBLISH
+            and not TutorialScenarioPage.objects.filter(tutorial=self.instance).exists()
+        ):
+            raise serializers.ValidationError(
+                {"scenarios": gettext("At least one scenario is required before publishing.")},
+            )
+        return attrs
+
+    @typing.override
     def update(self, instance: Tutorial, validated_data: dict[typing.Any, typing.Any]):
         old_status_enum = instance.status_enum
         updated_tutorial = super().update(instance, validated_data)

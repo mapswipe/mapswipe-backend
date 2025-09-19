@@ -2,6 +2,8 @@ import factory
 from factory.django import DjangoModelFactory
 from ulid import ULID
 
+from apps.common.models import IconEnum
+
 from .models import (
     Tutorial,
     TutorialInformationPage,
@@ -26,6 +28,16 @@ class TutorialScenarioPageFactory(DjangoModelFactory):
 
     client_id = factory.LazyFunction(lambda: str(ULID()))
     scenario_page_number = factory.Sequence(lambda n: n)
+    instructions_icon = IconEnum.ADD_OUTLINE
+    instructions_title = factory.Sequence(lambda n: f"Instruction title for page {n}")
+
+    hint_description = factory.Sequence(lambda n: f"Hint description for page {n}")
+    hint_icon = IconEnum.ADD_OUTLINE
+    hint_title = factory.Sequence(lambda n: f"Hint title for page {n}")
+
+    success_description = factory.Sequence(lambda n: f"success description for page {n}")
+    success_icon = IconEnum.ADD_OUTLINE
+    success_title = factory.Sequence(lambda n: f"success title for page {n}")
 
 
 class TutorialTaskFactory(DjangoModelFactory):
