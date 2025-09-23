@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.1-dev2](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.1-dev1..v0.2.1-dev2) - 2025-09-23
+### Changes:
+
+#### 🐛 Bug Fixes
+
+- Global file upload issue - ([334f487](https://github.com/mapswipe/mapswipe-backend/commit/334f487d63b50289b1c0c9719a599bf2e1dae202))
+
+### 🍻 Pull Requests (1)
+- (#172) [Fix: global file upload issue](https://github.com/mapswipe/mapswipe-backend/pull/172)
+
+
 ## [0.2.1-dev1](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.1-dev0..v0.2.1-dev1) - 2025-09-18
 ### Changes:
 
