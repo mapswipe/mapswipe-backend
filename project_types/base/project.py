@@ -203,7 +203,7 @@ class BaseProject[
     def _process_project(self):
         if self.project.status_enum != Project.Status.READY_TO_PROCESS:
             raise ValidationException(
-                "Project can only be processed if current state is 'Ready to Process'",
+                f"Project cannot be processed if project status is '{self.project.status_enum}'",
             )
 
         logger.info("project:%s - start creating a project", self.project.pk)
@@ -235,7 +235,8 @@ class BaseProject[
                     "Something unexpected happened! Please reach out on the MapSwipe slack for any further assistance."
                 )
 
-            self.project.update_status(Project.Status.PROCESSING_FAILED, False)
+            if self.project.status_enum == Project.Status.READY_TO_PROCESS:
+                self.project.update_status(Project.Status.PROCESSING_FAILED, False)
             self.project.save(
                 update_fields=[
                     "status",
@@ -244,7 +245,8 @@ class BaseProject[
             )
         else:
             self.project.status_message = None
-            self.project.update_status(Project.Status.PROCESSED, False)
+            if self.project.status_enum == Project.Status.READY_TO_PROCESS:
+                self.project.update_status(Project.Status.PROCESSED, False)
             self.project.update_processing_status(Project.ProcessingStatus.COMPLETED, False)
             self.project.save(
                 update_fields=[
@@ -450,11 +452,12 @@ class BaseProject[
             Project.Status.FINISHED,
         ]:
             raise ValidationException(
-                "Project can only be published if project status is 'Ready to Process' or 'Published'",
+                f"Project cannot be pushed to firebase if project status is '{self.project.status_enum.label}'",
             )
         if self.project.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
+            label = self.project.firebase_push_status_enum.label if self.project.firebase_push_status_enum else "None"
             raise ValidationException(
-                "Project can only be published if firebase push status is 'Ready to Process'",
+                f"Project cannot be pushed to firebase if firebase push status is '{label}'",
             )
 
         self.project.update_firebase_push_status(FirebasePushStatusEnum.PROCESSING)
@@ -509,9 +512,8 @@ class BaseProject[
             self.project.update_firebase_push_status(FirebasePushStatusEnum.FAILED, False)
             # TODO(tnagorra): We also need to clear any intermediate values for groups, tasks and projects in firebase
             # NOTE: If project has already been published, we cannot update it's status
-            if self.project.status_enum != Project.Status.PUBLISHED:
+            if self.project.status_enum == Project.Status.READY_TO_PUBLISH:
                 self.project.update_status(Project.Status.PUBLISHING_FAILED, False)
-                # TODO(tnagorra): We also need to clear any intermediate values for groups, tasks and projects
             self.project.save(
                 update_fields=[
                     "status",
@@ -523,7 +525,8 @@ class BaseProject[
         else:
             self.project.status_message = None
             self.project.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
-            self.project.update_status(Project.Status.PUBLISHED, False)
+            if self.project.status_enum == Project.Status.READY_TO_PUBLISH:
+                self.project.update_status(Project.Status.PUBLISHED, False)
             self.project.save(
                 update_fields=[
                     "status",
