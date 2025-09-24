@@ -213,7 +213,7 @@ class ValidateImageProject(
 
             bulk_mgr.add(
                 ProjectTask(
-                    firebase_id=f"t{f_id}",
+                    firebase_id=f"{f_id}",
                     task_group_id=group.pk,
                     geometry=None,
                     # FIXME(tnagorra): Do we need to define all of these here?
