@@ -33,7 +33,7 @@ class MappingSession(models.Model):
     project_task_group = models.ForeignKey[ProjectTaskGroup, ProjectTaskGroup](ProjectTaskGroup, on_delete=models.PROTECT)
     contributor_user = models.ForeignKey[ContributorUser, ContributorUser](ContributorUser, on_delete=models.PROTECT)
 
-    app_version = models.CharField[str, str](max_length=10)
+    app_version = models.CharField[str, str](max_length=255)
     client_type: int = IntegerChoicesField(choices_enum=MappingSessionClientTypeEnum)  # type: ignore[reportAssignmentType]
     items_count = models.IntegerField[int, int]()  # TODO(thenav56): Rename or just use task_group.number_of_tasks?
     start_time = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](
