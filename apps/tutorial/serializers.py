@@ -374,7 +374,6 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
 
     @typing.override
     def update(self, instance: Tutorial, validated_data: dict[typing.Any, typing.Any]):
-        old_status_enum = instance.status_enum
         scenarios_data = self.initial_data.get("scenarios") or []
         information_pages_data = self.initial_data.get("information_pages") or []
         validated_data.pop("scenarios", None)
@@ -421,7 +420,10 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
             information_page_serializer.is_valid(raise_exception=True)
             information_page_serializer.save()
 
-        if old_status_enum == Tutorial.Status.PUBLISHED and updated_tutorial.status_enum == Tutorial.Status.PUBLISHED:
+        if updated_tutorial.status_enum in [
+            Tutorial.Status.PUBLISHED,
+            Tutorial.Status.ARCHIVED,
+        ]:
             updated_tutorial.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
             transaction.on_commit(lambda: push_tutorial_to_firebase.delay(updated_tutorial.pk))
 
@@ -534,10 +536,16 @@ class TutorialStatusUpdateSerializer(UserResourceSerializer[Tutorial]):
         old_status_enum = instance.status_enum
         updated_tutorial = super().update(instance, validated_data)
 
-        if (
-            old_status_enum != Tutorial.Status.READY_TO_PUBLISH
-            and updated_tutorial.status_enum == Tutorial.Status.READY_TO_PUBLISH
-        ):
+        # NOTE: This check should technically never be called.
+        status_changed = old_status_enum != updated_tutorial.status_enum
+        if not status_changed:
+            return updated_tutorial
+
+        if updated_tutorial.status_enum in [
+            Tutorial.Status.READY_TO_PUBLISH,
+            Tutorial.Status.PUBLISHED,
+            Tutorial.Status.ARCHIVED,
+        ]:
             updated_tutorial.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
             transaction.on_commit(lambda: push_tutorial_to_firebase.delay(updated_tutorial.pk))
 

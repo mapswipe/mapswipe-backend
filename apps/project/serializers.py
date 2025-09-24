@@ -394,13 +394,15 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
 
     @typing.override
     def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:
-        old_status_enum = instance.status_enum
         updated_project = super().update(instance, validated_data)
 
-        # FIXME(tnagorra): Should we be able to edit paused and withdrawn projects?
-        if old_status_enum == Project.Status.PUBLISHED and updated_project.status_enum == Project.Status.PUBLISHED:
+        if updated_project.status_enum in [
+            Project.Status.PUBLISHED,
+            Project.Status.PAUSED,
+            Project.Status.WITHDRAWN,
+            Project.Status.FINISHED,
+        ]:
             updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
-            # FIXME(tnagorra): Published project should not set state to PUBLISHING_FAILED
             transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
 
         return updated_project
@@ -667,10 +669,13 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
         old_status_enum = instance.status_enum
         updated_project = super().update(instance, validated_data)
 
-        if (
-            old_status_enum != Project.Status.READY_TO_PROCESS
-            and updated_project.status_enum == Project.Status.READY_TO_PROCESS
-        ):
+        # NOTE: This check should technically never be called.
+        status_changed = old_status_enum != updated_project.status_enum
+        if not status_changed:
+            return updated_project
+
+        if updated_project.status_enum == Project.Status.READY_TO_PROCESS:
+            # NOTE: Validate and Street projects take more time to process
             if updated_project.project_type_enum in [
                 ProjectTypeEnum.VALIDATE,
                 ProjectTypeEnum.STREET,
@@ -684,11 +689,13 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
                 )
             else:
                 transaction.on_commit(lambda: process_project_task.delay(updated_project.pk))
-
-        elif (
-            old_status_enum != Project.Status.READY_TO_PUBLISH
-            and updated_project.status_enum == Project.Status.READY_TO_PUBLISH
-        ):
+        elif updated_project.status_enum in [
+            Project.Status.READY_TO_PUBLISH,
+            Project.Status.PUBLISHED,
+            Project.Status.PAUSED,
+            Project.Status.WITHDRAWN,
+            Project.Status.FINISHED,
+        ]:
             updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
             transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
 

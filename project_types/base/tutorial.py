@@ -321,13 +321,17 @@ class BaseTutorial[
         )
 
     def _push_tutorial_on_firebase(self):
-        if self.tutorial.status_enum not in [Tutorial.Status.READY_TO_PUBLISH, Tutorial.Status.PUBLISHED]:
+        if self.tutorial.status_enum not in [
+            Tutorial.Status.READY_TO_PUBLISH,
+            Tutorial.Status.PUBLISHED,
+        ]:
             raise TutorialValidationException(
-                "Tutorial can only be published if status is 'Ready to Process' or 'Published'",
+                f"Tutorial cannot be pushed to firebase if tutorial status is '{self.tutorial.status_enum.label}'",
             )
         if self.tutorial.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
+            label = self.tutorial.firebase_push_status_enum.label if self.tutorial.firebase_push_status_enum else "None"
             raise TutorialValidationException(
-                "Tutorial can only be published if firebase push status is 'Pending'",
+                f"Tutorial cannot be pushed to firebase if firebase push status is '{label}'",
             )
 
         self.tutorial.update_firebase_push_status(FirebasePushStatusEnum.PROCESSING)
@@ -371,9 +375,8 @@ class BaseTutorial[
             self.tutorial.update_firebase_push_status(FirebasePushStatusEnum.FAILED, False)
             # TODO(tnagorra): We also need to clear any intermediate values for groups, tasks and tutorial in firebase
             # NOTE: If tutorial has already been published, we cannot update it's status
-            if self.tutorial.status_enum != Tutorial.Status.PUBLISHED:
+            if self.tutorial.status_enum == Tutorial.Status.READY_TO_PUBLISH:
                 self.tutorial.update_status(Tutorial.Status.PUBLISHING_FAILED, False)
-
             self.tutorial.save(
                 update_fields=[
                     "status",
@@ -385,7 +388,8 @@ class BaseTutorial[
         else:
             self.tutorial.status_message = None
             self.tutorial.update_firebase_push_status(FirebasePushStatusEnum.SUCCESS)
-            self.tutorial.update_status(Tutorial.Status.PUBLISHED, True)
+            if self.tutorial.status_enum == Tutorial.Status.READY_TO_PUBLISH:
+                self.tutorial.update_status(Tutorial.Status.PUBLISHED, False)
             self.tutorial.save(
                 update_fields=[
                     "status",
