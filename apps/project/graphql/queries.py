@@ -8,6 +8,7 @@ from strawberry_django.permissions import IsAuthenticated
 from apps.project.custom_options import get_custom_options
 from apps.project.graphql.inputs.inputs import ProjectNameInput
 from apps.project.models import Organization, Project, ProjectTypeEnum
+from utils.common import generate_project_name
 from utils.geo.raster_tile_server.config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNameEnumWithoutCustom
 from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum, VectorTileServerNameEnumWithoutCustom
 
@@ -159,7 +160,7 @@ class Query:
             ],
         ).all()
 
-    # NOTE: This query is only for type hint.
+    # NOTE: This query is only for name hint.
     @strawberry_django.field()
     def project_name(
         self,
@@ -167,6 +168,12 @@ class Query:
     ) -> str:
         if not params:
             raise GraphQLError("params is required to build project name")
+        requesting_organization = Organization.objects.get(pk=params.requesting_organization_id)
 
-        organization_name = Organization.objects.get(pk=params.requesting_organization_id)
-        return f"{params.topic} - {params.region} ({params.project_number}) {organization_name}"
+        return generate_project_name(
+            project_type=params.project_type,
+            topic=params.topic,
+            requesting_organization_name=requesting_organization.name,
+            region=params.region,
+            project_number=params.project_number,
+        )

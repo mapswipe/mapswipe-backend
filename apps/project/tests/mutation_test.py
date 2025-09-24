@@ -619,7 +619,7 @@ class TestProjectMutation(TestCase):
                     id=self.gID(latest_project.requesting_organization.pk),
                     name=latest_project.requesting_organization.name,
                 ),
-                name=f"{latest_project.topic} - {latest_project.region} ({latest_project.project_number}) {latest_project.requesting_organization.name}",  # noqa: E501
+                name=f"{latest_project.project_type_enum.label} {latest_project.topic} - {latest_project.region} ({latest_project.project_number}) {latest_project.requesting_organization.name}",  # noqa: E501
                 topic=latest_project.topic,
                 region=latest_project.region,
                 projectNumber=latest_project.project_number,
@@ -629,7 +629,7 @@ class TestProjectMutation(TestCase):
                 description=latest_project.description,
                 verificationNumber=3,
                 groupSize=10,
-                maxTasksPerUser=None,
+                maxTasksPerUser=10,
                 isFeatured=latest_project.is_featured,
                 status=self.genum(Project.Status.DRAFT),
                 processingStatus=None,
@@ -724,7 +724,7 @@ class TestProjectMutation(TestCase):
                     id=self.gID(latest_project.requesting_organization.pk),
                     name=latest_project.requesting_organization.name,
                 ),
-                name=f"{latest_project.topic} - {latest_project.region} ({latest_project.project_number}) {latest_project.requesting_organization.name}",  # noqa: E501
+                name=f"{latest_project.project_type_enum.label} {latest_project.topic} - {latest_project.region} ({latest_project.project_number}) {latest_project.requesting_organization.name}",  # noqa: E501
                 topic=latest_project.topic,
                 region=latest_project.region,
                 projectNumber=latest_project.project_number,

@@ -7,7 +7,7 @@ from apps.common.graphql.inputs import (
     UserResourceCreateInputMixin,
     UserResourceTopLevelUpdateInputMixin,
 )
-from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum
+from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
 
 from .asset_types import ObjectImageAssetPropertyInput
 
@@ -124,6 +124,7 @@ class ProjectAssetCreateInput(UserResourceCreateInputMixin):
 
 @strawberry.input
 class ProjectNameInput:
+    project_type: ProjectTypeEnum
     requesting_organization_id: strawberry.ID
     topic: str
     region: str

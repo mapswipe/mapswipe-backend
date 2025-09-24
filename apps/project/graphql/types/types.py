@@ -190,7 +190,7 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
         return 0
 
     @strawberry_django.field(
-        only=["topic", "region", "project_number", "requesting_organization__name"],
+        only=["topic", "region", "project_number", "requesting_organization__name", "project_type"],
         annotate={"generated_name": Project.generate_name_query()},
         description="Project name generated from topic, region, project number, and requesting organization name.",
     )
