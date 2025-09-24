@@ -671,7 +671,19 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
             old_status_enum != Project.Status.READY_TO_PROCESS
             and updated_project.status_enum == Project.Status.READY_TO_PROCESS
         ):
-            transaction.on_commit(lambda: process_project_task.delay(updated_project.pk))
+            if updated_project.project_type_enum in [
+                ProjectTypeEnum.VALIDATE,
+                ProjectTypeEnum.STREET,
+            ]:
+                transaction.on_commit(
+                    lambda: process_project_task.apply_async(
+                        args=(updated_project.pk,),
+                        soft_time_limit=900,  # 15 minutes
+                        time_limit=960,  # 16 minutes
+                    ),
+                )
+            else:
+                transaction.on_commit(lambda: process_project_task.delay(updated_project.pk))
 
         elif (
             old_status_enum != Project.Status.READY_TO_PUBLISH
