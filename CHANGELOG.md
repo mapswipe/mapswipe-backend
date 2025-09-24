@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.2.1-dev3](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.1-dev2..v0.2.1-dev3) - 2025-09-24
+### Changes:
+
+#### 🚀  Features
+
+- *(celery)* Add time limits for project process tasks - ([1fe320b](https://github.com/mapswipe/mapswipe-backend/commit/1fe320b9c72a83e80c39b47a8d80fb255ef3a768))
+- *(model)* Add project type to generated name - ([40537b7](https://github.com/mapswipe/mapswipe-backend/commit/40537b7399309cbac8c18331593fa51375e42e8c))
+- *(name)* Use common function for name generation in model and name hint - ([312c0ea](https://github.com/mapswipe/mapswipe-backend/commit/312c0ea1d3f220add958dcd0057136fa9c3ad4c0))
+- *(project)* Add old_id in project type and filter - ([a4c9a49](https://github.com/mapswipe/mapswipe-backend/commit/a4c9a49a93b4745ddcef9b43b7c4315b84040d77))
+- *(query)* New query for generated name hint - ([d2347a0](https://github.com/mapswipe/mapswipe-backend/commit/d2347a00864976354b95a8d5454411ccf66bdd70))
+- *(serializer)* Update fire base push conditions - ([6f0c8b4](https://github.com/mapswipe/mapswipe-backend/commit/6f0c8b4a3ec448f1bd9cd564e3b925690fbe25f0))
+- *(serializer)* Add validation for tutorial status update - ([f6123a6](https://github.com/mapswipe/mapswipe-backend/commit/f6123a69322a145ba827ca656a6be8ff0732ea44))
+- *(test)* Update test to include new generated name - ([2714c5f](https://github.com/mapswipe/mapswipe-backend/commit/2714c5f20ff498cc3d3b1a99b76c56c9840040d2))
+- Cleanup temp tables before adding data to temp tables - ([11c76c6](https://github.com/mapswipe/mapswipe-backend/commit/11c76c668fa0c45bdbcb172529c59d31c1568e55))
+- Increment the lock expire for pull_results_from_firebase - ([6eeb515](https://github.com/mapswipe/mapswipe-backend/commit/6eeb51546afa1897bb1f6ba0761bfdd893955e8d))
+- Add task job expiration - ([b8825e5](https://github.com/mapswipe/mapswipe-backend/commit/b8825e59a21af8de92391e7145f4579a89d9a0ec))
+
+#### 🐛 Bug Fixes
+
+- *(project)* Use valid state machine transition for project - ([54124dd](https://github.com/mapswipe/mapswipe-backend/commit/54124dd47037fe2e5d87e9cc01289a8e88af3c6b))
+- *(project)* Update type of old_id - ([0db24d1](https://github.com/mapswipe/mapswipe-backend/commit/0db24d1777b42f2a95f0e20f48e0241a9b1e704f))
+- *(project)* Move generate_project_name to project model - ([bb6550d](https://github.com/mapswipe/mapswipe-backend/commit/bb6550d142821bc22bdbaa685c9087e3661d9899))
+- *(tutorial)* Use state machine transitions for tutorial - ([cc46de6](https://github.com/mapswipe/mapswipe-backend/commit/cc46de63f418a1f4823a42ee16fd1800c0701947))
+- Sync MappingSession app_version max_length with temp table field - ([2bf4743](https://github.com/mapswipe/mapswipe-backend/commit/2bf4743fe517264753f51f0cce574bc28db34748))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(model)* Remove default value for max_task_per_user - ([8918bce](https://github.com/mapswipe/mapswipe-backend/commit/8918bce2d73285f9ac2c28d981483927fd011a43))
+- *(name-query)* Remove project type from name query and test - ([60830d6](https://github.com/mapswipe/mapswipe-backend/commit/60830d66def819a71dd28f22ccabbad12840f974))
+
+### 🍻 Pull Requests (6)
+- (#173) [Feat/name query](https://github.com/mapswipe/mapswipe-backend/pull/173)
+- (#174) [Feat(serializer): update fire base push conditions](https://github.com/mapswipe/mapswipe-backend/pull/174)
+- (#175) [Feat(serializer): add validation for tutorial status update](https://github.com/mapswipe/mapswipe-backend/pull/175)
+- (#176) [Fix/worker stuck issue](https://github.com/mapswipe/mapswipe-backend/pull/176)
+- (#177) [Feat(celery): Add time limits for project process tasks](https://github.com/mapswipe/mapswipe-backend/pull/177)
+- (#178) [Update type of old_id in project model](https://github.com/mapswipe/mapswipe-backend/pull/178)
+
+
 ## [0.2.1-dev2](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.1-dev1..v0.2.1-dev2) - 2025-09-23
 ### Changes:
 
@@ -134,6 +173,7 @@
 - *(project)* Use enum label on error message instead of enum value - ([be08f15](https://github.com/mapswipe/mapswipe-backend/commit/be08f15c63f457f4b3efd673d3798ffaea740708))
 - *(project)* Convert to geography before calculating group area - ([a759caf](https://github.com/mapswipe/mapswipe-backend/commit/a759cafb0e704041395be82de73f1bdbccd6301e))
 - *(project)* Set progress status when progress is 100 - ([ea71f53](https://github.com/mapswipe/mapswipe-backend/commit/ea71f537082940518c4e3c95e0b829ca27930393))
+- *(rastertile)* Add mkt param for bing url - ([1b0d564](https://github.com/mapswipe/mapswipe-backend/commit/1b0d5646da922e38681ff5fdcd0d298dafe09ebd))
 
 #### 🧪 Testing
 
