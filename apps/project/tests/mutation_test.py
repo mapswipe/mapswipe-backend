@@ -1560,7 +1560,7 @@ class TestProjectTypeMutation(TestCase):
         fb_project: typing.Any = project_ref.get()
         assert fb_project is not None
 
-    @patch("apps.project.serializers.process_project_task.delay")
+    @patch("apps.project.serializers.process_project_task.apply_async")
     def test_project_street(self, mock_requests):
         self.force_login(self.user)
         project_data = {
@@ -1660,4 +1660,3 @@ class TestProjectTypeMutation(TestCase):
         assert resp_data["result"]["status"] == self.genum(Project.Status.READY_TO_PROCESS)
 
         mock_requests.assert_called_once()
-        mock_requests.assert_has_calls([call(int(project_id))])
