@@ -1,10 +1,12 @@
 import strawberry
 import strawberry_django
 from django.db.models import QuerySet
+from graphql import GraphQLError
 from strawberry_django.pagination import OffsetPaginated
 from strawberry_django.permissions import IsAuthenticated
 
 from apps.project.custom_options import get_custom_options
+from apps.project.graphql.inputs.inputs import ProjectNameInput
 from apps.project.models import Organization, Project, ProjectTypeEnum
 from utils.geo.raster_tile_server.config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNameEnumWithoutCustom
 from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum, VectorTileServerNameEnumWithoutCustom
@@ -156,3 +158,21 @@ class Query:
                 Project.Status.PUBLISHED,
             ],
         ).all()
+
+    # NOTE: This query is only for name hint.
+    @strawberry_django.field()
+    def project_name(
+        self,
+        params: ProjectNameInput | None,
+    ) -> str:
+        if not params:
+            raise GraphQLError("params is required to build project name")
+        requesting_organization = Organization.objects.get(pk=params.requesting_organization_id)
+
+        return Project.generate_project_name(
+            project_type=params.project_type,
+            topic=params.topic,
+            requesting_organization_name=requesting_organization.name,
+            region=params.region,
+            project_number=params.project_number,
+        )

@@ -6,7 +6,7 @@ from warnings import deprecated
 from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.geos import GEOSGeometry
 from django.db import models
-from django.db.models import ExpressionWrapper, Q
+from django.db.models import Case, CharField, ExpressionWrapper, Q, When
 from django.db.models.expressions import Value
 from django.db.models.functions import Concat, Lower
 from django.utils.translation import gettext_lazy
@@ -498,18 +498,44 @@ class Project(UserResource, FirebasePushResource):
     def __str__(self) -> str:
         return self.generate_name()
 
+    # NOTE: Defininig this function here to avoid circular dependency
+    # FIXME(tnagorra): rename this to generate_name
+    # Format: "{project_type} {topic} - {region} ({project_number}) {requesting_organization.name}"
+    @staticmethod
+    def generate_project_name(
+        *,
+        project_type: ProjectTypeEnum,
+        topic: str,
+        requesting_organization_name: str,
+        region: str,
+        project_number: int,
+    ) -> str:
+        return f"{project_type.label} {topic} - {region} ({project_number}) {requesting_organization_name}"
+
+    # FIXME(tnagorra): rename this to generated_name
     def generate_name(self) -> str:
         """Get generated name for the project based on topic, region and project number.
 
         Use select_related to avoid N+1 queries.
         """
-        # Format: "{topic} - {region} ({project_number}) {requesting_organization.name}"
-        return f"{self.topic} - {self.region} ({self.project_number}) {self.requesting_organization.name}"
+        return Project.generate_project_name(
+            project_type=self.project_type_enum,
+            topic=self.topic,
+            requesting_organization_name=self.requesting_organization.name,
+            region=self.region,
+            project_number=self.project_number,
+        )
 
     @staticmethod
     def generate_name_query(prefix: str = ""):
         """Get a Django QuerySet expression to generate the project name."""
+        project_type_label = Case(
+            *[When(**{f"{prefix}project_type": choice.value}, then=Value(choice.label)) for choice in ProjectTypeEnum],
+            output_field=CharField(),
+        )
         return Concat(
+            project_type_label,
+            Value(" "),
             models.F(f"{prefix}topic"),
             Value(" - "),
             models.F(f"{prefix}region"),

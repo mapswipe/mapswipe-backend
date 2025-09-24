@@ -145,6 +145,7 @@ class ProjectExportAssetTypeMixin:
 @strawberry_django.type(Project)
 class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePushResourceTypeMixin):
     id: strawberry.ID
+    old_id: strawberry.ID
     project_type: strawberry.auto
     requesting_organization_id: strawberry.ID
     requesting_organization: OrganizationType
@@ -189,7 +190,7 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
         return 0
 
     @strawberry_django.field(
-        only=["topic", "region", "project_number", "requesting_organization__name"],
+        only=["topic", "region", "project_number", "requesting_organization__name", "project_type"],
         annotate={"generated_name": Project.generate_name_query()},
         description="Project name generated from topic, region, project number, and requesting organization name.",
     )

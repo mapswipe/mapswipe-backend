@@ -1462,6 +1462,7 @@ input ProjectFilter {
   """
   isPrivate: BoolBaseFilterLookup
   name: String
+  oldId: StrFilterLookup
   progressStatus: ProjectProgressStatusEnumFilterLookup
   projectNumber: IntComparisonFilterLookup
   projectType: ProjectTypeEnumFilterLookup
@@ -1472,6 +1473,14 @@ input ProjectFilter {
   status: ProjectStatusEnumFilterLookup
   team: DjangoModelFilterInput
   topic: String
+}
+
+input ProjectNameInput {
+  projectNumber: Int!
+  projectType: ProjectTypeEnum!
+  region: String!
+  requestingOrganizationId: ID!
+  topic: String!
 }
 
 input ProjectOrder {
@@ -1793,6 +1802,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   Number of results contributed to this project that can be used to calculate the progress of this project. Max no. of results per task that can be used to calculate progress is equal to the `verification number`
   """
   numberOfResultsForProgress: Int!
+  oldId: ID!
   processingStatus: ProjectProcessingStatusEnum
 
   """Percentage of the required contribution that has been completed"""
@@ -2026,6 +2036,7 @@ type Query {
   project(id: ID!): ProjectType! @isAuthenticated
   projectAsset(id: ID!): ProjectAssetType! @isAuthenticated
   projectAssets(pagination: OffsetPaginationInput, filters: ProjectAssetFilter, order: ProjectAssetOrder): ProjectAssetTypeOffsetPaginated! @isAuthenticated
+  projectName(params: ProjectNameInput): String!
   projects(includeAll: Boolean! = false, filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated! @isAuthenticated
   publicOrganization(id: ID!): OrganizationType!
   publicOrganizations(filters: OrganizationFilter, order: OrganizationOrder, pagination: OffsetPaginationInput): OrganizationTypeOffsetPaginated!
