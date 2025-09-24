@@ -8,7 +8,6 @@ from strawberry_django.permissions import IsAuthenticated
 from apps.project.custom_options import get_custom_options
 from apps.project.graphql.inputs.inputs import ProjectNameInput
 from apps.project.models import Organization, Project, ProjectTypeEnum
-from utils.common import generate_project_name
 from utils.geo.raster_tile_server.config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNameEnumWithoutCustom
 from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum, VectorTileServerNameEnumWithoutCustom
 
@@ -170,7 +169,7 @@ class Query:
             raise GraphQLError("params is required to build project name")
         requesting_organization = Organization.objects.get(pk=params.requesting_organization_id)
 
-        return generate_project_name(
+        return Project.generate_project_name(
             project_type=params.project_type,
             topic=params.topic,
             requesting_organization_name=requesting_organization.name,

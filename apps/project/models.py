@@ -24,7 +24,6 @@ from apps.common.models import (
 from apps.contributor.models import ContributorTeam
 from main.db import Model
 from main.fields import OverwritableFileField
-from utils.common import generate_project_name
 from utils.fields import validate_percentage
 
 if typing.TYPE_CHECKING:
@@ -499,13 +498,27 @@ class Project(UserResource, FirebasePushResource):
     def __str__(self) -> str:
         return self.generate_name()
 
+    # NOTE: Defininig this function here to avoid circular dependency
+    # FIXME(tnagorra): rename this to generate_name
+    # Format: "{project_type} {topic} - {region} ({project_number}) {requesting_organization.name}"
+    @staticmethod
+    def generate_project_name(
+        *,
+        project_type: ProjectTypeEnum,
+        topic: str,
+        requesting_organization_name: str,
+        region: str,
+        project_number: int,
+    ) -> str:
+        return f"{project_type.label} {topic} - {region} ({project_number}) {requesting_organization_name}"
+
+    # FIXME(tnagorra): rename this to generated_name
     def generate_name(self) -> str:
         """Get generated name for the project based on topic, region and project number.
 
         Use select_related to avoid N+1 queries.
         """
-        # Format: "{topic} - {region} ({project_number}) {requesting_organization.name}"
-        return generate_project_name(
+        return Project.generate_project_name(
             project_type=self.project_type_enum,
             topic=self.topic,
             requesting_organization_name=self.requesting_organization.name,

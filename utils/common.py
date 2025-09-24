@@ -15,8 +15,6 @@ from django.db.models.fields import files
 from django.utils.translation import gettext
 from ulid import ULID
 
-from apps.project.models import ProjectTypeEnum
-
 
 def recursively_find_value(data: typing.Any, target_key: str):
     if isinstance(data, list):
@@ -213,14 +211,3 @@ def to_groups[T](features: list[T], group_size: int, start_index: int = 100):
 
 def get_random_string(length: int) -> str:
     return "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(length))
-
-
-def generate_project_name(
-    *,
-    project_type: ProjectTypeEnum,
-    topic: str,
-    requesting_organization_name: str,
-    region: str,
-    project_number: int,
-) -> str:
-    return f"{project_type.label} {topic} - {region} ({project_number}) {requesting_organization_name}"

@@ -1477,6 +1477,7 @@ input ProjectFilter {
 
 input ProjectNameInput {
   projectNumber: Int!
+  projectType: ProjectTypeEnum!
   region: String!
   requestingOrganizationId: ID!
   topic: String!
