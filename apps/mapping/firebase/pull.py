@@ -7,6 +7,7 @@ from main.logging import log_extra
 
 from .utils import (
     FirebaseCleanup,
+    cleanup_temp_tables,
     results_to_temp_table,
     transfer_results_from_temp_tables,
 )
@@ -44,6 +45,8 @@ def pull_results_from_firebase():
             firebase_id__in=project_firebase_id_to_fetch,
         )
     }
+
+    cleanup_temp_tables()
 
     firebase_cleanup = FirebaseCleanup()
     bulk_create_manager = BulkCreateManager()
