@@ -1802,7 +1802,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   Number of results contributed to this project that can be used to calculate the progress of this project. Max no. of results per task that can be used to calculate progress is equal to the `verification number`
   """
   numberOfResultsForProgress: Int!
-  oldId: ID!
+  oldId: String
   processingStatus: ProjectProcessingStatusEnum
 
   """Percentage of the required contribution that has been completed"""
