@@ -24,6 +24,9 @@ from utils.common import fd_name, tb_name
 
 logger = logging.getLogger(__name__)
 
+if typing.TYPE_CHECKING:
+    from django.db.backends.utils import CursorWrapper
+
 
 class FirebaseCleanupAlreadyDoneException(Exception): ...
 
@@ -303,6 +306,21 @@ SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_USER_GROUP = f"""
 """  # noqa: E501
 
 
+def cleanup_temp_tables(cursor: "CursorWrapper | None" = None):
+    def _cleanup(_cursor: "CursorWrapper"):
+        logger.info("Cleaning up staging results")
+        _cursor.execute(f"TRUNCATE TABLE {tb_name(MappingSessionResultTemp)} RESTART IDENTITY;")
+        _cursor.execute(f"TRUNCATE TABLE {tb_name(MappingSessionUserGroupTemp)} RESTART IDENTITY;")
+        logger.info("Cleared staging results")
+
+    if cursor is not None:
+        _cleanup(cursor)
+        return
+
+    with connection.cursor() as cursor_:
+        _cleanup(cursor_)
+
+
 def transfer_results_from_temp_tables(
     firebase_cleanup: FirebaseCleanup,
 ):
@@ -334,10 +352,7 @@ def transfer_results_from_temp_tables(
                 contributor_user_firebase_id=contributor_user_firebase_id,
             )
 
-        logger.info("Cleaning up staging results")
-        cursor.execute(f"TRUNCATE TABLE {tb_name(MappingSessionResultTemp)} RESTART IDENTITY;")
-        cursor.execute(f"TRUNCATE TABLE {tb_name(MappingSessionUserGroupTemp)} RESTART IDENTITY;")
-        logger.info("Cleared staging results")
+        cleanup_temp_tables(cursor)
 
 
 def results_to_temp_table(

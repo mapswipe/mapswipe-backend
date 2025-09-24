@@ -29,10 +29,11 @@ class CeleryLock:
 
     @staticmethod
     @contextmanager
-    def redis_lock(lock_id: str):
-        timeout_at: float = time.monotonic() + settings.REDIS_LOCK_EXPIRE - 3
+    def redis_lock(lock_id: str, *, lock_expire: int | None = None):
+        lock_expire_ = lock_expire or settings.REDIS_LOCK_EXPIRE
+        timeout_at: float = time.monotonic() + lock_expire_ - 3
         # cache.add fails if the key already exists
-        status = cache.add(lock_id, 1, settings.REDIS_LOCK_EXPIRE)
+        status = cache.add(lock_id, 1, lock_expire_)
         try:
             yield status
         finally:
