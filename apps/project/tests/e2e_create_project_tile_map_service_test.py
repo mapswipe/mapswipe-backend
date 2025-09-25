@@ -16,6 +16,7 @@ from apps.mapping.models import (
     MappingSessionUserGroup,
     MappingSessionUserGroupTemp,
 )
+from apps.project.models import Project
 from apps.user.factories import UserFactory
 from main.config import Config
 from main.tests import TestCase
@@ -611,7 +612,6 @@ class TestProjectE2E(TestCase):
         )
 
         # Test push tasks results to firebase
-        # Creating ContributorUserGroup: Without authentication
         old_contributor_user_group_data = test_data["create_contributor_user_group_data"]
         new_contributor_user_group_data = []
         for input_data in old_contributor_user_group_data:
@@ -642,7 +642,7 @@ class TestProjectE2E(TestCase):
                 # Replace userGroups
                 group_value[new_key]["userGroups"] = user_groups_input
 
-        ref_results = Config.FIREBASE_HELPER.ref(Config.FirebaseKeys.results_projects())
+        ref_results = self.firebase_helper.ref("/v2/results/")
         ref_results.set(input_data)
         fb_results_data = ref_results.get()
         assert fb_results_data is not None
@@ -656,7 +656,11 @@ class TestProjectE2E(TestCase):
             MappingSessionResultTemp.objects.count(),
         ] == [0, 0, 0, 0, 0], "Mapping session data should be empty before pull from firebase"
 
-        pull_results_from_firebase()
+        project = Project.objects.get(id=project_id)
+        assert project.progress == 0
+
+        with self.captureOnCommitCallbacks(execute=True):
+            pull_results_from_firebase()
 
         # Check if data is pulled
         assert [
@@ -678,3 +682,5 @@ class TestProjectE2E(TestCase):
         }
 
         assert pull_firebase_data == test_data["expected_pulled_results_data"], "Difference found for pulled results data."
+        project.refresh_from_db()
+        assert project.progress > 0
