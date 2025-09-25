@@ -62,10 +62,36 @@ class CustomOptionDefaults:
         },
     ]
 
+    STREET: list[CustomOption] = [
+        {
+            "title": "Yes",
+            "icon": IconEnum.CHECKMARK_OUTLINE,
+            "value": 1,
+            "description": "the object you are looking for is in the image",
+            "icon_color": "#388E3C",
+        },
+        {
+            "title": "No",
+            "icon": IconEnum.CLOSE_OUTLINE,
+            "value": 0,
+            "description": "the object you are looking for is NOT in the image",
+            "icon_color": "#D32F2F",
+        },
+        {
+            "title": "Not Sure",
+            "icon": IconEnum.REMOVE_OUTLINE,
+            "value": 2,
+            "description": "if you're not sure or there is bad imagery",
+            "icon_color": "#616161",
+        },
+    ]
 
-def get_custom_options(project_type: ProjectTypeEnum):
+
+def get_custom_options(project_type: ProjectTypeEnum) -> list[CustomOption]:
     if project_type == ProjectTypeEnum.VALIDATE:
         return CustomOptionDefaults.VALIDATE
     if project_type == ProjectTypeEnum.VALIDATE_IMAGE:
         return CustomOptionDefaults.VALIDATE_IMAGE
+    if project_type == ProjectTypeEnum.STREET:
+        return CustomOptionDefaults.STREET
     return []
