@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.2.1-dev4](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.1-dev3..v0.2.1-dev4) - 2025-09-25
+### Changes:
+
+#### 🚀  Features
+
+- *(project)* Support AOI geometry with z values - ([4341f1d](https://github.com/mapswipe/mapswipe-backend/commit/4341f1df83489ff4223bed3bb1709495e8364426))
+- *(street)* Add default custom options for street project - ([c7dd323](https://github.com/mapswipe/mapswipe-backend/commit/c7dd3231250a8af8262db16edbea0a60981dbe9f))
+
+#### 🐛 Bug Fixes
+
+- *(filter)* Add prefix on lookup field in unaccented filter - ([0a045e2](https://github.com/mapswipe/mapswipe-backend/commit/0a045e2e3a99f0fd79bf7042c8c2e5e2843c68f5))
+- *(project)* Enable firebase sync for archived tutorial - ([4d96b3f](https://github.com/mapswipe/mapswipe-backend/commit/4d96b3f261aaa7464f328d5716a53b32d24b18d2))
+- *(project)* Use fallback custom options for export - ([e27cddc](https://github.com/mapswipe/mapswipe-backend/commit/e27cddc9bfc174d6f674adeae0b5d46a008902cc))
+- *(validate)* Fix processing of geometry from HOT Tasking Manager - ([814ea5b](https://github.com/mapswipe/mapswipe-backend/commit/814ea5b838bce38e3cfd2ad40776af5a619126b8))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(helm)* Replace django-app chart with toggle-django-helm - ([920c9e3](https://github.com/mapswipe/mapswipe-backend/commit/920c9e3c2825a3a7edfd5c79f2c444a278451535))
+- *(project)* Update error messages for project - ([0a86e21](https://github.com/mapswipe/mapswipe-backend/commit/0a86e21a85a4d686d918ab96caff22811c4c2499))
+
+### 🍻 Pull Requests (1)
+- (#180) [Replace django-app chart with toggle-django-helm](https://github.com/mapswipe/mapswipe-backend/pull/180)
+
+
 ## [0.2.1-dev3](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.1-dev2..v0.2.1-dev3) - 2025-09-24
 ### Changes:
 
