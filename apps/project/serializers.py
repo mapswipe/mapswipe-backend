@@ -49,6 +49,41 @@ VALID_PROJECT_STATUS_TRANSITIONS = set(
 )
 
 
+# XXX: Changing this also requires changes in the update-serializer/models
+def _validate_project_name(
+    attrs: dict[str, typing.Any],
+    project: Project | None = None,
+):
+    existing_projects = Project.objects.all()
+
+    if project:
+        # XXX: Changing this also requires changes in the update-serializer/models
+        topic = attrs.get("topic", project.topic)
+        region = attrs.get("region", project.region)
+        project_number = attrs.get("project_number", project.project_number)
+        requesting_organization = attrs.get("requesting_organization", project.requesting_organization)
+        existing_projects = existing_projects.exclude(id=project.pk)
+    else:
+        topic = attrs["topic"]
+        region = attrs["region"]
+        project_number = attrs["project_number"]
+        requesting_organization = attrs["requesting_organization"]
+
+    existing_projects = existing_projects.filter(
+        topic__iexact=topic,
+        region__iexact=region,
+        project_number=project_number,
+        requesting_organization=requesting_organization,
+    )
+
+    if existing_projects.exists():
+        raise serializers.ValidationError(
+            {
+                "topic": gettext("Project name already exists in database"),
+            },
+        )
+
+
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class ProjectCreateSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
@@ -66,6 +101,12 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
             "image",
             "team",
         )
+
+    @typing.override
+    def validate(self, attrs: dict[str, typing.Any]):
+        attrs = super().validate(attrs)
+        _validate_project_name(attrs, None)
+        return attrs
 
     def validate_requesting_organization(self, requesting_organization: Organization | None) -> Organization | None:
         if requesting_organization and requesting_organization.is_archived:
@@ -216,6 +257,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
                 },
             )
 
+        _validate_project_name(attrs, self.instance)
         self._validate_project_instruction(attrs)
         self._validate_project_type_specifics(attrs)
         return super().validate(attrs)

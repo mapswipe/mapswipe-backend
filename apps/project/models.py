@@ -482,6 +482,7 @@ class Project(UserResource, FirebasePushResource):
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         constraints = [
+            # XXX: Changing this also requires changes in the serializers
             models.UniqueConstraint(
                 Lower("topic"),
                 Lower("region"),
