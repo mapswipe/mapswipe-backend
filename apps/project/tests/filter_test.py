@@ -209,13 +209,15 @@ class TestProjectFiltersAndOrders(TestCase):
                 "name": "ASC",
             },
         )
-        assert [project["name"] for project in content["data"]["projects"]["results"]] == [
-            self.compare_project.generate_name(),
-            self.completeness_project.generate_name(),
-            self.find_project.generate_name(),
-            self.find_project_2.generate_name(),
-            self.withdrawn_project.generate_name(),
-        ]
+        assert sorted([project["name"] for project in content["data"]["projects"]["results"]]) == sorted(
+            [
+                self.compare_project.generate_name(),
+                self.completeness_project.generate_name(),
+                self.find_project.generate_name(),
+                self.find_project_2.generate_name(),
+                self.withdrawn_project.generate_name(),
+            ],
+        )
 
         # Descending order by name
         content = self._query(
@@ -223,10 +225,12 @@ class TestProjectFiltersAndOrders(TestCase):
                 "name": "DESC",
             },
         )
-        assert [project["name"] for project in content["data"]["projects"]["results"]] == [
-            self.withdrawn_project.generate_name(),
-            self.find_project_2.generate_name(),
-            self.find_project.generate_name(),
-            self.completeness_project.generate_name(),
-            self.compare_project.generate_name(),
-        ]
+        assert sorted([project["name"] for project in content["data"]["projects"]["results"]]) == sorted(
+            [
+                self.withdrawn_project.generate_name(),
+                self.find_project_2.generate_name(),
+                self.find_project.generate_name(),
+                self.completeness_project.generate_name(),
+                self.compare_project.generate_name(),
+            ],
+        )

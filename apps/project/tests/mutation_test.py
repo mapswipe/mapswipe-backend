@@ -879,7 +879,7 @@ class TestProjectMutation(TestCase):
             {
                 "field": "projectTypeSpecifics",
                 "client_id": latest_project.client_id,
-                "messages": "Configuration not provided for Find",
+                "messages": "Configuration not provided for Find Features",
                 "object_errors": None,
                 "array_errors": None,
                 "pydantic_errors": None,
