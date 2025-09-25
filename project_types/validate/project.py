@@ -250,7 +250,6 @@ class ValidateProject(
 
         logger.info("Successfully fetched AOI geojson from HOT for tm_id %s", hot_tm_id)
 
-        aoi_geometry = aoi_result.json()
         aoi_geojson = {
             "type": "FeatureCollection",
             "metadata": {
@@ -260,7 +259,7 @@ class ValidateProject(
             "features": [
                 {
                     "type": "Feature",
-                    "geometry": aoi_geometry,
+                    "geometry": aoi_result.json(),
                     "properties": {
                         "hot_tm_project_id": hot_tm_id,
                     },
@@ -270,7 +269,7 @@ class ValidateProject(
 
         # TODO(tnagorra): Also create a input geometry?
         # TODO(tnagorra): Also store intermediate geometries?
-        geometry = GEOSGeometry(aoi_result, srid=4326)
+        geometry = GEOSGeometry(aoi_result.text, srid=4326)
         geometry_extent = geometry.extent
         geometry_bbox = get_polygon_of_extent(geometry_extent)
         geometry_center = geometry.centroid
