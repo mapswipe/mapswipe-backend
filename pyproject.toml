@@ -237,3 +237,10 @@ reportUnusedFunction = "warning"
 reportUnusedImport = "warning"
 reportUnusedVariable = "warning"
 reportPrivateImportUsage = "error"
+
+[tool.coverage.report]
+# https://coverage.readthedocs.io/en/7.10.6/excluding.html#advanced-exclusion
+exclude_also = [
+    'raise NotImplementedError',
+    'if typing.TYPE_CHECKING:',
+]

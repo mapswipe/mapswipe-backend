@@ -482,6 +482,7 @@ class Project(UserResource, FirebasePushResource):
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         constraints = [
+            # XXX: Changing this also requires changes in the serializers
             models.UniqueConstraint(
                 Lower("topic"),
                 Lower("region"),
@@ -510,7 +511,7 @@ class Project(UserResource, FirebasePushResource):
         region: str,
         project_number: int,
     ) -> str:
-        return f"{project_type.label} {topic} - {region} ({project_number}) {requesting_organization_name}"
+        return f"{project_type.label} - {topic} - {region} ({project_number}) {requesting_organization_name}"
 
     # FIXME(tnagorra): rename this to generated_name
     def generate_name(self) -> str:
@@ -530,12 +531,20 @@ class Project(UserResource, FirebasePushResource):
     def generate_name_query(prefix: str = ""):
         """Get a Django QuerySet expression to generate the project name."""
         project_type_label = Case(
-            *[When(**{f"{prefix}project_type": choice.value}, then=Value(choice.label)) for choice in ProjectTypeEnum],
+            *[
+                When(
+                    **{f"{prefix}project_type": choice.value},
+                    then=Value(choice.label),
+                )
+                for choice in ProjectTypeEnum
+            ],
+            default=models.Value("N/A"),
             output_field=CharField(),
         )
+
         return Concat(
             project_type_label,
-            Value(" "),
+            Value(" - "),
             models.F(f"{prefix}topic"),
             Value(" - "),
             models.F(f"{prefix}region"),

@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('type', django_choices_field.fields.IntegerChoicesField(choices=[(1, 'Project Type Aggregates'), (2, 'All projects'), (3, 'Projects geojson with centroid'), (4, 'Projects Geojson with GEOM')], primary_key=True, serialize=False)),
                 ('file_size', models.PositiveIntegerField(help_text='The size of the file in bytes')),
-                ('file', main.fields.OverwritableFileField(blank=True, help_text='The file associated with the asset', max_length=255, null=True, storage=django.core.files.storage.FileSystemStorage(allow_overwrite=True), upload_to='global/asset/')),
+                ('file', main.fields.OverwritableFileField(blank=True, help_text='The file associated with the asset', max_length=255, null=True, upload_to='global/asset/')),
                 ('last_updated_at', models.DateTimeField(auto_now=True)),
             ],
         ),

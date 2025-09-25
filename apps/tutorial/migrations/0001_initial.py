@@ -53,7 +53,7 @@ class Migration(migrations.Migration):
                 ('marked_as_deleted', models.BooleanField(default=False, help_text='If this flag is enabled, this asset will be deleted in the future')),
                 ('external_url', models.CharField(blank=True, help_text='Provide link to the file associated with the asset', null=True)),
                 ('input_type', django_choices_field.fields.IntegerChoicesField(blank=True, choices=[(100, 'Image for information block')], null=True)),
-                ('file', main.fields.OverwritableFileField(help_text='The file associated with the asset', max_length=255, storage=django.core.files.storage.FileSystemStorage(allow_overwrite=True), upload_to=apps.tutorial.models.UploadHelper.tutorial_asset)),
+                ('file', main.fields.OverwritableFileField(help_text='The file associated with the asset', max_length=255, upload_to=apps.tutorial.models.UploadHelper.tutorial_asset)),
             ],
             options={
                 'ordering': ['-id'],

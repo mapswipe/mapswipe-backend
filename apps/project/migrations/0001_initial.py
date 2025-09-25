@@ -122,7 +122,7 @@ class Migration(migrations.Migration):
                 ('external_url', models.CharField(blank=True, help_text='Provide link to the file associated with the asset', null=True)),
                 ('export_type', django_choices_field.fields.IntegerChoicesField(blank=True, choices=[(100, 'Aggregated Results (CSV)'), (101, 'Aggregated Results (with Geometry) (GEOJSON)'), (104, 'Groups (CSV)'), (105, 'History (CSV)'), (106, 'Results (CSV)'), (107, 'Tasks (CSV)'), (108, 'Users (CSV)'), (109, 'Area of Interest (GEOJSON)'), (200, 'HOT Tasking Manager Geometries (GEOJSON)'), (201, 'Moderate to High Agreement Yes Maybe Geometries (GEOJSON)')], null=True)),
                 ('input_type', django_choices_field.fields.IntegerChoicesField(blank=True, choices=[(100, 'AOI Geometry'), (200, 'Image with object annotations'), (201, 'Image for project cover')], null=True)),
-                ('file', main.fields.OverwritableFileField(blank=True, help_text='The file associated with the asset', max_length=255, null=True, storage=django.core.files.storage.FileSystemStorage(allow_overwrite=True), upload_to=apps.project.models.UploadHelper.project_asset)),
+                ('file', main.fields.OverwritableFileField(blank=True, help_text='The file associated with the asset', max_length=255, null=True, upload_to=apps.project.models.UploadHelper.project_asset)),
                 ('asset_type_specifics', models.JSONField(default=dict)),
             ],
             options={
