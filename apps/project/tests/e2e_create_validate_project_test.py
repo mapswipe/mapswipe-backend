@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 import json5
+import pytest
 from django.conf import settings
 from ulid import ULID
 
@@ -243,6 +244,7 @@ class TestValidateProjectE2E(TestCase):
             contributor_user=cls.contributor_user,
         )
 
+    @pytest.mark.vcr
     def test_validate_project_e2e(self):
         self._test_project(
             "assets/tests/projects/validate/project_data.json5",
