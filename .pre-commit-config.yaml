@@ -11,6 +11,12 @@ exclude: |
     )
 
 repos:
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.9.1
+    hooks:
+      - id: commitizen
+      # - id: commitizen-branch  FIXME: Not working in PR
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
