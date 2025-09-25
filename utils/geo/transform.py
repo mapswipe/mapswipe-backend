@@ -3,6 +3,7 @@ from typing import Any
 from warnings import deprecated
 
 from django.contrib.gis.geos import GeometryCollection, GEOSGeometry, Polygon
+from django.contrib.gis.geos.prototypes.io import wkt_w
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from geojson_pydantic import Feature as PydanticFeature
@@ -10,6 +11,13 @@ from geojson_pydantic import FeatureCollection as PydanticFeatureCollection
 from geojson_pydantic.geometries import MultiPolygon as PydanticMultiPolygon
 from geojson_pydantic.geometries import Polygon as PydanticPolygon
 from osgeo import ogr
+
+
+# FIXME(tnagorra): Is there are more performant way to do this?
+def to_2d(geom: GEOSGeometry) -> GEOSGeometry:
+    wkt_writer = wkt_w(dim=2)
+    wkt_2d = wkt_writer.write(geom).decode()
+    return GEOSGeometry(wkt_2d, srid=geom.srid)
 
 
 def get_area_of_geometry(geom: GeometryCollection | GEOSGeometry):
@@ -88,7 +96,7 @@ def convert_json_dict_to_geometry_collection(geojson_dict: dict):
         if not feature.geometry:
             continue
         geometry = GEOSGeometry(feature.geometry.model_dump_json(), srid=4326)
-        geometries.append(geometry)
+        geometries.append(to_2d(geometry))
 
     geometry_collection = GeometryCollection(geometries)
     geometry_collection.srid = 4326
