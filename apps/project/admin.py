@@ -9,7 +9,7 @@ from djangoql.admin import DjangoQLSearchMixin
 
 from apps.common.admin import ArchivableResourceAdmin, FirebaseResourceAdmin, UserResourceAdmin
 
-from .models import Organization, Project, ProjectAsset
+from .models import Geometry, Organization, Project, ProjectAsset
 
 
 class IncludedInTeamFilter(admin.SimpleListFilter):
@@ -49,10 +49,16 @@ class OrganizationAdmin(
     list_select_related = True
 
 
+@admin.register(Geometry)
+class GeometryAdmin(DjangoQLSearchMixin, admin.ModelAdmin[Geometry]):
+    list_display = ("id",)
+    search_fields = ("id",)
+
+
 @admin.register(Project)
 class ProjectAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, UserResourceAdmin, admin.ModelAdmin):
     list_display = (
-        "generate_name",
+        "generated_name",
         "requesting_organization",
         "project_type",
         "tutorial",
@@ -75,7 +81,29 @@ class ProjectAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, UserResourceAdmin
         "processing_status",
     )
     list_select_related = True
-    autocomplete_fields = ("requesting_organization", "team", "tutorial", "image")
+    autocomplete_fields = (
+        "requesting_organization",
+        "team",
+        "tutorial",
+        "image",
+        "aoi_geometry_input_asset",
+        "project_type_specific_output_asset",
+        "aoi_geometry",
+    )
+
+    @typing.override
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Project]:
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(
+                generated_name=Project.generate_name_query(),
+            )
+        )
+
+    @admin.display(ordering="generated_name", description="Generated Name")
+    def generated_name(self, obj: Project):
+        return obj.generated_name  # type: ignore[reportAttributeAccessIssue]
 
 
 @admin.register(ProjectAsset)

@@ -423,8 +423,14 @@ def parse_project_name(
         entry,
     )
 
-    # Regex pattern to match the main structure
-    match = re.match(r"(.+?)\s*-\s*(.+?)\s*\((\d+)\)\s*(.*)", name.strip())
+    name_ = name.strip()
+
+    if name_.count("-") == 2:
+        # For pattern: Find - Buildings in Sucre - Venezuela (3) HOT
+        match = re.match(r".*\s*-\s*(.+?)\s*-\s*(.+?)\s*\((\d+)\)\s*(.*)", name_)
+    else:
+        # For pattern: Buildings in Sucre - Venezuela (3) HOT
+        match = re.match(r"(.+?)\s*-\s*(.+?)\s*\((\d+)\)\s*(.*)", name_)
 
     if match:
         topic = match.group(1).strip()
