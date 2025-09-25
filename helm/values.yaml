@@ -10,6 +10,8 @@ app:
   ingress:
     enabled: true
     className: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: "10m"
 
   redis:
     enabled: true
@@ -32,6 +34,8 @@ app:
       defaultStorageClass:
     apiIngress:
       ingressClassName: nginx
+      annotations:
+        nginx.ingress.kubernetes.io/proxy-body-size: "10m"
     auth:
       rootUser: mapswipe
       rootPassword:
