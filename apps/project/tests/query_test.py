@@ -1,7 +1,7 @@
 import typing
 
 from apps.project.factories import OrganizationFactory, ProjectFactory
-from apps.project.models import ProjectTypeEnum
+from apps.project.models import Project, ProjectTypeEnum
 from apps.user.factories import UserFactory
 from main.tests import TestCase
 from utils.common import format_object_keys, to_camel_case
@@ -337,3 +337,17 @@ class TestProjectQuery(TestCase):
                 ],
             ),
         }, content
+
+        for project in self.projects:
+            generated_name = project.generate_name()
+
+            generated_name_from_query = (
+                Project.objects.filter(pk=project.pk)
+                .annotate(gen_name=Project.generate_name_query())
+                .values_list("gen_name", flat=True)
+                .get()
+            )
+
+            assert generated_name == generated_name_from_query, (
+                f"Mismatch for project {project.pk}: '{generated_name}' does not equal '{generated_name_from_query}'"
+            )
