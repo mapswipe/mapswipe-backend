@@ -411,7 +411,7 @@ class TestValidateProjectE2E(TestCase):
         # Publish Tutorial
         publish_tutorial_data = {
             "clientId": tutorial_client_id,
-            "status": "PUBLISHED",
+            "status": "READY_TO_PUBLISH",
         }
         with self.captureOnCommitCallbacks(execute=True):
             publish_tutorial_content = self.query_check(
@@ -421,7 +421,7 @@ class TestValidateProjectE2E(TestCase):
         publish_tutorial_response = publish_tutorial_content["data"]["updateTutorialStatus"]
         assert publish_tutorial_response["ok"], publish_tutorial_response["errors"]
         assert publish_tutorial_response is not None, "Processed tutorial publish response is None"
-        assert publish_tutorial_response["result"]["status"] == "PUBLISHED", "tutorial should be published"
+        assert publish_tutorial_response["result"]["status"] == "READY_TO_PUBLISH", "tutorial should be ready to published"
 
         # CHECK TUTORIAL, GROUP AND TASK CREATED IN FIREBASE
 
@@ -492,7 +492,7 @@ class TestValidateProjectE2E(TestCase):
         # Publish project
         publish_project_data = {
             "clientId": project_client_id,
-            "status": "PUBLISHED",
+            "status": "READY_TO_PUBLISH",
         }
         with self.captureOnCommitCallbacks(execute=True):
             publish_project_content = self.query_check(
@@ -502,7 +502,7 @@ class TestValidateProjectE2E(TestCase):
         publish_project_response = publish_project_content["data"]["updateProjectStatus"]
         assert publish_project_response["ok"], publish_project_response["errors"]
         assert publish_project_response is not None, "Processed project publish response is None"
-        assert publish_project_response["result"]["status"] == "PUBLISHED", "Project should be published"
+        assert publish_project_response["result"]["status"] == "READY_TO_PUBLISH", "Project should be ready to published"
 
         # CHECK PROJECT, GROUP AND TASK CREATED IN FIREBASE
 
