@@ -212,7 +212,7 @@ def _export_project_data(project: Project, tmp_directory: Path):
                 ),
             )
 
-            logger.info("Saved export file %s to %s", project_asset.type, project_asset.file)
+            logger.info("Saved export file %s to %s", project_asset.type_enum.label, project_asset.file)
 
 
 def export_project_data(project: Project):
