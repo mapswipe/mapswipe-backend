@@ -19,7 +19,7 @@ from django.contrib.gis.db.models.functions import Area
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandParser
 from django.db import models
-from django.db.models.functions import Cast, Trim
+from django.db.models.functions import Cast, Replace, Trim
 from django.db.utils import IntegrityError
 from django.utils import timezone
 from ulid import ULID
@@ -211,18 +211,41 @@ def get_contributor_user_group_id_by_old_id(old_id: str) -> int:
 
 
 @cached(cache=LRUCache(maxsize=1000))
-def get_organization_by_name(name: str | None) -> Organization:
-    name_ = sanitize_name(name or "")
+def get_organization_by_name(
+    name: str | None,
+    bot_user: User,
+) -> Organization:
+    name_ = " ".join((name or "").replace("\n", " ").strip().split())
+
     if not name_:
-        return Organization.objects.get(name__iexact="Unknown")
+        return Organization.objects.get_or_create(
+            name="Unknown",
+            defaults=dict(
+                client_id=str(ULID()),
+                created_by=bot_user,
+                modified_by=bot_user,
+            ),
+        )[0]
+
     try:
         return Organization.objects.annotate(
-            # XXX: Not same as sanitize_name, but it is working for now
-            trimmed_name=Trim("name"),
+            replaced_newlines=Replace(models.F("name"), models.Value("\n"), models.Value(" ")),
+            stripped=Trim(models.F("replaced_newlines")),
+            trimmed_name=models.Func(
+                models.F("stripped"),
+                models.Value(r"\s+"),
+                models.Value(" "),
+                function="REGEXP_REPLACE",
+            ),
         ).get(trimmed_name__iexact=name_)
     except Organization.DoesNotExist:
         logger.error("Organization name not found: <%s>", name_)
-        raise
+        return Organization.objects.create(
+            name=name,
+            client_id=str(ULID()),
+            created_by=bot_user,
+            modified_by=bot_user,
+        )
 
 
 # TODO(thenav56): Cache?
@@ -502,7 +525,7 @@ def create_project(
             project_number=project_number,
             centroid=existing_project.geom and existing_project.geom.centroid,
             project_type=parse_existing_project_type(existing_project.project_type),
-            requesting_organization=get_organization_by_name(requesting_organization),
+            requesting_organization=get_organization_by_name(requesting_organization, bot_user),
             created_by_id=get_user_by_contributor_user_firebase_id(existing_project.created_by, fallback=bot_user),
             modified_by_id=get_user_by_contributor_user_firebase_id(existing_project.created_by, fallback=bot_user),
         )
@@ -635,59 +658,6 @@ class Command(BaseCommand):
         self._existing_projects_csv_data: dict[str, ProjectCsvMetadata] | None = None
         # This is set using cli arguments
         self.migrate_project_active_results = False
-
-    @before_after_count(Organization)
-    def handle_organization(self):
-        # TODO(thenav56): pull from firebase: createdBy,createdAt,description
-        existing_organization_names_qs = existing_db_models.Project.objects.values_list(
-            "organization_name",
-            flat=True,
-        ).distinct()
-
-        current_organizations_set = {sanitize_name(name) for name in Organization.objects.values_list("name", flat=True)}
-
-        unknown_organization, unknown_created = Organization.objects.get_or_create(
-            name="Unknown",
-            defaults=dict(
-                client_id=str(ULID()),
-                created_by=self.bot_user,
-                modified_by=self.bot_user,
-            ),
-        )
-
-        if unknown_created:
-            logger.info("New: %s", unknown_organization)
-
-        existing_organization_names = set(
-            [
-                *[sanitize_name(name_) for name_ in existing_organization_names_qs],
-                *[organization_name for _, _, _, organization_name in self._get_pre_parsed_project_names().values()],
-            ],
-        )
-
-        total_existing = len(existing_organization_names)
-
-        for i, name in enumerate(existing_organization_names, start=1):
-            self.stdout.write(f"\rProcessing {i}/{total_existing}", ending="")
-
-            name_ = sanitize_name(name)
-            if not name_ or name_ in current_organizations_set:
-                continue
-
-            logger.info("New: %s", name)
-
-            self.bulk_create_mgr.add(
-                Organization(
-                    name=name,
-                    client_id=str(ULID()),
-                    created_by=self.bot_user,
-                    modified_by=self.bot_user,
-                ),
-            )
-
-        self.bulk_create_mgr.done()
-        self.stdout.write("\n")
-        self.stdout.write(f"Processed {total_existing}")
 
     @before_after_count(ContributorTeam)
     def handle_teams(self):
@@ -1106,7 +1076,6 @@ class Command(BaseCommand):
 
     def _handle(self):
         self.handle_contributor_users()
-        self.handle_organization()
         self.handle_teams()
         self.handle_contributor_user_groups()
         self.handle_contributor_user_user_group_memberships()
