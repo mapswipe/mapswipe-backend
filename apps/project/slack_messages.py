@@ -23,7 +23,7 @@ class SlackMessage:
     def format_user_link(user: User) -> str:
         if user.slack_user_id:
             return f"<@{user.slack_user_id}>"
-        return user.username or user.email
+        return user.username or user.display_name
 
     @staticmethod
     def format_project_status(status_enum: ProjectStatusEnum):
@@ -303,20 +303,3 @@ def update_base_slack_message(client: MapswipeSlack, project: Project, ts: str) 
         project,
     )
     return client.update_slack_message(ts=ts, **update_message)
-
-
-def save_sent_message(project: Project):
-    updated = False
-    notifications = project.slack_progress_notifications or {}
-
-    if 90 <= project.progress < 100 and not notifications.get("90", False):
-        notifications["90"] = True
-        updated = True
-
-    if project.progress >= 100 and not notifications.get("100", False):
-        notifications["100"] = True
-        updated = True
-
-    if updated:
-        project.slack_progress_notifications = notifications
-        project.save(update_fields=["slack_progress_notifications"])

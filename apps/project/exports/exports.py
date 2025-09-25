@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 
 from django.core.files import File
+from django.db import transaction
 from ulid import ULID
 
 from apps.common.models import AssetTypeEnum
@@ -158,6 +159,15 @@ def _export_project_data(project: Project, tmp_directory: Path):
         project.number_of_results_for_progress = project_stats_by_date_df["cum_number_of_results_progress"].iloc[-1]
         project.last_contribution_date = project_stats_by_date_df.index[-1]
         # TODO: Trigger slack notifications on progress change
+        if project.progress >= 90 and project.slack_progress_notifications < 90:
+            transaction.on_commit(
+                lambda: send_slack_message_for_project.delay(project_id=project.id, action="progress-change"),
+            )
+
+        if project.progress >= 100 and project.slack_progress_notifications < 100:
+            transaction.on_commit(
+                lambda: send_slack_message_for_project.delay(project_id=project.id, action="progress-change"),
+            )
 
     project.save(
         update_fields=(
@@ -169,7 +179,6 @@ def _export_project_data(project: Project, tmp_directory: Path):
             "last_contribution_date",
         ),
     )
-    send_slack_message_for_project.delay(project_id=project.id, action="progress-change")
 
     for export_type, file in [
         (ProjectAssetExportTypeEnum.AGGREGATED_RESULTS, tmp_mapping_results_aggregate_by_task_csv),

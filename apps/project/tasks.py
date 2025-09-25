@@ -8,7 +8,6 @@ from apps.project.models import Project
 from apps.project.slack_messages import (
     SlackMessage,
     get_or_create_base_slack_message,
-    save_sent_message,
     update_base_slack_message,
 )
 from main.cache import CeleryLock
@@ -87,8 +86,10 @@ def send_slack_message_for_project(project_id: int, action: Literal["progress-ch
     match action:
         case "progress-change":
             message = SlackMessage.get_message_for_project_progress(project=project)
+            slack_reply_broadcast = True
         case "status-change":
             message = SlackMessage.get_message_for_project_status(project=project)
+            slack_reply_broadcast = False
         case _:
             assert_never(action)
 
@@ -99,6 +100,8 @@ def send_slack_message_for_project(project_id: int, action: Literal["progress-ch
         base_slack_message_ts = "mock_ts"
 
     # FIXME(tnagorra): What does reply_broadcast do?
-    mapslack.send_slack_message(**message, thread_ts=base_slack_message_ts, reply_broadcast=False)
+    mapslack.send_slack_message(**message, thread_ts=base_slack_message_ts, reply_broadcast=slack_reply_broadcast)
     update_base_slack_message(client=mapslack, project=project, ts=base_slack_message_ts)
-    save_sent_message(project)
+    if action == "progress-change":
+        project.slack_progress_notifications = project.progress
+        project.save(update_fields=["slack_message_notifications"])
