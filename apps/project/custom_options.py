@@ -1,3 +1,4 @@
+import typing
 from typing import TypedDict
 
 from apps.common.models import IconEnum
@@ -95,3 +96,26 @@ def get_custom_options(project_type: ProjectTypeEnum) -> list[CustomOption]:
     if project_type == ProjectTypeEnum.STREET:
         return CustomOptionDefaults.STREET
     return []
+
+
+def get_fallback_custom_options_for_export(project_type: ProjectTypeEnum) -> list[int]:
+    # FIXME: Should we throw error for validate, validate image and street instead?
+    if project_type == ProjectTypeEnum.VALIDATE:
+        return [item["value"] for item in CustomOptionDefaults.VALIDATE]
+    if project_type == ProjectTypeEnum.VALIDATE_IMAGE:
+        return [item["value"] for item in CustomOptionDefaults.VALIDATE_IMAGE]
+    if project_type == ProjectTypeEnum.STREET:
+        return [item["value"] for item in CustomOptionDefaults.STREET]
+
+    if (
+        project_type == ProjectTypeEnum.FIND
+        or project_type == ProjectTypeEnum.COMPARE
+        or project_type == ProjectTypeEnum.COMPLETENESS
+    ):
+        return [
+            0,  # No
+            1,  # Yes
+            2,  # Maybe
+            3,  # Bad Imagery
+        ]
+    typing.assert_never(project_type)

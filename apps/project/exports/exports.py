@@ -6,6 +6,7 @@ from django.core.files import File
 from ulid import ULID
 
 from apps.common.models import AssetTypeEnum
+from apps.project.custom_options import get_fallback_custom_options_for_export
 from apps.project.exports.geojson import gzipped_csv_to_gzipped_geojson
 from apps.project.models import Project, ProjectAsset, ProjectAssetExportTypeEnum, ProjectProgressStatusEnum, ProjectTypeEnum
 from apps.user.models import User
@@ -57,25 +58,24 @@ def _export_project_data(project: Project, tmp_directory: Path):
     add_metadata = False
 
     custom_options_raw = []
+
+    # NOTE: We do not have custom options for Compare, Completeness and Find projects
     if not isinstance(
         project_type_handler.project_type_specifics,
-        (
-            # NOTE: Using negate test to throw type error if new project type is added
-            # TODO: Or we should just use project.project_type_specifics.get("custom_options", [])?
-            CompareProjectProperty | CompletenessProjectProperty | FindProjectProperty
-        ),
+        # NOTE: Using negate test to throw type error if new project type is added
+        (CompareProjectProperty | CompletenessProjectProperty | FindProjectProperty),
     ):
         custom_options_raw = [
             {"value": custom_option.value}
             for custom_option in project_type_handler.project_type_specifics.custom_options or []
         ]
 
-    # Fallback: TODO: Is this okay?
-    custom_options_raw = custom_options_raw or [
-        {"value": 0},
-        {"value": 1},
-        {"value": 2},
-    ]
+    # Fallback if custom options is not defined
+    if not custom_options_raw:
+        custom_options_raw = [
+            {"value": custom_option_value}
+            for custom_option_value in get_fallback_custom_options_for_export(project.project_type_enum)
+        ]
 
     # TODO: Cache tasks and groups as they don't change (if cached, make sure to remove Unnamed column)
     tasks_df = generate_project_tasks(destination_filename=tmp_project_task_csv, project=project)
