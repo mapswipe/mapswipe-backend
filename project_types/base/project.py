@@ -203,7 +203,7 @@ class BaseProject[
     def _process_project(self):
         if self.project.status_enum != Project.Status.READY_TO_PROCESS:
             raise ValidationException(
-                f"Project cannot be processed if project status is '{self.project.status_enum}'",
+                f"Project cannot be processed if project status is '{self.project.status_enum.label}'",
             )
 
         logger.info("project:%s - start creating a project", self.project.pk)

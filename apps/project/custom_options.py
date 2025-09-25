@@ -1,3 +1,4 @@
+import typing
 from typing import TypedDict
 
 from apps.common.models import IconEnum
@@ -62,10 +63,59 @@ class CustomOptionDefaults:
         },
     ]
 
+    STREET: list[CustomOption] = [
+        {
+            "title": "Yes",
+            "icon": IconEnum.CHECKMARK_OUTLINE,
+            "value": 1,
+            "description": "the object you are looking for is in the image",
+            "icon_color": "#388E3C",
+        },
+        {
+            "title": "No",
+            "icon": IconEnum.CLOSE_OUTLINE,
+            "value": 0,
+            "description": "the object you are looking for is NOT in the image",
+            "icon_color": "#D32F2F",
+        },
+        {
+            "title": "Not Sure",
+            "icon": IconEnum.REMOVE_OUTLINE,
+            "value": 2,
+            "description": "if you're not sure or there is bad imagery",
+            "icon_color": "#616161",
+        },
+    ]
 
-def get_custom_options(project_type: ProjectTypeEnum):
+
+def get_custom_options(project_type: ProjectTypeEnum) -> list[CustomOption]:
     if project_type == ProjectTypeEnum.VALIDATE:
         return CustomOptionDefaults.VALIDATE
     if project_type == ProjectTypeEnum.VALIDATE_IMAGE:
         return CustomOptionDefaults.VALIDATE_IMAGE
+    if project_type == ProjectTypeEnum.STREET:
+        return CustomOptionDefaults.STREET
     return []
+
+
+def get_fallback_custom_options_for_export(project_type: ProjectTypeEnum) -> list[int]:
+    # FIXME: Should we throw error for validate, validate image and street instead?
+    if project_type == ProjectTypeEnum.VALIDATE:
+        return [item["value"] for item in CustomOptionDefaults.VALIDATE]
+    if project_type == ProjectTypeEnum.VALIDATE_IMAGE:
+        return [item["value"] for item in CustomOptionDefaults.VALIDATE_IMAGE]
+    if project_type == ProjectTypeEnum.STREET:
+        return [item["value"] for item in CustomOptionDefaults.STREET]
+
+    if (
+        project_type == ProjectTypeEnum.FIND
+        or project_type == ProjectTypeEnum.COMPARE
+        or project_type == ProjectTypeEnum.COMPLETENESS
+    ):
+        return [
+            0,  # No
+            1,  # Yes
+            2,  # Maybe
+            3,  # Bad Imagery
+        ]
+    typing.assert_never(project_type)

@@ -7,7 +7,7 @@ sources:
   - https://github.com/mapswipe/mapswipe-backend/
 
 dependencies:
-  - name: django-app
+  - name: toggle-django-helm
     alias: app
-    version: 0.1.1
-    repository: oci://ghcr.io/toggle-corp/charts
+    version: 0.2.0
+    repository: oci://ghcr.io/toggle-corp

@@ -18,7 +18,9 @@ def unaccented_filter[T: Model](
     ) -> tuple[models.QuerySet[T], models.Q]:
         if qs_alias:
             queryset = qs_alias(queryset, prefix)
-        lookup = f"{field_name}__unaccent__icontains"
+            lookup = f"{field_name}__unaccent__icontains"
+        else:
+            lookup = f"{prefix}{field_name}__unaccent__icontains"
         return queryset, models.Q(**{lookup: value})
 
     return wrapper

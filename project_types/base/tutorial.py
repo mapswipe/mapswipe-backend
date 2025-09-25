@@ -324,6 +324,7 @@ class BaseTutorial[
         if self.tutorial.status_enum not in [
             Tutorial.Status.READY_TO_PUBLISH,
             Tutorial.Status.PUBLISHED,
+            Tutorial.Status.ARCHIVED,
         ]:
             raise TutorialValidationException(
                 f"Tutorial cannot be pushed to firebase if tutorial status is '{self.tutorial.status_enum.label}'",
