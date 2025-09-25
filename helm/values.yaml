@@ -44,6 +44,7 @@ app:
     defaultBuckets: static-data,media-data
     provisioning:
       extraCommands:
+        - "mc anonymous set download provisioning/media-data"
         - "mc anonymous set download provisioning/static-data"
 
   api:

@@ -339,6 +339,7 @@ if env("AWS_S3_ENABLED"):
                 **AWS_S3_CONFIG_OPTIONS,
                 "bucket_name": env("AWS_S3_MEDIA_BUCKET_NAME"),
                 "location": "media/",
+                "querystring_auth": False,
                 "file_overwrite": False,
             },
         },
