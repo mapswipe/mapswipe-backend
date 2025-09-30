@@ -269,6 +269,7 @@ SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_RESULTS = f"""
 """  # noqa: E501
 
 
+# FIXME(tnagorra): this crashes when user_group is not defined
 SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_USER_GROUP = f"""
     INSERT INTO {tb_name(MappingSessionUserGroup)} (
          {fd_name(MappingSessionUserGroup.mapping_session)},
