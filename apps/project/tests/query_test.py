@@ -338,16 +338,14 @@ class TestProjectQuery(TestCase):
             ),
         }, content
 
-        for project in self.projects:
+        annotated_projects = Project.objects.filter(
+            pk__in=[p.pk for p in self.projects],
+        ).annotate(
+            gen_name=Project.generate_name_query(),
+        )
+
+        for project in annotated_projects:
             generated_name = project.generate_name()
+            generated_name_from_query = project.gen_name  # type: ignore[reportAttributeAccessIssue]
 
-            generated_name_from_query = (
-                Project.objects.filter(pk=project.pk)
-                .annotate(gen_name=Project.generate_name_query())
-                .values_list("gen_name", flat=True)
-                .get()
-            )
-
-            assert generated_name == generated_name_from_query, (
-                f"Mismatch for project {project.pk}: '{generated_name}' does not equal '{generated_name_from_query}'"
-            )
+            assert generated_name == generated_name_from_query, f"Name mismatch for project {project.pk}"
