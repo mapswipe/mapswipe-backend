@@ -1,14 +1,18 @@
 import typing
+from uuid import uuid4
 
 import pytest
 from django.contrib.admin.sites import AdminSite
 from django.core.exceptions import ValidationError
+from django.urls import reverse
+from ulid import ULID
 
 from apps.contributor.admin import ContributorTeamAdmin
 from apps.contributor.factories import ContributorTeamFactory, ContributorUserFactory
 from apps.contributor.models import ContributorTeam
 from apps.user.factories import UserFactory
 from apps.user.models import User
+from main.config import Config
 from main.tests import TestCase
 
 
@@ -33,6 +37,11 @@ class TestContributorTeam(TestCase):
             firebase_id="test_id",
             team=cls.contributor_team,
         )
+        # Create superuser for admin login
+        cls.admin_user = User.objects.create_superuser(
+            email="admin@example.com",
+            password="adminpass",  # noqa: S106
+        )
 
     def test_cannot_archive_team_with_members(self):
         self.contributor_team.is_archived = True
@@ -54,3 +63,56 @@ class TestContributorTeam(TestCase):
         self.contributor_user.team = self.contributor_team
         with pytest.raises(ValidationError):
             self.contributor_user.clean()
+
+    def test_add_to_firebase(self):
+        self.client.login(email="admin@example.com", password="adminpass")  # noqa: S106
+
+        # Get admin add URL
+        url = reverse("admin:contributor_contributorteam_add")
+
+        client_id = str(ULID())
+        token = str(uuid4())
+        data = {
+            "client_id": client_id,
+            "created_by": self.user.pk,
+            "modified_by": self.user.pk,
+            "name": "Test team",
+            "token": token,
+        }
+        response = self.client.post(url, data, follow=True)
+        assert response.status_code == 200
+
+        # Verify object actually created
+        team = ContributorTeam.objects.get(name="Test team")
+        firebase_id = team.firebase_id
+
+        contributor_team_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.contributor_team(firebase_id),
+        )
+
+        # Check if team created in firebase
+        firebase_contributor_team: typing.Any = contributor_team_ref.get()
+        assert firebase_contributor_team is not None
+        assert firebase_contributor_team.get("teamName") == "Test team"
+
+        # Update team
+        url = reverse("admin:contributor_contributorteam_change", args=[team.pk])
+        data = {
+            "client_id": client_id,
+            "created_by": self.user.pk,
+            "modified_by": self.user.pk,
+            "name": "Test team updated",
+            "token": token,
+        }
+
+        response = self.client.post(url, data, follow=True)
+        assert response.status_code == 200
+
+        # Check if team updated in database
+        team.refresh_from_db()
+        assert team.name == "Test team updated"
+
+        # Check if team updated in firebase
+        firebase_contributor_team: typing.Any = contributor_team_ref.get()
+        assert firebase_contributor_team is not None
+        assert firebase_contributor_team.get("teamName") == "Test team updated"

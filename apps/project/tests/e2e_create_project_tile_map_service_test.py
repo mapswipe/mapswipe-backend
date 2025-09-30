@@ -139,7 +139,6 @@ class TestCompareProjectE2E(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.firebase_helper = Config.FIREBASE_HELPER
 
         cls.contributor_user = ContributorUserFactory.create(
             username="Ram Bahadur",
