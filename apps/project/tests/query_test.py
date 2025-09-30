@@ -1,7 +1,7 @@
 import typing
 
 from apps.project.factories import OrganizationFactory, ProjectFactory
-from apps.project.models import ProjectTypeEnum
+from apps.project.models import Project, ProjectTypeEnum
 from apps.user.factories import UserFactory
 from main.tests import TestCase
 from utils.common import format_object_keys, to_camel_case
@@ -337,3 +337,15 @@ class TestProjectQuery(TestCase):
                 ],
             ),
         }, content
+
+        annotated_projects = Project.objects.filter(
+            pk__in=[p.pk for p in self.projects],
+        ).annotate(
+            gen_name=Project.generate_name_query(),
+        )
+
+        for project in annotated_projects:
+            generated_name = project.generate_name()
+            generated_name_from_query = project.gen_name  # type: ignore[reportAttributeAccessIssue]
+
+            assert generated_name == generated_name_from_query, f"Name mismatch for project {project.pk}"
