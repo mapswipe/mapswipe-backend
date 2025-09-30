@@ -5,7 +5,6 @@ import json5
 from django.conf import settings
 
 from apps.user.factories import UserFactory
-from main.config import Config
 from main.tests import TestCase
 
 
@@ -31,6 +30,7 @@ class TestOrganizationE2E(TestCase):
                         name
                         description
                         clientId
+                        firebaseId
                     }
                 }
             }
@@ -71,7 +71,6 @@ class TestOrganizationE2E(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = UserFactory.create()
-        cls.firebase_helper = Config.FIREBASE_HELPER
 
     def test_organization_e2e(self):
         self.force_login(self.user)
@@ -83,8 +82,8 @@ class TestOrganizationE2E(TestCase):
 
         for item in test_data_list:
             create_data = item["create"]
-            update_data = item["update"]
-            org_expected_data = item["expected"]
+            updates_data = item["updates"]
+            expected_data = item["expected"]
 
             # Create Organization
             with self.captureOnCommitCallbacks(execute=True):
@@ -96,17 +95,18 @@ class TestOrganizationE2E(TestCase):
             create_resp = organization_content["data"].get("createOrganization")
             assert create_resp is not None, "CreateOrganization returned null"
             org_id = create_resp["result"]["id"]
+            org_fb_id = create_resp["result"]["firebaseId"]
 
             # Update Organization
-            with self.captureOnCommitCallbacks(execute=True):
-                update_content = self.query_check(
-                    self.Mutation.UPDATE_ORGANIZATION,
-                    variables={"data": update_data, "pk": org_id},
-                )
+            for update_data in updates_data:
+                with self.captureOnCommitCallbacks(execute=True):
+                    update_content = self.query_check(
+                        self.Mutation.UPDATE_ORGANIZATION,
+                        variables={"data": update_data, "pk": org_id},
+                    )
 
-            update_resp = update_content["data"].get("updateOrganization")
-            assert update_resp is not None, "UpdateOrganization returned null"
-            org_fb_id = update_resp["result"]["firebaseId"]
+                update_resp = update_content["data"]["updateOrganization"]
+                assert update_resp is not None, "UpdateOrganization returned null"
 
             # Check organization in Firebase
             org_fb_ref = self.firebase_helper.ref(f"/v2/organisations/{org_fb_id}")
@@ -114,4 +114,4 @@ class TestOrganizationE2E(TestCase):
             assert org_fb_data is not None, f"Organization {org_fb_id} not found in Firebase"
 
             # Compare expected vs actual Firebase data
-            assert org_fb_data == org_expected_data, "Differences found between expected and actual org data in firebase."
+            assert org_fb_data == expected_data, "Differences found between expected and actual org data in firebase."
