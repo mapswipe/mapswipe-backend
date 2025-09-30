@@ -1,22 +1,46 @@
 import typing
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
 import json5
 from django.conf import settings
+from django.db.models.signals import pre_save
 from ulid import ULID
 
 from apps.common.utils import remove_object_keys
 from apps.contributor.factories import ContributorUserFactory
-from apps.project.factories import OrganizationFactory
-from apps.tutorial.factories import TutorialFactory
+from apps.contributor.models import ContributorUserGroup
+from apps.mapping.firebase.pull import pull_results_from_firebase
+from apps.mapping.models import (
+    MappingSession,
+    MappingSessionResult,
+    MappingSessionResultTemp,
+    MappingSessionUserGroup,
+    MappingSessionUserGroupTemp,
+)
+from apps.project.models import Organization, Project
 from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
-from main.config import Config
 from main.tests import TestCase
 
 
-class TestCompareProjectE2E(TestCase):
+@contextmanager
+def create_override():
+    def pre_save_override(sender: typing.Any, instance: typing.Any, **kwargs):
+        if sender == Tutorial:
+            instance.firebase_id = f"tutorial_{instance.client_id}"
+        elif sender in {Project, Organization, ContributorUserGroup}:
+            instance.firebase_id = instance.client_id
+
+    pre_save.connect(pre_save_override)
+    try:
+        yield True
+    finally:
+        pre_save.disconnect(pre_save_override)
+
+
+class TestProjectE2E(TestCase):
     class Mutation:
         CREATE_PROJECT = """
         mutation CreateProject($data: ProjectCreateInput!) {
@@ -65,7 +89,7 @@ class TestCompareProjectE2E(TestCase):
         }
         """
 
-        UPLOAD_ASSET = """
+        UPLOAD_PROJECT_ASSET = """
         mutation CreateProjectAsset($data: ProjectAssetCreateInput!) {
           createProjectAsset(data: $data) {
             ... on OperationInfo {
@@ -135,61 +159,197 @@ class TestCompareProjectE2E(TestCase):
         }
         """
 
-    @typing.override
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
+        CREATE_CONTRIBUTOR_USER_GROUP = """
+            mutation CreateContributorUserGroup($data: ContributorUserGroupCreateInput!) {
+                createContributorUserGroup(data: $data) {
+                    ... on OperationInfo {
+                      __typename
+                      messages {
+                        code
+                        field
+                        kind
+                        message
+                      }
+                    }
+                    ... on ContributorUserGroupTypeMutationResponseType {
+                        errors
+                        ok
+                        result {
+                            id
+                            name
+                            description
+                            clientId
+                            isArchived
+                            firebaseId
+                        }
+                    }
+                }
+            }
+        """
 
-        cls.contributor_user = ContributorUserFactory.create(
-            username="Ram Bahadur",
-        )
+        CREATE_ORGANIZATION = """
+        mutation CreateOrganization($data: OrganizationCreateInput!) {
+            createOrganization(data: $data) {
+                ... on OperationInfo {
+                  __typename
+                  messages {
+                    code
+                    field
+                    kind
+                    message
+                  }
+                }
+                ... on OrganizationTypeMutationResponseType {
+                    errors
+                    ok
+                    result {
+                        id
+                        firebaseId
+                    }
+                }
+            }
+        }
+        """
 
-        cls.user = UserFactory.create(
-            contributor_user=cls.contributor_user,
-        )
-        cls.user_resource_kwargs = dict(
-            created_by=cls.user,
-            modified_by=cls.user,
-        )
+        CREATE_TUTORIAL = """
+            mutation CreateTutorial($data: TutorialCreateInput!) {
+              createTutorial(data: $data) {
+                ... on OperationInfo {
+                  __typename
+                  messages {
+                    code
+                    field
+                    kind
+                    message
+                  }
+                }
+                ... on TutorialTypeMutationResponseType {
+                  errors
+                  ok
+                  result {
+                    id
+                    clientId
+                    projectId
+                    firebaseId
+                  }
+                }
+              }
+            }
+        """
+
+        UPDATE_TUTORIAL = """
+            mutation UpdateTutorial($data: TutorialUpdateInput!, $pk: ID!) {
+              updateTutorial(data: $data, pk: $pk) {
+                ... on OperationInfo {
+                  __typename
+                  messages {
+                    code
+                    field
+                    kind
+                    message
+                  }
+                }
+                ... on TutorialTypeMutationResponseType {
+                  errors
+                  ok
+                  result {
+                    id
+                    status
+                  }
+                }
+              }
+            }
+        """
+
+        UPDATE_TUTORIAL_STATUS = """
+            mutation UpdateTutorialStatus($data: TutorialStatusUpdateInput!, $pk: ID!) {
+              updateTutorialStatus(data: $data, pk: $pk) {
+                ... on OperationInfo {
+                  __typename
+                  messages {
+                    code
+                    field
+                    kind
+                    message
+                  }
+                }
+                ... on TutorialTypeMutationResponseType {
+                  errors
+                  ok
+                  result {
+                    id
+                    status
+                    }
+                  }
+                }
+            }
+        """
 
     def test_find_project_e2e(self):
-        self._test_tile_map_service(
-            "find",
-            "assets/tests/projects/find/project_data.json5",
-        )
+        with create_override():
+            self._test_tile_map_service(
+                "find",
+                "assets/tests/projects/find/project_data.json5",
+            )
 
-    # TODO: add test for completeness
+    def test_completeness_project_e2e(self):
+        with create_override():
+            self._test_tile_map_service(
+                "completeness",
+                "assets/tests/projects/completeness/project_data.json5",
+            )
 
     def test_compare_project_e2e(self):
-        self._test_tile_map_service(
-            "compare",
-            "assets/tests/projects/compare/project_data.json5",
-        )
+        with create_override():
+            self._test_tile_map_service(
+                "compare",
+                "assets/tests/projects/compare/project_data.json5",
+            )
 
     def _test_tile_map_service(self, projectKey: str, filename: str):
-        self.force_login(self.user)
-
         # Load test data file
         full_path = Path(settings.BASE_DIR, filename)
         with full_path.open("r", encoding="utf-8") as f:
             test_data = json5.load(f)
 
+        # Create contributor user and login
+        contributor_user = ContributorUserFactory.create(
+            username="Ram Bahadur",
+            firebase_id=test_data["contributor_user_firebase_id"],
+        )
+        user = UserFactory.create(
+            contributor_user=contributor_user,
+        )
+
+        self.force_login(user)
+
         # Define full path for image and AOI files
         image_filename = Path(settings.BASE_DIR) / test_data["assets"]["image"]
         aoi_geometry_filename = Path(settings.BASE_DIR) / test_data["assets"]["aoi"]
 
-        # Load Project data initially.
-        create_project_data = test_data["create_project"]
+        # Create an organization
+        create_organization_data = test_data["create_organization"]
+        with self.captureOnCommitCallbacks(execute=True):
+            organization_content = self.query_check(
+                self.Mutation.CREATE_ORGANIZATION,
+                variables={"data": create_organization_data},
+            )
 
-        # TODO: Use mutation to create organization
-        # Create an organization and attach to project
-        organization = OrganizationFactory.create(
-            name=create_project_data["requestingOrganization"],
-            **self.user_resource_kwargs,
-        )
-        create_project_data["requestingOrganization"] = organization.id
+        organization_response = organization_content["data"]["createOrganization"]
+        assert organization_response is not None, "Organization create response is None"
+        assert organization_response["ok"]
+
+        organization_id = organization_response["result"]["id"]
+        organization_fb_id = organization_response["result"]["firebaseId"]
+
+        organization_fb_ref = self.firebase_helper.ref(f"/v2/organisations/{organization_fb_id}")
+        organization_fb_data = organization_fb_ref.get()
+        assert organization_fb_data is not None, "Organization in firebase is None"
 
         # Create project
+        create_project_data = test_data["create_project"]
+        create_project_data["requestingOrganization"] = organization_id
+
         with self.captureOnCommitCallbacks(execute=True):
             project_content = self.query_check(
                 self.Mutation.CREATE_PROJECT,
@@ -212,7 +372,7 @@ class TestCompareProjectE2E(TestCase):
         }
         with image_filename.open("rb") as img_file:
             image_content = self.query_check(
-                self.Mutation.UPLOAD_ASSET,
+                self.Mutation.UPLOAD_PROJECT_ASSET,
                 variables={"data": image_asset_data},
                 files={"imageFile": img_file},
                 map={"imageFile": ["variables.data.file"]},
@@ -230,7 +390,7 @@ class TestCompareProjectE2E(TestCase):
         }
         with aoi_geometry_filename.open("rb") as geo_file:
             aoi_content = self.query_check(
-                self.Mutation.UPLOAD_ASSET,
+                self.Mutation.UPLOAD_PROJECT_ASSET,
                 variables={"data": aoi_asset_data},
                 files={"geoFile": geo_file},
                 map={"geoFile": ["variables.data.file"]},
@@ -244,7 +404,7 @@ class TestCompareProjectE2E(TestCase):
         update_project_data = test_data["update_project"]
         update_project_data["image"] = image_id
         update_project_data["projectTypeSpecifics"][projectKey]["aoiGeometry"] = aoi_id
-        update_project_data["requestingOrganization"] = organization.id
+        update_project_data["requestingOrganization"] = organization_id
         with self.captureOnCommitCallbacks(execute=True):
             update_content = self.query_check(
                 self.Mutation.UPDATE_PROJECT,
@@ -269,18 +429,89 @@ class TestCompareProjectE2E(TestCase):
         assert process_project_response["ok"], process_project_response["errors"]
         assert process_project_response["result"]["status"] == "READY_TO_PROCESS", "Project should be ready to process"
 
-        # TODO: Use mutation to create tutorial
-        # Create tutorial to attach to project before publishing
-        tutorial = TutorialFactory.create(
-            **self.user_resource_kwargs,
-            project_id=project_id,
-            status=Tutorial.Status.PUBLISHED,
+        # Create tutorial from above project
+        create_tutorial_data = test_data["create_tutorial"]
+        create_tutorial_data["project"] = project_id
+        with self.captureOnCommitCallbacks(execute=True):
+            tutorial_content = self.query_check(
+                self.Mutation.CREATE_TUTORIAL,
+                variables={"data": create_tutorial_data},
+            )
+
+        tutorial_response = tutorial_content["data"]["createTutorial"]
+        assert tutorial_response is not None, "Tutorial create response is None"
+        assert tutorial_response["ok"]
+
+        tutorial_id = tutorial_response["result"]["id"]
+        tutorial_fb_id = tutorial_response["result"]["firebaseId"]
+        tutorial_client_id = create_tutorial_data["clientId"]
+
+        # Update Tutorial
+        with self.captureOnCommitCallbacks(execute=True):
+            update_tutorial_content = self.query_check(
+                query=self.Mutation.UPDATE_TUTORIAL,
+                variables={
+                    "data": test_data["update_tutorial"],
+                    "pk": tutorial_id,
+                },
+            )
+        update_tutorial_response = update_tutorial_content["data"]["updateTutorial"]
+        assert update_tutorial_response is not None, "Tutorial update response is None"
+        assert update_tutorial_response["ok"], update_tutorial_response["errors"]
+        assert update_tutorial_response is not None, "Tutorial update response is None"
+
+        # Publish tutorial
+        publish_tutorial_data = {
+            "clientId": tutorial_client_id,
+            "status": "READY_TO_PUBLISH",
+        }
+        with self.captureOnCommitCallbacks(execute=True):
+            publish_tutorial_content = self.query_check(
+                self.Mutation.UPDATE_TUTORIAL_STATUS,
+                variables={"pk": tutorial_id, "data": publish_tutorial_data},
+            )
+        publish_tutorial_response = publish_tutorial_content["data"]["updateTutorialStatus"]
+        assert publish_tutorial_response["ok"], publish_tutorial_response["errors"]
+        assert publish_tutorial_response is not None, "Processed tutorial publish response is None"
+        assert publish_tutorial_response["result"]["status"] == "READY_TO_PUBLISH", "tutorial should be published"
+
+        tutorial_fb_ref = self.firebase_helper.ref(f"/v2/projects/{tutorial_fb_id}")
+        tutorial_fb_data = tutorial_fb_ref.get()
+
+        # Check tutorial in firebase
+        assert tutorial_fb_data is not None, "Tutorial in firebase is None"
+        assert isinstance(tutorial_fb_data, dict), "Tutorial in firebase should be a dictionary"
+
+        ignored_tutorial_keys = []
+        filtered_tutorial_actual = remove_object_keys(tutorial_fb_data, ignored_tutorial_keys)
+        filtered_tutorial_expected = remove_object_keys(test_data["expected_tutorial_data"], ignored_tutorial_keys)
+        assert filtered_tutorial_actual == filtered_tutorial_expected, "Difference found for tutorial data in firebase."
+
+        # Check tutorial groups in firebase
+        tutorial_groups_fb_ref = self.firebase_helper.ref(f"/v2/groups/{tutorial_fb_id}/")
+        tutorial_groups_fb_data = tutorial_groups_fb_ref.get()
+
+        ignored_group_keys = []
+        filtered_group_actual = remove_object_keys(tutorial_groups_fb_data, ignored_group_keys)
+        filtered_group_expected = remove_object_keys(test_data["expected_tutorial_groups_data"], ignored_tutorial_keys)
+        assert filtered_group_actual == filtered_group_expected, "Difference found for tutorial group data in firebase."
+
+        # Check tutorial tasks in firebase
+        tutorial_tasks_ref = self.firebase_helper.ref(f"/v2/tasks/{tutorial_fb_id}/")
+        tutorial_task_fb_data = tutorial_tasks_ref.get()
+
+        ignored_task_keys = []
+        sanitized_tasks_actual = remove_object_keys(tutorial_task_fb_data, ignored_task_keys)
+        sanitized_tasks_expected = remove_object_keys(test_data["expected_tutorial_tasks_data"], ignored_task_keys)
+
+        assert sanitized_tasks_actual == sanitized_tasks_expected, (
+            "Differences found between expected and actual tasks on tutorial in firebase."
         )
 
-        # Update processed project
+        # Update processed project: attach tutorial, organization
         update_processed_project_data = test_data["update_processed_project"]
-        update_processed_project_data["tutorial"] = tutorial.id
-        update_processed_project_data["requestingOrganization"] = organization.id
+        update_processed_project_data["tutorial"] = tutorial_id
+        update_processed_project_data["requestingOrganization"] = organization_id
         with self.captureOnCommitCallbacks(execute=True):
             update_processed_project_content = self.query_check(
                 self.Mutation.UPDATE_PROCESSED_PROJECT,
@@ -305,54 +536,89 @@ class TestCompareProjectE2E(TestCase):
         assert publish_project_response is not None, "Processed project publish response is None"
         assert publish_project_response["result"]["status"] == "READY_TO_PUBLISH", "Project should be ready to publish"
 
-        # CHECK PROJECT, GROUP AND TASK CREATED IN FIREBASE
-
         project_fb_ref = self.firebase_helper.ref(f"/v2/projects/{project_fb_id}")
         project_fb_data = project_fb_ref.get()
 
         # Check project in firebase
-        # tutorial.refresh_from_db()
         assert project_fb_data is not None, "Project in firebase is None"
         assert isinstance(project_fb_data, dict), "Project in firebase should be a dictionary"
         assert project_fb_data["created"] is not None, "Field 'created' should be defined"
         assert datetime.fromisoformat(project_fb_data["created"]), "Field 'created' should be a timestamp"
-        assert project_fb_data["projectId"] == project_fb_id, "Field 'projectId' should match firebaseId"
-        assert project_fb_data["tutorialId"] == tutorial.firebase_id, "Field 'tutorialId' should match tutorial's firebaseId"
-        assert project_fb_data["createdBy"] == self.contributor_user.firebase_id, (
-            "Field 'createdBy' should match contributor user's firebaseId"
-        )
 
-        ignored_project_keys = {"created", "createdBy", "projectId", "tutorialId"}
+        ignored_project_keys = {"created"}
         filtered_project_actual = remove_object_keys(project_fb_data, ignored_project_keys)
         filtered_project_expected = remove_object_keys(test_data["expected_project_data"], ignored_project_keys)
         assert filtered_project_actual == filtered_project_expected, "Difference found for project data in firebase."
 
-        # Check group in firebase
+        # Check project groups in firebase
         groups_fb_ref = self.firebase_helper.ref(f"/v2/groups/{project_fb_id}/")
         groups_fb_data = groups_fb_ref.get()
 
-        if groups_fb_data:
-            for group in iter(groups_fb_data.values()):  # type: ignore[reportAttributeAccessIssue]
-                assert group["projectId"] == project_fb_id, "Field 'projectId' of each group should match firebaseId"
-
-        ignored_group_keys = {"projectId"}
+        ignored_group_keys = []
         filtered_group_actual = remove_object_keys(groups_fb_data, ignored_group_keys)
-        filtered_group_expected = remove_object_keys(test_data["expected_groups_data"], ignored_project_keys)
-        assert filtered_group_actual == filtered_group_expected, "Difference found for group data in firebase."
+        filtered_group_expected = remove_object_keys(test_data["expected_project_groups_data"], ignored_project_keys)
+        assert filtered_group_actual == filtered_group_expected, "Difference found for group data on project in firebase."
 
-        # Check group in firebase
-        tasks_ref = self.firebase_helper.ref(Config.FirebaseKeys.project_tasks(project_fb_id))
-        tasks_fb_data = tasks_ref.get()
+        # Check project tasks in firebase
+        project_tasks_ref = self.firebase_helper.ref(f"/v2/tasks/{project_fb_id}/")
+        project_tasks_db_data = project_tasks_ref.get()
 
-        if tasks_fb_data:
-            for groups in iter(tasks_fb_data.values()):  # type: ignore[reportAttributeAccessIssue]
-                for task in groups:
-                    assert task["projectId"] == project_fb_id, "Field 'projectId' of each task should match firebaseId"
-
-        ignored_task_keys = {"projectId"}
-        sanitized_tasks_actual = remove_object_keys(tasks_fb_data, ignored_task_keys)
-        sanitized_tasks_expected = remove_object_keys(test_data["expected_tasks_data"], ignored_task_keys)
+        ignored_task_keys = []
+        sanitized_tasks_actual = remove_object_keys(project_tasks_db_data, ignored_task_keys)
+        sanitized_tasks_expected = remove_object_keys(test_data["expected_project_tasks_data"], ignored_task_keys)
 
         assert sanitized_tasks_actual == sanitized_tasks_expected, (
-            "Differences found between expected and actual tasks in firebase."
+            "Differences found between expected and actual tasks on project in firebase."
         )
+
+        # Create contributor user group
+        old_contributor_user_group_data = test_data["create_contributor_user_group"]
+        for input_data in old_contributor_user_group_data:
+            usergroup_content = self.query_check(
+                self.Mutation.CREATE_CONTRIBUTOR_USER_GROUP,
+                variables={
+                    "data": input_data,
+                },
+            )
+            usergroup_response = usergroup_content["data"]["createContributorUserGroup"]
+            assert usergroup_response is not None, "usergroup create response is None"
+            assert usergroup_response["ok"]
+
+        # Pull results from firebase
+        input_data = test_data["create_results"]
+        ref_results = self.firebase_helper.ref(f"/v2/results/{project_fb_id}")
+        ref_results.set(input_data)
+
+        fb_results_data = ref_results.get()
+        assert fb_results_data is not None
+
+        assert [
+            MappingSession.objects.count(),
+            MappingSessionResult.objects.count(),
+            MappingSessionUserGroup.objects.count(),
+            MappingSessionUserGroupTemp.objects.count(),
+            MappingSessionResultTemp.objects.count(),
+        ] == [0, 0, 0, 0, 0], "Mapping session data should be empty before pull from firebase"
+
+        project = Project.objects.get(id=project_id)
+        assert project.progress == 0
+
+        with self.captureOnCommitCallbacks(execute=True):
+            pull_results_from_firebase()
+
+        assert [
+            MappingSession.objects.count(),
+            MappingSessionResult.objects.count(),
+            MappingSessionUserGroup.objects.count(),
+            MappingSessionUserGroupTemp.objects.count(),
+            MappingSessionResultTemp.objects.count(),
+        ] == [
+            test_data["expected_pulled_results_data"]["mapping_session_count"],
+            test_data["expected_pulled_results_data"]["mapping_session_results_count"],
+            test_data["expected_pulled_results_data"]["mapping_session_user_groups_count"],
+            0,
+            0,
+        ], "Difference found for pulled results data."
+
+        project.refresh_from_db()
+        assert project.progress == test_data["expected_pulled_results_data"]["progress"]
