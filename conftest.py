@@ -4,7 +4,7 @@ import pytest
 from django.http import QueryDict
 
 
-def scrub_auth_token(request):
+def scrub_auth_token(request):  # type: ignore[reportMissingParameterType]
     # NOTE: We want to redact sensitize information from "Authorization: Token XYZ"
     authorization_header = request.headers.get("authorization")
     if authorization_header and authorization_header.lower().startswith("token"):
@@ -24,7 +24,7 @@ def scrub_auth_token(request):
 
 
 @pytest.fixture(autouse=True)
-def vcr_config(request):
+def vcr_config(request):  # type: ignore[reportMissingParameterType]
     marker = request.node.get_closest_marker("vcr")
 
     cassette_path = None

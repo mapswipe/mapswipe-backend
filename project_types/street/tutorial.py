@@ -11,6 +11,7 @@ from utils import fields as custom_fields
 
 
 class StreetTutorialTaskProperty(base_tutorial.BaseTutorialTaskProperty):
+    # FIXME: Why is this a long text instead of PydanticId
     mapillary_image_id: custom_fields.PydanticLongText
     # NOTE: geometry is not used but we are saving this for the records
     geometry: str

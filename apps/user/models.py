@@ -76,7 +76,7 @@ class User(AbstractUser):
         )[0]
 
     @typing.override
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs):  # type: ignore[reportMissingParameterType]
         # Make sure email are same and lowercase
         self.email = self.email.lower()
         if self.pk is None:  # type: ignore[reportUnnecessaryComparison]

@@ -35,11 +35,11 @@ BASE_DIR = Path(__file__).resolve().parent
 
 def create_project_image_asset_query(
     *,
-    query_check_func: typing.Callable,
+    query_check_func: typing.Callable,  # type: ignore[reportMissingTypeArgument]
     query: str,
-    project_asset_data: dict,
-    **kwargs,
-) -> dict:
+    project_asset_data: dict,  # type: ignore[reportMissingTypeArgument]
+    **kwargs,  # type: ignore[reportMissingParameterType]
+) -> dict:  # type: ignore[reportMissingTypeArgument]
     with (
         NamedTemporaryFile(dir=settings.TEMP_DIR, suffix=".jpeg") as image_file,
     ):
@@ -68,11 +68,11 @@ def create_project_image_asset_query(
 
 def create_project_aoi_asset_query(
     *,
-    query_check_func: typing.Callable,
+    query_check_func: typing.Callable,  # type: ignore[reportMissingTypeArgument]
     query: str,
-    project_asset_data: dict,
-    **kwargs,
-) -> dict:
+    project_asset_data: dict,  # type: ignore[reportMissingTypeArgument]
+    **kwargs,  # type: ignore[reportMissingParameterType]
+) -> dict:  # type: ignore[reportMissingTypeArgument]
     with (
         Path(BASE_DIR / "data/ring-road.geojson").open(encoding="utf-8") as geo_file,
     ):
@@ -93,12 +93,12 @@ def create_project_aoi_asset_query(
 
 def update_project_query(
     *,
-    query_check_func: typing.Callable,
+    query_check_func: typing.Callable,  # type: ignore[reportMissingTypeArgument]
     query: str,
     pk: str,
-    project_data: dict,
-    **kwargs,
-) -> dict:
+    project_data: dict,  # type: ignore[reportMissingTypeArgument]
+    **kwargs,  # type: ignore[reportMissingParameterType]
+) -> dict:  # type: ignore[reportMissingTypeArgument]
     return query_check_func(
         query,
         variables={
@@ -490,7 +490,7 @@ class TestProjectMutation(TestCase):
 
         cls.organization = OrganizationFactory.create(**cls.user_resource_kwargs)
 
-    def _create_project_aoi_asset(self, project_asset_data: dict, **kwargs):
+    def _create_project_aoi_asset(self, project_asset_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return create_project_aoi_asset_query(
                 query_check_func=self.query_check,
@@ -501,7 +501,7 @@ class TestProjectMutation(TestCase):
                 },
             )
 
-    def _create_project_image_asset(self, project_asset_data: dict, **kwargs):
+    def _create_project_image_asset(self, project_asset_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return create_project_image_asset_query(
                 query_check_func=self.query_check,
@@ -512,7 +512,7 @@ class TestProjectMutation(TestCase):
                 },
             )
 
-    def _create_project_mutation(self, project_data: dict, **kwargs):
+    def _create_project_mutation(self, project_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return self.query_check(
                 query=Mutation.CREATE_PROJECT,
@@ -521,7 +521,7 @@ class TestProjectMutation(TestCase):
                 },
             )
 
-    def _update_project_mutation(self, pk: str, project_data: dict, **kwargs):
+    def _update_project_mutation(self, pk: str, project_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return update_project_query(
                 query_check_func=self.query_check,
@@ -531,7 +531,7 @@ class TestProjectMutation(TestCase):
                 **kwargs,
             )
 
-    def _update_processed_project_mutation(self, pk: str, project_data: dict, **kwargs):
+    def _update_processed_project_mutation(self, pk: str, project_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return update_project_query(
                 query_check_func=self.query_check,
@@ -541,7 +541,7 @@ class TestProjectMutation(TestCase):
                 **kwargs,
             )
 
-    def _update_project_status_mutation(self, pk: str, project_data: dict, **kwargs):
+    def _update_project_status_mutation(self, pk: str, project_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return update_project_query(
                 query_check_func=self.query_check,
@@ -669,7 +669,7 @@ class TestProjectMutation(TestCase):
         ], content
 
     @patch("apps.project.serializers.process_project_task.delay")
-    def test_project_update(self, mock_requests):
+    def test_project_update(self, mock_requests):  # type: ignore[reportMissingParameterType]
         proj = ProjectFactory.create(
             **self.user_resource_kwargs,
             project_type=ProjectTypeEnum.FIND,
@@ -1117,7 +1117,7 @@ class TestProjectTypeMutation(TestCase):
         # NOTE: _internal is for snake_case attributes, currently its same
         cls.tile_server_property_internal = cls.tile_server_property
 
-    def _create_project_aoi_asset(self, project_asset_data: dict, **kwargs):
+    def _create_project_aoi_asset(self, project_asset_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return create_project_aoi_asset_query(
                 query_check_func=self.query_check,
@@ -1128,7 +1128,7 @@ class TestProjectTypeMutation(TestCase):
                 },
             )
 
-    def _create_project_image_asset(self, project_asset_data: dict, **kwargs):
+    def _create_project_image_asset(self, project_asset_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return create_project_image_asset_query(
                 query_check_func=self.query_check,
@@ -1139,7 +1139,7 @@ class TestProjectTypeMutation(TestCase):
                 },
             )
 
-    def _create_project_mutation(self, project_data: dict, **kwargs):
+    def _create_project_mutation(self, project_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return self.query_check(
                 query=Mutation.CREATE_PROJECT,
@@ -1148,7 +1148,7 @@ class TestProjectTypeMutation(TestCase):
                 },
             )
 
-    def _update_project_mutation(self, pk: str, project_data: dict, **kwargs):
+    def _update_project_mutation(self, pk: str, project_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return update_project_query(
                 query_check_func=self.query_check,
@@ -1158,7 +1158,7 @@ class TestProjectTypeMutation(TestCase):
                 **kwargs,
             )
 
-    def _update_project_status_mutation(self, pk: str, project_data: dict, **kwargs):
+    def _update_project_status_mutation(self, pk: str, project_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return update_project_query(
                 query_check_func=self.query_check,
@@ -1168,7 +1168,7 @@ class TestProjectTypeMutation(TestCase):
                 **kwargs,
             )
 
-    def _update_processed_project_mutation(self, pk: str, project_data: dict, **kwargs):
+    def _update_processed_project_mutation(self, pk: str, project_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return update_project_query(
                 query_check_func=self.query_check,
@@ -1179,7 +1179,7 @@ class TestProjectTypeMutation(TestCase):
             )
 
     @patch("apps.project.serializers.process_project_task.delay")
-    def test_project_compare(self, mock_requests):
+    def test_project_compare(self, mock_requests):  # type: ignore[reportMissingParameterType]
         # Defining user and base project data
         self.force_login(self.user)
         project_data = {
@@ -1561,7 +1561,7 @@ class TestProjectTypeMutation(TestCase):
         assert fb_project is not None
 
     @patch("apps.project.serializers.process_project_task.apply_async")
-    def test_project_street(self, mock_requests):
+    def test_project_street(self, mock_requests):  # type: ignore[reportMissingParameterType]
         self.force_login(self.user)
         project_data = {
             **self.project_data,

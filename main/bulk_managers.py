@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from django.apps import apps
 from django.db import models
-from firebase_admin.db import Reference as FbReference
+from firebase_admin.db import Reference as FbReference  # type: ignore[reportMissingTypeStubs]
 
 
 class BaseBulkManager:
@@ -73,7 +73,7 @@ class BulkCreateManager(BaseBulkManager):
 
 
 class BulkUpdateManager(BaseBulkManager):
-    def __init__(self, update_fields: list[str], *args, **kwargs):
+    def __init__(self, update_fields: list[str], *args, **kwargs):  # type: ignore[reportMissingParameterType]
         super().__init__(*args, **kwargs)
         self.update_fields = update_fields
 

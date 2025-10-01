@@ -35,7 +35,7 @@ class TestValidateProject(TestCase):
             assert result == expected
 
     @patch("project_types.validate.api_calls.retry_get")
-    def test_query_osmcha(self, mock_retry_get):
+    def test_query_osmcha(self, mock_retry_get):  # type: ignore[reportMissingParameterType]
         changeset_ids = [12345, 67890]
         changeset_results = {}
 
@@ -97,7 +97,7 @@ class TestValidateProject(TestCase):
             query_osmcha(changeset_ids, changeset_results)
 
     @patch("project_types.validate.api_calls.retry_get")
-    def test_query_osm(self, mock_retry_get):
+    def test_query_osm(self, mock_retry_get):  # type: ignore[reportMissingParameterType]
         changeset_ids = [12345, 67890]
         changeset_results = {}
 
@@ -143,7 +143,7 @@ class TestValidateProject(TestCase):
 
     @patch("requests.post")
     @patch("project_types.validate.api_calls.remove_noise_and_add_user_info")
-    def test_ohsome(self, mock_remove_noise, mock_post):
+    def test_ohsome(self, mock_remove_noise, mock_post):  # type: ignore[reportMissingParameterType]
         sample_request = {
             "endpoint": "elements/geometry",
             "filter": "highway=primary",
@@ -213,7 +213,7 @@ class TestValidateProject(TestCase):
 
     @patch("project_types.validate.api_calls.query_osmcha")
     @patch("project_types.validate.api_calls.query_osm")
-    def test_remove_noise_and_add_user_info(self, mock_query_osm, mock_query_osmcha):
+    def test_remove_noise_and_add_user_info(self, mock_query_osm, mock_query_osmcha):  # type: ignore[reportMissingParameterType]
         input_data = {
             "type": "FeatureCollection",
             "features": [

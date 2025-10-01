@@ -18,7 +18,7 @@ from main.tests import TestCase
 
 @contextmanager
 def create_override():
-    def pre_save_override(sender: typing.Any, instance: typing.Any, **kwargs):
+    def pre_save_override(sender: typing.Any, instance: typing.Any, **kwargs):  # type: ignore[reportMissingParameterType]
         if sender == Tutorial:
             instance.firebase_id = f"tutorial_{instance.client_id}"
         elif sender in {Project, Organization}:

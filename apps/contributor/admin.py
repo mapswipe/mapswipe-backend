@@ -3,7 +3,7 @@ import typing
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
-from djangoql.admin import DjangoQLSearchMixin
+from djangoql.admin import DjangoQLSearchMixin  # type: ignore[reportMissingTypeStubs]
 
 from apps.common.admin import ArchivableResourceAdmin, FirebaseResourceAdmin, UserResourceAdmin
 
@@ -12,7 +12,7 @@ from .models import ContributorTeam, ContributorUser, ContributorUserGroup, Cont
 
 
 @admin.register(ContributorUser)
-class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):  # type: ignore[reportMissingTypeArgument]
     readonly_fields = (
         "firebase_id",
         "old_id",
@@ -30,15 +30,15 @@ class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     autocomplete_fields = ("team",)
 
     @typing.override
-    def has_add_permission(self, *args, **kwargs):
+    def has_add_permission(self, *args, **kwargs):  # type: ignore[reportMissingParameterType]
         return False
 
     @typing.override
-    def has_delete_permission(self, *args, **kwargs):
+    def has_delete_permission(self, *args, **kwargs):  # type: ignore[reportMissingParameterType]
         return False
 
     @typing.override
-    def save_model(self, request, obj, form, change):
+    def save_model(self, request, obj, form, change):  # type: ignore[reportMissingParameterType]
         super().save_model(request, obj, form, change)
         FirebaseContributorUser(obj).trigger()
 
@@ -49,7 +49,7 @@ class ContributorUserGroupAdmin(
     ArchivableResourceAdmin,
     FirebaseResourceAdmin,
     UserResourceAdmin,
-    admin.ModelAdmin,
+    admin.ModelAdmin,  # type: ignore[reportMissingTypeArgument]
 ):
     list_display = ("name",)
     ordering = ("name",)
@@ -63,7 +63,7 @@ class ContributorTeamAdmin(
     ArchivableResourceAdmin,
     FirebaseResourceAdmin,
     UserResourceAdmin,
-    admin.ModelAdmin,
+    admin.ModelAdmin,  # type: ignore[reportMissingTypeArgument]
 ):
     list_display = ("name", "view_team_members")
     ordering = ("name",)
@@ -71,17 +71,17 @@ class ContributorTeamAdmin(
     list_select_related = True
 
     @typing.override
-    def save_model(self, request, obj, form, change):
+    def save_model(self, request, obj, form, change):  # type: ignore[reportMissingParameterType]
         super().save_model(request, obj, form, change)
         FirebaseContributorTeam(obj).trigger()
 
-    def view_team_members(self, obj):
+    def view_team_members(self, obj):  # type: ignore[reportMissingParameterType]
         url = reverse("admin:contributor_contributoruser_changelist") + f"?team__id__exact={obj.id}"
         return format_html('<a href="{}">View Team Members</a>', url)
 
 
 @admin.register(ContributorUserGroupMembership)
-class ContributorUserGroupMembershipAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+class ContributorUserGroupMembershipAdmin(DjangoQLSearchMixin, admin.ModelAdmin):  # type: ignore[reportMissingTypeArgument]
     list_display = ("user", "user_group", "is_active")
     list_filter = (
         # "user",

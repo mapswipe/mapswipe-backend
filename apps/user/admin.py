@@ -6,14 +6,14 @@ from django.utils.translation import gettext_lazy as _
 from .models import User
 
 
-class UserCreationForm(forms.ModelForm):
+class UserCreationForm(forms.ModelForm):  # type: ignore[reportMissingTypeArgument]
     class Meta:
         model = User
         fields = ["email"]
 
 
 @admin.register(User)
-class UserAdmin(DjangoUserAdmin):
+class UserAdmin(DjangoUserAdmin):  # type: ignore[reportMissingTypeArgument]
     list_display = (
         "email",
         "first_name",

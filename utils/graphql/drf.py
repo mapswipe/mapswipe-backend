@@ -111,7 +111,7 @@ def _serializer_error_to_error_types(
                 ),
             )
         elif isinstance(value, list):
-            if isinstance(value[0], str):
+            if isinstance(value[0], str):  # type: ignore[reportUnnecessaryIsInstance]
                 if isinstance(initial_data.get(field), list):
                     # we have found an array input with top level error
                     error_types.append(
@@ -139,7 +139,7 @@ def _serializer_error_to_error_types(
                             array_errors=None,
                         ),
                     )
-            elif isinstance(value[0], dict):
+            elif isinstance(value[0], dict):  # type: ignore[reportUnnecessaryIsInstance]
                 array_errors = []
                 for pos, array_item in enumerate(value):
                     if not array_item:

@@ -92,6 +92,7 @@ PydanticHexColor = typing.Annotated[
     ),
 ]
 
+# FIXME: Add max length
 PydanticId = typing.Annotated[
     str,
     Field(

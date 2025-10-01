@@ -18,14 +18,14 @@ def sentry_middleware(get_response: typing.Any):
 
     if iscoroutinefunction(get_response):
 
-        async def amiddleware(request):
+        async def amiddleware(request):  # type: ignore[reportMissingParameterType]
             if settings.SENTRY_ENABLED:
                 await SentryTransactionMiddlewareHelper.async_track_transaction(graphql_urls, request)
             return await get_response(request)
 
         return amiddleware
 
-    def middleware(request):
+    def middleware(request):  # type: ignore[reportMissingParameterType]
         if settings.SENTRY_ENABLED:
             SentryTransactionMiddlewareHelper.track_transaction(graphql_urls, request)
         return get_response(request)

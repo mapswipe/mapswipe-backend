@@ -39,7 +39,7 @@ ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
 
 
 class AppEnumData:
-    def __init__(self, enum):
+    def __init__(self, enum):  # type: ignore[reportMissingParameterType]
         self.enum = enum
 
     @property
@@ -65,7 +65,7 @@ def generate_app_enum_collection_data(name: str):
 AppEnumCollectionData = generate_app_enum_collection_data("AppEnumCollectionData")
 
 
-def generate_type_for_enum(name: str, Enum):
+def generate_type_for_enum(name: str, Enum):  # type: ignore[reportMissingParameterType]
     return strawberry.type(
         dataclasses.make_dataclass(
             f"AppEnumCollection{name}",
@@ -77,7 +77,7 @@ def generate_type_for_enum(name: str, Enum):
     )
 
 
-def _enum_type(name: str, Enum):
+def _enum_type(name: str, Enum):  # type: ignore[reportMissingParameterType]
     EnumType = generate_type_for_enum(name, Enum)
 
     @strawberry.field

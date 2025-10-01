@@ -4,7 +4,7 @@ from datetime import datetime
 from django.contrib import admin
 from django.db import models
 from django.http import HttpRequest
-from djangoql.admin import DjangoQLSearchMixin
+from djangoql.admin import DjangoQLSearchMixin  # type: ignore[reportMissingTypeStubs]
 
 from apps.common.firebase.push import FirebaseAnnouncementPush
 from apps.common.models import Announcement, GlobalExportAsset, UserResource
@@ -12,9 +12,9 @@ from apps.common.models import Announcement, GlobalExportAsset, UserResource
 DjangoModel = typing.TypeVar("DjangoModel", bound=models.Model)
 
 
-class UserResourceAdmin(admin.ModelAdmin):
+class UserResourceAdmin(admin.ModelAdmin):  # type: ignore[reportMissingTypeArgument]
     @typing.override
-    def get_autocomplete_fields(self, *args, **kwargs):
+    def get_autocomplete_fields(self, *args, **kwargs):  # type: ignore[reportMissingParameterType]
         autocomplete_fields = super().get_autocomplete_fields(*args, **kwargs)
         return [
             *dict.fromkeys(
@@ -27,7 +27,7 @@ class UserResourceAdmin(admin.ModelAdmin):
         ]
 
     @typing.override
-    def get_readonly_fields(self, *args, **kwargs):
+    def get_readonly_fields(self, *args, **kwargs):  # type: ignore[reportMissingParameterType]
         readonly_fields = super().get_readonly_fields(*args, **kwargs)
         return [
             # To maintain order
@@ -43,14 +43,14 @@ class UserResourceAdmin(admin.ModelAdmin):
         ]
 
     @typing.override
-    def save_model(self, request, obj, form, change):
+    def save_model(self, request, obj, form, change):  # type: ignore[reportMissingParameterType]
         if not change:
             obj.created_by = request.user
         obj.modified_by = request.user
         super().save_model(request, obj, form, change)
 
     @typing.override
-    def save_formset(self, request, form, formset, change) -> None:
+    def save_formset(self, request, form, formset, change) -> None:  # type: ignore[reportMissingParameterType]
         if not issubclass(formset.model, UserResource):
             return super().save_formset(request, form, formset, change)
         # https://docs.djangoproject.com/en/4.2/ref/contrib/admin/#django.contrib.admin.ModelAdmin.save_formset
@@ -66,13 +66,13 @@ class UserResourceAdmin(admin.ModelAdmin):
         return None
 
     @typing.override
-    def get_queryset(self, request: HttpRequest) -> models.QuerySet[DjangoModel]:
+    def get_queryset(self, request: HttpRequest) -> models.QuerySet[DjangoModel]:  # type: ignore[reportInvalidTypeVarUse]
         return super().get_queryset(request).select_related("created_by", "modified_by")
 
 
-class ArchivableResourceAdmin(admin.ModelAdmin):
+class ArchivableResourceAdmin(admin.ModelAdmin):  # type: ignore[reportMissingTypeArgument]
     @typing.override
-    def get_list_display(self, *args, **kwargs):
+    def get_list_display(self, *args, **kwargs):  # type: ignore[reportMissingParameterType]
         list_display = super().get_list_display(*args, **kwargs)
         return [
             *dict.fromkeys(
@@ -84,7 +84,7 @@ class ArchivableResourceAdmin(admin.ModelAdmin):
         ]
 
     @typing.override
-    def get_list_filter(self, *args, **kwargs):
+    def get_list_filter(self, *args, **kwargs):  # type: ignore[reportMissingParameterType]
         list_filter = super().get_list_filter(*args, **kwargs)
         return [
             *dict.fromkeys(
@@ -96,7 +96,7 @@ class ArchivableResourceAdmin(admin.ModelAdmin):
         ]
 
     @typing.override
-    def get_autocomplete_fields(self, *args, **kwargs):
+    def get_autocomplete_fields(self, *args, **kwargs):  # type: ignore[reportMissingParameterType]
         autocomplete_fields = super().get_autocomplete_fields(*args, **kwargs)
         return [
             *dict.fromkeys(
@@ -108,7 +108,7 @@ class ArchivableResourceAdmin(admin.ModelAdmin):
         ]
 
     @typing.override
-    def get_readonly_fields(self, *args, **kwargs):
+    def get_readonly_fields(self, *args, **kwargs):  # type: ignore[reportMissingParameterType]
         readonly_fields = super().get_readonly_fields(*args, **kwargs)
         return [
             *dict.fromkeys(
@@ -121,7 +121,7 @@ class ArchivableResourceAdmin(admin.ModelAdmin):
         ]
 
     @typing.override
-    def save_model(self, request, obj, form, change):
+    def save_model(self, request, obj, form, change):  # type: ignore[reportMissingParameterType]
         if not change:
             obj.created_by = request.user
         obj.modified_by = request.user
@@ -134,11 +134,11 @@ class ArchivableResourceAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-class FirebaseResourceAdmin(admin.ModelAdmin):
+class FirebaseResourceAdmin(admin.ModelAdmin):  # type: ignore[reportMissingTypeArgument]
     # FIXME(tnagorra): Add ordering for firebase_last_pushed
 
     @typing.override
-    def get_list_display(self, *args, **kwargs):
+    def get_list_display(self, *args, **kwargs):  # type: ignore[reportMissingParameterType]
         list_display = super().get_list_display(*args, **kwargs)
         return [
             *dict.fromkeys(
@@ -152,7 +152,7 @@ class FirebaseResourceAdmin(admin.ModelAdmin):
         ]
 
     @typing.override
-    def get_list_filter(self, *args, **kwargs):
+    def get_list_filter(self, *args, **kwargs):  # type: ignore[reportMissingParameterType]
         list_filter = super().get_list_filter(*args, **kwargs)
         return [
             *dict.fromkeys(
@@ -164,7 +164,7 @@ class FirebaseResourceAdmin(admin.ModelAdmin):
         ]
 
     @typing.override
-    def get_readonly_fields(self, *args, **kwargs):
+    def get_readonly_fields(self, *args, **kwargs):  # type: ignore[reportMissingParameterType]
         readonly_fields = super().get_readonly_fields(*args, **kwargs)
         return [
             *dict.fromkeys(
@@ -184,11 +184,11 @@ class GlobalExportAssetAdmin(DjangoQLSearchMixin, admin.ModelAdmin[GlobalExportA
 
 
 @admin.register(Announcement)
-class AnnouncementAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, UserResourceAdmin, admin.ModelAdmin):
+class AnnouncementAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, UserResourceAdmin, admin.ModelAdmin):  # type: ignore[reportMissingTypeArgument]
     list_display = ("text", "is_active", "url")
 
     @typing.override
-    def save_model(self, request, obj, form, change):
+    def save_model(self, request, obj, form, change):  # type: ignore[reportMissingParameterType]
         super().save_model(request, obj, form, change)
 
         if obj.is_active:

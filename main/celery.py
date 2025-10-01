@@ -60,7 +60,7 @@ def config_loggers(**_):
 @signals.beat_init.connect
 def clean_up_periodic_tasks(**_):
     try:
-        from django_celery_beat.models import PeriodicTask
+        from django_celery_beat.models import PeriodicTask  # type: ignore[reportMissingTypeStubs]
 
         obsolute_tasks_qs = PeriodicTask.objects.filter(
             task__startswith="apps.",  # Our tasks

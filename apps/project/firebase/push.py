@@ -1,7 +1,7 @@
 import logging
 import typing
 
-from firebase_admin.db import Reference as FbReference
+from firebase_admin.db import Reference as FbReference  # type: ignore[reportMissingTypeStubs]
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
 
@@ -49,5 +49,5 @@ class FirebaseOrganizationPush(FirebasePush[Organization, firebase_models.FbOrga
         )
 
     @typing.override
-    def get_firebase_path(self, firebase_id: str, model=Organization):
+    def get_firebase_path(self, firebase_id: str, model=Organization):  # type: ignore[reportMissingParameterType]
         return Config.FirebaseKeys.organization(firebase_id)

@@ -5,7 +5,7 @@ from django.contrib import admin
 from django.db.models import QuerySet
 from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
-from djangoql.admin import DjangoQLSearchMixin
+from djangoql.admin import DjangoQLSearchMixin  # type: ignore[reportMissingTypeStubs]
 
 from apps.common.admin import ArchivableResourceAdmin, FirebaseResourceAdmin, UserResourceAdmin
 
@@ -17,7 +17,7 @@ class IncludedInTeamFilter(admin.SimpleListFilter):
     parameter_name = "included_in_team"
 
     @typing.override
-    def lookups(self, request: HttpRequest, model_admin: admin.ModelAdmin) -> list[tuple[Literal["yes", "no"], str]]:
+    def lookups(self, request: HttpRequest, model_admin: admin.ModelAdmin) -> list[tuple[Literal["yes", "no"], str]]:  # type: ignore[reportMissingTypeArgument]
         return [
             ("yes", "Yes"),
             ("no", "No"),
@@ -41,7 +41,7 @@ class OrganizationAdmin(
     ArchivableResourceAdmin,
     FirebaseResourceAdmin,
     UserResourceAdmin,
-    admin.ModelAdmin,
+    admin.ModelAdmin,  # type: ignore[reportMissingTypeArgument]
 ):
     list_display = ("name", "abbreviation")
     search_fields = ("name", "abbreviation")
@@ -56,7 +56,7 @@ class GeometryAdmin(DjangoQLSearchMixin, admin.ModelAdmin[Geometry]):
 
 
 @admin.register(Project)
-class ProjectAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, UserResourceAdmin, admin.ModelAdmin):
+class ProjectAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, UserResourceAdmin, admin.ModelAdmin):  # type: ignore[reportMissingTypeArgument]
     list_display = (
         "generated_name",
         "requesting_organization",
@@ -107,7 +107,7 @@ class ProjectAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, UserResourceAdmin
 
 
 @admin.register(ProjectAsset)
-class ProjectAssetAdmin(DjangoQLSearchMixin, UserResourceAdmin, admin.ModelAdmin):
+class ProjectAssetAdmin(DjangoQLSearchMixin, UserResourceAdmin, admin.ModelAdmin):  # type: ignore[reportMissingTypeArgument]
     list_display = ("project", "mimetype", "type", "input_type", "export_type", "file_size", "marked_as_deleted")
     list_filter = (
         # "project",

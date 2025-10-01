@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from main.graphql.context import Info
 
 
-def _custom_prepare_create_update(*args, **kwargs):
+def _custom_prepare_create_update(*args, **kwargs):  # type: ignore[reportMissingParameterType]
     info: Info = kwargs["info"]
     user_id = info.context.request.user.pk
     resp_instance, resp_direct_field_values, resp_m2m = prepare_create_update(*args, **kwargs)

@@ -2,7 +2,7 @@ import typing
 from unittest import mock
 
 from django.urls import reverse
-from firebase_admin import auth
+from firebase_admin import auth  # type: ignore[reportMissingTypeStubs]
 
 from apps.contributor.factories import ContributorUserFactory
 from apps.user.factories import UserFactory

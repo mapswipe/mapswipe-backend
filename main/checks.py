@@ -6,7 +6,7 @@ from django.core.checks import Warning as DCWarning
 
 
 @register(Tags.compatibility)
-def celery_beat_tasks(app_configs, **kwargs):
+def celery_beat_tasks(app_configs, **kwargs):  # type: ignore[reportMissingParameterType]
     from main.cronjobs import SCHEDULES
 
     # Confirm all tasks can be imported
@@ -19,7 +19,7 @@ def celery_beat_tasks(app_configs, **kwargs):
 
 
 @register(Tags.compatibility)
-def firebase_check(app_configs, **kwargs):
+def firebase_check(app_configs, **kwargs):  # type: ignore[reportMissingParameterType]
     if not settings.FIREBASE_EMULATOR_USE:
         return []
 

@@ -4,5 +4,5 @@ class IntegerChoicesField:
     def __init__(
         self,
         choices_enum: type[models.IntegerChoices],
-        **kwargs,
+        **kwargs,  # type: ignore[reportMissingParameterType]
     ): ...

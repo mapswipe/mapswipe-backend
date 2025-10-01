@@ -61,7 +61,7 @@ class TestCase(BaseTestCase):
         # Clear firebase data
         logger.info("Clearing firebase database")
         self.clear_firebase_data()
-        self.firebase_helper = Config.FIREBASE_HELPER
+        self.firebase_helper = Config.FIREBASE_HELPER  # type: ignore[reportUninitializedInstanceVariable]
 
         super().setUp()
 
@@ -75,7 +75,7 @@ class TestCase(BaseTestCase):
         ref = Config.FIREBASE_HELPER.ref(Config.FirebaseKeys.v2())
         ref.delete()
 
-    def force_login(self, user):
+    def force_login(self, user):  # type: ignore[reportMissingParameterType]
         self.client.force_login(user)
 
     def logout(self):
@@ -87,7 +87,7 @@ class TestCase(BaseTestCase):
         assert_errors: bool = False,
         variables: dict[typing.Any, typing.Any] | None = None,
         files: dict[typing.Any, typing.Any] | None = None,
-        **kwargs,
+        **kwargs,  # type: ignore[reportMissingParameterType]
     ) -> dict[typing.Any, typing.Any]:
         import json
 
@@ -130,7 +130,7 @@ class TestCase(BaseTestCase):
             warning_message = msg or "Assertion warning: condition not met."
             warnings.warn(warning_message, stacklevel=2)
 
-    def assertResponseNoErrors(self, resp: typing.Any, msg=None):
+    def assertResponseNoErrors(self, resp: typing.Any, msg=None):  # type: ignore[reportMissingParameterType]
         """Assert that the call went through correctly. 200 means the syntax is ok,
         if there are no `errors`, the call was fine.
 
@@ -140,7 +140,7 @@ class TestCase(BaseTestCase):
         assert resp.status_code == 200, msg or content
         assert "errors" not in list(content.keys()), msg or content
 
-    def assertResponseHasErrors(self, resp: typing.Any, msg=None):
+    def assertResponseHasErrors(self, resp: typing.Any, msg=None):  # type: ignore[reportMissingParameterType]
         """Assert that the call was failing.
 
         Take care: Even with errors, GraphQL returns status 200!

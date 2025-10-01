@@ -38,7 +38,7 @@ def retry_get(url: str, retries: int | None = 3, timeout: int | None = 4, to_osm
 
 
 # FIXME(rup): Not used anywhere
-def geojsonToFeatureCollection(geojson: dict) -> dict:
+def geojsonToFeatureCollection(geojson: dict) -> dict:  # type: ignore[reportMissingTypeArgument]
     """Take a GeoJson and wrap it in a FeatureCollection."""
     if geojson["type"] != "FeatureCollection":
         return {
@@ -53,7 +53,7 @@ def chunks[T](arr: list[T], n_objects: int) -> list[list[T]]:
     return [arr[i * n_objects : (i + 1) * n_objects] for i in range((len(arr) + n_objects - 1) // n_objects)]
 
 
-def query_osmcha(changeset_ids: list, changeset_results: dict[int, Any]):
+def query_osmcha(changeset_ids: list, changeset_results: dict[int, Any]):  # type: ignore[reportMissingTypeArgument]
     """Get data from changesetId."""
     id_string = ",".join(map(str, changeset_ids))
 
@@ -77,7 +77,7 @@ def query_osmcha(changeset_ids: list, changeset_results: dict[int, Any]):
     return changeset_results
 
 
-def query_osm(changeset_ids: list, changeset_results: dict):
+def query_osm(changeset_ids: list, changeset_results: dict):  # type: ignore[reportMissingTypeArgument]
     """Get data from changesetId."""
     id_string = ",".join(map(str, changeset_ids))
 

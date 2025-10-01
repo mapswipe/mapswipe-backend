@@ -13,7 +13,7 @@ from .models import (
 )
 
 
-class TutorialFactory(DjangoModelFactory):
+class TutorialFactory(DjangoModelFactory):  # type: ignore[reportMissingTypeArgument]
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Tutorial
 
@@ -22,7 +22,7 @@ class TutorialFactory(DjangoModelFactory):
     # name = factory.Sequence(lambda n: f"Tutorial {n}")
 
 
-class TutorialScenarioPageFactory(DjangoModelFactory):
+class TutorialScenarioPageFactory(DjangoModelFactory):  # type: ignore[reportMissingTypeArgument]
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = TutorialScenarioPage
 
@@ -40,7 +40,7 @@ class TutorialScenarioPageFactory(DjangoModelFactory):
     success_title = factory.Sequence(lambda n: f"success title for page {n}")
 
 
-class TutorialTaskFactory(DjangoModelFactory):
+class TutorialTaskFactory(DjangoModelFactory):  # type: ignore[reportMissingTypeArgument]
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = TutorialTask
 
@@ -49,7 +49,7 @@ class TutorialTaskFactory(DjangoModelFactory):
     project_type_specifics = factory.LazyAttribute(lambda _: {})
 
 
-class TutorialInformationPageFactory(DjangoModelFactory):
+class TutorialInformationPageFactory(DjangoModelFactory):  # type: ignore[reportMissingTypeArgument]
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = TutorialInformationPage
 
@@ -58,7 +58,7 @@ class TutorialInformationPageFactory(DjangoModelFactory):
     page_number = factory.Sequence(lambda n: n)
 
 
-class TutorialInformationPageBlockFactory(DjangoModelFactory):
+class TutorialInformationPageBlockFactory(DjangoModelFactory):  # type: ignore[reportMissingTypeArgument]
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = TutorialInformationPageBlock
 

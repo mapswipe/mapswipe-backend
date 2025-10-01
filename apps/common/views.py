@@ -9,7 +9,7 @@ from django.contrib.auth import login
 from django.http import JsonResponse
 from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema
-from health_check.views import MainView
+from health_check.views import MainView  # type: ignore[reportMissingTypeStubs]
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
