@@ -40,7 +40,7 @@ def create_override():
         pre_save.disconnect(pre_save_override)
 
 
-class TestProjectE2E(TestCase):
+class TestTileMapServiceProjectE2E(TestCase):
     class Mutation:
         CREATE_PROJECT = """
         mutation CreateProject($data: ProjectCreateInput!) {
@@ -287,26 +287,28 @@ class TestProjectE2E(TestCase):
 
     def test_find_project_e2e(self):
         with create_override():
-            self._test_tile_map_service(
+            self._test_project(
                 "find",
                 "assets/tests/projects/find/project_data.json5",
             )
 
     def test_completeness_project_e2e(self):
         with create_override():
-            self._test_tile_map_service(
+            self._test_project(
                 "completeness",
                 "assets/tests/projects/completeness/project_data.json5",
             )
 
     def test_compare_project_e2e(self):
         with create_override():
-            self._test_tile_map_service(
+            self._test_project(
                 "compare",
                 "assets/tests/projects/compare/project_data.json5",
             )
 
-    def _test_tile_map_service(self, projectKey: str, filename: str):
+    # Generic functions
+
+    def _test_project(self, projectKey: str, filename: str):
         # Load test data file
         full_path = Path(settings.BASE_DIR, filename)
         with full_path.open("r", encoding="utf-8") as f:
@@ -358,7 +360,7 @@ class TestProjectE2E(TestCase):
 
         project_response = project_content["data"]["createProject"]
         assert project_response is not None, "Project create response is None"
-        assert project_response["ok"]
+        assert project_response["ok"], project_response["errors"]
 
         project_id = project_response["result"]["id"]
         project_fb_id = project_response["result"]["firebaseId"]
@@ -473,7 +475,7 @@ class TestProjectE2E(TestCase):
         publish_tutorial_response = publish_tutorial_content["data"]["updateTutorialStatus"]
         assert publish_tutorial_response["ok"], publish_tutorial_response["errors"]
         assert publish_tutorial_response is not None, "Processed tutorial publish response is None"
-        assert publish_tutorial_response["result"]["status"] == "READY_TO_PUBLISH", "tutorial should be published"
+        assert publish_tutorial_response["result"]["status"] == "READY_TO_PUBLISH", "tutorial should be ready to published"
 
         tutorial_fb_ref = self.firebase_helper.ref(f"/v2/projects/{tutorial_fb_id}")
         tutorial_fb_data = tutorial_fb_ref.get()
@@ -482,27 +484,24 @@ class TestProjectE2E(TestCase):
         assert tutorial_fb_data is not None, "Tutorial in firebase is None"
         assert isinstance(tutorial_fb_data, dict), "Tutorial in firebase should be a dictionary"
 
-        ignored_tutorial_keys = []
-        filtered_tutorial_actual = remove_object_keys(tutorial_fb_data, ignored_tutorial_keys)
-        filtered_tutorial_expected = remove_object_keys(test_data["expected_tutorial_data"], ignored_tutorial_keys)
+        filtered_tutorial_actual = tutorial_fb_data
+        filtered_tutorial_expected = test_data["expected_tutorial_data"]
         assert filtered_tutorial_actual == filtered_tutorial_expected, "Difference found for tutorial data in firebase."
 
         # Check tutorial groups in firebase
         tutorial_groups_fb_ref = self.firebase_helper.ref(f"/v2/groups/{tutorial_fb_id}/")
         tutorial_groups_fb_data = tutorial_groups_fb_ref.get()
 
-        ignored_group_keys = []
-        filtered_group_actual = remove_object_keys(tutorial_groups_fb_data, ignored_group_keys)
-        filtered_group_expected = remove_object_keys(test_data["expected_tutorial_groups_data"], ignored_tutorial_keys)
+        filtered_group_actual = tutorial_groups_fb_data
+        filtered_group_expected = test_data["expected_tutorial_groups_data"]
         assert filtered_group_actual == filtered_group_expected, "Difference found for tutorial group data in firebase."
 
         # Check tutorial tasks in firebase
         tutorial_tasks_ref = self.firebase_helper.ref(f"/v2/tasks/{tutorial_fb_id}/")
         tutorial_task_fb_data = tutorial_tasks_ref.get()
 
-        ignored_task_keys = []
-        sanitized_tasks_actual = remove_object_keys(tutorial_task_fb_data, ignored_task_keys)
-        sanitized_tasks_expected = remove_object_keys(test_data["expected_tutorial_tasks_data"], ignored_task_keys)
+        sanitized_tasks_actual = tutorial_task_fb_data
+        sanitized_tasks_expected = test_data["expected_tutorial_tasks_data"]
 
         assert sanitized_tasks_actual == sanitized_tasks_expected, (
             "Differences found between expected and actual tasks on tutorial in firebase."
@@ -554,18 +553,16 @@ class TestProjectE2E(TestCase):
         groups_fb_ref = self.firebase_helper.ref(f"/v2/groups/{project_fb_id}/")
         groups_fb_data = groups_fb_ref.get()
 
-        ignored_group_keys = []
-        filtered_group_actual = remove_object_keys(groups_fb_data, ignored_group_keys)
-        filtered_group_expected = remove_object_keys(test_data["expected_project_groups_data"], ignored_project_keys)
+        filtered_group_actual = groups_fb_data
+        filtered_group_expected = test_data["expected_project_groups_data"]
         assert filtered_group_actual == filtered_group_expected, "Difference found for group data on project in firebase."
 
         # Check project tasks in firebase
         project_tasks_ref = self.firebase_helper.ref(f"/v2/tasks/{project_fb_id}/")
-        project_tasks_db_data = project_tasks_ref.get()
+        project_tasks_fb_data = project_tasks_ref.get()
 
-        ignored_task_keys = []
-        sanitized_tasks_actual = remove_object_keys(project_tasks_db_data, ignored_task_keys)
-        sanitized_tasks_expected = remove_object_keys(test_data["expected_project_tasks_data"], ignored_task_keys)
+        sanitized_tasks_actual = project_tasks_fb_data
+        sanitized_tasks_expected = test_data["expected_project_tasks_data"]
 
         assert sanitized_tasks_actual == sanitized_tasks_expected, (
             "Differences found between expected and actual tasks on project in firebase."
