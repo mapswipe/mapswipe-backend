@@ -225,8 +225,8 @@ class StreetProject(
     # FIREBASE
 
     @typing.override
-    def skip_tasks_on_firebase(self) -> bool:
-        return False
+    def compress_tasks_on_firebase(self) -> bool:
+        return True
 
     @typing.override
     def get_task_specifics_for_firebase(self, task: ProjectTask):
