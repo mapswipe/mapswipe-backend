@@ -1,28 +1,23 @@
+import logging
 import typing
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
 import json5
+import pytest
 from django.conf import settings
 from django.db.models.signals import pre_save
 from ulid import ULID
 
-from apps.common.utils import remove_object_keys
+from apps.common.utils import decode_tasks, remove_object_keys
 from apps.contributor.factories import ContributorUserFactory
-from apps.contributor.models import ContributorUserGroup
-from apps.mapping.firebase.pull import pull_results_from_firebase
-from apps.mapping.models import (
-    MappingSession,
-    MappingSessionResult,
-    MappingSessionResultTemp,
-    MappingSessionUserGroup,
-    MappingSessionUserGroupTemp,
-)
 from apps.project.models import Organization, Project
 from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
 from main.tests import TestCase
+
+logging.getLogger("vcr").setLevel(logging.WARNING)
 
 
 @contextmanager
@@ -30,7 +25,7 @@ def create_override():
     def pre_save_override(sender: typing.Any, instance: typing.Any, **kwargs):
         if sender == Tutorial:
             instance.firebase_id = f"tutorial_{instance.client_id}"
-        elif sender in {Project, Organization, ContributorUserGroup}:
+        elif sender in {Project, Organization}:
             instance.firebase_id = instance.client_id
 
     pre_save.connect(pre_save_override)
@@ -40,7 +35,7 @@ def create_override():
         pre_save.disconnect(pre_save_override)
 
 
-class TestTileMapServiceProjectE2E(TestCase):
+class TestStreetProjectE2E(TestCase):
     class Mutation:
         CREATE_PROJECT = """
         mutation CreateProject($data: ProjectCreateInput!) {
@@ -159,34 +154,6 @@ class TestTileMapServiceProjectE2E(TestCase):
         }
         """
 
-        CREATE_CONTRIBUTOR_USER_GROUP = """
-            mutation CreateContributorUserGroup($data: ContributorUserGroupCreateInput!) {
-                createContributorUserGroup(data: $data) {
-                    ... on OperationInfo {
-                      __typename
-                      messages {
-                        code
-                        field
-                        kind
-                        message
-                      }
-                    }
-                    ... on ContributorUserGroupTypeMutationResponseType {
-                        errors
-                        ok
-                        result {
-                            id
-                            name
-                            description
-                            clientId
-                            isArchived
-                            firebaseId
-                        }
-                    }
-                }
-            }
-        """
-
         CREATE_ORGANIZATION = """
         mutation CreateOrganization($data: OrganizationCreateInput!) {
             createOrganization(data: $data) {
@@ -285,30 +252,17 @@ class TestTileMapServiceProjectE2E(TestCase):
             }
         """
 
-    def test_find_project_e2e(self):
+    @pytest.mark.vcr("assets/tests/projects/street/cassette")
+    def test_street_project_e2e(self):
+        # TODO(susilnem): Add more test with filters
         with create_override():
             self._test_project(
-                "find",
-                "assets/tests/projects/find/project_data.json5",
-            )
-
-    def test_completeness_project_e2e(self):
-        with create_override():
-            self._test_project(
-                "completeness",
-                "assets/tests/projects/completeness/project_data.json5",
-            )
-
-    def test_compare_project_e2e(self):
-        with create_override():
-            self._test_project(
-                "compare",
-                "assets/tests/projects/compare/project_data.json5",
+                "assets/tests/projects/street/project_data.json5",
             )
 
     # Generic functions
 
-    def _test_project(self, projectKey: str, filename: str):
+    def _test_project(self, filename: str):
         # Load test data file
         full_path = Path(settings.BASE_DIR, filename)
         with full_path.open("r", encoding="utf-8") as f:
@@ -405,7 +359,7 @@ class TestTileMapServiceProjectE2E(TestCase):
         # Update project
         update_project_data = test_data["update_project"]
         update_project_data["image"] = image_id
-        update_project_data["projectTypeSpecifics"][projectKey]["aoiGeometry"] = aoi_id
+        update_project_data["projectTypeSpecifics"]["street"]["aoiGeometry"] = aoi_id
         update_project_data["requestingOrganization"] = organization_id
         with self.captureOnCommitCallbacks(execute=True):
             update_content = self.query_check(
@@ -498,7 +452,11 @@ class TestTileMapServiceProjectE2E(TestCase):
 
         # Check tutorial tasks in firebase
         tutorial_tasks_ref = self.firebase_helper.ref(f"/v2/tasks/{tutorial_fb_id}/")
-        tutorial_task_fb_data = tutorial_tasks_ref.get()
+        tutorial_task_fb_data: dict[str, typing.Any] = tutorial_tasks_ref.get()  # type: ignore[reportArgumentType]
+
+        # NOTE: We want to decode the tasks before comparison
+        for key, value in tutorial_task_fb_data.items():
+            tutorial_task_fb_data[key] = decode_tasks(value)
 
         sanitized_tasks_actual = tutorial_task_fb_data
         sanitized_tasks_expected = test_data["expected_tutorial_tasks_data"]
@@ -559,7 +517,11 @@ class TestTileMapServiceProjectE2E(TestCase):
 
         # Check project tasks in firebase
         project_tasks_ref = self.firebase_helper.ref(f"/v2/tasks/{project_fb_id}/")
-        project_tasks_fb_data = project_tasks_ref.get()
+        project_tasks_fb_data: dict[str, typing.Any] = project_tasks_ref.get()  # type: ignore[reportArgumentType]
+
+        # NOTE: We want to decode the tasks before comparison
+        for key, value in project_tasks_fb_data.items():
+            project_tasks_fb_data[key] = decode_tasks(value)
 
         sanitized_tasks_actual = project_tasks_fb_data
         sanitized_tasks_expected = test_data["expected_project_tasks_data"]
@@ -567,55 +529,3 @@ class TestTileMapServiceProjectE2E(TestCase):
         assert sanitized_tasks_actual == sanitized_tasks_expected, (
             "Differences found between expected and actual tasks on project in firebase."
         )
-
-        # Create contributor user group
-        old_contributor_user_group_data = test_data["create_contributor_user_group"]
-        for input_data in old_contributor_user_group_data:
-            usergroup_content = self.query_check(
-                self.Mutation.CREATE_CONTRIBUTOR_USER_GROUP,
-                variables={
-                    "data": input_data,
-                },
-            )
-            usergroup_response = usergroup_content["data"]["createContributorUserGroup"]
-            assert usergroup_response is not None, "usergroup create response is None"
-            assert usergroup_response["ok"]
-
-        # Pull results from firebase
-        input_data = test_data["create_results"]
-        ref_results = self.firebase_helper.ref(f"/v2/results/{project_fb_id}")
-        ref_results.set(input_data)
-
-        fb_results_data = ref_results.get()
-        assert fb_results_data is not None
-
-        assert [
-            MappingSession.objects.count(),
-            MappingSessionResult.objects.count(),
-            MappingSessionUserGroup.objects.count(),
-            MappingSessionUserGroupTemp.objects.count(),
-            MappingSessionResultTemp.objects.count(),
-        ] == [0, 0, 0, 0, 0], "Mapping session data should be empty before pull from firebase"
-
-        project = Project.objects.get(id=project_id)
-        assert project.progress == 0
-
-        with self.captureOnCommitCallbacks(execute=True):
-            pull_results_from_firebase()
-
-        assert [
-            MappingSession.objects.count(),
-            MappingSessionResult.objects.count(),
-            MappingSessionUserGroup.objects.count(),
-            MappingSessionUserGroupTemp.objects.count(),
-            MappingSessionResultTemp.objects.count(),
-        ] == [
-            test_data["expected_pulled_results_data"]["mapping_session_count"],
-            test_data["expected_pulled_results_data"]["mapping_session_results_count"],
-            test_data["expected_pulled_results_data"]["mapping_session_user_groups_count"],
-            0,
-            0,
-        ], "Difference found for pulled results data."
-
-        project.refresh_from_db()
-        assert project.progress == test_data["expected_pulled_results_data"]["progress"]

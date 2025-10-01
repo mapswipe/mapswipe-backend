@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class ValidImage(typing.TypedDict):
+    source_identifier: str | None
     url: str
     file_name: str
     width: int | None
@@ -103,6 +104,8 @@ class ValidateImageProject(
         inputs: list[ValidImage] = []
         for image_asset in direct_images_assets_qs.iterator():
             valid_image: ValidImage = {
+                # NOTE: There is no identifier from source if uploaded directly
+                "source_identifier": None,
                 "url": get_absolute_uri(image_asset.file),
                 "file_name": image_asset.file.name,
                 "width": None,
@@ -147,6 +150,7 @@ class ValidateImageProject(
             if annotations:
                 for annotation in annotations:
                     valid_image: ValidImage = {
+                        "source_identifier": asset_specifics.image.id,
                         "url": image_asset.external_url,
                         "file_name": asset_specifics.image.file_name,
                         "width": asset_specifics.image.width,
@@ -156,6 +160,7 @@ class ValidateImageProject(
                     inputs.append(valid_image)
             else:
                 valid_image: ValidImage = {
+                    "source_identifier": asset_specifics.image.id,
                     "url": image_asset.external_url,
                     "file_name": asset_specifics.image.file_name,
                     "width": None,
@@ -213,7 +218,7 @@ class ValidateImageProject(
 
             bulk_mgr.add(
                 ProjectTask(
-                    firebase_id=f"t{f_id}",
+                    firebase_id=feature["source_identifier"] or f_id,
                     task_group_id=group.pk,
                     geometry=None,
                     # FIXME(tnagorra): Do we need to define all of these here?

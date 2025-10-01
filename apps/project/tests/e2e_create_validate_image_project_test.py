@@ -10,15 +10,6 @@ from ulid import ULID
 
 from apps.common.utils import remove_object_keys
 from apps.contributor.factories import ContributorUserFactory
-from apps.contributor.models import ContributorUserGroup
-from apps.mapping.firebase.pull import pull_results_from_firebase
-from apps.mapping.models import (
-    MappingSession,
-    MappingSessionResult,
-    MappingSessionResultTemp,
-    MappingSessionUserGroup,
-    MappingSessionUserGroupTemp,
-)
 from apps.project.models import Organization, Project
 from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
@@ -30,7 +21,7 @@ def create_override():
     def pre_save_override(sender: typing.Any, instance: typing.Any, **kwargs):
         if sender == Tutorial:
             instance.firebase_id = f"tutorial_{instance.client_id}"
-        elif sender in {Project, Organization, ContributorUserGroup}:
+        elif sender in {Project, Organization}:
             instance.firebase_id = instance.client_id
 
     pre_save.connect(pre_save_override)
@@ -40,7 +31,7 @@ def create_override():
         pre_save.disconnect(pre_save_override)
 
 
-class TestTileMapServiceProjectE2E(TestCase):
+class TestValidateImageProjectE2E(TestCase):
     class Mutation:
         CREATE_PROJECT = """
         mutation CreateProject($data: ProjectCreateInput!) {
@@ -159,34 +150,6 @@ class TestTileMapServiceProjectE2E(TestCase):
         }
         """
 
-        CREATE_CONTRIBUTOR_USER_GROUP = """
-            mutation CreateContributorUserGroup($data: ContributorUserGroupCreateInput!) {
-                createContributorUserGroup(data: $data) {
-                    ... on OperationInfo {
-                      __typename
-                      messages {
-                        code
-                        field
-                        kind
-                        message
-                      }
-                    }
-                    ... on ContributorUserGroupTypeMutationResponseType {
-                        errors
-                        ok
-                        result {
-                            id
-                            name
-                            description
-                            clientId
-                            isArchived
-                            firebaseId
-                        }
-                    }
-                }
-            }
-        """
-
         CREATE_ORGANIZATION = """
         mutation CreateOrganization($data: OrganizationCreateInput!) {
             createOrganization(data: $data) {
@@ -285,30 +248,16 @@ class TestTileMapServiceProjectE2E(TestCase):
             }
         """
 
-    def test_find_project_e2e(self):
+    def test_validate_image_project_e2e(self):
+        # TODO(susilnem): Add more test with filters
         with create_override():
             self._test_project(
-                "find",
-                "assets/tests/projects/find/project_data.json5",
-            )
-
-    def test_completeness_project_e2e(self):
-        with create_override():
-            self._test_project(
-                "completeness",
-                "assets/tests/projects/completeness/project_data.json5",
-            )
-
-    def test_compare_project_e2e(self):
-        with create_override():
-            self._test_project(
-                "compare",
-                "assets/tests/projects/compare/project_data.json5",
+                "assets/tests/projects/validate_image/project_data.json5",
             )
 
     # Generic functions
 
-    def _test_project(self, projectKey: str, filename: str):
+    def _test_project(self, filename: str):
         # Load test data file
         full_path = Path(settings.BASE_DIR, filename)
         with full_path.open("r", encoding="utf-8") as f:
@@ -327,7 +276,7 @@ class TestTileMapServiceProjectE2E(TestCase):
 
         # Define full path for image and AOI files
         image_filename = Path(settings.BASE_DIR) / test_data["assets"]["image"]
-        aoi_geometry_filename = Path(settings.BASE_DIR) / test_data["assets"]["aoi"]
+        coco_filename = Path(settings.BASE_DIR) / test_data["assets"]["coco_dataset"]
 
         # Create an organization
         create_organization_data = test_data["create_organization"]
@@ -384,28 +333,39 @@ class TestTileMapServiceProjectE2E(TestCase):
         assert image_response["ok"]
         image_id = image_response["result"]["id"]
 
-        # Create GeoJSON Asset for AOI Geometry
-        aoi_asset_data = {
-            "clientId": str(ULID()),
-            "inputType": "AOI_GEOMETRY",
-            "project": project_id,
-        }
-        with aoi_geometry_filename.open("rb") as geo_file:
-            aoi_content = self.query_check(
-                self.Mutation.UPLOAD_PROJECT_ASSET,
-                variables={"data": aoi_asset_data},
-                files={"geoFile": geo_file},
-                map={"geoFile": ["variables.data.file"]},
-            )
-        aoi_response = aoi_content["data"]["createProjectAsset"]
-        assert aoi_response is not None, "AOI create response is None"
-        assert aoi_response["ok"]
-        aoi_id = aoi_response["result"]["id"]
+        # Create Image Asset for COCO images
+        if test_data["update_project"]["projectTypeSpecifics"]["validateImage"]["sourceType"] == "DATASET_FILE":
+            with coco_filename.open("r", encoding="utf-8") as f:
+                coco_data = json5.load(f)
+                for image in iter(coco_data["images"]):
+                    image_asset_data = {
+                        "clientId": str(ULID()),
+                        "inputType": "OBJECT_IMAGE",
+                        "project": project_id,
+                        "assetTypeSpecifics": {
+                            "objectImage": {
+                                "image": {
+                                    "cocoUrl": image["coco_url"],
+                                    "fileName": image["file_name"],
+                                    "height": image["height"],
+                                    "id": str(image["id"]),
+                                    "width": image["width"],
+                                },
+                            },
+                        },
+                        "externalUrl": image["coco_url"],
+                    }
+                    image_content = self.query_check(
+                        self.Mutation.UPLOAD_PROJECT_ASSET,
+                        variables={"data": image_asset_data},
+                    )
+                    image_response = image_content["data"]["createProjectAsset"]
+                    assert image_response is not None, "image create response is None"
+                    assert image_response["ok"]
 
         # Update project
         update_project_data = test_data["update_project"]
         update_project_data["image"] = image_id
-        update_project_data["projectTypeSpecifics"][projectKey]["aoiGeometry"] = aoi_id
         update_project_data["requestingOrganization"] = organization_id
         with self.captureOnCommitCallbacks(execute=True):
             update_content = self.query_check(
@@ -567,55 +527,3 @@ class TestTileMapServiceProjectE2E(TestCase):
         assert sanitized_tasks_actual == sanitized_tasks_expected, (
             "Differences found between expected and actual tasks on project in firebase."
         )
-
-        # Create contributor user group
-        old_contributor_user_group_data = test_data["create_contributor_user_group"]
-        for input_data in old_contributor_user_group_data:
-            usergroup_content = self.query_check(
-                self.Mutation.CREATE_CONTRIBUTOR_USER_GROUP,
-                variables={
-                    "data": input_data,
-                },
-            )
-            usergroup_response = usergroup_content["data"]["createContributorUserGroup"]
-            assert usergroup_response is not None, "usergroup create response is None"
-            assert usergroup_response["ok"]
-
-        # Pull results from firebase
-        input_data = test_data["create_results"]
-        ref_results = self.firebase_helper.ref(f"/v2/results/{project_fb_id}")
-        ref_results.set(input_data)
-
-        fb_results_data = ref_results.get()
-        assert fb_results_data is not None
-
-        assert [
-            MappingSession.objects.count(),
-            MappingSessionResult.objects.count(),
-            MappingSessionUserGroup.objects.count(),
-            MappingSessionUserGroupTemp.objects.count(),
-            MappingSessionResultTemp.objects.count(),
-        ] == [0, 0, 0, 0, 0], "Mapping session data should be empty before pull from firebase"
-
-        project = Project.objects.get(id=project_id)
-        assert project.progress == 0
-
-        with self.captureOnCommitCallbacks(execute=True):
-            pull_results_from_firebase()
-
-        assert [
-            MappingSession.objects.count(),
-            MappingSessionResult.objects.count(),
-            MappingSessionUserGroup.objects.count(),
-            MappingSessionUserGroupTemp.objects.count(),
-            MappingSessionResultTemp.objects.count(),
-        ] == [
-            test_data["expected_pulled_results_data"]["mapping_session_count"],
-            test_data["expected_pulled_results_data"]["mapping_session_results_count"],
-            test_data["expected_pulled_results_data"]["mapping_session_user_groups_count"],
-            0,
-            0,
-        ], "Difference found for pulled results data."
-
-        project.refresh_from_db()
-        assert project.progress == test_data["expected_pulled_results_data"]["progress"]

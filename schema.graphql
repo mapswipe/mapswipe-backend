@@ -975,9 +975,7 @@ input ObjectImageAnnotationInput {
 
   """Numeric value as string"""
   id: String!
-
-  """Numeric value as string"""
-  imageId: String!
+  imageId: String = null
   iscrowd: Int = null
   segmentation: [[Float!]!] = null
 }
@@ -989,9 +987,7 @@ type ObjectImageAnnotationType {
 
   """Numeric value as string"""
   id: String!
-
-  """Numeric value as string"""
-  imageId: String!
+  imageId: String
   iscrowd: Int
   segmentation: [[Float!]!]
 }
@@ -2724,6 +2720,7 @@ input ValidateImageTutorialTaskPropertyInput {
   annotation: ObjectImageAnnotationInput = null
   fileName: String!
   height: Int = null
+  imageId: String = null
   url: String!
   width: Int = null
 }
@@ -2732,6 +2729,7 @@ type ValidateImageTutorialTaskPropertyType {
   annotation: ObjectImageAnnotationType
   fileName: String!
   height: Int
+  imageId: String
   url: String!
   width: Int
 }

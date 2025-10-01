@@ -37,8 +37,7 @@ class ObjectImageAnnotation(BaseModel):
     # NOTE: `id` is not required in coco format but we might need this to be required
     # NOTE: converting id and image_id to string as large integers are not supported
     id: custom_fields.PydanticId
-    # NOTE: converting id and image_id to string as large integers are not supported
-    image_id: custom_fields.PydanticId
+    image_id: custom_fields.PydanticId | None = None
     category_id: custom_fields.PydanticId | None = None
     iscrowd: custom_fields.PydanticPositiveInt | None = None
     segmentation: list[list[float]] | None = None

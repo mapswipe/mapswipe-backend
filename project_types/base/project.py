@@ -296,7 +296,7 @@ class BaseProject[
         return False
 
     def create_tasks_on_firebase(self, task_ref: FbReference):
-        tasks = ProjectTask.objects.filter(task_group__project_id=self.project.pk)
+        tasks = ProjectTask.objects.filter(task_group__project_id=self.project.pk).order_by("id")
         grouped_tasks: dict[str, list[dict[str, typing.Any]]] = defaultdict(list)
 
         for task in tasks.iterator():
@@ -328,7 +328,7 @@ class BaseProject[
         firebase_bulk_mgr.done()
 
     def create_groups_on_firebase(self, group_ref: FbReference):
-        groups = ProjectTaskGroup.objects.filter(project_id=self.project.pk)
+        groups = ProjectTaskGroup.objects.filter(project_id=self.project.pk).order_by("id")
         fb_groups: dict[str, dict[str, dict]] = {}
 
         firebase_bulk_mgr = FirebaseBulkManager(ref=group_ref)
