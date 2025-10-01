@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class ValidateImageTutorialTaskProperty(BaseTutorialTaskProperty):
     url: str
+    image_id: str | None = None
     file_name: str
     width: int | None = None
     height: int | None = None
@@ -45,7 +46,7 @@ class ValidateImageTutorial(
             projectId=self.tutorial.firebase_id,
             referenceAnswer=task.reference,
             screen=task.scenario.scenario_page_number,
-            taskId=f"{index}",
+            taskId=task_specifics.image_id or str(index),
             url=task_specifics.url,
             fileName=task_specifics.file_name,
             width=task_specifics.width,
