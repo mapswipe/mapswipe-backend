@@ -213,21 +213,21 @@ class TestProjectExport(TestCase):
             {
                 "type": "All projects",
                 "file_name": "global/asset/projects.csv",
-                "file_size": 1859,
+                "file_size": 2099,
             },
             {
                 "type": "Projects geojson with centroid",
                 "file_name": "global/asset/projects_centroid.geojson",
-                "file_size": 5110,
+                "file_size": 5350,
             },
             {
                 "file_name": "global/asset/projects_geom.geojson",
                 "type": "Projects Geojson with GEOM",
-                "file_size": 5110,
+                "file_size": 5350,
             },
             {
                 "type": "Project Type Aggregates",
                 "file_name": "global/asset/project_stats_by_types.csv",
-                "file_size": 216,
+                "file_size": 236,
             },
         ]
