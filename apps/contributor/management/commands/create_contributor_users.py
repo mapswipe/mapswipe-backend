@@ -61,7 +61,7 @@ class Command(BaseCommand):
     help = "Create dummy contributor users. Also sync these users to firebase"
 
     @typing.override
-    def handle(self, *args, **options):
+    def handle(self, *args, **options):  # type: ignore[reportMissingParameterType]
         if not settings.ENABLE_DANGER_MODE:
             logger.warning("Dummy data generation is disabled")
             return

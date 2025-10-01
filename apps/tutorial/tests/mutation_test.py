@@ -240,7 +240,7 @@ class TestTutorialMutation(TestCase):
             project_type_specifics=cls.project_type_specifics,
         )
 
-    def _create_tutorial_mutation(self, tutorial_data: dict, **kwargs):
+    def _create_tutorial_mutation(self, tutorial_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return self.query_check(
                 query=Mutation.CREATE_TUTORIAL,
@@ -249,7 +249,7 @@ class TestTutorialMutation(TestCase):
                 },
             )
 
-    def _update_tutorial_mutation(self, pk: str, tutorial_data: dict, **kwargs):
+    def _update_tutorial_mutation(self, pk: str, tutorial_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return self.query_check(
                 query=Mutation.UPDATE_TUTORIAL,
@@ -259,7 +259,7 @@ class TestTutorialMutation(TestCase):
                 },
             )
 
-    def _update_tutorial_status_mutation(self, pk: str, tutorial_data: dict, **kwargs):
+    def _update_tutorial_status_mutation(self, pk: str, tutorial_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return self.query_check(
                 query=Mutation.UPDATE_TUTORIAL_STATUS,
@@ -471,7 +471,7 @@ class TestTutorialMutation(TestCase):
         latest_tutorial.refresh_from_db()
 
         # Updating Tutorial: Nested Updates
-        def get_update_for_task(tut: dict):
+        def get_update_for_task(tut: dict):  # type: ignore[reportMissingTypeArgument]
             return {"update": {**tut, "projectTypeSpecifics": {"find": tut.get("projectTypeSpecifics")}}}
 
         tutorial_from_res = resp_data["result"]

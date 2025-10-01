@@ -10,7 +10,7 @@ from geojson_pydantic import Feature as PydanticFeature
 from geojson_pydantic import FeatureCollection as PydanticFeatureCollection
 from geojson_pydantic.geometries import MultiPolygon as PydanticMultiPolygon
 from geojson_pydantic.geometries import Polygon as PydanticPolygon
-from osgeo import ogr
+from osgeo import ogr  # type: ignore[reportMissingTypeStubs]
 
 
 # FIXME(tnagorra): Is there are more performant way to do this?
@@ -53,7 +53,7 @@ def convert_feature_to_wkt(feature: PydanticFeature[PydanticPolygon | PydanticMu
 
 
 @deprecated("We can directly use geojson_pydantic with more specific geometry")
-def validate_geojson_file(file: ContentFile) -> None:
+def validate_geojson_file(file: ContentFile) -> None:  # type: ignore[reportMissingTypeArgument]
     """Validates if the given file contains a valid GeoJSON FeatureCollection.
 
     Args:
@@ -78,7 +78,7 @@ def validate_geojson_file(file: ContentFile) -> None:
 AoiFeature = PydanticFeature[PydanticPolygon | PydanticMultiPolygon, dict[str, Any]]
 
 
-def convert_json_dict_to_features(geojson_dict: dict):
+def convert_json_dict_to_features(geojson_dict: dict):  # type: ignore[reportMissingTypeArgument]
     feature_collection = PydanticFeatureCollection.model_validate(geojson_dict)
 
     polygon_types = (PydanticPolygon, PydanticMultiPolygon)
@@ -88,7 +88,7 @@ def convert_json_dict_to_features(geojson_dict: dict):
     return filtered_features
 
 
-def convert_json_dict_to_geometry_collection(geojson_dict: dict):
+def convert_json_dict_to_geometry_collection(geojson_dict: dict):  # type: ignore[reportMissingTypeArgument]
     filtered_features = convert_json_dict_to_features(geojson_dict)
 
     geometries: list[GEOSGeometry] = []

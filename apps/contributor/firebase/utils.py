@@ -1,7 +1,7 @@
 import logging
 import typing
 
-from firebase_admin.db import Reference
+from firebase_admin.db import Reference  # type: ignore[reportMissingTypeStubs]
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from main.config import Config

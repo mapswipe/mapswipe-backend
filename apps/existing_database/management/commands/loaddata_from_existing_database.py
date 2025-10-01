@@ -66,7 +66,7 @@ if typing.TYPE_CHECKING:
 
 
 class FakeFirebaseCleanup:
-    def undo_mark_as_delete(self, *args, **kwargs):
+    def undo_mark_as_delete(self, *args, **kwargs):  # type: ignore[reportMissingParameterType]
         return
 
 
@@ -251,7 +251,7 @@ def get_organization_by_name(
 # TODO(thenav56): Cache?
 def generate_django_content_file_from_url(
     absolute_path: str,
-) -> ContentFile | None:
+) -> ContentFile | None:  # type: ignore[reportMissingTypeArgument]
     file_url = urljoin(Config.EXISTING_SYSTEM_API.geturl(), absolute_path)
 
     response = None
@@ -758,10 +758,10 @@ class Command(BaseCommand):
             if existing_user.username is None:
                 users_with_null_username += 1
 
-            if existing_user.created is None:
+            if existing_user.created is None:  # type: ignore[reportUnnecessaryComparison]
                 users_with_null_created_at += 1
 
-            if existing_user.updated_at is None:
+            if existing_user.updated_at is None:  # type: ignore[reportUnnecessaryComparison]
                 users_with_null_modified_at += 1
 
             # TODO: Check if already exists? - This makes it very low

@@ -2,7 +2,7 @@
 
 import math
 
-from osgeo import ogr
+from osgeo import ogr  # type: ignore[reportMissingTypeStubs]
 
 
 class _Point:

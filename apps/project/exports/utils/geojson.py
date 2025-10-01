@@ -3,7 +3,7 @@ import logging
 import typing
 from pathlib import Path
 
-from osgeo import ogr, osr
+from osgeo import ogr, osr  # type: ignore[reportMissingTypeStubs]
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +170,7 @@ def create_geojson_file_from_dict(
 
 
 def create_geojson_file(
-    geometries: dict,
+    geometries: dict,  # type: ignore[reportMissingTypeArgument]
     outfile: Path,
 ):
     driver = ogr.GetDriverByName("GeoJSONSeq")

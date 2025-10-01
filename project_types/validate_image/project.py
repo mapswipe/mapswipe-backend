@@ -248,7 +248,7 @@ class ValidateImageProject(
     # FIREBASE
 
     @typing.override
-    def get_task_specifics_for_firebase(self, task):
+    def get_task_specifics_for_firebase(self, task):  # type: ignore[reportMissingParameterType]
         task_specifics = self.project_task_property_class.model_validate(task.project_type_specifics)
         return firebase_models.FbMappingTaskValidateImageCreateOnlyInput(
             taskId=task.firebase_id,
@@ -267,7 +267,7 @@ class ValidateImageProject(
         )
 
     @typing.override
-    def get_group_specifics_for_firebase(self, group):
+    def get_group_specifics_for_firebase(self, group):  # type: ignore[reportMissingParameterType]
         return firebase_models.FbMappingGroupValidateImageCreateOnlyInput(
             # TODO(tnagorra): Add fields here
             groupId=group.firebase_id,

@@ -7,7 +7,7 @@ from django.http.request import HttpRequest
 from django.template.defaultfilters import filesizeformat
 from django.utils import timezone
 from django.utils.translation import gettext
-from firebase_admin import auth
+from firebase_admin import auth  # type: ignore[reportMissingTypeStubs]
 from rest_framework import serializers
 
 from apps.common.models import ArchivableResource, UserResource

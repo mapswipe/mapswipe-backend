@@ -8,7 +8,7 @@ import strawberry
 import strawberry_django
 from django.db import models
 from django.utils import timezone
-from django_cte import With
+from django_cte import With  # type: ignore[reportMissingTypeStubs]
 
 from apps.community_dashboard.models import AggregatedUserGroupStatData, AggregatedUserStatData
 from apps.contributor.models import ContributorUser

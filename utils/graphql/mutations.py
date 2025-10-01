@@ -23,23 +23,23 @@ def _get_serializer_context(info: Info, extra_context: dict[typing.Any, typing.A
 
 
 class ModelMutation:
-    InputType: type
-    PartialInputType: type
+    InputType: type  # type: ignore[reportUninitializedInstanceVariable]
+    PartialInputType: type  # type: ignore[reportUninitializedInstanceVariable]
 
     def __init__(
         self,
-        serializer_class: type[serializers.Serializer],
+        serializer_class: type[serializers.Serializer],  # type: ignore[reportMissingTypeArgument]
     ):
         self.serializer_class = serializer_class
 
     @staticmethod
     @sync_to_async
     def handle_mutation(
-        serializer_class,
-        data,
-        info,
+        serializer_class,  # type: ignore[reportMissingParameterType]
+        data,  # type: ignore[reportMissingParameterType]
+        info,  # type: ignore[reportMissingParameterType]
         extra_context: dict[typing.Any, typing.Any] | None,
-        **kwargs,
+        **kwargs,  # type: ignore[reportMissingParameterType]
     ) -> tuple[CustomErrorType | None, models.Model | None]:
         serializer = serializer_class(
             data=data,
@@ -58,10 +58,10 @@ class ModelMutation:
 
     async def handle_create_mutation(
         self,
-        data,
+        data,  # type: ignore[reportMissingParameterType]
         info: Info,
         extra_context: dict[typing.Any, typing.Any] | None = None,
-    ) -> MutationResponseType:
+    ) -> MutationResponseType:  # type: ignore[reportMissingTypeArgument]
         errors, saved_instance = await self.handle_mutation(
             self.serializer_class,
             parse_input_data(data),
@@ -74,12 +74,12 @@ class ModelMutation:
 
     async def handle_update_mutation(
         self,
-        data,
+        data,  # type: ignore[reportMissingParameterType]
         info: Info,
         instance: models.Model,
-        extra_context: dict | None = None,
+        extra_context: dict | None = None,  # type: ignore[reportMissingTypeArgument]
         dataclass_transformer: typing.Callable[[DataclassInstance], tuple[bool, InputDataType]] | None = None,
-    ) -> MutationResponseType:
+    ) -> MutationResponseType:  # type: ignore[reportMissingTypeArgument]
         parsed_dict = parse_input_data(
             data,
             dataclass_transformer,

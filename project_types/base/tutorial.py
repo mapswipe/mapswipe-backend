@@ -4,7 +4,7 @@ import typing
 from abc import ABC, abstractmethod
 
 from django.core.files.base import ContentFile
-from firebase_admin.db import Reference as FbReference
+from firebase_admin.db import Reference as FbReference  # type: ignore[reportMissingTypeStubs]
 from pydantic import BaseModel, ConfigDict
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
@@ -69,7 +69,7 @@ class BaseTutorial[
         if missing_fields:
             raise NotImplementedError(f"Please define {','.join(missing_fields)} for {cls}")
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs):  # type: ignore[reportMissingParameterType]
         super().__init_subclass__(**kwargs)
         cls._inheritance_checks()
 
@@ -140,7 +140,7 @@ class BaseTutorial[
         task_ref.set(value=grouped_tasks_dict)
 
     def create_groups_on_firebase(self, group_ref: FbReference):
-        fb_groups: dict[str, dict[str, dict]] = {}
+        fb_groups: dict[str, dict[str, dict]] = {}  # type: ignore[reportMissingTypeArgument]
 
         group_key = self.get_tutorial_group_key()
 

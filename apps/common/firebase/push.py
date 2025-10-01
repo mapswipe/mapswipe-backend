@@ -1,7 +1,7 @@
 import logging
 import typing
 
-from firebase_admin.db import Reference as FbReference
+from firebase_admin.db import Reference as FbReference  # type: ignore[reportMissingTypeStubs]
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
 
@@ -47,5 +47,5 @@ class FirebaseAnnouncementPush(FirebasePush[Announcement, firebase_models.FbAnno
         )
 
     @typing.override
-    def get_firebase_path(self, firebase_id: str, model=Announcement):
+    def get_firebase_path(self, firebase_id: str, model=Announcement):  # type: ignore[reportMissingParameterType]
         return Config.FirebaseKeys.announcement()

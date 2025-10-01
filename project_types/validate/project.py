@@ -143,7 +143,7 @@ class ValidateProject(
             project_id=self.project.pk,
         )
 
-    def _get_object_geometry_from_ohsome(self, geojson: dict):
+    def _get_object_geometry_from_ohsome(self, geojson: dict):  # type: ignore[reportMissingTypeArgument]
         feature_collection = PydanticFeatureCollection.model_validate(geojson)
         ohsome_request = {
             "endpoint": "elements/geometry",

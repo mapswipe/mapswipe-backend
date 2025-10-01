@@ -5,7 +5,7 @@ from functools import partial
 from typing import Any
 from warnings import deprecated
 
-import mercantile
+import mercantile  # type: ignore[reportMissingTypeStubs]
 import pandas as pd
 import requests
 from geojson_pydantic import FeatureCollection as PydanticFeatureCollection
@@ -18,7 +18,7 @@ from shapely import Polygon as ShapelyPolygon
 from shapely import box, unary_union
 from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry as ShapelyBaseGeometry
-from vt2geojson import tools as vt2geojson_tools
+from vt2geojson import tools as vt2geojson_tools  # type: ignore[reportMissingTypeStubs]
 
 from main.config import Config
 from main.logging import log_extra_response

@@ -14,7 +14,7 @@ class Command(BaseCommand):
     help = "Send slack messages for a given project"
 
     @typing.override
-    def add_arguments(self, parser):
+    def add_arguments(self, parser):  # type: ignore[reportMissingParameterType]
         parser.add_argument(
             "--project-id",
             type=str,
@@ -26,7 +26,7 @@ class Command(BaseCommand):
         subparsers.add_parser("project-progress-change", help="Send message for project progress change")
 
     @typing.override
-    def handle(self, *args, **options):
+    def handle(self, *args, **options):  # type: ignore[reportMissingParameterType]
         project_id = typing.cast("str", options["project_id"])
         project_id = int(project_id)
 

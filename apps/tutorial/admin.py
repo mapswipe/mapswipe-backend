@@ -1,5 +1,5 @@
 from django.contrib import admin
-from djangoql.admin import DjangoQLSearchMixin
+from djangoql.admin import DjangoQLSearchMixin  # type: ignore[reportMissingTypeStubs]
 
 from apps.common.admin import UserResourceAdmin
 
@@ -7,7 +7,7 @@ from .models import Tutorial, TutorialAsset
 
 
 @admin.register(Tutorial)
-class TutorialAdmin(DjangoQLSearchMixin, UserResourceAdmin, admin.ModelAdmin):
+class TutorialAdmin(DjangoQLSearchMixin, UserResourceAdmin, admin.ModelAdmin):  # type: ignore[reportMissingTypeArgument]
     list_display = ("name", "project", "status")
     search_fields = ("name",)
     ordering = ("name",)
@@ -20,7 +20,7 @@ class TutorialAdmin(DjangoQLSearchMixin, UserResourceAdmin, admin.ModelAdmin):
 
 
 @admin.register(TutorialAsset)
-class TutorialAssetAdmin(DjangoQLSearchMixin, UserResourceAdmin, admin.ModelAdmin):
+class TutorialAssetAdmin(DjangoQLSearchMixin, UserResourceAdmin, admin.ModelAdmin):  # type: ignore[reportMissingTypeArgument]
     list_display = ("tutorial", "mimetype", "type", "input_type", "file_size", "marked_as_deleted")
     list_filter = (
         # "tutorial",

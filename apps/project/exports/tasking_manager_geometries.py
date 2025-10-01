@@ -6,7 +6,7 @@ import typing
 from pathlib import Path
 from queue import Queue
 
-from osgeo import ogr
+from osgeo import ogr  # type: ignore[reportMissingTypeStubs]
 
 from apps.project.models import Project
 from utils.geo.tile_functions import geometry_from_tile_coords

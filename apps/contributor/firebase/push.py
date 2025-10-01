@@ -1,7 +1,7 @@
 import logging
 import typing
 
-from firebase_admin.db import Reference as FbReference
+from firebase_admin.db import Reference as FbReference  # type: ignore[reportMissingTypeStubs]
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
@@ -47,7 +47,7 @@ class FirebaseContributorTeam(FirebasePush[ContributorTeam, firebase_models.FbTe
         )
 
     @typing.override
-    def get_firebase_path(self, firebase_id: str, model=ContributorTeam):
+    def get_firebase_path(self, firebase_id: str, model=ContributorTeam):  # type: ignore[reportMissingParameterType]
         return Config.FirebaseKeys.contributor_team(firebase_id)
 
 
@@ -76,7 +76,7 @@ class FirebaseContributorUser(FirebasePush[ContributorUser, firebase_ext_models.
         )
 
     @typing.override
-    def get_firebase_path(self, firebase_id: str, model=ContributorUser):
+    def get_firebase_path(self, firebase_id: str, model=ContributorUser):  # type: ignore[reportMissingParameterType]
         return Config.FirebaseKeys.contributor_user(firebase_id)
 
 
@@ -124,5 +124,5 @@ class FirebaseContributorUserGroup(FirebasePush[ContributorUserGroup, firebase_e
         )
 
     @typing.override
-    def get_firebase_path(self, firebase_id: str, model=ContributorUserGroup):
+    def get_firebase_path(self, firebase_id: str, model=ContributorUserGroup):  # type: ignore[reportMissingParameterType]
         return Config.FirebaseKeys.contributor_user_group(firebase_id)

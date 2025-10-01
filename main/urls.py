@@ -1,4 +1,4 @@
-from debug_toolbar.toolbar import debug_toolbar_urls
+from debug_toolbar.toolbar import debug_toolbar_urls  # type: ignore[reportMissingTypeStubs]
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -9,7 +9,7 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
-from health_check.views import MainView as HealthCheckView
+from health_check.views import MainView as HealthCheckView  # type: ignore[reportMissingTypeStubs]
 
 from apps.common.views import FirebaseAuthView, HealthCheckCustomView
 from main.graphql.schema import CustomAsyncGraphQLView

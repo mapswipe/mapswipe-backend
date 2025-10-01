@@ -16,7 +16,7 @@ class MapswipeSlack:
 
     class MapswipeSlackMessageArgumentType(typing.TypedDict):
         text: str
-        blocks: typing.Sequence[dict | Block] | None
+        blocks: typing.Sequence[dict | Block] | None  # type: ignore[reportMissingTypeArgument]
 
     def __init__(self):
         slack_config = config.Slack.load_slack_config()
@@ -32,7 +32,7 @@ class MapswipeSlack:
     def send_slack_message(
         self,
         text: str | None = None,
-        blocks: typing.Sequence[dict | Block] | None = None,
+        blocks: typing.Sequence[dict | Block] | None = None,  # type: ignore[reportMissingTypeArgument]
         thread_ts: str | None = None,
         reply_broadcast: bool = False,
     ) -> str | None:
@@ -57,7 +57,7 @@ class MapswipeSlack:
         self,
         ts: str,
         text: str | None = None,
-        blocks: typing.Sequence[dict | Block] | None = None,
+        blocks: typing.Sequence[dict | Block] | None = None,  # type: ignore[reportMissingTypeArgument]
     ) -> str | None:
         if not self.client:
             logger.info("Sending message on slack for thread %s", ts)

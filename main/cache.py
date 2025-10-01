@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 from django.conf import settings
 from django.core.cache import caches
-from django_redis.client import DefaultClient
+from django_redis.client import DefaultClient  # type: ignore[reportMissingTypeStubs]
 
 cache: DefaultClient = caches["default"]  # type: ignore[reportAssignmentType]
 

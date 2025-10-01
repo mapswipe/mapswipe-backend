@@ -73,7 +73,7 @@ def regenerate_project_stats_by_types_csv():
     logger.info("Processed regenerate_project_stats_by_types_csv")
 
 
-def regenerate_projects_csv(temp_projects_csv: typing.IO):
+def regenerate_projects_csv(temp_projects_csv: typing.IO):  # type: ignore[reportMissingTypeArgument]
     logger.info("Processing regenerate_projects_csv")
     fieldnames = {
         "id": None,

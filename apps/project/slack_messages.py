@@ -74,7 +74,7 @@ class SlackMessage:
     @staticmethod
     def get_project_information_block(
         project: Project,
-    ) -> dict:
+    ) -> dict:  # type: ignore[reportMissingTypeArgument]
         progress_bar = SlackMessage.format_progress_bar(project.progress)
         username = SlackMessage.format_user_link(project.created_by)
         project_text = SlackMessage.format_project_link(project)
@@ -83,7 +83,7 @@ class SlackMessage:
         project_type = SlackMessage.format_project_type(project.project_type_enum)
         created_at = SlackMessage.format_datetime(project.created_at)
 
-        section_block: dict = {
+        section_block: dict = {  # type: ignore[reportMissingTypeArgument]
             "type": "section",
             "text": {
                 "type": "mrkdwn",

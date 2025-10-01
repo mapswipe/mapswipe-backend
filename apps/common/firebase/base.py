@@ -2,7 +2,7 @@ import abc
 import logging
 import typing
 
-from firebase_admin.db import Reference as FbReference
+from firebase_admin.db import Reference as FbReference  # type: ignore[reportMissingTypeStubs]
 from pydantic import BaseModel, ConfigDict
 
 from apps.common.models import FirebasePushResource, FirebasePushStatusEnum
@@ -42,7 +42,7 @@ class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
         if missing_fields:
             raise NotImplementedError(f"Please define {','.join(missing_fields)} for {cls}")
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs):  # type: ignore[reportMissingParameterType]
         super().__init_subclass__(**kwargs)
         cls._inheritance_checks()
 

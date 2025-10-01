@@ -9,7 +9,7 @@ from django.contrib.gis.db.models.functions import Area
 from django.core.files.base import ContentFile
 from django.db import models
 from django.db.models.functions import Cast
-from firebase_admin.db import Reference as FbReference
+from firebase_admin.db import Reference as FbReference  # type: ignore[reportMissingTypeStubs]
 from pydantic import BaseModel, ConfigDict
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
@@ -81,7 +81,7 @@ class BaseProject[
         if missing_fields:
             raise NotImplementedError(f"Please define {','.join(missing_fields)} for {cls}")
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs):  # type: ignore[reportMissingParameterType]
         super().__init_subclass__(**kwargs)
         cls._inheritance_checks()
 
@@ -329,7 +329,7 @@ class BaseProject[
 
     def create_groups_on_firebase(self, group_ref: FbReference):
         groups = ProjectTaskGroup.objects.filter(project_id=self.project.pk).order_by("id")
-        fb_groups: dict[str, dict[str, dict]] = {}
+        fb_groups: dict[str, dict[str, dict]] = {}  # type: ignore[reportMissingTypeArgument]
 
         firebase_bulk_mgr = FirebaseBulkManager(ref=group_ref)
 
