@@ -23,7 +23,7 @@ class SlackMessage:
     def format_user_link(user: User) -> str:
         if user.slack_user_id:
             return f"<@{user.slack_user_id}>"
-        return user.username or user.email
+        return user.username or user.display_name
 
     @staticmethod
     def format_project_status(status_enum: ProjectStatusEnum):
