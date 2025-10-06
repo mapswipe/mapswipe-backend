@@ -6,11 +6,11 @@ from django.core.files import File
 from django.db import transaction
 from ulid import ULID
 
-from apps.common.models import AssetTypeEnum
+from apps.common.models import AssetTypeEnum, FirebasePushStatusEnum
 from apps.project.custom_options import get_fallback_custom_options_for_export
 from apps.project.exports.geojson import gzipped_csv_to_gzipped_geojson
 from apps.project.models import Project, ProjectAsset, ProjectAssetExportTypeEnum, ProjectProgressStatusEnum, ProjectTypeEnum
-from apps.project.tasks import send_slack_message_for_project
+from apps.project.tasks import push_project_to_firebase, send_slack_message_for_project
 from apps.user.models import User
 from main.config import Config
 from main.logging import log_extra
@@ -151,14 +151,17 @@ def _export_project_data(project: Project, tmp_directory: Path):
         )
 
     if not project_stats_by_date_df.empty:
-        project.progress = project_stats_by_date_df["cum_progress"].iloc[-1] * 100
-        if project.progress >= 100:
-            project.progress_status = ProjectProgressStatusEnum.COMPLETED
         project.number_of_contributor_users = project_stats_by_date_df["cum_number_of_users"].iloc[-1]
         project.number_of_results = project_stats_by_date_df["cum_number_of_results"].iloc[-1]
         project.number_of_results_for_progress = project_stats_by_date_df["cum_number_of_results_progress"].iloc[-1]
         project.last_contribution_date = project_stats_by_date_df.index[-1]
-        # TODO: Trigger slack notifications on progress change
+
+        previous_progress = project.progress
+        project.progress = project_stats_by_date_df["cum_progress"].iloc[-1] * 100
+
+        if project.progress >= 100:
+            project.progress_status = ProjectProgressStatusEnum.COMPLETED
+
         if project.progress >= 90 and project.slack_progress_notifications < 90:
             transaction.on_commit(
                 lambda: send_slack_message_for_project.delay(project_id=project.id, action="progress-change"),
@@ -169,6 +172,13 @@ def _export_project_data(project: Project, tmp_directory: Path):
                 lambda: send_slack_message_for_project.delay(project_id=project.id, action="progress-change"),
             )
 
+        if project.progress != previous_progress:
+            # FIXME(tnagorra): Do we only send updates for the 2 fields?
+            transaction.on_commit(
+                lambda: push_project_to_firebase.delay(project_id=project.id),
+            )
+            project.update_firebase_push_status(FirebasePushStatusEnum.PENDING, False)
+
     project.save(
         update_fields=(
             "progress",
@@ -177,6 +187,8 @@ def _export_project_data(project: Project, tmp_directory: Path):
             "number_of_results",
             "number_of_results_for_progress",
             "last_contribution_date",
+            "firebase_push_status",
+            "firebase_last_pushed",
         ),
     )
 

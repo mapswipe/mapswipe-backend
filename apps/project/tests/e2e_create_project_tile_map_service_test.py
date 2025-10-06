@@ -603,6 +603,7 @@ class TestTileMapServiceProjectE2E(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             pull_results_from_firebase()
 
+        # Check if results are stored in database
         assert [
             MappingSession.objects.count(),
             MappingSessionResult.objects.count(),
@@ -619,3 +620,10 @@ class TestTileMapServiceProjectE2E(TestCase):
 
         project.refresh_from_db()
         assert project.progress == test_data["expected_pulled_results_data"]["progress"]
+
+        # Check if progress and contributorCount synced to firebase
+        project_fb_data = project_fb_ref.get()
+        assert project_fb_data is not None, "Project in firebase is None"
+        assert isinstance(project_fb_data, dict), "Project in firebase should be a dictionary"
+        assert project_fb_data["progress"] == project.progress, "Progress should be synced with firebase"
+        assert project_fb_data["contributorCount"] == 1, "Contributor count should be synced with firebase"
