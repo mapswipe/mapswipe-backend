@@ -1178,6 +1178,9 @@ input ProcessedProjectUpdateInput {
   """What should the users look for (e.g. buildings, cars, trees)"""
   lookFor: String
 
+  """How many tasks each user is allowed to work on for this project"""
+  maxTasksPerUser: Int
+
   """Provide project instruction"""
   projectInstruction: String
   projectNumber: Int

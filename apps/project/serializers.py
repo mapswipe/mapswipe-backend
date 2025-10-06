@@ -348,6 +348,7 @@ class ProcessedProjectUpdateSerializer(UserResourceSerializer[Project]):
             "look_for",
             "project_instruction",
             "additional_info_url",
+            "max_tasks_per_user",
             "description",
             "image",
             "tutorial",
