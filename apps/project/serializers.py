@@ -337,7 +337,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
-class ProcessedProjectSerializer(UserResourceSerializer[Project]):
+class ProcessedProjectUpdateSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Project
         fields = (
@@ -431,6 +431,24 @@ class ProcessedProjectSerializer(UserResourceSerializer[Project]):
                 },
             )
 
+        # disallow changing requesting organization once published
+        org = attrs.get("requesting_organization")
+        if (
+            org
+            and org != self.instance.requesting_organization
+            and self.instance.status_enum
+            not in [
+                Project.Status.PROCESSED,
+                Project.Status.PUBLISHING_FAILED,
+            ]
+        ):
+            raise serializers.ValidationError(
+                {
+                    "status": gettext("Cannot update project with status %s") % self.instance.status_enum.label,
+                },
+            )
+
+        _validate_project_name(attrs, self.instance)
         self._validate_project_instruction(attrs)
         return super().validate(attrs)
 
