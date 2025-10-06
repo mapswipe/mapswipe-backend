@@ -18,6 +18,7 @@ from ulid import ULID
 
 from apps.common.models import FirebasePushStatusEnum
 from apps.common.utils import get_absolute_uri
+from apps.mapping.models import MappingSession
 from apps.project.models import (
     Project,
     ProjectAsset,
@@ -420,6 +421,17 @@ class BaseProject[
         assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
         assert self.project.tutorial is not None, "Tutorial is required before project can be pushed to firebase"
 
+        unique_contributors_count = (
+            MappingSession.objects.filter(
+                project_task_group__in=ProjectTaskGroup.objects.filter(project=self.project),
+            )
+            .values(
+                "contributor_user_id",
+            )
+            .distinct()
+            .count()
+        )
+
         project_ref.update(
             value=firebase_utils.serialize(
                 firebase_models.FbProjectUpdateInput(
@@ -437,6 +449,8 @@ class BaseProject[
                     tutorialId=self.project.tutorial.firebase_id,
                     status=BaseProject.get_firebase_status(self.project.status_enum, not self.project.team_id),
                     teamId=self.project.team.firebase_id if self.project.team else None,
+                    contributorCount=unique_contributors_count,
+                    progress=self.project.progress,
                     # FIXME(tnagorra): Need to check how we get this?
                     language="en-us",
                 ),
