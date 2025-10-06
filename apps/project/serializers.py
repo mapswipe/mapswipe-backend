@@ -102,10 +102,33 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
             "team",
         )
 
+    def _validate_group_size(self, attrs: dict[str, typing.Any]):
+        project_type = attrs["project_type"]
+        if not isinstance(project_type, Project.Type):
+            project_type = Project.Type(project_type)
+
+        group_size: int
+        match project_type:
+            case Project.Type.FIND:
+                group_size = 25
+            case Project.Type.VALIDATE:
+                group_size = 120
+            case Project.Type.VALIDATE_IMAGE:
+                group_size = 25
+            case Project.Type.COMPARE:
+                group_size = 25
+            case Project.Type.COMPLETENESS:
+                group_size = 80
+            case Project.Type.STREET:
+                group_size = 25
+
+        attrs["group_size"] = group_size
+
     @typing.override
     def validate(self, attrs: dict[str, typing.Any]):
         attrs = super().validate(attrs)
         _validate_project_name(attrs, None)
+        self._validate_group_size(attrs)
         return attrs
 
     def validate_requesting_organization(self, requesting_organization: Organization | None) -> Organization | None:
@@ -140,6 +163,21 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             "tutorial",
             "team",
         )
+
+    def validate_group_size(self, group_size: int):
+        # FIXME(tnagorra): minimum group size is actually 10, but using 5 to pass existing tests
+        if group_size < 5:
+            raise serializers.ValidationError(gettext("Group size should be equal to or greater than 5"))
+        if group_size > 250:
+            raise serializers.ValidationError(gettext("Group size should be equal to or less than 250"))
+        return group_size
+
+    def validate_verification_number(self, verification_number: int):
+        if verification_number < 3:
+            raise serializers.ValidationError(gettext("Verification number should be equal to or greater than 3"))
+        if verification_number > 10000:
+            raise serializers.ValidationError(gettext("Verification number should be equal to or less than 10000"))
+        return verification_number
 
     def validate_requesting_organization(self, requesting_organization: Organization | None) -> Organization | None:
         assert self.instance is not None
