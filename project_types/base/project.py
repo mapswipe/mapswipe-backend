@@ -151,14 +151,14 @@ class BaseProject[
             )
         )["required_results"] or 0
 
+        if self.project.required_results == 0:
+            raise ValidationException("Project does not contain any groups or tasks")
+
         self.project.total_area = (
             ProjectTaskGroup.objects.filter(project_id=self.project.pk).aggregate(agg_area=models.Sum("total_area"))
         )["agg_area"] or 0
 
         self.project.save(update_fields=(["required_results"]))
-
-        # FIXME: Throw error if no. of tasks is zero.
-        # FIXME: Throw error if no. of groups is zero.
 
     @abstractmethod
     def get_max_time_spend_percentile(self) -> float:
