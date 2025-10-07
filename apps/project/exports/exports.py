@@ -18,6 +18,7 @@ from project_types.store import get_project_type_handler
 from project_types.tile_map_service.compare.project import CompareProjectProperty
 from project_types.tile_map_service.completeness.project import CompletenessProjectProperty
 from project_types.tile_map_service.find.project import FindProjectProperty
+from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
 
 from .mapping_results import generate_mapping_results
 from .mapping_results_aggregate.task import generate_mapping_results_aggregate_by_task
@@ -56,8 +57,32 @@ def _export_project_data(project: Project, tmp_directory: Path):
     # legacy system path: /api/hot_tm/hot_tm_{project.id}.geojson
     tmp_tasking_manager_hot_tm_geojson = tmp_directory / f"hot_tm_{project.id}.geojson"
 
-    # TODO: if maxar is used for tile_server_name, this should be true
-    add_metadata = False
+    # FIXME(tnagorra): move this to project handler
+    tile_servers = set[RasterTileServerNameEnum]()
+    if isinstance(
+        project_type_handler.project_type_specifics,
+        FindProjectProperty,
+    ):
+        tile_servers.add(project_type_handler.project_type_specifics.tile_server_property.name)
+    elif isinstance(
+        project_type_handler.project_type_specifics,
+        CompareProjectProperty,
+    ):
+        tile_servers.add(project_type_handler.project_type_specifics.tile_server_property.name)
+        tile_servers.add(project_type_handler.project_type_specifics.tile_server_b_property.name)
+    elif isinstance(
+        project_type_handler.project_type_specifics,
+        CompletenessProjectProperty,
+    ):
+        tile_servers.add(project_type_handler.project_type_specifics.tile_server_property.name)
+        if project_type_handler.project_type_specifics.overlay_tile_server_property.raster:
+            tile_servers.add(
+                project_type_handler.project_type_specifics.overlay_tile_server_property.raster.tile_server.name,
+            )
+
+    add_metadata = (
+        RasterTileServerNameEnum.MAXAR_STANDARD in tile_servers or RasterTileServerNameEnum.MAXAR_PREMIUM in tile_servers
+    )
 
     custom_options_raw = []
 
@@ -136,6 +161,7 @@ def _export_project_data(project: Project, tmp_directory: Path):
         tmp_project_stats_by_date_csv.name,
     )
 
+    # FIXME(tnagorra): move this to project handler
     generate_hot_tm_geometries = project.project_type_enum in [
         ProjectTypeEnum.COMPARE,
         ProjectTypeEnum.COMPLETENESS,
