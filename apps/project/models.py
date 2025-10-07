@@ -467,6 +467,7 @@ class Project(UserResource, FirebasePushResource):
 
     slack_progress_notifications = models.PositiveIntegerField[int, int](
         null=True,
+        blank=True,
         help_text=gettext_lazy("Stores the last progress checkpoint notified via Slack."),
     )
 
