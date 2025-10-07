@@ -23,6 +23,7 @@ class MapswipeSlack:
         if slack_config.enabled is False:
             self.channel = "mock_channel"
             self.bot_name = "mock_slack_bot"
+            self.client = None
             return
 
         self.client = WebClient(token=slack_config.token)
