@@ -858,17 +858,15 @@ class TestProjectMutation(TestCase):
                     "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": {
-                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
-                        "custom": {
-                            "url": "https://hi-there/{x}/{y}/{z}",
-                            "credits": "My Map",
+                        "name": self.genum(RasterTileServerNameEnum.MAXAR_STANDARD),
+                        "maxarStandard": {
+                            "credits": "default credits",
                         },
                     },
                     "tileServerBProperty": {
-                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
-                        "custom": {
-                            "url": "https://hi-there-2/{x}/{y}/{z}",
-                            "credits": "My Map 2",
+                        "name": self.genum(RasterTileServerNameEnum.MAXAR_PREMIUM),
+                        "maxarPremium": {
+                            "credits": "default credits",
                         },
                     },
                 },
@@ -895,10 +893,9 @@ class TestProjectMutation(TestCase):
                     "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": {
-                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
-                        "custom": {
-                            "url": "https://hi-there/{x}/{y}/{z}",
-                            "credits": "My Map",
+                        "name": self.genum(RasterTileServerNameEnum.MAXAR_PREMIUM),
+                        "maxarPremium": {
+                            "credits": "default credits",
                         },
                     },
                 },
@@ -917,10 +914,9 @@ class TestProjectMutation(TestCase):
             "zoom_level": 15,
             "aoi_geometry": aoi_geometry_asset["id"],
             "tile_server_property": {
-                "name": RasterTileServerNameEnum.CUSTOM.value,
-                "custom": {
-                    "credits": "My Map",
-                    "url": "https://hi-there/{x}/{y}/{z}",
+                "name": RasterTileServerNameEnum.MAXAR_PREMIUM.value,
+                "maxar_premium": {
+                    "credits": "default credits",
                 },
             },
         }
@@ -1084,39 +1080,6 @@ class TestProjectTypeMutation(TestCase):
             "projectInstruction": "Buildings",
         }
 
-        cls.tile_server_property = {
-            "valid_custom": {
-                "name": cls.genum(RasterTileServerNameEnum.CUSTOM),
-                "custom": {
-                    "url": "https://hi-there/{x}/{y}/{z}",
-                    "credits": "My Map",
-                },
-            },
-            "valid_custom_02": {
-                "name": cls.genum(RasterTileServerNameEnum.CUSTOM),
-                "custom": {
-                    "url": "https://hi-here/{x}/{y}/{z}",
-                    "credits": "My Map",
-                },
-            },
-            "invalid_custom": {
-                "name": cls.genum(RasterTileServerNameEnum.CUSTOM),
-                "custom": {
-                    "url": "https://hi-there",
-                    "credits": "My Map",
-                },
-            },
-            "invalid_custom_02": {
-                "name": cls.genum(RasterTileServerNameEnum.CUSTOM),
-                "custom": {
-                    "url": "https://hi-there/{{x}}/{{y}}/{{z}}",
-                    "credits": "My Map",
-                },
-            },
-        }
-        # NOTE: _internal is for snake_case attributes, currently its same
-        cls.tile_server_property_internal = cls.tile_server_property
-
     def _create_project_aoi_asset(self, project_asset_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return create_project_aoi_asset_query(
@@ -1272,8 +1235,19 @@ class TestProjectTypeMutation(TestCase):
                 "compare": {
                     "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
-                    "tileServerProperty": self.tile_server_property["invalid_custom"],
-                    "tileServerBProperty": self.tile_server_property["valid_custom"],
+                    "tileServerProperty": {
+                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
+                        "custom": {
+                            "url": "https://hi-there",
+                            "credits": "My Map",
+                        },
+                    },
+                    "tileServerBProperty": {
+                        "name": self.genum(RasterTileServerNameEnum.ESRI),
+                        "esri": {
+                            "credits": "default credits",
+                        },
+                    },
                 },
             },
         }
@@ -1299,8 +1273,19 @@ class TestProjectTypeMutation(TestCase):
                 "compare": {
                     "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
-                    "tileServerProperty": self.tile_server_property["invalid_custom_02"],
-                    "tileServerBProperty": self.tile_server_property["valid_custom"],
+                    "tileServerProperty": {
+                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
+                        "custom": {
+                            "url": "https://hi-there/{{x}}/{{y}}/{{z}}",
+                            "credits": "My Map",
+                        },
+                    },
+                    "tileServerBProperty": {
+                        "name": self.genum(RasterTileServerNameEnum.ESRI_BETA),
+                        "esriBeta": {
+                            "credits": "default credits",
+                        },
+                    },
                 },
             },
         }
@@ -1326,8 +1311,19 @@ class TestProjectTypeMutation(TestCase):
                 "compare": {
                     "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
-                    "tileServerProperty": self.tile_server_property["valid_custom"],
-                    "tileServerBProperty": self.tile_server_property["valid_custom_02"],
+                    "tileServerProperty": {
+                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
+                        "custom": {
+                            "url": "https://hi-there/{x}/{y}/{z}",
+                            "credits": "My Map",
+                        },
+                    },
+                    "tileServerBProperty": {
+                        "name": self.genum(RasterTileServerNameEnum.MAXAR_STANDARD),
+                        "maxarStandard": {
+                            "credits": "default credits",
+                        },
+                    },
                 },
             },
         }
@@ -1344,8 +1340,19 @@ class TestProjectTypeMutation(TestCase):
         assert latest_project.project_type_specifics == {
             "aoi_geometry": aoi_geometry_asset["id"],
             "zoom_level": 15,
-            "tile_server_property": self.tile_server_property_internal["valid_custom"],
-            "tile_server_b_property": self.tile_server_property_internal["valid_custom_02"],
+            "tile_server_property": {
+                "name": RasterTileServerNameEnum.CUSTOM.value,
+                "custom": {
+                    "url": "https://hi-there/{x}/{y}/{z}",
+                    "credits": "My Map",
+                },
+            },
+            "tile_server_b_property": {
+                "name": RasterTileServerNameEnum.MAXAR_STANDARD.value,
+                "maxar_standard": {
+                    "credits": "default credits",
+                },
+            },
         }
         compare_project.CompareProjectProperty.model_validate(
             latest_project.project_type_specifics,
