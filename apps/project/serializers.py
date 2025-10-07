@@ -62,16 +62,22 @@ def _validate_project_name(
         region = attrs.get("region", project.region)
         project_number = attrs.get("project_number", project.project_number)
         requesting_organization = attrs.get("requesting_organization", project.requesting_organization)
+        project_type = attrs.get("project_type", project.project_type)
         existing_projects = existing_projects.exclude(id=project.pk)
     else:
         topic = attrs["topic"]
         region = attrs["region"]
         project_number = attrs["project_number"]
+        project_type = attrs["project_type"]
         requesting_organization = attrs["requesting_organization"]
+
+    if not isinstance(project_type, ProjectTypeEnum):
+        project_type = ProjectTypeEnum(project_type)
 
     existing_projects = existing_projects.filter(
         topic__iexact=topic,
         region__iexact=region,
+        project_type=project_type,
         project_number=project_number,
         requesting_organization=requesting_organization,
     )

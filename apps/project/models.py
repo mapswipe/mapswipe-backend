@@ -481,13 +481,14 @@ class Project(UserResource, FirebasePushResource):
         constraints = [
             # XXX: Changing this also requires changes in the serializers
             models.UniqueConstraint(
+                "project_type",
                 Lower("topic"),
                 Lower("region"),
                 "project_number",
                 "requesting_organization",
                 name="unique_project_name",
                 violation_error_message=gettext_lazy(
-                    "A project with the same topic, region, project number and requesting organization already exists.",
+                    "A project with the same type, topic, region, number and requesting organization already exists.",
                 ),
             ),
         ]
