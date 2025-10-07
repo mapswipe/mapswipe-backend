@@ -59,7 +59,12 @@ class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
     @abc.abstractmethod
     def get_firebase_path(self, firebase_id: str, model: type[T]) -> str: ...
 
-    def trigger(self, *, delete: bool | None = None) -> None:
+    def trigger(
+        self,
+        *,
+        delete: bool | None = None,
+        force_update: bool | None = None,
+    ) -> None:
         model_obj = self.obj
         model_obj.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
 
@@ -73,7 +78,7 @@ class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
                 return
             self._delete(model_obj)
         else:
-            self._push(model_obj)
+            self._push(model_obj, force_update=force_update)
 
     def _delete(self, model_obj: T) -> None:
         if model_obj.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
@@ -106,7 +111,12 @@ class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
             model_obj.firebase_push_status = None
             model_obj.save(update_fields=["firebase_last_pushed", "firebase_push_status"])
 
-    def _push(self, model_obj: T) -> None:
+    def _push(
+        self,
+        model_obj: T,
+        *,
+        force_update: bool | None = None,
+    ) -> None:
         if model_obj.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
             logger.warning(
                 "Firebase push error: push is not required for %s",
@@ -124,13 +134,14 @@ class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
             fb_model: typing.Any = model_ref.get()
 
             if not model_obj.firebase_last_pushed:
-                if fb_model is not None:
+                if not force_update and fb_model is not None:
                     logger.error(
                         "Firebase create error: %s already exists in Firebase",
                         model_obj._meta.label,
                         extra={"id": model_obj.pk},
                     )
                     raise InvalidObjectPushException
+
                 self.handle_new_object_on_firebase(model_obj, model_ref)
             else:
                 if fb_model is None:

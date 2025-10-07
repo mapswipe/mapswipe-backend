@@ -195,6 +195,6 @@ class AnnouncementAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, UserResource
             previous_announcements = Announcement.objects.exclude(id=obj.id)
             previous_announcements.update(is_active=False)
 
-            FirebaseAnnouncementPush(obj).trigger()
+            FirebaseAnnouncementPush(obj).trigger(force_update=True)
         else:
             FirebaseAnnouncementPush(obj).trigger(delete=True)
