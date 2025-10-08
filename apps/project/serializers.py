@@ -294,7 +294,10 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
     def validate(self, attrs: dict[str, typing.Any]):
         assert self.instance is not None
 
-        if self.instance.status_enum not in [Project.Status.DRAFT, Project.Status.PROCESSING_FAILED]:
+        if self.instance.status_enum not in [
+            Project.Status.DRAFT,
+            Project.Status.PROCESSING_FAILED,
+        ]:
             raise serializers.ValidationError(
                 {
                     "status": gettext("Cannot update project with status %s") % self.instance.status_enum.label,
@@ -467,8 +470,11 @@ class ProcessedProjectUpdateSerializer(UserResourceSerializer[Project]):
         # FIXME(tnagorra): Should we be able to edit paused, withdrawn, and published project
         if self.instance.status_enum not in [
             Project.Status.PROCESSED,
-            Project.Status.PUBLISHED,
             Project.Status.PUBLISHING_FAILED,
+            Project.Status.PUBLISHED,
+            Project.Status.PAUSED,
+            Project.Status.WITHDRAWN,
+            Project.Status.FINISHED,
         ]:
             raise serializers.ValidationError(
                 {
