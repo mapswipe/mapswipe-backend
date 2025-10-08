@@ -1,5 +1,6 @@
 import datetime
 
+from apps.common.models import FirebasePushStatusEnum
 from apps.common.utils import get_absolute_uri
 from apps.project.models import Project, ProjectStatusEnum, ProjectTypeEnum
 from apps.tutorial.models import Tutorial
@@ -69,7 +70,7 @@ class SlackMessage:
 
     @staticmethod
     def format_datetime(value: datetime.datetime):
-        return value.strftime("%b. %d, %Y, %-I:%M %p")
+        return f"<!date^{int(value.timestamp())}^{{date_short}} at {{time}}|unknown time>"
 
     @staticmethod
     def get_project_information_block(
@@ -248,27 +249,54 @@ class SlackMessage:
         project: Project,
     ) -> MapswipeSlack.MapswipeSlackMessageArgumentType:
         status_label = project.status_enum.label.lower()
+        username = SlackMessage.format_user_link(project.modified_by)
+        modified_at = SlackMessage.format_datetime(project.modified_at)
 
         # FIXME(tnagorra): This should be called when the project status is:
         # published, paused, withdrawn and finished
 
-        username = SlackMessage.format_user_link(project.modified_by)
-        modified_at = SlackMessage.format_datetime(project.modified_at)
+        action_failed = project.firebase_push_status_enum == FirebasePushStatusEnum.FAILED
 
-        text = "Project status changed!"
+        match project.status_enum:
+            case ProjectStatusEnum.PUBLISHED:
+                status_label = "published"
+            case ProjectStatusEnum.PUBLISHING_FAILED:
+                status_label = "published"
+                action_failed = True
+            case ProjectStatusEnum.PAUSED:
+                status_label = "paused"
+            case ProjectStatusEnum.WITHDRAWN:
+                status_label = "withdrawn"
+            case ProjectStatusEnum.FINISHED:
+                status_label = "finished"
+            case _:
+                raise Exception(f"Slack message should not be sent when project status is {project.status_enum.label}")
+
+        text = "Project status updated!"
+        if action_failed:
+            text = "Project status could not be updated!"
+
+        heading = "Project status updated :pushpin:"
+        if action_failed:
+            heading = "Project status could not be updated :x:"
+
+        description = f"The project has been *{status_label}* by {username} at {modified_at}"
+        if action_failed:
+            description = f"The project could be *{status_label}* by {username} at {modified_at}"
+
         blocks = [
             {
                 "type": "header",
                 "text": {
                     "type": "plain_text",
-                    "text": "Project status changed :pushpin:",
+                    "text": heading,
                 },
             },
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"The project has been *{status_label}* by {username} at {modified_at}",
+                    "text": description,
                 },
             },
         ]
