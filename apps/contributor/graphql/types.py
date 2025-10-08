@@ -82,6 +82,7 @@ class ContributorUserGroupType(UserResourceTypeMixin, ArchivableResourceTypeMixi
             models.Subquery(
                 ContributorUserGroupMembership.objects.filter(
                     user_group_id=models.OuterRef("id"),
+                    is_active=True,
                 )
                 .order_by()
                 .values("user_group_id")
