@@ -341,38 +341,6 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
         )
 
     @typing.override
-    def create(self, validated_data: dict[typing.Any, typing.Any]):
-        scenarios_data = self.initial_data["scenarios"]
-        information_pages_data = self.initial_data["information_pages"]
-        validated_data.pop("scenarios")
-        validated_data.pop("information_pages")
-        tutorial = super().create(validated_data)
-
-        for scenario_data in scenarios_data:
-            scenario_serializer = TutorialScenarioPageSerializer(
-                data=scenario_data,
-                context={
-                    **self.context,
-                    "tutorial": tutorial,
-                },
-            )
-            scenario_serializer.is_valid(raise_exception=True)
-            scenario_serializer.save()
-
-        for information_page_data in information_pages_data:
-            information_page_serializer = TutorialInformationPageSerializer(
-                data=information_page_data,
-                context={
-                    **self.context,
-                    "tutorial": tutorial,
-                },
-            )
-            information_page_serializer.is_valid(raise_exception=True)
-            information_page_serializer.save()
-
-        return tutorial
-
-    @typing.override
     def update(self, instance: Tutorial, validated_data: dict[typing.Any, typing.Any]):
         scenarios_data = self.initial_data.get("scenarios") or []
         information_pages_data = self.initial_data.get("information_pages") or []
