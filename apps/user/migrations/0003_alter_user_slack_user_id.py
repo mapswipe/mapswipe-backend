@@ -2,6 +2,10 @@
 
 from django.db import migrations, models
 
+def update_null_to_empty_string(apps, schema_editor):
+    User = apps.get_model('user', 'User')
+    User.objects.filter(slack_user_id__isnull=True).update(slack_user_id='')
+
 
 class Migration(migrations.Migration):
 
@@ -10,6 +14,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(update_null_to_empty_string, reverse_code=migrations.RunPython.noop),
         migrations.AlterField(
             model_name='user',
             name='slack_user_id',
