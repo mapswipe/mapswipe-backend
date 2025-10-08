@@ -7,7 +7,8 @@ import json5
 from django.db.models.signals import pre_save
 from ulid import ULID
 
-from apps.common.utils import remove_object_keys
+from apps.common.models import AssetTypeEnum
+from apps.common.utils import compare_csv_files, compare_geojson_files, remove_object_keys
 from apps.contributor.factories import ContributorUserFactory
 from apps.contributor.models import ContributorUserGroup
 from apps.mapping.firebase.pull import pull_results_from_firebase
@@ -18,7 +19,7 @@ from apps.mapping.models import (
     MappingSessionUserGroup,
     MappingSessionUserGroupTemp,
 )
-from apps.project.models import Organization, Project
+from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetExportTypeEnum
 from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
 from main.config import Config
@@ -627,3 +628,182 @@ class TestTileMapServiceProjectE2E(TestCase):
         assert isinstance(project_fb_data, dict), "Project in firebase should be a dictionary"
         assert project_fb_data["progress"] == project.progress, "Progress should be synced with firebase"
         assert project_fb_data["contributorCount"] == 1, "Contributor count should be synced with firebase"
+
+        # NOTE: EXPORTS TESTING
+        aggregated_results_filename = (
+            Path(Config.BASE_DIR) / test_data["expected_project_exports_data"]["aggregated_results"]
+        )
+
+        # NOTE: Test AGGREGATED RESULTS
+        aggregated_results_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.AGGREGATED_RESULTS,
+        ).first()
+
+        if not aggregated_results_project_asset:
+            raise AssertionError("Aggregated results project asset not found")
+
+        compare_csv_files(
+            aggregated_results_project_asset,
+            aggregated_results_filename,
+            is_gzip_file=True,
+            message="Difference found for aggregated results export file.",
+        )
+
+        # NOTE: Test AGGREGATED RESULTS WITH GEOMETRY
+        aggregated_results_with_geometry_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY,
+        ).first()
+
+        if not aggregated_results_with_geometry_project_asset:
+            raise AssertionError("Aggregated results with geometry project asset not found")
+
+        compare_geojson_files(
+            aggregated_results_with_geometry_project_asset,
+            test_data["expected_project_exports_data"]["aggregated_results_with_geometry"],
+            is_gzip_file=True,
+            message="Difference found for aggregated results with geometry export file.",
+        )
+
+        # NOTE: Test RESULTS
+        results_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.RESULTS,
+        ).first()
+
+        if not results_project_asset:
+            raise AssertionError("Results project asset not found")
+
+        compare_csv_files(
+            results_project_asset,
+            test_data["expected_project_exports_data"]["results"],
+            is_gzip_file=True,
+            message="Difference found for results export file.",
+        )
+        # NOTE: Test HISTORY
+        history_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.HISTORY,
+        ).first()
+
+        if not history_project_asset:
+            raise AssertionError("History project asset not found")
+
+        compare_csv_files(
+            history_project_asset,
+            test_data["expected_project_exports_data"]["history"],
+            is_gzip_file=True,
+            message="Difference found for history export file.",
+        )
+
+        # NOTE: Test GROUPS
+        groups_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.GROUPS,
+        ).first()
+
+        if not groups_project_asset:
+            raise AssertionError("Groups project asset not found")
+
+        compare_csv_files(
+            groups_project_asset,
+            test_data["expected_project_exports_data"]["groups"],
+            is_gzip_file=True,
+            message="Difference found for groups export file.",
+        )
+
+        # NOTE: Test TASKS
+        tasks_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.TASKS,
+        ).first()
+
+        if not tasks_project_asset:
+            raise AssertionError("Tasks project asset not found")
+
+        compare_csv_files(
+            tasks_project_asset,
+            test_data["expected_project_exports_data"]["tasks"],
+            is_gzip_file=True,
+            message="Difference found for tasks export file.",
+        )
+
+        # NOTE: Test USERS
+        users_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.USERS,
+        ).first()
+
+        if not users_project_asset:
+            raise AssertionError("Users project asset not found")
+
+        compare_csv_files(
+            users_project_asset,
+            test_data["expected_project_exports_data"]["users"],
+            is_gzip_file=True,
+            message="Difference found for users export file.",
+        )
+
+        # NOTE: Test AREA OF INTEREST FILE
+        aoi_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.AREA_OF_INTEREST,
+        ).first()
+
+        if not aoi_project_asset:
+            raise AssertionError("AOI Geometry project asset not found")
+
+        compare_geojson_files(
+            aoi_project_asset,
+            aoi_geometry_filename,
+            message="Difference found for AOI Geometry export file.",
+        )
+
+        # NOTE: TEST HOT TASKING MANAGER GEOMETRY
+        if "hot_tasking_manager_aoi" in test_data["assets"]:
+            htm_aoi_filename = Path(Config.BASE_DIR) / test_data["assets"]["hot_tasking_manager_aoi"]
+            htm_aoi_project_asset = ProjectAsset.objects.filter(
+                project=project,
+                type=AssetTypeEnum.EXPORT,
+                export_type=ProjectAssetExportTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES,
+            ).first()
+
+            if not htm_aoi_project_asset:
+                raise AssertionError("HTM AOI Geometry project asset not found")
+
+            compare_geojson_files(
+                htm_aoi_project_asset,
+                htm_aoi_filename,
+                message="Difference found for HTM AOI Geometry export file.",
+            )
+
+        # NOTE: TEST MODERATE TO HIGH AGREEMENT
+        if "moderate_to_high_agreement" in test_data["expected_project_exports_data"]:
+            moderate_to_high_agreement_filename = Path(
+                Config.BASE_DIR,
+                test_data["expected_project_exports_data"]["moderate_to_high_agreement"],
+            )
+
+            moderate_to_high_agreement_project_asset = ProjectAsset.objects.filter(
+                project=project,
+                type=AssetTypeEnum.EXPORT,
+                export_type=ProjectAssetExportTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES,
+            ).first()
+
+            if not moderate_to_high_agreement_project_asset:
+                raise AssertionError("Moderate to high agreement project asset not found")
+
+            compare_geojson_files(
+                moderate_to_high_agreement_project_asset,
+                moderate_to_high_agreement_filename,
+                message="Difference found for moderate to high agreement export file.",
+            )
