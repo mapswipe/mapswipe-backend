@@ -43,7 +43,7 @@ class User(AbstractUser):
     )
 
     objects: CustomUserManager = CustomUserManager()  # type: ignore[reportAssignmentType]
-    slack_user_id = models.CharField(max_length=20, null=True, blank=False)
+    slack_user_id = models.CharField(max_length=20, null=False, blank=True)
 
     # type hints
     pk: int
