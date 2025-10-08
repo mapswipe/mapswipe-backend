@@ -18,3 +18,8 @@ def clear_expired_django_sessions():
             logger.warning("Clear expired django sessions")
             return
     management.call_command("clearsessions", verbosity=0)
+
+
+@shared_task
+def celery_queue_uptime_check(queue: str):
+    logger.info("Celery Queue %s is taking task...", queue)
