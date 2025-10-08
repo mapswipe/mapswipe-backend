@@ -1,5 +1,109 @@
 # Changelog
 
+## [0.2.1-dev5](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.1-dev4..v0.2.1-dev5) - 2025-10-08
+### Changes:
+
+#### 🚀  Features
+
+- *(cron)* Track queue uptime - ([bc64e1b](https://github.com/mapswipe/mapswipe-backend/commit/bc64e1bbf7a639e81745280441984a9c15ec499e))
+- *(export)* Add metadata if maxar raster-tiles are used - ([43fdeea](https://github.com/mapswipe/mapswipe-backend/commit/43fdeea974b19e6e6182da831a85eab5d44d183a))
+- *(filter)* Add "created by" filter for project and tutorial - ([b60178b](https://github.com/mapswipe/mapswipe-backend/commit/b60178bb80f99680b075883037495a4cdc7a95fa))
+- *(firebase)* Update project info on firebase after results is fetched - ([bc62bab](https://github.com/mapswipe/mapswipe-backend/commit/bc62bab95bc04fea02ad5ae36cd83804b898b096))
+- *(migration)* Migration project created date - ([ed5a6af](https://github.com/mapswipe/mapswipe-backend/commit/ed5a6af95e220594c242b1612478fb997346acf4))
+- *(model)* Add field to save slack message sent bool - ([1ee13fc](https://github.com/mapswipe/mapswipe-backend/commit/1ee13fc8801d40e1fc96da0901aa96f9ec7cade9))
+- *(project)* Sync project and contributorCount to firebase on update - ([41444b3](https://github.com/mapswipe/mapswipe-backend/commit/41444b3ff9f3d423ba613a4c3537f204665899dd))
+- *(project_type)* Change project type label. - ([6a6299e](https://github.com/mapswipe/mapswipe-backend/commit/6a6299e4ea3b740613a8376132944600f8303532))
+- *(pytest)* Add vcr testing configurations - ([ea386b2](https://github.com/mapswipe/mapswipe-backend/commit/ea386b2579bb79c2b8d039546e26e90e4c48d401))
+- *(sentry)* Setup support for custom tags - ([80e33ec](https://github.com/mapswipe/mapswipe-backend/commit/80e33ec2a6fe6ae257a1394e53750cad7354e720))
+- *(slack)* Handle failure states on project status changes - ([d77d282](https://github.com/mapswipe/mapswipe-backend/commit/d77d2823a000360064bb5c464a144fd6785d7715))
+- *(slack)* Remove slack bot name config - ([c00de68](https://github.com/mapswipe/mapswipe-backend/commit/c00de682eba5f3cc6945c8476c08f940ef9932cc))
+- *(slack)* Trigger for status change slack message - ([3475408](https://github.com/mapswipe/mapswipe-backend/commit/34754081747d2c831b5bd62aa9b661affc8c3976))
+- *(slack)* Change trigger condition for progress change - ([4a720b4](https://github.com/mapswipe/mapswipe-backend/commit/4a720b43faade2c8016ad977755719c060784ab0))
+- *(test)* Add e2e testing for validate image project and tutorial - ([795d154](https://github.com/mapswipe/mapswipe-backend/commit/795d154b604118c53c22e571aacd5b7f0054e3f2))
+- *(test)* Add e2e data for the street project - ([de2fcce](https://github.com/mapswipe/mapswipe-backend/commit/de2fcce6ecf639485fea314b83999ab7b895179d))
+- *(test)* Add e2e testing for validate project and tutorial - ([3ceb302](https://github.com/mapswipe/mapswipe-backend/commit/3ceb302a0e6b5c355aa7cab680e4594dec2c6c38))
+- *(test)* Add e2e test for completeness project and tutorial - ([0192d69](https://github.com/mapswipe/mapswipe-backend/commit/0192d69efa91854da1b448a64fc8d522dda40bcf))
+- *(test)* Add organization data instead of using factories - ([54d271e](https://github.com/mapswipe/mapswipe-backend/commit/54d271e30dfcfc6c8cdfba6704aaddd025c53e13))
+- *(test)* Add e2e testing for the tutorial - ([e4b3518](https://github.com/mapswipe/mapswipe-backend/commit/e4b3518803dac6e4d39c82fc559f62157bdd6703))
+- *(test)* Add update test for usergroup. - ([be72a1d](https://github.com/mapswipe/mapswipe-backend/commit/be72a1ddcc36d55351d245c18a703ce13bfa9e72))
+
+#### 🐛 Bug Fixes
+
+- *(export)* Convert progress to float in projects.csv - ([68873c0](https://github.com/mapswipe/mapswipe-backend/commit/68873c0c9cf9cbff594636d92aae357db4b290b5))
+- *(export)* Convert progress to float in projects.csv - ([addeff2](https://github.com/mapswipe/mapswipe-backend/commit/addeff2b15f20ceab66b79fedab3db6b6bd6c1ec))
+- *(firebase)* Sync maxTasksPerUser on project update - ([5587c75](https://github.com/mapswipe/mapswipe-backend/commit/5587c75214fcdd558c12eea3c339bfc7dfe9a5ba))
+- *(firebase)* Fix issue with announcement sync when adding another one - ([0d65429](https://github.com/mapswipe/mapswipe-backend/commit/0d6542999e93056613b1f852f1be7dd537b82f13))
+- *(migrations)* Untrack storage config in OverwritableFileField - ([f22d521](https://github.com/mapswipe/mapswipe-backend/commit/f22d52172ac2920552b939f165cb6b602f3565ca))
+- *(progress)* Fix project progress - ([81b42cf](https://github.com/mapswipe/mapswipe-backend/commit/81b42cf6d80a317b4b1bad1dec2adff89e04ea59))
+- *(project)* Enable editing paused, withdrawn and finished project - ([9558137](https://github.com/mapswipe/mapswipe-backend/commit/95581378038b8b40dba2be4087a5a20be7c32f73))
+- *(project)* Add project type on name uniqueness constraint - ([df373bd](https://github.com/mapswipe/mapswipe-backend/commit/df373bdbde3b36a311a237c1c7e4d164c4699e05))
+- *(project)* Add validation for project fields - ([0c15e2a](https://github.com/mapswipe/mapswipe-backend/commit/0c15e2a4d67c8212b7a80d0f8de43fdb34aad39e))
+- *(project)* Remove default value for "max tasks per user" - ([ad523a1](https://github.com/mapswipe/mapswipe-backend/commit/ad523a14c405bdbd9377792a648be2c3ad534436))
+- *(project)* Do not allow editing requesting organization later - ([00d8889](https://github.com/mapswipe/mapswipe-backend/commit/00d888990f67f99d8a7b0adc5770b4167c5c5761))
+- *(project)* Throw validation error if required results is empty - ([5bdd864](https://github.com/mapswipe/mapswipe-backend/commit/5bdd864a7073adc56394ab4b493469a162edeab6))
+- *(project)* Sort tasks and groups before creating on firebase - ([720af6c](https://github.com/mapswipe/mapswipe-backend/commit/720af6c8f00a81be8ce09385ae671c9425a4d55d))
+- *(project)* Update e2e test for street and validate image - ([c7adcc6](https://github.com/mapswipe/mapswipe-backend/commit/c7adcc6762479c28f8f63ffae3475119797645c6))
+- *(serializer)* Add unique constraints validation in project serializer - ([529f283](https://github.com/mapswipe/mapswipe-backend/commit/529f2837b4ec8b426dfa9b8c4447372bf2949dab))
+- *(serializers)* Add checks for non implemented actions - ([be5a648](https://github.com/mapswipe/mapswipe-backend/commit/be5a648a91d6572dd6b866bd234dae8e393aa197))
+- *(test)* Add partial_branches ignore for coverage - ([f1ea57b](https://github.com/mapswipe/mapswipe-backend/commit/f1ea57b4e286aa2ce82516d881f85026c36db734))
+- *(test)* Clear out tokens from generated cassette files - ([02bb767](https://github.com/mapswipe/mapswipe-backend/commit/02bb7675a8c296e992c19d761be965c5037be827))
+- *(tutorial)* Fix e2e test case for tutorial. - ([15ac780](https://github.com/mapswipe/mapswipe-backend/commit/15ac780824326596ec75bde30235ca3a192e1540))
+- *(usergroup-membership)* Filter active membership for count - ([5c0b45c](https://github.com/mapswipe/mapswipe-backend/commit/5c0b45c9cb50ff2b4a6e2fa2a7a43788a7976672))
+- *(validate-image)* Use image id for taskId else fallback to index - ([3d3ce15](https://github.com/mapswipe/mapswipe-backend/commit/3d3ce1535e55c13407bd676383433d32a38532fe))
+
+#### 🚜 Refactor
+
+- *(config)* Use Config instead of settings - ([c337f0d](https://github.com/mapswipe/mapswipe-backend/commit/c337f0d3c83c06e5809b06a6a16d7e5399f53037))
+- *(loaddata)* Organization migration - ([b4aa130](https://github.com/mapswipe/mapswipe-backend/commit/b4aa130ada9d0d2df9dc1b75ca987d26faaedad8))
+- *(project)* Update test to generate name in bulk - ([6623a92](https://github.com/mapswipe/mapswipe-backend/commit/6623a92b86de690eb583fb29d3df9ce20c30887f))
+
+#### 🧪 Testing
+
+- *(project)* Add tests for street project, aggregate, geo functions - ([cb85897](https://github.com/mapswipe/mapswipe-backend/commit/cb85897c410b5fe1cad98bc5a17c0bca401128c5))
+- *(project)* Add test for updating processed project - ([9cf46ab](https://github.com/mapswipe/mapswipe-backend/commit/9cf46ab28166ac0aeb98651911078f65db3548e7))
+- *(project)* Use different raster tileserver in project mutation tests - ([084b4b3](https://github.com/mapswipe/mapswipe-backend/commit/084b4b3bec9a34bb9001bb3bdce88d315f8aaeac))
+- *(project)* Fix failing tests - ([cb7d475](https://github.com/mapswipe/mapswipe-backend/commit/cb7d4759b94da16490098c52ce8928831dd76fc5))
+- *(project)* Refactor street, validate and validate image project - ([6d192cf](https://github.com/mapswipe/mapswipe-backend/commit/6d192cfa10f8c3239bec8e61800df101a149f1a5))
+- *(project)* Use client_id as firebase_id on test for easy comparison - ([8ff0643](https://github.com/mapswipe/mapswipe-backend/commit/8ff064328dd5bb80adb5e23c857d02b612387ccc))
+- *(tutorial)* Add test for image block - ([cec0320](https://github.com/mapswipe/mapswipe-backend/commit/cec03201a28a41203507762ae2602eb8ae01450d))
+- *(usergroup)* Fix test for usergroup - ([8d70f60](https://github.com/mapswipe/mapswipe-backend/commit/8d70f607bf6a02acea538f627b17ec50b384a93f))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(export)* Add trigger for progress change - ([6930913](https://github.com/mapswipe/mapswipe-backend/commit/6930913b59e3262e8a3036cd94bb8de3124ee581))
+- *(firebase-cleanup)* Skip cleanup for unknown project results - ([5bf29a0](https://github.com/mapswipe/mapswipe-backend/commit/5bf29a03e2f665bd49a83baa2ab80a52731da47a))
+- *(migration)* Use latest parsed project name dataset - ([ffca833](https://github.com/mapswipe/mapswipe-backend/commit/ffca833073341fba4cf21b57f1b0ba9ed4526214))
+- *(model)* Add slack user id in admin panel. - ([3cfe3ca](https://github.com/mapswipe/mapswipe-backend/commit/3cfe3ca8fa58f1f1103658b8d1780db30dd14ad2))
+- *(model)* Make slack_progress_notification field blankable - ([aab956b](https://github.com/mapswipe/mapswipe-backend/commit/aab956be5754c5ccf2c541f1aec020a206e4ef27))
+- *(pre-commit)* Add commitizen - ([f497f71](https://github.com/mapswipe/mapswipe-backend/commit/f497f7111343a075caa719b964b955ffb32b90e1))
+- *(project)* Merge migration - ([ea02dc7](https://github.com/mapswipe/mapswipe-backend/commit/ea02dc7251fa98c80ce58624f36f5dfbd1c76044))
+- *(project)* Make migration for project type name change - ([254bf8f](https://github.com/mapswipe/mapswipe-backend/commit/254bf8f98273019b1ef4cafe4d0e452d7c3723b9))
+- *(project)* Project name fixes - ([af4ee16](https://github.com/mapswipe/mapswipe-backend/commit/af4ee160be32ca1645b44afe37ab98f5390f6e82))
+- *(results)* Add test for push result to firebase - ([17edf90](https://github.com/mapswipe/mapswipe-backend/commit/17edf90b0c51053a2e49c294f82f7c6cb20b081a))
+- *(s3)* Set media-data as public - ([d6b84bb](https://github.com/mapswipe/mapswipe-backend/commit/d6b84bb8bb21d44f99f07083c3e5f65b3c81b958))
+- *(slack)* Update default config in docker and base test - ([c9d4229](https://github.com/mapswipe/mapswipe-backend/commit/c9d4229d5e9d0ebd1fae6a9e900022bc23fa0026))
+- *(slack)* Add client for slack not enabled condition - ([cbe2311](https://github.com/mapswipe/mapswipe-backend/commit/cbe2311c36802b9347c1c69ee9166df30689f4dc))
+- *(test)* Add firebase test for team. - ([b341f1b](https://github.com/mapswipe/mapswipe-backend/commit/b341f1bb6515548d2e7a5a1b66c5595d503f765a))
+- *(test)* Updated the test script for usergroup creation - ([6e52856](https://github.com/mapswipe/mapswipe-backend/commit/6e528560786614a7a26237c2813a77d47a97a069))
+- *(test)* Add test for equivalence of generate_name and generate_name_query - ([59d01fb](https://github.com/mapswipe/mapswipe-backend/commit/59d01fb55cd212347980a4de16ca11b76763b875))
+- *(test)* Add coverage report exclude list - ([34a4977](https://github.com/mapswipe/mapswipe-backend/commit/34a4977226a81737099fc7c5de757e40d2d7bbe4))
+- *(tutorial)* Remove unused create method for tutorial - ([21a0268](https://github.com/mapswipe/mapswipe-backend/commit/21a0268bc6dcf2edc5e0fe932e9fc7db431c30da))
+- *(types)* Ignore existing pyright warnings - ([d7e7061](https://github.com/mapswipe/mapswipe-backend/commit/d7e7061dcf120cc3b1f76deeba5e8bceb018b083))
+
+### 🍻 Pull Requests (11)
+- (#123) [E2E Test for User Group creation](https://github.com/mapswipe/mapswipe-backend/pull/123)
+- (#162) [Add e2e testing for validate and street project and tutorial](https://github.com/mapswipe/mapswipe-backend/pull/162)
+- (#168) [E2E BASE: Test for Results, Completeness Project and others](https://github.com/mapswipe/mapswipe-backend/pull/168)
+- (#171) [Feat/slack progress message](https://github.com/mapswipe/mapswipe-backend/pull/171)
+- (#179) [Add test for equivalence of generate_name and generate_n…](https://github.com/mapswipe/mapswipe-backend/pull/179)
+- (#181) [Fix/load data project name](https://github.com/mapswipe/mapswipe-backend/pull/181)
+- (#182) [Change project type label.](https://github.com/mapswipe/mapswipe-backend/pull/182)
+- (#183) [Ignore existing pyright warnings](https://github.com/mapswipe/mapswipe-backend/pull/183)
+- (#185) [Fix(project): throw validation error if required results is empty](https://github.com/mapswipe/mapswipe-backend/pull/185)
+- (#186) [Slack status trigger](https://github.com/mapswipe/mapswipe-backend/pull/186)
+- (#187) [Feat/membership count issue](https://github.com/mapswipe/mapswipe-backend/pull/187)
+
+
 ## [0.2.1-dev4](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.1-dev3..v0.2.1-dev4) - 2025-09-25
 ### Changes:
 
