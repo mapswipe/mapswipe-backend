@@ -2,7 +2,6 @@ import logging
 import typing
 import uuid
 
-from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from pyfirebase_mapswipe import extended_models as firebase_extended_models
@@ -62,7 +61,7 @@ class Command(BaseCommand):
 
     @typing.override
     def handle(self, *args, **options):  # type: ignore[reportMissingParameterType]
-        if not settings.ENABLE_DANGER_MODE:
+        if not Config.ENABLE_DANGER_MODE:
             logger.warning("Dummy data generation is disabled")
             return
 

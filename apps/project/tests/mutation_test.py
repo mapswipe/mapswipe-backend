@@ -3,7 +3,6 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import call, patch
 
-from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 from PIL import Image
 from ulid import ULID
@@ -41,7 +40,7 @@ def create_project_image_asset_query(
     **kwargs,  # type: ignore[reportMissingParameterType]
 ) -> dict:  # type: ignore[reportMissingTypeArgument]
     with (
-        NamedTemporaryFile(dir=settings.TEMP_DIR, suffix=".jpeg") as image_file,
+        NamedTemporaryFile(dir=Config.TEMP_DIR, suffix=".jpeg") as image_file,
     ):
         img = Image.new("RGB", (10, 10), color="red")
         buf = BytesIO()
@@ -628,8 +627,8 @@ class TestProjectMutation(TestCase):
                 additionalInfoUrl=latest_project.additional_info_url,
                 description=latest_project.description,
                 verificationNumber=3,
-                groupSize=10,
-                maxTasksPerUser=10,
+                groupSize=25,
+                maxTasksPerUser=None,
                 isFeatured=latest_project.is_featured,
                 status=self.genum(Project.Status.DRAFT),
                 processingStatus=None,
@@ -688,7 +687,7 @@ class TestProjectMutation(TestCase):
             "projectInstruction": "Buildings and Houses",
             "additionalInfoUrl": "https://hi-there/about.html?code=1",
             "description": "The new updated **project** from hi-there.",
-            "verificationNumber": 2,
+            "verificationNumber": 5,
             "groupSize": 16,
             "maxTasksPerUser": 11,
             "clientId": proj.client_id,
@@ -858,17 +857,15 @@ class TestProjectMutation(TestCase):
                     "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": {
-                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
-                        "custom": {
-                            "url": "https://hi-there/{x}/{y}/{z}",
-                            "credits": "My Map",
+                        "name": self.genum(RasterTileServerNameEnum.MAXAR_STANDARD),
+                        "maxarStandard": {
+                            "credits": "default credits",
                         },
                     },
                     "tileServerBProperty": {
-                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
-                        "custom": {
-                            "url": "https://hi-there-2/{x}/{y}/{z}",
-                            "credits": "My Map 2",
+                        "name": self.genum(RasterTileServerNameEnum.MAXAR_PREMIUM),
+                        "maxarPremium": {
+                            "credits": "default credits",
                         },
                     },
                 },
@@ -895,10 +892,9 @@ class TestProjectMutation(TestCase):
                     "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
                     "tileServerProperty": {
-                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
-                        "custom": {
-                            "url": "https://hi-there/{x}/{y}/{z}",
-                            "credits": "My Map",
+                        "name": self.genum(RasterTileServerNameEnum.MAXAR_PREMIUM),
+                        "maxarPremium": {
+                            "credits": "default credits",
                         },
                     },
                 },
@@ -917,10 +913,9 @@ class TestProjectMutation(TestCase):
             "zoom_level": 15,
             "aoi_geometry": aoi_geometry_asset["id"],
             "tile_server_property": {
-                "name": RasterTileServerNameEnum.CUSTOM.value,
-                "custom": {
-                    "credits": "My Map",
-                    "url": "https://hi-there/{x}/{y}/{z}",
+                "name": RasterTileServerNameEnum.MAXAR_PREMIUM.value,
+                "maxar_premium": {
+                    "credits": "default credits",
                 },
             },
         }
@@ -1084,39 +1079,6 @@ class TestProjectTypeMutation(TestCase):
             "projectInstruction": "Buildings",
         }
 
-        cls.tile_server_property = {
-            "valid_custom": {
-                "name": cls.genum(RasterTileServerNameEnum.CUSTOM),
-                "custom": {
-                    "url": "https://hi-there/{x}/{y}/{z}",
-                    "credits": "My Map",
-                },
-            },
-            "valid_custom_02": {
-                "name": cls.genum(RasterTileServerNameEnum.CUSTOM),
-                "custom": {
-                    "url": "https://hi-here/{x}/{y}/{z}",
-                    "credits": "My Map",
-                },
-            },
-            "invalid_custom": {
-                "name": cls.genum(RasterTileServerNameEnum.CUSTOM),
-                "custom": {
-                    "url": "https://hi-there",
-                    "credits": "My Map",
-                },
-            },
-            "invalid_custom_02": {
-                "name": cls.genum(RasterTileServerNameEnum.CUSTOM),
-                "custom": {
-                    "url": "https://hi-there/{{x}}/{{y}}/{{z}}",
-                    "credits": "My Map",
-                },
-            },
-        }
-        # NOTE: _internal is for snake_case attributes, currently its same
-        cls.tile_server_property_internal = cls.tile_server_property
-
     def _create_project_aoi_asset(self, project_asset_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
             return create_project_aoi_asset_query(
@@ -1272,8 +1234,19 @@ class TestProjectTypeMutation(TestCase):
                 "compare": {
                     "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
-                    "tileServerProperty": self.tile_server_property["invalid_custom"],
-                    "tileServerBProperty": self.tile_server_property["valid_custom"],
+                    "tileServerProperty": {
+                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
+                        "custom": {
+                            "url": "https://hi-there",
+                            "credits": "My Map",
+                        },
+                    },
+                    "tileServerBProperty": {
+                        "name": self.genum(RasterTileServerNameEnum.ESRI),
+                        "esri": {
+                            "credits": "default credits",
+                        },
+                    },
                 },
             },
         }
@@ -1299,8 +1272,19 @@ class TestProjectTypeMutation(TestCase):
                 "compare": {
                     "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
-                    "tileServerProperty": self.tile_server_property["invalid_custom_02"],
-                    "tileServerBProperty": self.tile_server_property["valid_custom"],
+                    "tileServerProperty": {
+                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
+                        "custom": {
+                            "url": "https://hi-there/{{x}}/{{y}}/{{z}}",
+                            "credits": "My Map",
+                        },
+                    },
+                    "tileServerBProperty": {
+                        "name": self.genum(RasterTileServerNameEnum.ESRI_BETA),
+                        "esriBeta": {
+                            "credits": "default credits",
+                        },
+                    },
                 },
             },
         }
@@ -1326,8 +1310,19 @@ class TestProjectTypeMutation(TestCase):
                 "compare": {
                     "aoiGeometry": aoi_geometry_asset["id"],
                     "zoomLevel": 15,
-                    "tileServerProperty": self.tile_server_property["valid_custom"],
-                    "tileServerBProperty": self.tile_server_property["valid_custom_02"],
+                    "tileServerProperty": {
+                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
+                        "custom": {
+                            "url": "https://hi-there/{x}/{y}/{z}",
+                            "credits": "My Map",
+                        },
+                    },
+                    "tileServerBProperty": {
+                        "name": self.genum(RasterTileServerNameEnum.MAXAR_STANDARD),
+                        "maxarStandard": {
+                            "credits": "default credits",
+                        },
+                    },
                 },
             },
         }
@@ -1344,8 +1339,19 @@ class TestProjectTypeMutation(TestCase):
         assert latest_project.project_type_specifics == {
             "aoi_geometry": aoi_geometry_asset["id"],
             "zoom_level": 15,
-            "tile_server_property": self.tile_server_property_internal["valid_custom"],
-            "tile_server_b_property": self.tile_server_property_internal["valid_custom_02"],
+            "tile_server_property": {
+                "name": RasterTileServerNameEnum.CUSTOM.value,
+                "custom": {
+                    "url": "https://hi-there/{x}/{y}/{z}",
+                    "credits": "My Map",
+                },
+            },
+            "tile_server_b_property": {
+                "name": RasterTileServerNameEnum.MAXAR_STANDARD.value,
+                "maxar_standard": {
+                    "credits": "default credits",
+                },
+            },
         }
         compare_project.CompareProjectProperty.model_validate(
             latest_project.project_type_specifics,
@@ -1559,6 +1565,22 @@ class TestProjectTypeMutation(TestCase):
         # project is sync to firebase after publish
         fb_project: typing.Any = project_ref.get()
         assert fb_project is not None
+
+        # Updating Processed Project after publishing
+        project_data = {
+            "clientId": project_client_id,
+            "maxTasksPerUser": 1000,
+        }
+        content = self._update_processed_project_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProcessedProject"]
+        assert resp_data["errors"] is None, content
+        assert resp_data["result"]["maxTasksPerUser"] == 1000
+        project_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.project(latest_project.firebase_id),
+        )
+        fb_project: typing.Any = project_ref.get()
+        assert fb_project is not None
+        assert fb_project["maxTasksPerUser"] == 1000
 
     @patch("apps.project.serializers.process_project_task.apply_async")
     def test_project_street(self, mock_requests):  # type: ignore[reportMissingParameterType]

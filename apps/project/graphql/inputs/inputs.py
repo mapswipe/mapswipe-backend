@@ -101,6 +101,7 @@ class ProcessedProjectUpdateInput(UserResourceTopLevelUpdateInputMixin):
     additional_info_url: strawberry.auto
     is_featured: strawberry.auto
     description: strawberry.auto
+    max_tasks_per_user: strawberry.auto
     tutorial: strawberry.ID | None = strawberry.UNSET
     requesting_organization: strawberry.ID | None = strawberry.UNSET
     image: strawberry.ID | None = strawberry.UNSET

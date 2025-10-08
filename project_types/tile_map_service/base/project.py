@@ -5,7 +5,6 @@ import typing
 from abc import ABC
 from pathlib import Path
 
-from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
 from pydantic import BaseModel
@@ -25,6 +24,7 @@ from apps.project.models import (
     ProjectTaskGroup,
 )
 from main.bulk_managers import BulkCreateManager
+from main.config import Config
 from project_types.base import project as base_project
 from utils import fields as custom_fields
 from utils.asset_types.models import AoiGeometryAssetProperty
@@ -216,7 +216,7 @@ class TileMapServiceBaseProject[
             raise base_project.ValidationException(f"Area for AOI Geometry must be less than {allowed_area} sq. km")
 
         extension = Path(aoi_asset.file.name).suffix
-        with tempfile.NamedTemporaryFile(suffix=extension, dir=settings.TEMP_DIR) as temp_file:
+        with tempfile.NamedTemporaryFile(suffix=extension, dir=Config.TEMP_DIR) as temp_file:
             # FIXME(frozenhelium): close the aoi_asset file?
             with aoi_asset.file.open() as aoi_file:
                 temp_file.write(aoi_file.read())

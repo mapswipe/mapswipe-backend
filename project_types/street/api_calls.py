@@ -8,6 +8,7 @@ from warnings import deprecated
 import mercantile  # type: ignore[reportMissingTypeStubs]
 import pandas as pd
 import requests
+from geojson_pydantic import Feature as PydanticFeature
 from geojson_pydantic import FeatureCollection as PydanticFeatureCollection
 from geojson_pydantic.geometries import MultiPolygon as PydanticMultiPolygon
 from geojson_pydantic.geometries import Polygon as PydanticPolygon
@@ -73,17 +74,33 @@ def create_tiles(
 
 # FIXME: move this to utils
 def geojson_to_polygon(geojson_data: dict[str, Any]):
+    fc: PydanticFeatureCollection[Any] | None
+    try:
+        feature = PydanticFeature(**geojson_data)
+        fc = PydanticFeatureCollection(
+            type="FeatureCollection",
+            features=[feature],
+        )
+    except ValidationError:
+        fc = None
+
     # NOTE: We might not need this, as we already check this
     try:
-        fc = PydanticFeatureCollection(**geojson_data)
+        if not fc:
+            fc = PydanticFeatureCollection(**geojson_data)
     except ValidationError as e:
         raise ValidationException("Invalid GeoJSON FeatureCollection") from e
 
     polygon_types = (PydanticPolygon, PydanticMultiPolygon)
-    geometries = [shape(feature.geometry) for feature in fc.features if isinstance(feature.geometry, polygon_types)]
 
-    if not geometries:
-        raise ValidationException("No valid Polygon or MultiPolygon found in the GeoJSON FeatureCollection")
+    has_invalid_geometries = any(not isinstance(feature.geometry, polygon_types) for feature in fc.features)
+    if has_invalid_geometries:
+        raise ValidationException("Non-polygon geometries cannot be combined into a MultiPolygon.")
+
+    geometries = [shape(feature.geometry) for feature in fc.features]
+
+    # if not geometries:
+    #     raise ValidationException("No valid Polygon or MultiPolygon found in the GeoJSON FeatureCollection")
 
     return unary_union(geometries)
 
@@ -140,7 +157,7 @@ def parallelized_processing(
 
 def download_and_process_tile(
     *,
-    row: dict[Hashable, Any],
+    row: dict[Hashable, Any] | pd.Series,
     polygon: ShapelyBaseGeometry,
     kwargs: dict[str, Any],
     attempt_limit: int = 3,
@@ -219,7 +236,7 @@ def filter_results(
     results_df: pd.DataFrame,
     creator_id: int | None = None,
     is_pano: bool | None = None,
-    organization_id: str | None = None,
+    organization_id: int | None = None,
     start_time: str | None = None,
     end_time: str | None = None,
 ):

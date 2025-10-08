@@ -280,7 +280,6 @@ class Project(UserResource, FirebasePushResource):
     project_number = models.PositiveIntegerField[int, int]()
 
     # TODO(tnagorra): Max length is 25 in manager dashboard.
-    # TODO(frozenhelium): We should discuss if we need this field.
     look_for = models.CharField[str | None, str | None](
         null=True,
         blank=True,
@@ -310,7 +309,6 @@ class Project(UserResource, FirebasePushResource):
         ),
     )
 
-    # NOTE: JPG and PNG should be supported.
     image = models.ForeignKey["ProjectAsset | None", "ProjectAsset | None"](
         "project.ProjectAsset",
         related_name="+",
@@ -320,7 +318,6 @@ class Project(UserResource, FirebasePushResource):
     )
 
     # FIXME(tnagorra): We might need to rename this field
-    # NOTE: The tutorial should align with what we are looking for.
     tutorial = models.ForeignKey["Tutorial | None", "Tutorial | None"](
         "tutorial.Tutorial",
         null=True,  # NOTE: Validation makes sure active project have tutorial attached
@@ -330,13 +327,11 @@ class Project(UserResource, FirebasePushResource):
         help_text=gettext_lazy("Tutorial used for this project."),
     )  # NOTE: tutorial_id before
 
-    # TODO(tnagorra): This should be an integer from 3 to 10000
     verification_number = models.PositiveSmallIntegerField[int, int](
         help_text=gettext_lazy("How many people do you want to see every tile before you consider it finished?"),
         default=3,
     )
 
-    # TODO(tnagorra): This should be an integer from 10 to 25
     group_size = models.PositiveSmallIntegerField[int, int](
         help_text=gettext_lazy(
             "How big should a mapping session be? Group size refers to the number of tasks per mapping session.",
@@ -344,13 +339,10 @@ class Project(UserResource, FirebasePushResource):
         default=10,
     )
 
-    # TODO(tnagorra): This should be an integer from 10 to 250
-    # TODO(tnagorra): Empty indicates that no limit is set. But, this field is required in manager dashboard.
     max_tasks_per_user = models.PositiveSmallIntegerField[int, int](
         help_text=gettext_lazy("How many tasks each user is allowed to work on for this project"),
         null=True,
         blank=True,
-        default=10,
     )
 
     # TODO(tnagorra): Currently this field collects any data not stored by another fields, pulled from firebase.
@@ -438,7 +430,7 @@ class Project(UserResource, FirebasePushResource):
         default=ProjectProgressStatusEnum.ON_GOING,
     )
 
-    # TODO: Change this to float?
+    # FIXME(tnagorra): Change this to float?
     progress = models.PositiveSmallIntegerField[int, int](
         default=0,
         validators=[validate_percentage],
@@ -489,13 +481,14 @@ class Project(UserResource, FirebasePushResource):
         constraints = [
             # XXX: Changing this also requires changes in the serializers
             models.UniqueConstraint(
+                "project_type",
                 Lower("topic"),
                 Lower("region"),
                 "project_number",
                 "requesting_organization",
                 name="unique_project_name",
                 violation_error_message=gettext_lazy(
-                    "A project with the same topic, region, project number and requesting organization already exists.",
+                    "A project with the same type, topic, region, number and requesting organization already exists.",
                 ),
             ),
         ]
@@ -581,23 +574,6 @@ class Project(UserResource, FirebasePushResource):
     @property
     def progress_status_enum(self):
         return ProjectProgressStatusEnum(self.progress_status)
-
-    @typing.override
-    def clean(self):
-        ...
-        # if not self.teamId:
-        #     self.status = "inactive"  # this is a public project
-        # else:
-        #     self.status = (
-        #         "private_inactive"  # private project visible only for team members
-        #     )
-        #
-        # if max_tasks_per_user is not None:
-        #     self.maxTasksPerUser = int(max_tasks_per_user)
-
-        # for group in self.groups.values():
-        #     group.requiredCount = self.verificationNumber
-        #     self.requiredResults += group.requiredCount * group.numberOfTasks
 
 
 class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibleVariableOverride]

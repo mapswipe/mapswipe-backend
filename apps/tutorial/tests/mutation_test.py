@@ -1,6 +1,9 @@
 import typing
+from io import BytesIO
 from pathlib import Path
 
+from django.core.files.temp import NamedTemporaryFile
+from PIL import Image
 from ulid import ULID
 
 from apps.project.factories import OrganizationFactory, ProjectFactory
@@ -14,6 +17,7 @@ from apps.tutorial.factories import (
 )
 from apps.tutorial.models import (
     Tutorial,
+    TutorialAssetInputTypeEnum,
     TutorialStatusEnum,
 )
 from apps.tutorial.serializers import VALID_TUTORIAL_STATUS_TRANSITIONS
@@ -24,6 +28,39 @@ from utils.common import format_object_keys, to_camel_case
 from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
 
 BASE_DIR = Path(__file__).resolve().parent
+
+
+def create_tutorial_image_asset_query(
+    *,
+    query_check_func: typing.Callable,  # type: ignore[reportMissingTypeArgument]
+    query: str,
+    tutorial_asset_data: dict,  # type: ignore[reportMissingTypeArgument]
+    **kwargs,  # type: ignore[reportMissingParameterType]
+) -> dict:  # type: ignore[reportMissingTypeArgument]
+    with (
+        NamedTemporaryFile(dir=Config.TEMP_DIR, suffix=".jpeg") as image_file,
+    ):
+        img = Image.new("RGB", (10, 10), color="red")
+        buf = BytesIO()
+        img.save(buf, format="JPEG")
+        buf.seek(0)
+
+        image_file.write(buf.read())
+        image_file.seek(0)
+
+        return query_check_func(
+            query,
+            variables={
+                "data": tutorial_asset_data,
+            },
+            files={
+                "imageFile": image_file,
+            },
+            map={
+                "imageFile": ["variables.data.file"],
+            },
+            **kwargs,
+        )
 
 
 class Mutation:
@@ -201,6 +238,33 @@ class Mutation:
         }
     """
 
+    CREATE_TUTORIAL_ASSET = """
+        mutation CreateTutorialAsset($data: TutorialAssetCreateInput!) {
+          createTutorialAsset(data: $data) {
+            ... on OperationInfo {
+              __typename
+              messages {
+                code
+                field
+                kind
+                message
+              }
+            }
+            ... on TutorialAssetTypeMutationResponseType {
+              errors
+              ok
+              result {
+                id
+                clientId
+                type
+                mimetype
+                tutorialId
+              }
+            }
+          }
+        }
+    """
+
 
 class TestTutorialMutation(TestCase):
     @typing.override
@@ -239,6 +303,17 @@ class TestTutorialMutation(TestCase):
             description="The new **project** from hi-there.",
             project_type_specifics=cls.project_type_specifics,
         )
+
+    def _create_tutorial_image_asset(self, tutorial_asset_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
+        with self.captureOnCommitCallbacks(execute=True):
+            return create_tutorial_image_asset_query(
+                query_check_func=self.query_check,
+                query=Mutation.CREATE_TUTORIAL_ASSET,
+                tutorial_asset_data={
+                    **tutorial_asset_data,
+                    "inputType": self.genum(TutorialAssetInputTypeEnum.INFORMATION_BLOCK_IMAGE),
+                },
+            )
 
     def _create_tutorial_mutation(self, tutorial_data: dict, **kwargs):  # type: ignore[reportMissingParameterType, reportMissingTypeArgument]
         with self.captureOnCommitCallbacks(execute=True):
@@ -297,6 +372,18 @@ class TestTutorialMutation(TestCase):
         assert latest_tutorial.status == TutorialStatusEnum.DRAFT
         assert latest_tutorial.created_by_id == self.user.pk
         assert latest_tutorial.modified_by_id == self.user.pk
+
+        # Create page block image
+
+        # Creating Project Image Asset
+        tutorial_asset_data = {
+            "tutorial": latest_tutorial.pk,
+            "clientId": str(ULID()),
+        }
+        content = self._create_tutorial_image_asset(tutorial_asset_data)
+        resp_data = content["data"]["createTutorialAsset"]
+        assert resp_data["errors"] is None, content
+        image_asset = resp_data["result"]
 
         # Update Tutorial
 
@@ -418,6 +505,12 @@ class TestTutorialMutation(TestCase):
                                 "blockType": "TEXT",
                                 "text": "These structures are built to serve specific purposes, such as housing, "
                                 "transportation, defense, communication, or recreation.",
+                            },
+                            {
+                                "clientId": str(ULID()),
+                                "blockNumber": 3,
+                                "blockType": "IMAGE",
+                                "image": image_asset["id"],
                             },
                         ],
                     },
