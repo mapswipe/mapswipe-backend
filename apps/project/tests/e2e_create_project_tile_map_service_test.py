@@ -4,7 +4,6 @@ from datetime import datetime
 from pathlib import Path
 
 import json5
-from django.conf import settings
 from django.db.models.signals import pre_save
 from ulid import ULID
 
@@ -22,6 +21,7 @@ from apps.mapping.models import (
 from apps.project.models import Organization, Project
 from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
+from main.config import Config
 from main.tests import TestCase
 
 
@@ -310,7 +310,7 @@ class TestTileMapServiceProjectE2E(TestCase):
 
     def _test_project(self, projectKey: str, filename: str):
         # Load test data file
-        full_path = Path(settings.BASE_DIR, filename)
+        full_path = Path(Config.BASE_DIR, filename)
         with full_path.open("r", encoding="utf-8") as f:
             test_data = json5.load(f)
 
@@ -326,8 +326,8 @@ class TestTileMapServiceProjectE2E(TestCase):
         self.force_login(user)
 
         # Define full path for image and AOI files
-        image_filename = Path(settings.BASE_DIR) / test_data["assets"]["image"]
-        aoi_geometry_filename = Path(settings.BASE_DIR) / test_data["assets"]["aoi"]
+        image_filename = Path(Config.BASE_DIR) / test_data["assets"]["image"]
+        aoi_geometry_filename = Path(Config.BASE_DIR) / test_data["assets"]["aoi"]
 
         # Create an organization
         create_organization_data = test_data["create_organization"]

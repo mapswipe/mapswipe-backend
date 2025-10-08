@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.contributor.models import ContributorUser
+from main.config import Config
 
 from .serializers import FirebaseAuthRequestSerializer
 
@@ -29,7 +30,7 @@ if typing.TYPE_CHECKING:
 
 # FIXME: Maybe a better approach then this?
 def _get_version_from_pyproject(base_path: Path) -> str:
-    data = toml.load(settings.BASE_DIR / base_path / "pyproject.toml")
+    data = toml.load(Config.BASE_DIR / base_path / "pyproject.toml")
     return data["project"]["version"]
 
 
@@ -46,7 +47,7 @@ class HealthCheckCustomView(MainView):
             **json.loads(response.content),
             "app": {
                 "environment": settings.APP_ENVIRONMENT,
-                "version": _get_version_from_pyproject(settings.BASE_DIR),
+                "version": _get_version_from_pyproject(Config.BASE_DIR),
                 "git": {
                     "branch": git_helper.branch,
                     "commit": git_helper.commit_sha,

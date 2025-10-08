@@ -4,7 +4,6 @@ from datetime import datetime
 from pathlib import Path
 
 import json5
-from django.conf import settings
 from django.db.models.signals import pre_save
 from ulid import ULID
 
@@ -13,6 +12,7 @@ from apps.contributor.factories import ContributorUserFactory
 from apps.project.models import Organization, Project
 from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
+from main.config import Config
 from main.tests import TestCase
 
 
@@ -259,7 +259,7 @@ class TestValidateImageProjectE2E(TestCase):
 
     def _test_project(self, filename: str):
         # Load test data file
-        full_path = Path(settings.BASE_DIR, filename)
+        full_path = Path(Config.BASE_DIR, filename)
         with full_path.open("r", encoding="utf-8") as f:
             test_data = json5.load(f)
 
@@ -275,8 +275,8 @@ class TestValidateImageProjectE2E(TestCase):
         self.force_login(user)
 
         # Define full path for image and AOI files
-        image_filename = Path(settings.BASE_DIR) / test_data["assets"]["image"]
-        coco_filename = Path(settings.BASE_DIR) / test_data["assets"]["coco_dataset"]
+        image_filename = Path(Config.BASE_DIR) / test_data["assets"]["image"]
+        coco_filename = Path(Config.BASE_DIR) / test_data["assets"]["coco_dataset"]
 
         # Create an organization
         create_organization_data = test_data["create_organization"]

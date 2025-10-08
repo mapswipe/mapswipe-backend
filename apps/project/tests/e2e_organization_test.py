@@ -2,9 +2,9 @@ import typing
 from pathlib import Path
 
 import json5
-from django.conf import settings
 
 from apps.user.factories import UserFactory
+from main.config import Config
 from main.tests import TestCase
 
 
@@ -76,7 +76,7 @@ class TestOrganizationE2E(TestCase):
         self.force_login(self.user)
 
         # Load test data from JSON5
-        data_file = Path(settings.BASE_DIR, "assets/tests/organization/data.json5")
+        data_file = Path(Config.BASE_DIR, "assets/tests/organization/data.json5")
         with data_file.open("r", encoding="utf-8") as f:
             test_data_list = json5.load(f)
 

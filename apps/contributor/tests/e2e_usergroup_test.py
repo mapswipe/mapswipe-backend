@@ -3,11 +3,11 @@ from datetime import datetime
 from pathlib import Path
 
 import json5
-from django.conf import settings
 
 from apps.common.utils import remove_object_keys
 from apps.contributor.factories import ContributorUserFactory
 from apps.user.factories import UserFactory
+from main.config import Config
 from main.tests import TestCase
 
 
@@ -83,7 +83,7 @@ class TestUserGroupE2E(TestCase):
     def test_usergroup_e2e(self):
         self.force_login(self.user)
 
-        data_file = Path(settings.BASE_DIR, "assets/tests/usergroup/data.json5")
+        data_file = Path(Config.BASE_DIR, "assets/tests/usergroup/data.json5")
         with data_file.open("r", encoding="utf-8") as f:
             test_data_list = json5.load(f)
 

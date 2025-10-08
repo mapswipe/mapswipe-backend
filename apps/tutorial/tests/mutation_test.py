@@ -2,7 +2,6 @@ import typing
 from io import BytesIO
 from pathlib import Path
 
-from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 from PIL import Image
 from ulid import ULID
@@ -39,7 +38,7 @@ def create_tutorial_image_asset_query(
     **kwargs,  # type: ignore[reportMissingParameterType]
 ) -> dict:  # type: ignore[reportMissingTypeArgument]
     with (
-        NamedTemporaryFile(dir=settings.TEMP_DIR, suffix=".jpeg") as image_file,
+        NamedTemporaryFile(dir=Config.TEMP_DIR, suffix=".jpeg") as image_file,
     ):
         img = Image.new("RGB", (10, 10), color="red")
         buf = BytesIO()
