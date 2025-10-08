@@ -1,3 +1,4 @@
+import json
 import logging
 import typing
 
@@ -12,7 +13,6 @@ logger = logging.getLogger(__name__)
 class MapswipeSlack:
     client: WebClient | None
     channel: str
-    bot_name: str | None
 
     class MapswipeSlackMessageArgumentType(typing.TypedDict):
         text: str
@@ -22,12 +22,11 @@ class MapswipeSlack:
         slack_config = config.Slack.load_slack_config()
         if slack_config.enabled is False:
             self.channel = "mock_channel"
-            self.bot_name = "mock_slack_bot"
+            self.client = None
             return
 
         self.client = WebClient(token=slack_config.token)
         self.channel = slack_config.channel
-        self.bot_name = slack_config.bot_name
 
     def send_slack_message(
         self,
@@ -38,13 +37,18 @@ class MapswipeSlack:
     ) -> str | None:
         if not self.client:
             logger.info("Sending message on slack for thread %s", thread_ts)
-            logger.info(text)
-            logger.info(blocks)
+            logger.info(
+                json.dumps(
+                    {
+                        "text": text,
+                        "blocks": blocks,
+                    },
+                ),
+            )
             return None
 
         res = self.client.chat_postMessage(
             channel=self.channel,
-            username=self.bot_name,
             blocks=blocks,
             text=text,
             thread_ts=thread_ts,
@@ -61,8 +65,14 @@ class MapswipeSlack:
     ) -> str | None:
         if not self.client:
             logger.info("Sending message on slack for thread %s", ts)
-            logger.info(text)
-            logger.info(blocks)
+            logger.info(
+                json.dumps(
+                    {
+                        "text": text,
+                        "blocks": blocks,
+                    },
+                ),
+            )
             return None
 
         res = self.client.chat_update(

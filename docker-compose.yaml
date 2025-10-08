@@ -172,6 +172,8 @@ services:
       FIREBASE_EMULATOR_PROJECT_ID: dev-mapswipe
       FIREBASE_EMULATOR_DATABASE_HOST: firebase-test:9000
       FIREBASE_EMULATOR_TEST_HOST: firebase-test:9000
+      SLACK_BOT_ENABLED: false
+      SLACK_FALLBACK_TO_CONSOLE: true
     depends_on:
       - db
       - redis

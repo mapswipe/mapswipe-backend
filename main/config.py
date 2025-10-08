@@ -13,6 +13,7 @@ if typing.TYPE_CHECKING:
 
 if settings.IS_TESTING:
     assert settings.FIREBASE_EMULATOR_USE is True, "Always use firebase emulator while TESTING"
+    assert settings.SLACK_BOT_ENABLED is False, "Always disable slack bot when TESTING"
 
 
 class Config:
@@ -176,7 +177,6 @@ class Slack:
         enabled: typing.Literal[True]
         token: str
         channel: str
-        bot_name: str | None
 
     SlackConfig = SlackConfigEnabled | SlackConfigDisabled
 
@@ -187,7 +187,6 @@ class Slack:
                 enabled=True,
                 token=settings.SLACK_BOT_TOKEN,
                 channel=settings.SLACK_BOT_CHANNEL,
-                bot_name=settings.SLACK_BOT_NAME,
             )
         if not settings.SLACK_FALLBACK_TO_CONSOLE:
             raise Exception("Enable SLACK_FALLBACK_TO_CONSOLE when SLACK_BOT_ENABLED is False")

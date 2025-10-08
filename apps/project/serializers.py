@@ -2,6 +2,7 @@ import json
 import typing
 
 import pydantic
+from celery import chain
 from django.contrib.gis.geos import Point
 from django.db import transaction
 from django.utils.translation import gettext
@@ -19,10 +20,7 @@ from utils.geo.transform import convert_json_dict_to_geometry_collection, get_ar
 from utils.graphql.drf import handle_pydantic_validation_error
 
 from .models import Geometry, Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
-from .tasks import (
-    process_project_task,
-    push_project_to_firebase,
-)
+from .tasks import process_project_task, push_project_to_firebase, send_slack_message_for_project
 
 if typing.TYPE_CHECKING:
     from django.core.files.base import ContentFile
@@ -828,6 +826,11 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
             Project.Status.FINISHED,
         ]:
             updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
-            transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
+            transaction.on_commit(
+                lambda: chain(
+                    push_project_to_firebase.si(updated_project.pk),
+                    send_slack_message_for_project.si(project_id=updated_project.pk, action="status-change"),
+                ).apply_async(),
+            )
 
         return updated_project

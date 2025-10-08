@@ -49,6 +49,7 @@ class UserAdmin(DjangoUserAdmin):  # type: ignore[reportMissingTypeArgument]
                     "last_name",
                     "display_name",
                     "contributor_user",
+                    "slack_user_id",
                 ),
             },
         ),
