@@ -13,6 +13,15 @@ from ulid import ULID
 
 from apps.common.utils import decode_tasks, remove_object_keys
 from apps.contributor.factories import ContributorUserFactory
+from apps.contributor.models import ContributorUserGroup
+from apps.mapping.firebase.pull import pull_results_from_firebase
+from apps.mapping.models import (
+    MappingSession,
+    MappingSessionResult,
+    MappingSessionResultTemp,
+    MappingSessionUserGroup,
+    MappingSessionUserGroupTemp,
+)
 from apps.project.models import Organization, Project
 from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
@@ -27,7 +36,7 @@ def create_override():
     def pre_save_override(sender: typing.Any, instance: typing.Any, **kwargs):  # type: ignore[reportMissingParameterType]
         if sender == Tutorial:
             instance.firebase_id = f"tutorial_{instance.client_id}"
-        elif sender in {Project, Organization}:
+        elif sender in {Project, Organization, ContributorUserGroup}:
             instance.firebase_id = instance.client_id
 
     pre_save.connect(pre_save_override)
@@ -250,6 +259,34 @@ class TestValidateProjectE2E(TestCase):
                     status
                     }
                   }
+                }
+            }
+        """
+
+        CREATE_CONTRIBUTOR_USER_GROUP = """
+            mutation CreateContributorUserGroup($data: ContributorUserGroupCreateInput!) {
+                createContributorUserGroup(data: $data) {
+                    ... on OperationInfo {
+                      __typename
+                      messages {
+                        code
+                        field
+                        kind
+                        message
+                      }
+                    }
+                    ... on ContributorUserGroupTypeMutationResponseType {
+                        errors
+                        ok
+                        result {
+                            id
+                            name
+                            description
+                            clientId
+                            isArchived
+                            firebaseId
+                        }
+                    }
                 }
             }
         """
@@ -533,3 +570,55 @@ class TestValidateProjectE2E(TestCase):
         assert sanitized_tasks_actual == sanitized_tasks_expected, (
             "Differences found between expected and actual tasks on project in firebase."
         )
+
+        # Create contributor user group
+        old_contributor_user_group_data = test_data["create_contributor_user_group"]
+        for input_data in old_contributor_user_group_data:
+            usergroup_content = self.query_check(
+                self.Mutation.CREATE_CONTRIBUTOR_USER_GROUP,
+                variables={
+                    "data": input_data,
+                },
+            )
+            usergroup_response = usergroup_content["data"]["createContributorUserGroup"]
+            assert usergroup_response is not None, "usergroup create response is None"
+            assert usergroup_response["ok"]
+
+        # Pull results from firebase
+        input_data = test_data["create_results"]
+        ref_results = self.firebase_helper.ref(f"/v2/results/{project_fb_id}")
+        ref_results.set(input_data)
+
+        fb_results_data = ref_results.get()
+        assert fb_results_data is not None
+
+        assert [
+            MappingSession.objects.count(),
+            MappingSessionResult.objects.count(),
+            MappingSessionUserGroup.objects.count(),
+            MappingSessionUserGroupTemp.objects.count(),
+            MappingSessionResultTemp.objects.count(),
+        ] == [0, 0, 0, 0, 0], "Mapping session data should be empty before pull from firebase"
+
+        project = Project.objects.get(id=project_id)
+        assert project.progress == 0
+
+        with self.captureOnCommitCallbacks(execute=True):
+            pull_results_from_firebase()
+
+        assert [
+            MappingSession.objects.count(),
+            MappingSessionResult.objects.count(),
+            MappingSessionUserGroup.objects.count(),
+            MappingSessionUserGroupTemp.objects.count(),
+            MappingSessionResultTemp.objects.count(),
+        ] == [
+            test_data["expected_pulled_results_data"]["mapping_session_count"],
+            test_data["expected_pulled_results_data"]["mapping_session_results_count"],
+            test_data["expected_pulled_results_data"]["mapping_session_user_groups_count"],
+            0,
+            0,
+        ], "Difference found for pulled results data."
+
+        project.refresh_from_db()
+        assert project.progress == test_data["expected_pulled_results_data"]["progress"]
