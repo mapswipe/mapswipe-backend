@@ -77,7 +77,8 @@ def pull_results_from_firebase():
                     sentry_tags={SentryTag.Tag.PROJECT: project_firebase_id},
                 ),
             )
-            firebase_cleanup.add_project(project_firebase_id=project_firebase_id)
+            # TODO: Cleanup this.. For now let's do this manually
+            # firebase_cleanup.add_project(project_firebase_id=project_firebase_id)
             continue
 
         _transfer_results_for_project(
