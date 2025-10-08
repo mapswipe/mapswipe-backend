@@ -31,7 +31,7 @@ class SlackMessage:
         status_to_icon: dict[ProjectStatusEnum, str] = {
             Project.Status.PUBLISHED: ":mega:",
             Project.Status.PAUSED: ":hand:",
-            Project.Status.WITHDRAWN: ":archived:",
+            Project.Status.WITHDRAWN: ":package:",
         }
         # FIXME: better way to concatenate this
         return f"{status_enum.label} {status_to_icon.get(status_enum, '')}".strip()
@@ -216,7 +216,6 @@ class SlackMessage:
                     "text": SlackMessage.format_project_name(project),
                 },
             },
-            {"type": "divider"},
             SlackMessage.get_project_information_block(project),
             {"type": "divider"},
             {

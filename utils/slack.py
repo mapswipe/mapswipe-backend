@@ -1,3 +1,4 @@
+import json
 import logging
 import typing
 
@@ -36,8 +37,14 @@ class MapswipeSlack:
     ) -> str | None:
         if not self.client:
             logger.info("Sending message on slack for thread %s", thread_ts)
-            logger.info(text)
-            logger.info(blocks)
+            logger.info(
+                json.dumps(
+                    {
+                        "text": text,
+                        "blocks": blocks,
+                    },
+                ),
+            )
             return None
 
         res = self.client.chat_postMessage(
@@ -58,8 +65,14 @@ class MapswipeSlack:
     ) -> str | None:
         if not self.client:
             logger.info("Sending message on slack for thread %s", ts)
-            logger.info(text)
-            logger.info(blocks)
+            logger.info(
+                json.dumps(
+                    {
+                        "text": text,
+                        "blocks": blocks,
+                    },
+                ),
+            )
             return None
 
         res = self.client.chat_update(

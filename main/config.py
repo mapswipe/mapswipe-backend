@@ -13,6 +13,7 @@ if typing.TYPE_CHECKING:
 
 if settings.IS_TESTING:
     assert settings.FIREBASE_EMULATOR_USE is True, "Always use firebase emulator while TESTING"
+    assert settings.SLACK_BOT_ENABLED is False, "Always disable slack bot when TESTING"
 
 
 class Config:
