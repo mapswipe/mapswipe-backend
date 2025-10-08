@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext
 from rest_framework import serializers
 
-from apps.common.models import AssetMimetypeEnum, FirebasePushStatusEnum
+from apps.common.models import AssetMimetypeEnum, CommonAsset, FirebasePushStatusEnum
 from apps.common.serializers import CommonAssetSerializer, DrfContextType, UserResourceSerializer
 from apps.project.models import Project, ProjectTypeEnum
 from project_types.store import get_tutorial_task_property
@@ -326,6 +326,10 @@ class TutorialCreateSerializer(UserResourceSerializer[Tutorial]):
             )
         return project
 
+    @typing.override
+    def update(self, instance: Tutorial, validated_data: dict[typing.Any, typing.Any]):
+        raise NotImplementedError("update is not allowed")
+
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
@@ -339,6 +343,10 @@ class TutorialUpdateSerializer(UserResourceSerializer[Tutorial]):
             "information_pages",
             "scenarios",
         )
+
+    @typing.override
+    def create(self, validated_data: dict[typing.Any, typing.Any]):
+        raise NotImplementedError("create is not allowed")
 
     @typing.override
     def update(self, instance: Tutorial, validated_data: dict[typing.Any, typing.Any]):
@@ -451,6 +459,10 @@ class TutorialAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Tuto
 
         return attrs
 
+    @typing.override
+    def update(self, instance: CommonAsset, validated_data: dict[typing.Any, typing.Any]):
+        raise NotImplementedError("update is not allowed")
+
 
 class TutorialStatusUpdateSerializer(UserResourceSerializer[Tutorial]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
@@ -498,6 +510,10 @@ class TutorialStatusUpdateSerializer(UserResourceSerializer[Tutorial]):
                 {"scenarios": gettext("At least one scenario is required before publishing.")},
             )
         return attrs
+
+    @typing.override
+    def create(self, validated_data: dict[typing.Any, typing.Any]):
+        raise NotImplementedError("create is not allowed")
 
     @typing.override
     def update(self, instance: Tutorial, validated_data: dict[typing.Any, typing.Any]):

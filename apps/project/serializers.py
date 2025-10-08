@@ -7,7 +7,7 @@ from django.db import transaction
 from django.utils.translation import gettext
 from rest_framework import serializers
 
-from apps.common.models import AssetMimetypeEnum, FirebasePushStatusEnum
+from apps.common.models import AssetMimetypeEnum, CommonAsset, FirebasePushStatusEnum
 from apps.common.serializers import ArchivableResourceSerializer, CommonAssetSerializer, UserResourceSerializer
 from apps.contributor.models import ContributorTeam
 from apps.project.firebase.push import FirebaseOrganizationPush
@@ -146,6 +146,10 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
         if team and team.is_archived:
             raise serializers.ValidationError(gettext("Cannot use archived team on a project."))
         return team
+
+    @typing.override
+    def update(self, instance: Project, validated_data: dict[typing.Any, typing.Any]):
+        raise NotImplementedError("update is not allowed")
 
 
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
@@ -308,6 +312,10 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         self._validate_project_instruction(attrs)
         self._validate_project_type_specifics(attrs)
         return super().validate(attrs)
+
+    @typing.override
+    def create(self, validated_data: dict[typing.Any, typing.Any]):
+        raise NotImplementedError("create is not allowed")
 
     @typing.override
     def update(self, instance: Project, validated_data: dict[typing.Any, typing.Any]):
@@ -504,6 +512,10 @@ class ProcessedProjectUpdateSerializer(UserResourceSerializer[Project]):
         return super().validate(attrs)
 
     @typing.override
+    def create(self, validated_data: dict[typing.Any, typing.Any]):
+        raise NotImplementedError("create is not allowed")
+
+    @typing.override
     def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:
         updated_project = super().update(instance, validated_data)
 
@@ -672,6 +684,10 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
         attrs["asset_type_specifics"] = asset_type_specifics
 
     @typing.override
+    def update(self, instance: CommonAsset, validated_data: dict[typing.Any, typing.Any]):
+        raise NotImplementedError("update is not allowed")
+
+    @typing.override
     def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
         attrs = super().validate(attrs)
 
@@ -774,6 +790,10 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
                 },
             )
         return attrs
+
+    @typing.override
+    def create(self, validated_data: dict[typing.Any, typing.Any]):
+        raise NotImplementedError("create is not allowed")
 
     @typing.override
     def update(self, instance: Project, validated_data: dict[str, typing.Any]) -> Project:
