@@ -14,9 +14,10 @@ class ProjectFilter:
     requesting_organization_id: strawberry.auto
     is_featured: strawberry.auto
     status: strawberry.auto
-    team: strawberry.auto
+    team_id: strawberry.auto
     is_private: strawberry.auto
     progress_status: strawberry.auto
+    created_by_id: strawberry.auto
 
     topic = unaccented_filter("topic")
     region = unaccented_filter("region")

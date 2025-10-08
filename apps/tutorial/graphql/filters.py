@@ -11,6 +11,7 @@ class TutorialFilter:
     id: strawberry.auto
     status: strawberry.auto
     project: ProjectFilter | None
+    created_by_id: strawberry.auto
 
     name = unaccented_filter("name")
 

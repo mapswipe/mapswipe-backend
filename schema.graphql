@@ -774,10 +774,6 @@ union DeleteProjectPayload = OperationInfo | ProjectType
 
 union DeleteTutorialPayload = OperationInfo | TutorialType
 
-input DjangoModelFilterInput {
-  id: ID!
-}
-
 input FindProjectPropertyInput {
   """Numeric value as string"""
   aoiGeometry: String!
@@ -1453,6 +1449,7 @@ input ProjectFilter {
   DISTINCT: Boolean
   NOT: ProjectFilter
   OR: ProjectFilter
+  createdById: IDBaseFilterLookup
   id: IDBaseFilterLookup
   isFeatured: BoolBaseFilterLookup
 
@@ -1470,7 +1467,7 @@ input ProjectFilter {
   """Which group, institution or community is requesting this project?"""
   requestingOrganizationId: IDBaseFilterLookup
   status: ProjectStatusEnumFilterLookup
-  team: DjangoModelFilterInput
+  teamId: IDBaseFilterLookup
   topic: String
 }
 
@@ -2270,6 +2267,7 @@ input TutorialFilter {
   DISTINCT: Boolean
   NOT: TutorialFilter
   OR: TutorialFilter
+  createdById: IDBaseFilterLookup
   id: IDBaseFilterLookup
   name: String
 
