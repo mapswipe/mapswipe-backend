@@ -443,6 +443,7 @@ class BaseProject[
                     projectNumber=self.project.project_number,
                     projectRegion=self.project.region,
                     projectTopic=self.project.topic,
+                    maxTasksPerUser=self.project.max_tasks_per_user,
                     projectTopicKey=self.project.generate_name().lower().strip(),
                     projectDetails=self.project.description or "n/a",
                     requestingOrganisation=self.project.requesting_organization.name,
