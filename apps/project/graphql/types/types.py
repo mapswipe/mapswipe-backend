@@ -176,11 +176,16 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
     aoi_geometry: GeometryType | None
 
     progress_status: strawberry.auto
-    progress: strawberry.auto
     number_of_contributor_users: strawberry.auto
     number_of_results: strawberry.auto
     number_of_results_for_progress: strawberry.auto
     last_contribution_date: strawberry.auto
+
+    @strawberry_django.field(
+        description=str(Project._meta.get_field("progress").help_text),  # type: ignore[reportAttributeAccessIssue]
+    )
+    def progress(self, project: strawberry.Parent[Project]) -> float:
+        return project.progress / 100
 
     @strawberry_django.field(
         description="No. of unique contributors in this project",

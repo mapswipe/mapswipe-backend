@@ -1802,7 +1802,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   processingStatus: ProjectProcessingStatusEnum
 
   """Percentage of the required contribution that has been completed"""
-  progress: Int!
+  progress: Float!
   progressStatus: ProjectProgressStatusEnum!
 
   """Provide project instruction"""
