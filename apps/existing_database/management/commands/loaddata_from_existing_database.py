@@ -506,7 +506,7 @@ def create_project(
     existing_project: existing_db_models.Project,
     requesting_organization: str,
     bot_user: User,
-):
+) -> tuple[Project, bool]:
     try:
         assert existing_project.project_type is not None, "Project type should be defined"
 
@@ -544,7 +544,7 @@ def create_project(
                 # 2022-10-13 00:00:00 -> 2022-10-13
                 project_metadata["last_contribution_date"] = day_.split(" ")[0]
 
-        return Project.objects.update_or_create(
+        project, project_created = Project.objects.update_or_create(
             old_id=existing_project.project_id,
             create_defaults=dict(
                 client_id=client_id,
@@ -553,6 +553,15 @@ def create_project(
             ),
             defaults=project_metadata,
         )
+
+        # NOTE: Django doesn't allow custom value for auto_add fields, we can use objects.update to do that
+        if project_creation_date := parse_datetime(existing_project.created):
+            Project.objects.filter(id=project.pk).update(
+                created_at=project_creation_date,
+                modified_at=project_creation_date,
+            )
+
+        return project, project_created
     except IntegrityError as e:
         if not str(e).startswith('duplicate key value violates unique constraint "unique_project_name"'):
             raise
