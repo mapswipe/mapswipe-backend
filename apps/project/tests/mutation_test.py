@@ -1567,6 +1567,22 @@ class TestProjectTypeMutation(TestCase):
         fb_project: typing.Any = project_ref.get()
         assert fb_project is not None
 
+        # Updating Processed Project after publishing
+        project_data = {
+            "clientId": project_client_id,
+            "maxTasksPerUser": 1000,
+        }
+        content = self._update_processed_project_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProcessedProject"]
+        assert resp_data["errors"] is None, content
+        assert resp_data["result"]["maxTasksPerUser"] == 1000
+        project_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.project(latest_project.firebase_id),
+        )
+        fb_project: typing.Any = project_ref.get()
+        assert fb_project is not None
+        assert fb_project["maxTasksPerUser"] == 1000
+
     @patch("apps.project.serializers.process_project_task.apply_async")
     def test_project_street(self, mock_requests):  # type: ignore[reportMissingParameterType]
         self.force_login(self.user)
