@@ -3,6 +3,8 @@ import typing
 
 import requests
 
+from main.sentry import SentryTag
+
 
 def log_render_extra_context(record: logging.LogRecord):
     """Append extra->context to logs.
@@ -20,10 +22,14 @@ def log_render_extra_context(record: logging.LogRecord):
     return True
 
 
-def log_extra(extra: dict[typing.Any, typing.Any]):
+def log_extra(
+    extra: dict[typing.Any, typing.Any],
+    sentry_tags: dict[SentryTag.Tag, typing.Any] | None = None,
+):
     """Basic helper function to view extra argument in logs using log_render_extra_context."""
     return {
         "context": extra,
+        "tags": sentry_tags,  # https://forum.sentry.io/t/how-to-add-tags-to-python-logging/323/4
     }
 
 

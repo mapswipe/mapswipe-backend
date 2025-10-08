@@ -4,6 +4,7 @@ from apps.project.models import Project
 from main.bulk_managers import BulkCreateManager
 from main.config import Config
 from main.logging import log_extra
+from main.sentry import SentryTag
 
 from .utils import (
     FirebaseCleanup,
@@ -22,11 +23,10 @@ def _transfer_results_for_project(
     firebase_cleanup: FirebaseCleanup,
     project: Project,
 ):
+    SentryTag.set_tags({SentryTag.Tag.PROJECT: project.pk})
     group_results = FH.ref(Config.FirebaseKeys.results_project_groups(project.firebase_id)).get()
     assert type(group_results) is dict
     results_to_temp_table(bulk_create_manager, firebase_cleanup, project, group_results)
-
-    # generate user_group mapping session
 
 
 def pull_results_from_firebase():
@@ -59,6 +59,7 @@ def pull_results_from_firebase():
                     {
                         "tutorial_firebase_id": project_firebase_id,
                     },
+                    sentry_tags={SentryTag.Tag.PROJECT: project_firebase_id},
                 ),
             )
             firebase_cleanup.add_project(project_firebase_id=project_firebase_id)
@@ -73,6 +74,7 @@ def pull_results_from_firebase():
                     {
                         "project_firebase_id": project_firebase_id,
                     },
+                    sentry_tags={SentryTag.Tag.PROJECT: project_firebase_id},
                 ),
             )
             firebase_cleanup.add_project(project_firebase_id=project_firebase_id)
