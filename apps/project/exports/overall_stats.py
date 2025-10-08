@@ -92,7 +92,7 @@ def regenerate_projects_csv(temp_projects_csv: typing.IO):  # type: ignore[repor
         "area_sqkm": models.F("aoi_geometry__total_area"),
         "centroid": None,  # TODO: use this after removing from model models.F("aoi_geometry__centroid"),
         "geom": models.F("aoi_geometry__geometry"),
-        "progress": None,
+        "progress": None,  # NOTE: This is changed to float later
         "number_of_contributor_users": None,
         "number_of_results": None,
         "number_of_results_for_progress": None,
@@ -116,6 +116,7 @@ def regenerate_projects_csv(temp_projects_csv: typing.IO):  # type: ignore[repor
         data["image_url"] = image_file_url
         data["status_display"] = ProjectStatusEnum(data["status"]).label
         data["project_type_display"] = ProjectTypeEnum(data["project_type"]).label
+        data["progress"] = data["progress"] / 100
 
         writer.writerow(data)
 

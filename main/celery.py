@@ -8,9 +8,8 @@ import celery
 from celery import signals
 from django.conf import settings
 from django.db import models
-from kombu import Queue
 
-from .cronjobs import BEAT_SCHEDULES
+from .cronjobs import BEAT_SCHEDULES, CeleryQueue
 
 if TYPE_CHECKING:
     from celery.app.task import Task
@@ -22,13 +21,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
-
-
-class CeleryQueue:
-    # NOTE: Make sure all queue names are lowercase (They are in k8s)
-    default = Queue("default")
-
-    ALL_QUEUE = (default,)
 
 
 class Celery(celery.Celery):

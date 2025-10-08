@@ -1,6 +1,7 @@
 import dataclasses
 import json
 import typing
+from enum import Enum
 
 import sentry_sdk
 from asgiref.sync import sync_to_async
@@ -106,3 +107,16 @@ class SentryTransactionMiddlewareHelper:
                         "is_superuser": user.is_superuser,
                     },
                 )
+
+
+class SentryTag:
+    """https://docs.sentry.io/platforms/python/enriching-events/tags/."""
+
+    class Tag(Enum):
+        _BASE = "mapswipe."
+        PROJECT = _BASE + "project"
+
+    @staticmethod
+    def set_tags(kwargs: dict[Tag, int | str]):
+        for key, value in kwargs.items():
+            sentry_sdk.set_tag(key.value, value)

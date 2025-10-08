@@ -2,6 +2,7 @@ import typing
 from datetime import datetime
 
 from celery.schedules import crontab
+from kombu import Queue
 from sentry_sdk.integrations.celery import beat as sentry_celery_beat
 
 if typing.TYPE_CHECKING:
@@ -18,6 +19,13 @@ class TimeConstants:
     EVERY_HOUR = crontab(minute="0", hour="*")
     EVERY_2_MINUTES = crontab(minute="*/2")
     EVERY_1_MINUTES = crontab(minute="*/1")
+
+
+class CeleryQueue:
+    # NOTE: Make sure all queue names are lowercase (They are in k8s)
+    default = Queue("default")
+
+    ALL_QUEUE = (default,)
 
 
 class CronJobOption(typing.TypedDict, total=False):
@@ -37,6 +45,7 @@ class CeleryBeatSchedule(typing.TypedDict):
     task: str
     schedule: crontab
     options: CronJobOption
+    args: tuple[typing.Any, ...] | None
 
 
 class CronJobSentryConfig(typing.NamedTuple):
@@ -67,6 +76,7 @@ class CronJobSentryConfig(typing.NamedTuple):
 class CronJob(typing.NamedTuple):
     task: str
     schedule: crontab
+    args: tuple[typing.Any, ...] | None = None
     sentry_config: CronJobSentryConfig = CronJobSentryConfig()
     options: CronJobOption = {}
 
@@ -118,11 +128,27 @@ SCHEDULES: dict[str, CronJob] = {
             max_runtime=2,
         ),
     ),
+    # Queue uptime
+    **{
+        f"celery_queue_uptime_{celery_queue.name}": CronJob(
+            task="apps.common.tasks.celery_queue_uptime_check",
+            args=(celery_queue.name,),
+            schedule=TimeConstants.EVERY_HOUR,
+            options=CronJobOption(expires=TimeConstants.SECONDS_IN_A_HOUR),
+            sentry_config=CronJobSentryConfig(
+                failure_issue_threshold=2,
+                checkin_margin=2,
+                max_runtime=2,
+            ),
+        )
+        for celery_queue in CeleryQueue.ALL_QUEUE
+    },
 }
 
 BEAT_SCHEDULES: dict[str, CeleryBeatSchedule] = {
     name: {
         "task": config.task,
+        "args": config.args,
         "schedule": config.schedule,
         "options": config.options,
     }
