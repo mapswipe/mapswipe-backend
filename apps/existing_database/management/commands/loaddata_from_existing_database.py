@@ -39,7 +39,12 @@ from apps.contributor.models import (
 )
 from apps.existing_database import models as existing_db_models
 from apps.mapping.firebase.utils import transfer_results_from_temp_tables
-from apps.mapping.models import MappingSession, MappingSessionClientTypeEnum, MappingSessionResultTemp
+from apps.mapping.models import (
+    MappingSession,
+    MappingSessionClientTypeEnum,
+    MappingSessionResultTemp,
+    MappingSessionUserGroupTemp,
+)
 from apps.project.models import (
     Geometry,
     Organization,
@@ -317,12 +322,15 @@ def store_project_image(
 def _process_project_results(
     bulk_create_manager: BulkCreateManager,
     existing_project: existing_db_models.Project,
+    project: Project,
 ):
     existing_ms_result_qs = existing_db_models.MappingSessionResult.objects.filter(
-        mapping_session__project_id=existing_project.project_id,
+        # NOTE: Using this to avoid join on the large table MappingSessionResult compare to MappingSession
+        mapping_session__in=existing_db_models.MappingSession.objects.filter(project_id=existing_project.project_id),
     ).select_related("mapping_session")
 
-    # TODO: user groups
+    logger.info("Project - %s: Results to temp tables - Started", project.generate_name())
+    last_start_time = time.time()
 
     for existing_ms_result in existing_ms_result_qs.iterator():
         existing_ms = existing_ms_result.mapping_session
@@ -343,6 +351,38 @@ def _process_project_results(
             ),
         )
 
+    logger.info(
+        "Project - %s: Results to temp tables - Finished (runtime %s)",
+        project.generate_name(),
+        timedelta(seconds=time.time() - last_start_time),
+    )
+    last_start_time = time.time()
+
+    logger.info("Project - %s: UserGroup Mapping Session to temp tables - Started", project.generate_name())
+
+    existing_ms_user_group_qs = existing_db_models.MappingSessionUserGroup.objects.filter(
+        # NOTE: Using this to avoid join on the large table MappingSessionResult compare to MappingSession
+        mapping_session__in=existing_db_models.MappingSession.objects.filter(project_id=existing_project.project_id),
+    ).select_related("mapping_session")
+
+    for existing_ms_user_group in existing_ms_user_group_qs.iterator():
+        existing_ms = existing_ms_user_group.mapping_session
+
+        bulk_create_manager.add(
+            MappingSessionUserGroupTemp(
+                project_firebase_id=existing_ms.project_id,
+                group_firebase_id=existing_ms.group_id,
+                contributor_user_firebase_id=existing_ms.user_id,
+                user_group_firebase_id=existing_ms_user_group.user_group_id,
+            ),
+        )
+
+    logger.info(
+        "Project - %s: UserGroup Mapping Session to temp tables - Finished (runtime %s)",
+        project.generate_name(),
+        timedelta(seconds=time.time() - last_start_time),
+    )
+
 
 def process_mapping_data_for_project(
     project: Project,
@@ -352,15 +392,18 @@ def process_mapping_data_for_project(
         logger.info("Project - %s: Raw mapping data already exists", project.generate_name())
         return
 
-    logger.info("Project - %s: Fetching raw mapping data", project.generate_name())
+    logger.info("Project - %s: Mapping session load - Started", project.generate_name())
 
     start_time = time.time()
     last_start_time = time.time()
+
     existing_group_qs = existing_db_models.Group.objects.filter(
         project_id=existing_project.project_id,
     )
 
     bulk_create_manager = BulkCreateManager(chunk_size=1000)
+
+    logger.info("Project - %s: Groups/Tasks - Started", project.generate_name())
 
     for existing_group in existing_group_qs.iterator():
         project_task_group, _ = ProjectTaskGroup.objects.get_or_create(
@@ -393,15 +436,16 @@ def process_mapping_data_for_project(
             )
 
     logger.info(
-        "Project - %s: Created groups/tasks (runtime %s)",
+        "Project - %s: Groups/Tasks - Finished (runtime %s)",
         project.generate_name(),
         timedelta(seconds=time.time() - last_start_time),
     )
     last_start_time = time.time()
 
-    _process_project_results(bulk_create_manager, existing_project)
+    logger.info("Project - %s: Temp table data - Started", project.generate_name())
+    _process_project_results(bulk_create_manager, existing_project, project)
     logger.info(
-        "Project - %s: Created temp mapping data (runtime %s)",
+        "Project - %s: Temp table data - Finished (runtime %s)",
         project.generate_name(),
         timedelta(seconds=time.time() - last_start_time),
     )
@@ -409,18 +453,19 @@ def process_mapping_data_for_project(
 
     bulk_create_manager.done()
 
+    logger.info("Project - %s: Temp to mapping tables - Started", project.generate_name())
     transfer_results_from_temp_tables(
         typing.cast("FirebaseCleanup", FakeFirebaseCleanup()),
     )
     logger.info(
-        "Project - %s: Stored mapping data (runtime %s)",
+        "Project - %s: Temp to mapping tables - Finished (runtime %s)",
         project.generate_name(),
         timedelta(seconds=time.time() - last_start_time),
     )
     last_start_time = time.time()
 
     logger.info(
-        "Project - %s: Raw mapping success (runtime %s)",
+        "Project - %s: Mapping session load - Finished (runtime %s)",
         project.generate_name(),
         timedelta(seconds=time.time() - start_time),
     )
@@ -927,7 +972,7 @@ class Command(BaseCommand):
                 if self.migrate_project_active_results:
                     process_mapping_data_for_project(project, existing_project)
                 else:
-                    logger.info(
+                    logger.warning(
                         "Project - %s: Active project found. Migrate mapping data using --migrate-active-results",
                         project.generate_name(),
                     )

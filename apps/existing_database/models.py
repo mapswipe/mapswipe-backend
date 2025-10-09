@@ -283,6 +283,10 @@ class MappingSessionUserGroup(Model):
     mapping_session = models.ForeignKey[MappingSession, MappingSession](MappingSession, on_delete=models.DO_NOTHING)
     user_group = models.ForeignKey[UserGroup, UserGroup](UserGroup, on_delete=models.DO_NOTHING, related_name="+")
 
+    # Type hints
+    user_group_id: str
+    mapping_session_id: str
+
     class Meta:
         managed = False
         db_table = "mapping_sessions_user_groups"
