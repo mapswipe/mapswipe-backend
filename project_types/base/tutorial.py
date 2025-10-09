@@ -3,6 +3,7 @@ import logging
 import typing
 from abc import ABC, abstractmethod
 
+from celery.exceptions import SoftTimeLimitExceeded
 from django.core.files.base import ContentFile
 from firebase_admin.db import Reference as FbReference  # type: ignore[reportMissingTypeStubs]
 from pydantic import BaseModel, ConfigDict
@@ -367,12 +368,30 @@ class BaseTutorial[
         try:
             self._push_tutorial_on_firebase()
         except Exception as ex:
-            logger.error(
-                "push_to_firebase for tutorial failed",
-                extra=log_extra({"tutorial": self.tutorial.pk}),
-                exc_info=True,
-            )
-            self.tutorial.status_message = str(ex) if isinstance(ex, TutorialValidationException) else None
+            if isinstance(ex, TutorialValidationException):
+                logger.warning(
+                    "push_to_firebase for tutorial failed",
+                    extra=log_extra({"tutorial": self.tutorial.pk}),
+                    exc_info=True,
+                )
+                self.tutorial.status_message = str(ex)
+            elif isinstance(ex, SoftTimeLimitExceeded):
+                logger.error(
+                    "push_to_firebase for tutorial failed due to SoftTimeLimitExceeded",
+                    extra=log_extra({"tutorial": self.tutorial.pk}),
+                    exc_info=True,
+                )
+                self.tutorial.status_message = "Tutorial sync to firebase timed out before completion"
+            else:
+                logger.error(
+                    "push_to_firebase for tutorial failed",
+                    extra=log_extra({"tutorial": self.tutorial.pk}),
+                    exc_info=True,
+                )
+                self.tutorial.status_message = (
+                    "Something unexpected happened! Please reach out on the MapSwipe slack for any further assistance."
+                )
+
             self.tutorial.update_firebase_push_status(FirebasePushStatusEnum.FAILED, False)
             # TODO(tnagorra): We also need to clear any intermediate values for groups, tasks and tutorial in firebase
             # NOTE: If tutorial has already been published, we cannot update it's status

@@ -4,6 +4,7 @@ import typing
 from abc import ABC, abstractmethod
 from collections import defaultdict
 
+from celery.exceptions import SoftTimeLimitExceeded
 from django.contrib.gis.db.models import GeometryField
 from django.contrib.gis.db.models.functions import Area
 from django.core.files.base import ContentFile
@@ -226,6 +227,13 @@ class BaseProject[
                     exc_info=True,
                 )
                 self.project.status_message = str(ex)
+            elif isinstance(ex, SoftTimeLimitExceeded):
+                logger.error(
+                    "process_project failed due to SoftTimeLimitExceeded",
+                    extra=log_extra({"project": self.project.pk}),
+                    exc_info=True,
+                )
+                self.project.status_message = "Project processing timed out before completion"
             else:
                 logger.error(
                     "process_project failed",
@@ -514,6 +522,13 @@ class BaseProject[
                     exc_info=True,
                 )
                 self.project.status_message = str(ex)
+            elif isinstance(ex, SoftTimeLimitExceeded):
+                logger.error(
+                    "push_to_firebase for project failed due to SoftTimeLimitExceeded",
+                    extra=log_extra({"project": self.project.pk}),
+                    exc_info=True,
+                )
+                self.project.status_message = "Project sync to firebase timed out before completion"
             else:
                 logger.error(
                     "push_to_firebase for project failed",
