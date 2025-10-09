@@ -11,6 +11,22 @@ from .types import CustomErrorType
 ARRAY_NON_MEMBER_ERRORS = "nonMemberErrors"
 
 
+# NOTE: Recursively iterate over dict and list and convert strawberry type object to dict
+def recursive_dict(data: typing.Any):
+    if isinstance(data, dict):
+        new_obj = {}
+        for key, value in data.items():
+            new_obj[key] = recursive_dict(value)
+        return new_obj
+    if isinstance(data, list):
+        return [recursive_dict(item) for item in data]
+    if isinstance(data, ArrayNestedErrorType):
+        return dict(data)
+    if isinstance(data, MutationCustomErrorType):
+        return dict(data)
+    return data
+
+
 @strawberry.type
 class ArrayNestedErrorType:
     client_id: str
@@ -22,9 +38,10 @@ class ArrayNestedErrorType:
 
     def __getitem__(self, key: str):
         key = to_snake_case(key)
-        if key in ("object_errors",) and getattr(self, key):
-            return [dict(each) for each in getattr(self, key)]
-        return getattr(self, key)
+        attr_value = getattr(self, key)
+        if key == "object_errors" and attr_value:
+            return [recursive_dict(each) for each in attr_value]
+        return attr_value
 
 
 @strawberry.type
@@ -56,12 +73,12 @@ class MutationCustomErrorType:
 
     def __getitem__(self, key: str):
         key = to_snake_case(key)
-        if key in ("object_errors", "array_errors") and getattr(self, key):
-            # TODO(thenav56): Confirm if using str() is enough
-            if key == "object_errors":
-                return {each_key: str(each_data) for each_key, each_data in getattr(self, key).items()}
-            return [str(each) for each in getattr(self, key)]
-        return getattr(self, key)
+        attr_value = getattr(self, key)
+        if key == "object_errs" and attr_value:
+            return {each_key: recursive_dict(each_data) for each_key, each_data in attr_value.items()}
+        if key == "array_errors" and attr_value:
+            return [recursive_dict(each) for each in attr_value]
+        return attr_value
 
 
 # TODO(thenav56): Check again on the error structure
@@ -86,59 +103,55 @@ def _serializer_error_to_error_types(
     initial_data = initial_data or {}
     node_client_id = initial_data.get("client_id")
     error_types: list[MutationCustomErrorType] = []
+
     for field, value in errors.items():
         if field.endswith("-pydantic"):
-            error_types.append(
-                MutationCustomErrorType(
-                    client_id=node_client_id,
-                    field=to_camel_case(field.replace("-pydantic", "")),
-                    object_errors=None,
-                    array_errors=None,
-                    messages=None,
-                    # NOTE: Error from handle_pydantic_validation_error
-                    pydantic_errors=value,
-                ),
+            err = MutationCustomErrorType(
+                client_id=node_client_id,
+                field=to_camel_case(field.replace("-pydantic", "")),
+                object_errors=None,
+                array_errors=None,
+                messages=None,
+                # NOTE: Error from handle_pydantic_validation_error
+                pydantic_errors=value,
             )
+            error_types.append(err)
             continue
         if isinstance(value, dict):
-            error_types.append(
-                MutationCustomErrorType(
-                    client_id=node_client_id,
-                    field=to_camel_case(field),
-                    object_errors=value,  # type: ignore[reportArgumentType]
-                    array_errors=None,
-                    messages=None,
-                ),
+            err = MutationCustomErrorType(
+                client_id=node_client_id,
+                field=to_camel_case(field),
+                object_errors=value,  # type: ignore[reportArgumentType]
+                array_errors=None,
+                messages=None,
             )
+            error_types.append(err)
         elif isinstance(value, list):
             if isinstance(value[0], str):  # type: ignore[reportUnnecessaryIsInstance]
                 if isinstance(initial_data.get(field), list):
                     # we have found an array input with top level error
-                    error_types.append(
-                        MutationCustomErrorType(
-                            client_id=node_client_id,
-                            field=to_camel_case(field),
-                            array_errors=[
-                                ArrayNestedErrorType(
-                                    client_id=ARRAY_NON_MEMBER_ERRORS,
-                                    messages="".join(str(msg) for msg in value),
-                                    object_errors=None,
-                                ),
-                            ],
-                            messages=None,
-                            object_errors=None,
-                        ),
+                    err = MutationCustomErrorType(
+                        client_id=node_client_id,
+                        field=to_camel_case(field),
+                        array_errors=[
+                            ArrayNestedErrorType(
+                                client_id=ARRAY_NON_MEMBER_ERRORS,
+                                messages="".join(str(msg) for msg in value),
+                                object_errors=None,
+                            ),
+                        ],
+                        messages=None,
+                        object_errors=None,
                     )
                 else:
-                    error_types.append(
-                        MutationCustomErrorType(
-                            client_id=node_client_id,
-                            field=to_camel_case(field),
-                            messages=", ".join(str(msg) for msg in value),
-                            object_errors=None,
-                            array_errors=None,
-                        ),
+                    err = MutationCustomErrorType(
+                        client_id=node_client_id,
+                        field=to_camel_case(field),
+                        messages=", ".join(str(msg) for msg in value),
+                        object_errors=None,
+                        array_errors=None,
                     )
+                    error_types.append(err)
             elif isinstance(value[0], dict):  # type: ignore[reportUnnecessaryIsInstance]
                 array_errors = []
                 for pos, array_item in enumerate(value):
@@ -154,25 +167,23 @@ def _serializer_error_to_error_types(
                             messages=None,
                         ),
                     )
-                error_types.append(
-                    MutationCustomErrorType(
-                        client_id=node_client_id,
-                        field=to_camel_case(field),
-                        array_errors=array_errors,
-                        object_errors=None,
-                        messages=None,
-                    ),
+                err = MutationCustomErrorType(
+                    client_id=node_client_id,
+                    field=to_camel_case(field),
+                    array_errors=array_errors,
+                    object_errors=None,
+                    messages=None,
                 )
+                error_types.append(err)
         else:
             # fallback
-            error_types.append(
-                MutationCustomErrorType(
-                    field=to_camel_case(field),
-                    messages=" ".join(str(msg) for msg in value or []),
-                    array_errors=None,
-                    object_errors=None,
-                ),
+            err = MutationCustomErrorType(
+                field=to_camel_case(field),
+                messages=" ".join(str(msg) for msg in value or []),
+                array_errors=None,
+                object_errors=None,
             )
+            error_types.append(err)
     return error_types
 
 
