@@ -630,9 +630,6 @@ class TestTileMapServiceProjectE2E(TestCase):
         assert project_fb_data["contributorCount"] == 1, "Contributor count should be synced with firebase"
 
         # NOTE: EXPORTS TESTING
-        aggregated_results_filename = (
-            Path(Config.BASE_DIR) / test_data["expected_project_exports_data"]["aggregated_results"]
-        )
 
         # NOTE: Test AGGREGATED RESULTS
         aggregated_results_project_asset = ProjectAsset.objects.filter(
@@ -644,10 +641,18 @@ class TestTileMapServiceProjectE2E(TestCase):
         if not aggregated_results_project_asset:
             raise AssertionError("Aggregated results project asset not found")
 
+        aggregated_results_filename = (
+            Path(Config.BASE_DIR) / test_data["expected_project_exports_data"]["aggregated_results"]
+        )
         compare_csv_files(
             aggregated_results_project_asset,
             aggregated_results_filename,
             is_gzip_file=True,
+            keys_to_ignore={
+                "project_internal_id",
+                "group_internal_id",
+                "task_internal_id",
+            },
             message="Difference found for aggregated results export file.",
         )
 
@@ -661,10 +666,20 @@ class TestTileMapServiceProjectE2E(TestCase):
         if not aggregated_results_with_geometry_project_asset:
             raise AssertionError("Aggregated results with geometry project asset not found")
 
+        expected_aggregated_results_with_geometry_filename = Path(
+            Config.BASE_DIR,
+            test_data["expected_project_exports_data"]["aggregated_results_with_geometry"],
+        )
         compare_geojson_files(
             aggregated_results_with_geometry_project_asset,
-            test_data["expected_project_exports_data"]["aggregated_results_with_geometry"],
+            expected_aggregated_results_with_geometry_filename,
             is_gzip_file=True,
+            keys_to_ignore={
+                "name",
+                "project_internal_id",
+                "group_internal_id",
+                "task_internal_id",
+            },
             message="Difference found for aggregated results with geometry export file.",
         )
 
@@ -678,10 +693,20 @@ class TestTileMapServiceProjectE2E(TestCase):
         if not results_project_asset:
             raise AssertionError("Results project asset not found")
 
+        results_filename = Path(Config.BASE_DIR) / test_data["expected_project_exports_data"]["results"]
         compare_csv_files(
             results_project_asset,
-            test_data["expected_project_exports_data"]["results"],
+            results_filename,
             is_gzip_file=True,
+            keys_to_ignore={
+                "project_internal_id",
+                "group_internal_id",
+                "task_internal_id",
+                "user_internal_id",
+                "timestamp",
+                "start_time",
+                "end_time",
+            },
             message="Difference found for results export file.",
         )
         # NOTE: Test HISTORY
@@ -691,13 +716,13 @@ class TestTileMapServiceProjectE2E(TestCase):
             export_type=ProjectAssetExportTypeEnum.HISTORY,
         ).first()
 
+        history_filename = Path(Config.BASE_DIR) / test_data["expected_project_exports_data"]["history"]
         if not history_project_asset:
             raise AssertionError("History project asset not found")
 
         compare_csv_files(
             history_project_asset,
-            test_data["expected_project_exports_data"]["history"],
-            is_gzip_file=True,
+            history_filename,
             message="Difference found for history export file.",
         )
 
@@ -710,11 +735,15 @@ class TestTileMapServiceProjectE2E(TestCase):
 
         if not groups_project_asset:
             raise AssertionError("Groups project asset not found")
-
+        groups_filename = Path(Config.BASE_DIR) / test_data["expected_project_exports_data"]["groups"]
         compare_csv_files(
             groups_project_asset,
-            test_data["expected_project_exports_data"]["groups"],
+            groups_filename,
             is_gzip_file=True,
+            keys_to_ignore={
+                "project_internal_id",
+                "group_internal_id",
+            },
             message="Difference found for groups export file.",
         )
 
@@ -727,11 +756,16 @@ class TestTileMapServiceProjectE2E(TestCase):
 
         if not tasks_project_asset:
             raise AssertionError("Tasks project asset not found")
-
+        tasks_filename = Path(Config.BASE_DIR) / test_data["expected_project_exports_data"]["tasks"]
         compare_csv_files(
             tasks_project_asset,
-            test_data["expected_project_exports_data"]["tasks"],
+            tasks_filename,
             is_gzip_file=True,
+            keys_to_ignore={
+                "project_internal_id",
+                "group_internal_id",
+                "task_internal_id",
+            },
             message="Difference found for tasks export file.",
         )
 
@@ -744,10 +778,10 @@ class TestTileMapServiceProjectE2E(TestCase):
 
         if not users_project_asset:
             raise AssertionError("Users project asset not found")
-
+        users_filename = Path(Config.BASE_DIR) / test_data["expected_project_exports_data"]["users"]
         compare_csv_files(
             users_project_asset,
-            test_data["expected_project_exports_data"]["users"],
+            users_filename,
             is_gzip_file=True,
             message="Difference found for users export file.",
         )
@@ -761,16 +795,22 @@ class TestTileMapServiceProjectE2E(TestCase):
 
         if not aoi_project_asset:
             raise AssertionError("AOI Geometry project asset not found")
-
+        aoi_geometry_export_filename = Path(
+            Config.BASE_DIR,
+            test_data["expected_project_exports_data"]["area_of_interest"],
+        )
         compare_geojson_files(
             aoi_project_asset,
-            aoi_geometry_filename,
+            aoi_geometry_export_filename,
             message="Difference found for AOI Geometry export file.",
         )
 
         # NOTE: TEST HOT TASKING MANAGER GEOMETRY
-        if "hot_tasking_manager_aoi" in test_data["assets"]:
-            htm_aoi_filename = Path(Config.BASE_DIR) / test_data["assets"]["hot_tasking_manager_aoi"]
+        # TODO: CHECK if this export is required for completeness project if required, remove this check
+        if "hot_tasking_manager_geometry" in test_data["expected_project_exports_data"]:
+            htm_aoi_filename = (
+                Path(Config.BASE_DIR) / test_data["expected_project_exports_data"]["hot_tasking_manager_geometry"]
+            )
             htm_aoi_project_asset = ProjectAsset.objects.filter(
                 project=project,
                 type=AssetTypeEnum.EXPORT,
@@ -787,6 +827,7 @@ class TestTileMapServiceProjectE2E(TestCase):
             )
 
         # NOTE: TEST MODERATE TO HIGH AGREEMENT
+        # TODO: CHECK if this export is required for completeness project if required, remove this check
         if "moderate_to_high_agreement" in test_data["expected_project_exports_data"]:
             moderate_to_high_agreement_filename = Path(
                 Config.BASE_DIR,

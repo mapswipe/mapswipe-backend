@@ -72,19 +72,19 @@ def compare_csv_files(
             gzip.GzipFile(fileobj=file, mode="rb") as gz,
             io.TextIOWrapper(gz, encoding="utf-8") as text_stream,
         ):
-            actual_data = list(csv.DictReader(text_stream))
+            generated_data = list(csv.DictReader(text_stream))
     else:
         with project_asset.file.open(mode="r") as file:
-            actual_data = list(csv.DictReader(file))
+            generated_data = list(csv.DictReader(file))
 
     with expected_csv_path.open(mode="r", newline="", encoding="utf-8") as file:
         expected_data = list(csv.DictReader(file))
 
     if keys_to_ignore:
-        actual_data = remove_object_keys(actual_data, keys_to_ignore)
+        generated_data = remove_object_keys(generated_data, keys_to_ignore)
         expected_data = remove_object_keys(expected_data, keys_to_ignore)
 
-    assert actual_data == expected_data, message
+    assert generated_data == expected_data, message
 
 
 def compare_geojson_files(
@@ -104,16 +104,16 @@ def compare_geojson_files(
             gzip.GzipFile(fileobj=file, mode="rb") as gz,
             io.TextIOWrapper(gz, encoding="utf-8") as text_stream,
         ):
-            actual_data = json.load(text_stream)
+            generated_data = json.load(text_stream)
     else:
-        with project_asset.file.open("r", encoding="utf-8") as file:
-            actual_data = json.load(file)
+        with project_asset.file.open("r") as file:
+            generated_data = json.load(file)
 
     with expected_geojson_path.open("r", encoding="utf-8") as file:
         expected_data = json.load(file)
 
     if keys_to_ignore:
-        actual_data = remove_object_keys(actual_data, keys_to_ignore)
+        generated_data = remove_object_keys(generated_data, keys_to_ignore)
         expected_data = remove_object_keys(expected_data, keys_to_ignore)
 
-    assert actual_data == expected_data, message
+    assert generated_data == expected_data, message
