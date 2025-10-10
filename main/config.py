@@ -79,7 +79,7 @@ class Config:
 
         @staticmethod
         def tutorial_url(tutorial_id: int):
-            return f"{Config.MANAGER_DASHBOARD_DOMAIN.geturl()}/tutorials/{tutorial_id}/edit"
+            return f"{Config.MANAGER_DASHBOARD_DOMAIN.geturl()}/tutorial/{tutorial_id}/edit"
 
     class FirebaseKeys:
         @staticmethod
