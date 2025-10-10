@@ -115,12 +115,13 @@ def coordinate_download(
         polygon=polygon,
         level=level,
     )
-
     if tiles.empty:
         return pd.DataFrame()
 
+    logger.info("Images will be queried in roughly %s requests from mapillary", len(tiles.index))
+
     downloaded_metadata: list[pd.DataFrame] = []
-    for row in tiles.to_dict(orient="records"):
+    for i, row in enumerate(tiles.to_dict(orient="records")):
         df = download_and_process_tile(
             row=row,
             polygon=polygon,
@@ -128,6 +129,14 @@ def coordinate_download(
         )
         if df is not None and not df.empty:
             downloaded_metadata.append(df)
+        progress = round(100 * ((i + 1) / len(tiles.index)), 1)
+        logger.info(
+            "finished query %s/%s, progress=%s, images=%s",
+            i + 1,
+            len(tiles.index),
+            progress,
+            len(df.index) if df is not None else 0,
+        )
 
     if downloaded_metadata:
         return pd.concat(downloaded_metadata, ignore_index=True)
@@ -166,12 +175,13 @@ def download_and_process_tile(
     x = row["x"]
     y = row["y"]
     z, x, y = row["z"], row["x"], row["y"]
+
     url = f"{Config.MAPILLARY_API_LINK}{z}/{x}/{y}?access_token={Config.MAPILLARY_API_KEY}"
 
-    attempt = 0
-    while attempt < attempt_limit:
+    for _ in range(attempt_limit):
         try:
             data = get_mapillary_data(url, x, y, z)
+
             if data.isna().all() is False or data.empty is False:
                 data = data[data["geometry"].apply(lambda point: point.within(polygon))]
                 target_columns = [
@@ -189,6 +199,8 @@ def download_and_process_tile(
                 if data.isna().all() is False or data.empty is False:
                     data = filter_results(data, **kwargs)
                 return data
+
+            return None
         except StreetException:
             logger.warning(
                 "Error while fetching Mapillary data for tile %s/%s/%s",
@@ -196,7 +208,6 @@ def download_and_process_tile(
                 x,
                 y,
             )
-            attempt += 1
     return None
 
 
@@ -318,7 +329,7 @@ def get_image_metadata(
     downloaded_metadata = downloaded_metadata.drop_duplicates(subset=["geometry"])
 
     total_images = len(downloaded_metadata)
-    if total_images > 100000:
+    if total_images > 100_000:
         raise ValidationException(
             f"Too many Images with selected filter options for the AoI: {total_images}",
         )
