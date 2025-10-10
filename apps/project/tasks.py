@@ -104,4 +104,4 @@ def send_slack_message_for_project(project_id: int, action: Literal["progress-ch
     update_base_slack_message(client=mapslack, project=project, ts=base_slack_message_ts)
     if action == "progress-change":
         project.slack_progress_notifications = project.progress
-        project.save(update_fields=["slack_message_notifications"])
+        project.save(update_fields=["slack_progress_notifications"])
