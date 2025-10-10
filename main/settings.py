@@ -436,6 +436,17 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
 REDIS_URL = CACHE_REDIS_URL
 HEALTHCHECK_CACHE_KEY = "mapswipe_healthcheck_key"
 
+# NOTE: For non-alpha instances, look at 50 as we have other resources like db/media on the same host
+# We will need to add additional disk if usages are high on the main disk
+HEALTH_CHECK = {
+    "DISK_USAGE_MAX": 50,  # percent
+}
+
+if "alpha" in APP_ENVIRONMENT.lower():
+    HEALTH_CHECK = {
+        "DISK_USAGE_MAX": 90,
+    }
+
 # Security Header configuration
 
 MAPSWIPE_TRUSTED_ORIGINS = [
