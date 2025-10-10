@@ -188,13 +188,6 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
         return project.progress / 100
 
     @strawberry_django.field(
-        description="No. of unique contributors in this project",
-    )
-    def contributors_count(self) -> int:
-        # TODO(tnagorra): We need to implement this
-        return 0
-
-    @strawberry_django.field(
         only=["topic", "region", "project_number", "requesting_organization__name", "project_type"],
         annotate={"generated_name": Project.generate_name_query()},
         description="Project name generated from topic, region, project number, and requesting organization name.",

@@ -4,6 +4,7 @@ import typing
 from abc import ABC, abstractmethod
 from collections import defaultdict
 
+from celery.exceptions import SoftTimeLimitExceeded
 from django.contrib.gis.db.models import GeometryField
 from django.contrib.gis.db.models.functions import Area
 from django.core.files.base import ContentFile
@@ -18,7 +19,6 @@ from ulid import ULID
 
 from apps.common.models import FirebasePushStatusEnum
 from apps.common.utils import get_absolute_uri
-from apps.mapping.models import MappingSession
 from apps.project.models import (
     Project,
     ProjectAsset,
@@ -226,6 +226,13 @@ class BaseProject[
                     exc_info=True,
                 )
                 self.project.status_message = str(ex)
+            elif isinstance(ex, SoftTimeLimitExceeded):
+                logger.error(
+                    "process_project failed due to SoftTimeLimitExceeded",
+                    extra=log_extra({"project": self.project.pk}),
+                    exc_info=True,
+                )
+                self.project.status_message = "Project processing timed out before completion"
             else:
                 logger.error(
                     "process_project failed",
@@ -421,17 +428,6 @@ class BaseProject[
         assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
         assert self.project.tutorial is not None, "Tutorial is required before project can be pushed to firebase"
 
-        unique_contributors_count = (
-            MappingSession.objects.filter(
-                project_task_group__in=ProjectTaskGroup.objects.filter(project=self.project),
-            )
-            .values(
-                "contributor_user_id",
-            )
-            .distinct()
-            .count()
-        )
-
         project_ref.update(
             value=firebase_utils.serialize(
                 firebase_models.FbProjectUpdateInput(
@@ -450,7 +446,7 @@ class BaseProject[
                     tutorialId=self.project.tutorial.firebase_id,
                     status=BaseProject.get_firebase_status(self.project.status_enum, not self.project.team_id),
                     teamId=self.project.team.firebase_id if self.project.team else None,
-                    contributorCount=unique_contributors_count,
+                    contributorCount=self.project.number_of_contributor_users,
                     progress=self.project.progress,
                     # FIXME(tnagorra): Need to check how we get this?
                     language="en-us",
@@ -514,6 +510,13 @@ class BaseProject[
                     exc_info=True,
                 )
                 self.project.status_message = str(ex)
+            elif isinstance(ex, SoftTimeLimitExceeded):
+                logger.error(
+                    "push_to_firebase for project failed due to SoftTimeLimitExceeded",
+                    extra=log_extra({"project": self.project.pk}),
+                    exc_info=True,
+                )
+                self.project.status_message = "Project sync to firebase timed out before completion"
             else:
                 logger.error(
                     "push_to_firebase for project failed",

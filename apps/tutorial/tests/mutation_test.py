@@ -4,7 +4,6 @@ from pathlib import Path
 
 from django.core.files.temp import NamedTemporaryFile
 from PIL import Image
-from ulid import ULID
 
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
@@ -346,7 +345,7 @@ class TestTutorialMutation(TestCase):
 
     def test_tutorial_create(self):
         tutorial_data = {
-            "clientId": str(ULID()),
+            "clientId": "01K748SHD9W5BTQA8EB9RCZGB7",
             "name": "My Tutorial",
             "project": self.project.pk,
         }
@@ -378,7 +377,7 @@ class TestTutorialMutation(TestCase):
         # Creating Project Image Asset
         tutorial_asset_data = {
             "tutorial": latest_tutorial.pk,
-            "clientId": str(ULID()),
+            "clientId": "01K748TDZPSDKPX1QVC5J5H558",
         }
         content = self._create_tutorial_image_asset(tutorial_asset_data)
         resp_data = content["data"]["createTutorialAsset"]
@@ -386,13 +385,14 @@ class TestTutorialMutation(TestCase):
         image_asset = resp_data["result"]
 
         # Update Tutorial
+        tutorial_data.pop("project")
 
         tutorial_data = {
             **tutorial_data,
             "scenarios": [
                 {
                     "create": {
-                        "clientId": str(ULID()),
+                        "clientId": "01K748TDZPADVS0XX5FV59Q8JC",
                         "scenarioPageNumber": 1,
                         "instructionsDescription": "Anything that is not naturally occurring",
                         "instructionsIcon": "STAR_OUTLINE",
@@ -405,32 +405,32 @@ class TestTutorialMutation(TestCase):
                         "successTitle": "Well done!",
                         "tasks": [
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZQAX1242QFT3R8V3H1",
                                 "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110087}},
                                 "reference": 0,
                             },
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZQDAHN2RAEJ6KKQZBS",
                                 "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110088}},
                                 "reference": 1,
                             },
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZQN9KR7PPAWY282B8V",
                                 "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193196, "tileY": 110089}},
                                 "reference": 0,
                             },
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZQCYF1Q88MVW3B5J8A",
                                 "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110087}},
                                 "reference": 0,
                             },
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZR861B76GJAYS3WCY6",
                                 "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110088}},
                                 "reference": 1,
                             },
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZRT35XEZFT0SRR1EF0",
                                 "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193197, "tileY": 110089}},
                                 "reference": 0,
                             },
@@ -439,7 +439,7 @@ class TestTutorialMutation(TestCase):
                 },
                 {
                     "create": {
-                        "clientId": str(ULID()),
+                        "clientId": "01K748TDZSP64X7DY58NQZQ87E",
                         "scenarioPageNumber": 2,
                         "instructionsDescription": "Anything that is not naturally occurring",
                         "instructionsIcon": "STAR_OUTLINE",
@@ -452,32 +452,32 @@ class TestTutorialMutation(TestCase):
                         "successTitle": "Well done!",
                         "tasks": [
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZSBB9R1D0B0JYWQVHS",
                                 "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110087}},
                                 "reference": 1,
                             },
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZS4875A6W77FFKCB39",
                                 "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110088}},
                                 "reference": 1,
                             },
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZSDZJ7VPY35KQRMZ8E",
                                 "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193204, "tileY": 110089}},
                                 "reference": 1,
                             },
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZS86H58VNJ876JTB7R",
                                 "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110087}},
                                 "reference": 1,
                             },
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZS5DGYD7RGHT2EEEV6",
                                 "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110088}},
                                 "reference": 1,
                             },
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZSC0NVNAMZKBQRRYQY",
                                 "projectTypeSpecifics": {"find": {"tileZ": 18, "tileX": 193205, "tileY": 110089}},
                                 "reference": 1,
                             },
@@ -488,26 +488,26 @@ class TestTutorialMutation(TestCase):
             "informationPages": [
                 {
                     "create": {
-                        "clientId": str(ULID()),
+                        "clientId": "01K748TDZTPW7Y19MEMPH0332S",
                         "title": "Man-made structures",
                         "pageNumber": 1,
                         "blocks": [
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZTPVP7HF5VX03HTW9Z",
                                 "blockNumber": 1,
                                 "blockType": "TEXT",
                                 "text": "Man-made structures are physical constructions created by humans, typically "
                                 "using tools, materials, and engineering principles.",
                             },
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZT5T9D33D78VV5NFKS",
                                 "blockNumber": 2,
                                 "blockType": "TEXT",
                                 "text": "These structures are built to serve specific purposes, such as housing, "
                                 "transportation, defense, communication, or recreation.",
                             },
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZT7PV91ZX9W5H4BS47",
                                 "blockNumber": 3,
                                 "blockType": "IMAGE",
                                 "image": image_asset["id"],
@@ -517,12 +517,12 @@ class TestTutorialMutation(TestCase):
                 },
                 {
                     "create": {
-                        "clientId": str(ULID()),
+                        "clientId": "01K748TDZTZ2M1FJWEKHGDVSV9",
                         "title": "Natural structures",
                         "pageNumber": 2,
                         "blocks": [
                             {
-                                "clientId": str(ULID()),
+                                "clientId": "01K748TDZTS0MK857GPZHKYDWW",
                                 "blockNumber": 1,
                                 "blockType": "TEXT",
                                 "text": "Natural structures are physical formations that are created by nature "
@@ -533,7 +533,6 @@ class TestTutorialMutation(TestCase):
                 },
             ],
         }
-        tutorial_data.pop("project")
 
         # Updating Tutorial: Without Authentication
         self.logout()
@@ -547,8 +546,56 @@ class TestTutorialMutation(TestCase):
             },
         ], content
 
-        # Updating Tutorial: With Authentication
+        # Updating Tutorial: Check deep nested validation issues
         self.force_login(self.user)
+        tutorial_data["scenarios"][1]["create"]["tasks"][1]["reference"] = -9  # type: ignore[reportArgumentType, reportIndexIssue]
+        content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
+        tutorial_data["scenarios"][1]["create"]["tasks"][1]["reference"] = 1  # type: ignore[reportArgumentType, reportIndexIssue]
+
+        resp_data = content["data"]["updateTutorial"]
+        expected_error_message = [
+            {
+                "field": "scenarios",
+                "client_id": "01K748SHD9W5BTQA8EB9RCZGB7",
+                "messages": None,
+                "object_errors": None,
+                "array_errors": [
+                    {
+                        "client_id": "01K748TDZSP64X7DY58NQZQ87E",
+                        "messages": None,
+                        "object_errors": [
+                            {
+                                "field": "tasks",
+                                "client_id": "01K748TDZSP64X7DY58NQZQ87E",
+                                "messages": None,
+                                "object_errors": None,
+                                "array_errors": [
+                                    {
+                                        "client_id": "01K748TDZS4875A6W77FFKCB39",
+                                        "messages": None,
+                                        "object_errors": [
+                                            {
+                                                "field": "reference",
+                                                "client_id": "01K748TDZS4875A6W77FFKCB39",
+                                                "messages": "Ensure this value is greater than or equal to 0.",
+                                                "object_errors": None,
+                                                "array_errors": None,
+                                                "pydantic_errors": None,
+                                            },
+                                        ],
+                                    },
+                                ],
+                                "pydantic_errors": None,
+                            },
+                        ],
+                    },
+                ],
+                "pydantic_errors": None,
+            },
+        ]
+        assert resp_data["errors"] == expected_error_message, content
+
+        # Updating Tutorial: With Authentication and correct data
         content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
         resp_data = content["data"]["updateTutorial"]
         assert resp_data["errors"] is None, content
@@ -618,7 +665,7 @@ class TestTutorialMutation(TestCase):
                             },
                             {
                                 "create": {
-                                    "clientId": str(ULID()),
+                                    "clientId": "01K748TDZTRDF6Z3X2VTNKJEGF",
                                     # NOTE: blockNumber 2 is previously deleted so should not error on unique constraint
                                     "blockNumber": 2,
                                     "blockType": "TEXT",
@@ -744,7 +791,7 @@ class TestTutorialMutation(TestCase):
     def test_tutorial_state_transitions(self):
         # Create a draft tutorial
         tutorial = TutorialFactory.create(
-            client_id=str(ULID()),
+            client_id="01K748TDZT84RRP5GACAYB71PP",
             name="Status Tutorial",
             project=self.project,
             created_by=self.user,

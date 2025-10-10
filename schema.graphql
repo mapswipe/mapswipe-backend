@@ -1737,9 +1737,6 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   aoiGeometry: GeometryType
   aoiGeometryInputAsset: ProjectAssetType
   clientId: String!
-
-  """No. of unique contributors in this project"""
-  contributorsCount: Int!
   createdAt: DateTime!
   createdBy: UserType!
   description: String
