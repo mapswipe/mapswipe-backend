@@ -14,7 +14,9 @@ class CompareProjectProperty(base_project.TileMapServiceProjectProperty):
 class CompareProjectTaskGroupProperty(base_project.TileMapServiceProjectTaskGroupProperty): ...
 
 
-class CompareProjectTaskProperty(base_project.TileMapServiceProjectTaskProperty): ...
+class CompareProjectTaskProperty(base_project.TileMapServiceProjectTaskProperty):
+    # NOTE: We added URL as it's used directly when creating exports
+    url_b: str
 
 
 class CompareProject(
@@ -37,6 +39,23 @@ class CompareProject(
     def get_max_time_spend_percentile(self) -> float:
         return 11.2
 
+    @typing.override
+    def get_task_specifics_for_db(self, tile_x: int, tile_y: int) -> CompareProjectTaskProperty:
+        return self.project_task_property_class(
+            tile_x=tile_x,
+            tile_y=tile_y,
+            url=self.project_type_specifics.tile_server_property.generate_url(
+                tile_x,
+                tile_y,
+                self.project_type_specifics.zoom_level,
+            ),
+            url_b=self.project_type_specifics.tile_server_b_property.generate_url(
+                tile_x,
+                tile_y,
+                self.project_type_specifics.zoom_level,
+            ),
+        )
+
     # FIREBASE
 
     @typing.override
@@ -46,24 +65,14 @@ class CompareProject(
     @typing.override
     def get_task_specifics_for_firebase(self, task: ProjectTask) -> firebase_models.FbMappingTaskCompareCreateOnlyInput:
         task_specifics = self.project_task_property_class.model_validate(task.project_type_specifics)
-        tsp = self.project_type_specifics.tile_server_property
-        tsp_b = self.project_type_specifics.tile_server_b_property
 
         return firebase_models.FbMappingTaskCompareCreateOnlyInput(
             groupId=str(task.task_group.firebase_id),
             taskId=task.firebase_id,
             taskX=task_specifics.tile_x,
             taskY=task_specifics.tile_y,
-            url=tsp.generate_url(
-                task_specifics.tile_x,
-                task_specifics.tile_y,
-                self.project_type_specifics.zoom_level,
-            ),
-            urlB=tsp_b.generate_url(
-                task_specifics.tile_x,
-                task_specifics.tile_y,
-                self.project_type_specifics.zoom_level,
-            ),
+            url=task_specifics.url,
+            urlB=task_specifics.url_b,
         )
 
     @typing.override

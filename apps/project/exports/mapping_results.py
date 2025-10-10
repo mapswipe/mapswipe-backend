@@ -8,6 +8,7 @@ from psycopg2 import sql
 from apps.contributor.models import ContributorUser
 from apps.mapping.models import (
     MappingSession,
+    MappingSessionClientTypeEnum,
     MappingSessionResult,
 )
 from apps.project.models import Project, ProjectTask, ProjectTaskGroup
@@ -19,7 +20,6 @@ logger = logging.getLogger(__name__)
 
 
 def generate_mapping_results(*, destination_filename: Path, project: Project) -> pd.DataFrame:
-    # TODO: client_type IS ENUM -- CONVERT TO VALUE?
     sql_query = sql.SQL(f"""
         COPY (
             SELECT
@@ -38,7 +38,9 @@ def generate_mapping_results(*, destination_filename: Path, project: Project) ->
                 MS.{fd_name(MappingSession.start_time)} as start_time,
                 MS.{fd_name(MappingSession.end_time)} as end_time,
                 MS.{fd_name(MappingSession.app_version)} as app_version,
-                MS.{fd_name(MappingSession.client_type)} as client_type,
+                (
+                    {MappingSessionClientTypeEnum.get_client_type_label_sql(f"MS.{fd_name(MappingSession.client_type)}")}
+                ) as client_type,
                 MSR.{fd_name(MappingSessionResult.result)} as result,
                 -- the username for users which login to MapSwipe with their
                 -- OSM account is not defined or ''.

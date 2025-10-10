@@ -26,6 +26,17 @@ class MappingSessionClientTypeEnum(models.IntegerChoices):
             "web": cls.WEB,
         }.get(value, cls.UNKNOWN)
 
+    @classmethod
+    def get_client_type_label_sql(cls, field: str) -> str:
+        return f"""
+            CASE {field}
+                WHEN {cls.MOBILE_ANDROID.value} THEN 'android'
+                WHEN {cls.MOBILE_IOS.value} THEN 'ios'
+                WHEN {cls.WEB.value} THEN 'web'
+            ELSE 'unknown'
+            END
+        """
+
 
 class MappingSession(models.Model):
     """Model representing a mapping session where a contributor user worked on a specific project task group."""

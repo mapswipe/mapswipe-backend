@@ -142,13 +142,13 @@ class BaseProject[
         )
         # NOTE: After number_of_tasks is calculated
         project_task_groups_qs.update(
-            required_count=models.F("number_of_tasks") * self.project.verification_number,
+            required_count=self.project.verification_number,
             time_spent_max_allowed=(models.F("number_of_tasks") * self.get_max_time_spend_percentile()),
         )
 
         self.project.required_results = (
             ProjectTaskGroup.objects.filter(project_id=self.project.pk).aggregate(
-                required_results=models.Sum("required_count"),
+                required_results=models.Sum("number_of_tasks") * self.project.verification_number,
             )
         )["required_results"] or 0
 

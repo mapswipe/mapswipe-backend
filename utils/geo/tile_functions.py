@@ -91,7 +91,7 @@ def quad_key_to_bing_url(quad_key: str, api_key: str):
 
 
 # FIXME(tnagorra): Add typings for osgeo
-def geometry_from_tile_coords(tile_x: float, tile_y: float, zoom: int) -> str:
+def geometry_from_tile_coords(tile_x: float, tile_y: float, zoom: int, *, skip_flatten: bool = False) -> str:
     """Compute the polygon geometry of a tile map service tile."""
     # Calculate lat, lon of upper left corner of tile
     pixel_x = tile_x * 256
@@ -113,7 +113,7 @@ def geometry_from_tile_coords(tile_x: float, tile_y: float, zoom: int) -> str:
     poly = ogr.Geometry(ogr.wkbPolygon)
     poly.AddGeometry(ring)
 
-    if poly.GetCoordinateDimension() == 3:
+    if not skip_flatten and poly.GetCoordinateDimension() == 3:
         poly.FlattenTo2D()
 
     return poly.ExportToWkt()

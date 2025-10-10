@@ -694,141 +694,7 @@ class TestTileMapServiceProjectE2E(TestCase):
         if not test_data.get("expected_project_exports_data"):
             return
 
-        # Check aggregated results export
-
-        aggregated_results_project_asset = ProjectAsset.objects.filter(
-            project=project,
-            type=AssetTypeEnum.EXPORT,
-            export_type=ProjectAssetExportTypeEnum.AGGREGATED_RESULTS,
-        ).first()
-        assert aggregated_results_project_asset is not None, "Aggregated results project asset not found"
-
-        expected_aggregated_results = read_csv(
-            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["aggregated_results"]),
-            ignore_columns={
-                "geom",  # FIXME: Previously MULTIPOLYGON now it's POLYGON
-                "url",  # FIXME: Does not exist in actual csv
-                "taskX",  # FIXME: Does not exist in actual csv
-                "taskY",  # FIXME: Does not exist in actual csv
-            },
-        )
-        actual_aggregated_results = read_csv(
-            aggregated_results_project_asset.file,
-            compressed=True,
-            ignore_columns={
-                "project_internal_id",  # FIXME: remove this
-                "group_internal_id",  # FIXME: remove this
-                "task_internal_id",  # FIXME: remove this
-                "geom",  # FIXME: Previously MULTIPOLYGON now it's POLYGON
-            },
-        )
-        assert expected_aggregated_results == actual_aggregated_results, (
-            "Difference found for aggregated results export file."
-        )
-
-        # Check aggregated results with geometry export
-
-        aggregated_results_with_geometry_project_asset = ProjectAsset.objects.filter(
-            project=project,
-            type=AssetTypeEnum.EXPORT,
-            export_type=ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY,
-        ).first()
-        assert aggregated_results_with_geometry_project_asset is not None, (
-            "Aggregated results with geometry project asset not found"
-        )
-
-        expected_aggregated_results_with_geometry = read_json(
-            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["aggregated_results_with_geometry"]),
-            ignore_fields={
-                "url",  # FIXME: Does not exist in actual csv
-                "taskX",  # FIXME: Does not exist in actual csv
-                "taskY",  # FIXME: Does not exist in actual csv
-                "name",  # FIXME: Previously "tmp", now "tmp" + random_str
-                "geometry",  # FIXME: Previously MultiPolygon now it's Polygon
-            },
-        )
-        actual_aggregated_results_with_geometry = read_json(
-            aggregated_results_with_geometry_project_asset.file,
-            compressed=True,
-            ignore_fields={
-                "name",  # FIXME: Previously "tmp", now "tmp" + random_str
-                "geometry",  # FIXME: Previously MultiPolygon now it's Polygon
-                "group_internal_id",  # FIXME: Remove this
-                "project_internal_id",  # FIXME: Remove this
-                "task_internal_id",  # FIXME: Remove this
-            },
-        )
-        assert expected_aggregated_results_with_geometry == actual_aggregated_results_with_geometry, (
-            "Difference found for aggregated results with geometry export file."
-        )
-
-        # Check results export
-
-        results_project_asset = ProjectAsset.objects.filter(
-            project=project,
-            type=AssetTypeEnum.EXPORT,
-            export_type=ProjectAssetExportTypeEnum.RESULTS,
-        ).first()
-        assert results_project_asset is not None, "Results project asset not found"
-
-        expected_results = read_csv(
-            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["results"]),
-            sort_column=operator.itemgetter("task_id"),
-            ignore_columns={
-                "timestamp",  # FIXME: +00 added in our system
-                "start_time",  # FIXME: +00 added in our system
-                "end_time",  # FIXME: +00 added in our system
-                "client_type",  # FIXME: web in previous, 3 in current
-                "",  # FIXME: Not sure what this is at all
-            },
-        )
-        actual_results = read_csv(
-            results_project_asset.file,
-            sort_column=operator.itemgetter("task_id"),
-            ignore_columns={
-                "",  # FIXME: Not sure what this is at all
-                "timestamp",  # FIXME: +00 added in our system
-                "start_time",  # FIXME: +00 added in our system
-                "end_time",  # FIXME: +00 added in our system
-                "client_type",  # FIXME: web in previous, 3 in current
-                "task_internal_id",  # FIXME: remove this
-                "user_internal_id",  # FIXME: remove this
-                "group_internal_id",  # FIXME: remove this
-                "project_internal_id",  # FIXME: remove this
-            },
-            compressed=True,
-        )
-        assert expected_results == actual_results, "Difference found for results export file."
-
-        # Check history export
-
-        history_project_asset = ProjectAsset.objects.filter(
-            project=project,
-            type=AssetTypeEnum.EXPORT,
-            export_type=ProjectAssetExportTypeEnum.HISTORY,
-        ).first()
-        assert history_project_asset is not None, "History project asset not found"
-
-        expected_history = read_csv(
-            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["history"]),
-            ignore_columns={
-                "cum_progress",  # FIXME: Not correct
-                "progress",  # FIXME: Not correct
-                "project_id",  # FIXME: Previously firebase_id now number
-            },
-        )
-        actual_history = read_csv(
-            history_project_asset.file,
-            ignore_columns={
-                "cum_progress",  # FIXME: Not correct
-                "progress",  # FIXME: Not correct
-                "project_id",  # FIXME: Previously firebase_id now number
-            },
-        )
-        assert expected_history == actual_history, "Difference found for history export file."
-
         # Check groups export
-
         groups_project_asset = ProjectAsset.objects.filter(
             project=project,
             type=AssetTypeEnum.EXPORT,
@@ -839,30 +705,18 @@ class TestTileMapServiceProjectE2E(TestCase):
         expected_groups = read_csv(
             Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["groups"]),
             ignore_columns={
-                "total_area",  # FIXME: previously empty, now real value
-                "time_spent_max_allowed",  # FIXME: previously empty, now real value
-                "required_count",  # FIXME: previously looks like verification count
-                "number_of_users_required",  # FIXME: previously looks like verification count
-                "xMax",  # FIXME: previously camelcase
-                "xMin",  # FIXME: previously camelcase
-                "yMax",  # FIXME: previously camelcase
-                "yMin",  # FIXME: previously camelcase
+                "total_area",  # NOTE: previously empty, now real value
+                "time_spent_max_allowed",  # NOTE: previously empty, now real value
             },
         )
         actual_groups = read_csv(
             groups_project_asset.file,
             compressed=True,
             ignore_columns={
-                "total_area",  # FIXME: previously empty, now real value
-                "time_spent_max_allowed",  # FIXME: previously empty, now real value
-                "project_internal_id",  # FIXME: remove this
-                "group_internal_id",  # FIXME: remove this
-                "required_count",  # FIXME: previously looks like verification count
-                "number_of_users_required",  # FIXME: previously looks like verification count
-                "x_max",  # FIXME: previously camelcase
-                "x_min",  # FIXME: previously camelcase
-                "y_max",  # FIXME: previously camelcase
-                "y_min",  # FIXME: previously camelcase
+                "total_area",  # NOTE: previously empty, now real value
+                "time_spent_max_allowed",  # NOTE: previously empty, now real value
+                "project_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
             },
         )
         assert expected_groups == actual_groups, "Difference found for groups export file."
@@ -879,11 +733,7 @@ class TestTileMapServiceProjectE2E(TestCase):
             Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["tasks"]),
             sort_column=operator.itemgetter("task_id"),
             ignore_columns={
-                "",  # FIXME: Not sure what this is at all
-                "geom",  # FIXME: Previously MULTIPOLYGON now it's POLYGON
-                "url",  # FIXME: Does not exist in actual csv
-                "taskX",  # FIXME: Does not exist in actual csv
-                "taskY",  # FIXME: Does not exist in actual csv
+                "",  # NOTE: dataframe index
             },
         )
         actual_tasks = read_csv(
@@ -891,14 +741,138 @@ class TestTileMapServiceProjectE2E(TestCase):
             compressed=True,
             sort_column=operator.itemgetter("task_id"),
             ignore_columns={
-                "",  # FIXME: Not sure what this is at all
-                "project_internal_id",  # FIXME: remove this
-                "group_internal_id",  # FIXME: remove this
-                "task_internal_id",  # FIXME: remove this
-                "geom",  # FIXME: Previously MULTIPOLYGON now it's POLYGON
+                "",  # NOTE: dataframe index
+                "project_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
+                "task_internal_id",  # NOTE: added for referencing
             },
         )
         assert expected_tasks == actual_tasks, "Difference found for tasks export file."
+
+        # Check results export
+        results_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.RESULTS,
+        ).first()
+        assert results_project_asset is not None, "Results project asset not found"
+
+        expected_results = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["results"]),
+            sort_column=operator.itemgetter("task_id"),
+            ignore_columns={
+                "",  # NOTE: dataframe index
+            },
+        )
+        actual_results = read_csv(
+            results_project_asset.file,
+            sort_column=operator.itemgetter("task_id"),
+            ignore_columns={
+                "",  # NOTE: dataframe index
+                "task_internal_id",  # NOTE: added for referencing
+                "user_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
+                "project_internal_id",  # NOTE: added for referencing
+            },
+            compressed=True,
+        )
+        assert expected_results == actual_results, "Difference found for results export file."
+
+        # Check aoi export
+        aoi_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.INPUT,
+            input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
+        ).first()
+        assert aoi_project_asset is not None, "AOI Geometry project asset not found"
+
+        expected_aoi = read_json(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["area_of_interest"]),
+            ignore_fields={
+                "crs",  # NOTE: crs has almost no data
+                "name",  # NOTE: previously system file path
+                "properties",  # FIXME: previously has id (index)
+                "coordinates",  # FIXME: precision has changed
+            },
+        )
+        actual_aoi = read_json(
+            aoi_project_asset.file,
+            ignore_fields={
+                "properties",  # FIXME: previously has id (index)
+                "coordinates",  # FIXME: precision has changed
+            },
+        )
+        assert expected_aoi == actual_aoi, "Difference found for AOI geometry export file."
+
+        # Check aggregated results export
+        aggregated_results_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.AGGREGATED_RESULTS,
+        ).first()
+        assert aggregated_results_project_asset is not None, "Aggregated results project asset not found"
+
+        expected_aggregated_results = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["aggregated_results"]),
+        )
+        actual_aggregated_results = read_csv(
+            aggregated_results_project_asset.file,
+            compressed=True,
+            ignore_columns={
+                "project_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
+                "task_internal_id",  # NOTE: added for referencing
+            },
+        )
+        assert expected_aggregated_results == actual_aggregated_results, (
+            "Difference found for aggregated results export file."
+        )
+
+        # Check aggregated results with geometry export
+        aggregated_results_with_geometry_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY,
+        ).first()
+        assert aggregated_results_with_geometry_project_asset is not None, (
+            "Aggregated results with geometry project asset not found"
+        )
+
+        expected_aggregated_results_with_geometry = read_json(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["aggregated_results_with_geometry"]),
+            ignore_fields={
+                "name",  # NOTE: Previously "tmp", now "tmp" + random_str
+            },
+        )
+        actual_aggregated_results_with_geometry = read_json(
+            aggregated_results_with_geometry_project_asset.file,
+            compressed=True,
+            ignore_fields={
+                "name",  # NOTE: Previously "tmp", now "tmp" + random_str
+                "project_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
+                "task_internal_id",  # NOTE: added for referencing
+            },
+        )
+        assert expected_aggregated_results_with_geometry == actual_aggregated_results_with_geometry, (
+            "Difference found for aggregated results with geometry export file."
+        )
+
+        # Check history export
+        history_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.HISTORY,
+        ).first()
+        assert history_project_asset is not None, "History project asset not found"
+
+        expected_history = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["history"]),
+        )
+        actual_history = read_csv(
+            history_project_asset.file,
+        )
+        assert expected_history == actual_history, "Difference found for history export file."
 
         # Check users export
         users_project_asset = ProjectAsset.objects.filter(
@@ -910,50 +884,39 @@ class TestTileMapServiceProjectE2E(TestCase):
 
         expected_users = read_csv(
             Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["users"]),
-            ignore_columns={
-                "groups_completed",  # FIXME: Why is this different?
-                "total_contributions",  # FIXME: Why is this different?
-            },
         )
         actual_users = read_csv(
             users_project_asset.file,
             compressed=True,
-            ignore_columns={
-                "groups_completed",  # FIXME: Why is this different?
-                "total_contributions",  # FIXME: Why is this different?
-            },
         )
         assert expected_users == actual_users, "Difference found for users export file."
 
-        # NOTE: Check aoi export
-
-        aoi_project_asset = ProjectAsset.objects.filter(
+        # Check hot tasking manager geometry export
+        hot_aoi_project_asset = ProjectAsset.objects.filter(
             project=project,
-            type=AssetTypeEnum.INPUT,
-            input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES,
         ).first()
-        assert aoi_project_asset is not None, "AOI Geometry project asset not found"
+        assert hot_aoi_project_asset is not None, "HOT TM AOI Geometry project asset not found"
 
-        expected_aoi = read_json(
-            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["area_of_interest"]),
+        expected_hot_aoi = read_json(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["hot_tasking_manager_geometry"]),
             ignore_fields={
-                "crs",  # FIXME: not defined on uploaded geojson
-                "name",  # FIXME: not defined on uploaded geojson
-                "properties",  # FIXME: empty in uploaded geojson
-                "coordinates",  # FIXME: precision has changed
+                "name",  # NOTE: previously full path, not just filename
             },
         )
-        actual_aoi = read_json(
-            aoi_project_asset.file,
+        expected_hot_aoi["features"].sort(key=lambda x: x["properties"]["group_id"])  # type: ignore[reportArgumentType, reportCallIssue]
+        actual_hot_aoi = read_json(
+            hot_aoi_project_asset.file,
             ignore_fields={
-                "properties",  # FIXME: empty in uploaded geojson
-                "coordinates",  # FIXME: precision has changed
+                "name",  # NOTE: previously full path, not just filename
             },
         )
-        assert expected_aoi == actual_aoi, "Difference found for AOI geometry export file."
+
+        actual_hot_aoi["features"].sort(key=lambda x: x["properties"]["group_id"])  # type: ignore[reportArgumentType, reportCallIssue]
+        assert expected_hot_aoi == actual_hot_aoi, "Difference found for HOT TM AOI geometry export file."
 
         # Check for moderate to high agreement export
-
         agreement_project_asset = ProjectAsset.objects.filter(
             project=project,
             type=AssetTypeEnum.EXPORT,
@@ -964,38 +927,13 @@ class TestTileMapServiceProjectE2E(TestCase):
         expected_agreement = read_json(
             Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["moderate_to_high_agreement"]),
             ignore_fields={
-                "name",  # FIXME: previously full path, not just filename
+                "name",  # NOTE: previously full path, not just filename
             },
         )
         actual_agreement = read_json(
             agreement_project_asset.file,
             ignore_fields={
-                "name",  # FIXME: previously full path, not just filename
+                "name",  # NOTE: previously full path, not just filename
             },
         )
         assert expected_agreement == actual_agreement, "Difference found for moderate to high agreement export file."
-
-        # Check hot tasking manager geometry export
-
-        hot_aoi_project_asset = ProjectAsset.objects.filter(
-            project=project,
-            type=AssetTypeEnum.EXPORT,
-            export_type=ProjectAssetExportTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES,
-        ).first()
-        assert hot_aoi_project_asset is not None, "HTM AOI Geometry project asset not found"
-
-        expected_hot_aoi = read_json(
-            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["hot_tasking_manager_geometry"]),
-            ignore_fields={
-                "name",  # FIXME: previously full path, not just filename
-            },
-        )
-        expected_hot_aoi["features"].sort(key=lambda x: x["properties"]["group_id"])  # type: ignore[reportArgumentType, reportCallIssue]
-        actual_hot_aoi = read_json(
-            hot_aoi_project_asset.file,
-            ignore_fields={
-                "name",  # FIXME: previously full path, not just filename
-            },
-        )
-        actual_hot_aoi["features"].sort(key=lambda x: x["properties"]["group_id"])  # type: ignore[reportArgumentType, reportCallIssue]
-        assert expected_hot_aoi == actual_hot_aoi, "Difference found for HOT TM AOI geometry export file."

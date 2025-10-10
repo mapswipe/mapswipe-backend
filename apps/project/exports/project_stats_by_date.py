@@ -177,6 +177,6 @@ def get_project_history(
 
     # merge contributors and progress
     project_history_df = progress_by_date_df.merge(contributors_by_date_df, left_on="day", right_on="day")
-    project_history_df["project_id"] = project.id
+    project_history_df["project_id"] = project.firebase_id
     project_history_df.to_csv(destination_filename)
     return project_history_df

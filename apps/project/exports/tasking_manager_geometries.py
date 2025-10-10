@@ -59,9 +59,10 @@ def load_data(project: Project, gzipped_csv_file: Path) -> list[ProjectData]:
 
             task_id = row[1]
 
-            task_x = _get_row_value(column_index_map, row, "task_x")
-            task_y = _get_row_value(column_index_map, row, "task_y")
-            task_z = _get_row_value(column_index_map, row, "task_z")
+            # TODO: rename all task_N to tile_N
+            task_x = _get_row_value(column_index_map, row, "tile_x")
+            task_y = _get_row_value(column_index_map, row, "tile_y")
+            task_z = _get_row_value(column_index_map, row, "tile_z")
 
             # TODO: Add no_count here and use later
             project_data.append(
@@ -108,6 +109,8 @@ def load_data(project: Project, gzipped_csv_file: Path) -> list[ProjectData]:
                         task_x,
                         task_y,
                         task_z,
+                        # NOTE: We do not flatten to 2D only for backwards compatibility
+                        skip_flatten=True,
                     ),
                 },
             )

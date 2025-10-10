@@ -51,6 +51,8 @@ class TileMapServiceProjectTaskGroupProperty(base_project.BaseProjectTaskGroupPr
 class TileMapServiceProjectTaskProperty(base_project.BaseProjectTaskProperty):
     tile_x: int
     tile_y: int
+    # NOTE: We added URL as it's used directly when creating exports
+    url: str
 
 
 class TileMapServiceBaseProject[
@@ -132,6 +134,17 @@ class TileMapServiceBaseProject[
         self.project.project_type_specific_output_asset = asset
         self.project.save(update_fields=("project_type_specific_output_asset",))
 
+    def get_task_specifics_for_db(self, tile_x: int, tile_y: int) -> TileMapServiceProjectTaskProperty:
+        return self.project_task_property_class(
+            tile_x=tile_x,
+            tile_y=tile_y,
+            url=self.project_type_specifics.tile_server_property.generate_url(
+                tile_x,
+                tile_y,
+                self.project_type_specifics.zoom_level,
+            ),
+        )
+
     @typing.override
     def create_tasks(
         self,
@@ -155,10 +168,7 @@ class TileMapServiceBaseProject[
                         task_group_id=group.pk,
                         geometry=geometry,
                         project_type_specifics=clean_up_none_keys(
-                            self.project_task_property_class(
-                                tile_x=tile_x,
-                                tile_y=tile_y,
-                            ).model_dump(),
+                            self.get_task_specifics_for_db(tile_x, tile_y).model_dump(),
                         ),
                     ),
                 )
