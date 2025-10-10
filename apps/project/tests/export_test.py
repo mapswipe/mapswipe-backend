@@ -95,6 +95,7 @@ class TestProjectExport(TestCase):
                 project_type_specifics=FindProjectTaskProperty(
                     tile_x=1,
                     tile_y=2,
+                    url="https://some-service.com/14/1/2/",
                 ).model_dump(),
             )
         ]

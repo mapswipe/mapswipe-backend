@@ -1393,7 +1393,7 @@ class TestProjectTypeMutation(TestCase):
             {
                 "firebase_id": "g101",
                 "number_of_tasks": 18,
-                "required_count": 18 * 10,
+                "required_count": 10,
                 "total_area": 210.10735845202447,
                 "project_type_specifics": {
                     "x_max": 24152,
@@ -1405,7 +1405,7 @@ class TestProjectTypeMutation(TestCase):
             {
                 "firebase_id": "g102",
                 "number_of_tasks": 24,
-                "required_count": 24 * 10,
+                "required_count": 10,
                 "total_area": 280.2915392364502,
                 "project_type_specifics": {
                     "x_max": 24153,
@@ -1417,7 +1417,7 @@ class TestProjectTypeMutation(TestCase):
             {
                 "firebase_id": "g103",
                 "number_of_tasks": 24,
-                "required_count": 24 * 10,
+                "required_count": 10,
                 "total_area": 280.4398676951218,
                 "project_type_specifics": {
                     "x_max": 24153,
@@ -1429,7 +1429,7 @@ class TestProjectTypeMutation(TestCase):
             {
                 "firebase_id": "g104",
                 "number_of_tasks": 6,
-                "required_count": 6 * 10,
+                "required_count": 10,
                 "total_area": 70.14703242812156,
                 "project_type_specifics": {
                     "x_max": 24150,
@@ -1445,6 +1445,8 @@ class TestProjectTypeMutation(TestCase):
                 "project_type_specifics": {
                     "tile_x": 24147,
                     "tile_y": 13753,
+                    "url": "https://hi-there/24147/13753/15",
+                    "url_b": "https://services.digitalglobe.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg/15/24147/13753.jpg?connectId=dummy-maxar-standard",
                 },
             },
             {
@@ -1452,6 +1454,8 @@ class TestProjectTypeMutation(TestCase):
                 "project_type_specifics": {
                     "tile_x": 24147,
                     "tile_y": 13754,
+                    "url": "https://hi-there/24147/13754/15",
+                    "url_b": "https://services.digitalglobe.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg/15/24147/13754.jpg?connectId=dummy-maxar-standard",
                 },
             },
             {
@@ -1459,6 +1463,8 @@ class TestProjectTypeMutation(TestCase):
                 "project_type_specifics": {
                     "tile_x": 24147,
                     "tile_y": 13755,
+                    "url": "https://hi-there/24147/13755/15",
+                    "url_b": "https://services.digitalglobe.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg/15/24147/13755.jpg?connectId=dummy-maxar-standard",
                 },
             },
             {
@@ -1466,6 +1472,8 @@ class TestProjectTypeMutation(TestCase):
                 "project_type_specifics": {
                     "tile_x": 24148,
                     "tile_y": 13753,
+                    "url": "https://hi-there/24148/13753/15",
+                    "url_b": "https://services.digitalglobe.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg/15/24148/13753.jpg?connectId=dummy-maxar-standard",
                 },
             },
             {
@@ -1473,6 +1481,8 @@ class TestProjectTypeMutation(TestCase):
                 "project_type_specifics": {
                     "tile_x": 24148,
                     "tile_y": 13754,
+                    "url": "https://hi-there/24148/13754/15",
+                    "url_b": "https://services.digitalglobe.com/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg/15/24148/13754.jpg?connectId=dummy-maxar-standard",
                 },
             },
         ]
@@ -1482,7 +1492,7 @@ class TestProjectTypeMutation(TestCase):
         project_task_qs = ProjectTask.objects.filter(task_group__project=latest_project)
 
         assert {
-            "required_results": sum(task_group["required_count"] for task_group in expected_task_groups),
+            "required_results": (18 + 24 + 24 + 6) * 10,
             "tasks_groups_count": project_task_group_qs.count(),
             "tasks_groups": list(
                 project_task_group_qs.order_by("id").values(

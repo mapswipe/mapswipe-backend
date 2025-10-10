@@ -44,7 +44,8 @@ def generate_project_tasks(
                 PTG.{fd_name(ProjectTaskGroup.firebase_id)} as group_id,
                 PT.{fd_name(ProjectTask.firebase_id)} as task_id,
                 -- Metadata
-                ST_AsText({fd_name(ProjectTask.geometry)}) AS geom,
+                -- NOTE: Using ST_Multi only to make the exports backward compatible with previous exports
+                ST_AsText(ST_Multi({fd_name(ProjectTask.geometry)})) AS geom,
                 '{project.project_type_specifics.get("zoom_level")}' as tile_z,
                 -- NOTE: Existing tile_x and tile_y are passed from project_type_specifics now
                 -- NOTE: this is destructured by normalize_project_type_specifics(write_sql_to_gzipped_csv)

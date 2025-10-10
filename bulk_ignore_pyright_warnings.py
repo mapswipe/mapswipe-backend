@@ -19,6 +19,8 @@ from collections import defaultdict
 # - We need to use the same version of python as specified on precommit
 # - We look for pyproject.toml on the current working directory
 
+SEVERITY = "warning"
+
 
 def run_pyright(path: str) -> dict:  # type: ignore[reportMissingTypeArgument]
     """Run pyright and return JSON output."""
@@ -46,7 +48,7 @@ def apply_specific_ignores(pyright_output: dict):  # type: ignore[reportMissingT
         if "file" not in diag or "range" not in diag or "rule" not in diag or "severity" not in diag:
             print("Error: diagnostics should define file, range and rule", diag)
             continue
-        if diag["severity"] != "warning":
+        if diag["severity"] != SEVERITY:
             continue
 
         file_path = diag["file"]
