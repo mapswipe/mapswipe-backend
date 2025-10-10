@@ -731,7 +731,7 @@ class TestTileMapServiceProjectE2E(TestCase):
             sort_column=operator.itemgetter("task_id"),
             ignore_columns={
                 "",  # NOTE: dataframe index
-                "url_b",  # FIXME: old system contains this field
+                "urlB",  # FIXME: old system contains this field
             },
         )
         actual_tasks = read_csv(
@@ -843,7 +843,7 @@ class TestTileMapServiceProjectE2E(TestCase):
             Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["aggregated_results_with_geometry"]),
             ignore_fields={
                 "name",  # NOTE: Previously "tmp", now "tmp" + random_str
-                "urlB",
+                "urlB",  # FIXME: old system contains this field
             },
         )
         actual_aggregated_results_with_geometry = read_json(
