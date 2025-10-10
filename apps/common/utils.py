@@ -1,19 +1,13 @@
 import base64
-import csv
 import gzip
-import io
 import json
 import typing
-from pathlib import Path
 
 from django.core.files.storage import FileSystemStorage
 from django.db.models.fields import files
 
 from main.config import Config
 from utils.common import is_file_empty
-
-if typing.TYPE_CHECKING:
-    from apps.project.models import ProjectAsset
 
 
 @typing.overload
@@ -53,67 +47,3 @@ def decode_tasks(encoded_task: str) -> list[dict[str, typing.Any]]:
     compressed_bytes = base64.b64decode(encoded_task)
     json_bytes = gzip.decompress(compressed_bytes)
     return json.loads(json_bytes.decode("utf-8"))
-
-
-def compare_csv_files(
-    project_asset: "ProjectAsset",
-    expected_csv_path: Path,
-    message: str,
-    keys_to_ignore: list[str] | set[str] | None = None,
-    is_gzip_file: bool = False,
-) -> None:
-    """Compare a CSV from a ProjectAsset with a plain CSV file.
-    Supports gzipped CSV files when is_gzip_file=True.
-    Raises AssertionError if differences are found.
-    """
-    if is_gzip_file:
-        with (
-            project_asset.file.open("rb") as file,
-            gzip.GzipFile(fileobj=file, mode="rb") as gz,
-            io.TextIOWrapper(gz, encoding="utf-8") as text_stream,
-        ):
-            generated_data = list(csv.DictReader(text_stream))
-    else:
-        with project_asset.file.open(mode="r") as file:
-            generated_data = list(csv.DictReader(file))
-
-    with expected_csv_path.open(mode="r", newline="", encoding="utf-8") as file:
-        expected_data = list(csv.DictReader(file))
-
-    if keys_to_ignore:
-        generated_data = remove_object_keys(generated_data, keys_to_ignore)
-        expected_data = remove_object_keys(expected_data, keys_to_ignore)
-
-    assert generated_data == expected_data, message
-
-
-def compare_geojson_files(
-    project_asset: "ProjectAsset",
-    expected_geojson_path: Path,
-    message: str,
-    keys_to_ignore: list[str] | set[str] | None = None,
-    is_gzip_file: bool = False,
-) -> None:
-    """Compare a GeoJSON from a ProjectAsset with a plain GeoJSON file.
-    Supports gzipped GeoJSON files when is_gzip_file=True.
-    Raises AssertionError if differences are found.
-    """
-    if is_gzip_file:
-        with (
-            project_asset.file.open("rb") as file,
-            gzip.GzipFile(fileobj=file, mode="rb") as gz,
-            io.TextIOWrapper(gz, encoding="utf-8") as text_stream,
-        ):
-            generated_data = json.load(text_stream)
-    else:
-        with project_asset.file.open("r") as file:
-            generated_data = json.load(file)
-
-    with expected_geojson_path.open("r", encoding="utf-8") as file:
-        expected_data = json.load(file)
-
-    if keys_to_ignore:
-        generated_data = remove_object_keys(generated_data, keys_to_ignore)
-        expected_data = remove_object_keys(expected_data, keys_to_ignore)
-
-    assert generated_data == expected_data, message
