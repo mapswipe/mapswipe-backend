@@ -691,9 +691,6 @@ class TestTileMapServiceProjectE2E(TestCase):
         assert project_fb_data["progress"] == project.progress, "Progress should be synced with firebase"
         assert project_fb_data["contributorCount"] == 1, "Contributor count should be synced with firebase"
 
-        if not test_data.get("expected_project_exports_data"):
-            return
-
         # Check groups export
         groups_project_asset = ProjectAsset.objects.filter(
             project=project,
@@ -734,6 +731,7 @@ class TestTileMapServiceProjectE2E(TestCase):
             sort_column=operator.itemgetter("task_id"),
             ignore_columns={
                 "",  # NOTE: dataframe index
+                "urlB",  # FIXME: old system contains this field
             },
         )
         actual_tasks = read_csv(
@@ -814,6 +812,9 @@ class TestTileMapServiceProjectE2E(TestCase):
 
         expected_aggregated_results = read_csv(
             Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["aggregated_results"]),
+            ignore_columns={
+                "urlB",  # FIXME: old system contains this field
+            },
         )
         actual_aggregated_results = read_csv(
             aggregated_results_project_asset.file,
@@ -842,6 +843,7 @@ class TestTileMapServiceProjectE2E(TestCase):
             Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["aggregated_results_with_geometry"]),
             ignore_fields={
                 "name",  # NOTE: Previously "tmp", now "tmp" + random_str
+                "urlB",  # FIXME: old system contains this field
             },
         )
         actual_aggregated_results_with_geometry = read_json(

@@ -79,7 +79,9 @@ class CompletenessProjectProperty(base_project.TileMapServiceProjectProperty):
 class CompletenessProjectTaskGroupProperty(base_project.TileMapServiceProjectTaskGroupProperty): ...
 
 
-class CompletenessProjectTaskProperty(base_project.TileMapServiceProjectTaskProperty): ...
+class CompletenessProjectTaskProperty(base_project.TileMapServiceProjectTaskProperty):
+    # NOTE: We added URL as it's used directly when creating exports
+    url_b: str
 
 
 class CompletenessProject(
@@ -101,6 +103,33 @@ class CompletenessProject(
     @typing.override
     def get_max_time_spend_percentile(self) -> float:
         return 1.4
+
+    @typing.override
+    def get_task_specifics_for_db(self, tile_x: int, tile_y: int) -> CompletenessProjectTaskProperty:
+        url = self.project_type_specifics.tile_server_property.generate_url(
+            tile_x,
+            tile_y,
+            self.project_type_specifics.zoom_level,
+        )
+
+        url_b: str | None = None
+        if self.project_type_specifics.overlay_tile_server_property.raster:
+            url_b = self.project_type_specifics.overlay_tile_server_property.raster.tile_server.generate_url(
+                tile_x,
+                tile_y,
+                self.project_type_specifics.zoom_level,
+            )
+        elif self.project_type_specifics.overlay_tile_server_property.vector:
+            url_b = self.project_type_specifics.overlay_tile_server_property.vector.tile_server.get_config()["url"]
+
+        return self.project_task_property_class(
+            tile_x=tile_x,
+            tile_y=tile_y,
+            url=url,
+            url_b=url_b or url,
+        )
+
+    # FIREBASE
 
     @typing.override
     def get_project_specifics_for_firebase(self):

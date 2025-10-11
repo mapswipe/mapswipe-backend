@@ -2,7 +2,7 @@ import json
 import logging
 import tempfile
 import typing
-from abc import ABC
+from abc import ABC, abstractmethod
 from pathlib import Path
 
 from django.contrib.gis.geos import GEOSGeometry
@@ -134,16 +134,8 @@ class TileMapServiceBaseProject[
         self.project.project_type_specific_output_asset = asset
         self.project.save(update_fields=("project_type_specific_output_asset",))
 
-    def get_task_specifics_for_db(self, tile_x: int, tile_y: int) -> TileMapServiceProjectTaskProperty:
-        return self.project_task_property_class(
-            tile_x=tile_x,
-            tile_y=tile_y,
-            url=self.project_type_specifics.tile_server_property.generate_url(
-                tile_x,
-                tile_y,
-                self.project_type_specifics.zoom_level,
-            ),
-        )
+    @abstractmethod
+    def get_task_specifics_for_db(self, tile_x: int, tile_y: int) -> TileMapServiceProjectTaskProperty: ...
 
     @typing.override
     def create_tasks(
