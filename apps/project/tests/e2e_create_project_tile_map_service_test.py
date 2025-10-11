@@ -691,9 +691,6 @@ class TestTileMapServiceProjectE2E(TestCase):
         assert project_fb_data["progress"] == project.progress, "Progress should be synced with firebase"
         assert project_fb_data["contributorCount"] == 1, "Contributor count should be synced with firebase"
 
-        if not test_data.get("expected_project_exports_data"):
-            return
-
         # Check groups export
         groups_project_asset = ProjectAsset.objects.filter(
             project=project,

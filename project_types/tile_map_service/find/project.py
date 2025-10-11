@@ -36,6 +36,20 @@ class FindProject(
         return 1.4
 
     @typing.override
+    def get_task_specifics_for_db(self, tile_x: int, tile_y: int) -> FindProjectTaskProperty:
+        return self.project_task_property_class(
+            tile_x=tile_x,
+            tile_y=tile_y,
+            url=self.project_type_specifics.tile_server_property.generate_url(
+                tile_x,
+                tile_y,
+                self.project_type_specifics.zoom_level,
+            ),
+        )
+
+    # FIREBASE
+
+    @typing.override
     def get_project_specifics_for_firebase(self):
         tsp = self.project_type_specifics.tile_server_property
         return firebase_models.FbProjectFindCreateOnlyInput(
