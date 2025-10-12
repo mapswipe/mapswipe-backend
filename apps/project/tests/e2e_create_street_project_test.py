@@ -672,6 +672,7 @@ class TestStreetProjectE2E(TestCase):
 
         expected_tasks = read_csv(
             Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["tasks"]),
+            sort_column=operator.itemgetter("task_id"),
             ignore_columns={
                 "",  # NOTE: dataframe index
                 "urlB",  # FIXME: old system contains this field
@@ -681,6 +682,7 @@ class TestStreetProjectE2E(TestCase):
         )
         actual_tasks = read_csv(
             tasks_project_asset.file,
+            sort_column=operator.itemgetter("task_id"),
             compressed=True,
             ignore_columns={
                 "",  # NOTE: dataframe index
