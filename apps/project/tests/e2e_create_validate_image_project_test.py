@@ -1,3 +1,4 @@
+import operator
 import typing
 from contextlib import contextmanager
 from datetime import datetime
@@ -7,6 +8,7 @@ import json5
 from django.db.models.signals import pre_save
 from ulid import ULID
 
+from apps.common.models import AssetTypeEnum
 from apps.common.utils import remove_object_keys
 from apps.contributor.factories import ContributorUserFactory
 from apps.contributor.models import ContributorUserGroup
@@ -18,7 +20,8 @@ from apps.mapping.models import (
     MappingSessionUserGroup,
     MappingSessionUserGroupTemp,
 )
-from apps.project.models import Organization, Project
+from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetExportTypeEnum
+from apps.project.tests.e2e_create_project_tile_map_service_test import read_csv, read_json
 from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
 from main.config import Config
@@ -616,3 +619,202 @@ class TestValidateImageProjectE2E(TestCase):
 
         project.refresh_from_db()
         assert project.progress == test_data["expected_pulled_results_data"]["progress"]
+
+        # Check if progress and contributorCount synced to firebase
+        project_fb_data = project_fb_ref.get()
+        assert project_fb_data is not None, "Project in firebase is None"
+        assert isinstance(project_fb_data, dict), "Project in firebase should be a dictionary"
+        assert project_fb_data["progress"] == project.progress, "Progress should be synced with firebase"
+        assert project_fb_data["contributorCount"] == 1, "Contributor count should be synced with firebase"
+
+        if not test_data.get("expected_project_exports_data"):
+            return
+
+        # Check groups export
+        groups_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.GROUPS,
+        ).first()
+        assert groups_project_asset is not None, "Groups project asset not found"
+
+        expected_groups = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["groups"]),
+            ignore_columns={
+                "total_area",  # NOTE: previously empty, now real value
+                "time_spent_max_allowed",  # NOTE: previously empty, now real value
+            },
+        )
+        actual_groups = read_csv(
+            groups_project_asset.file,
+            compressed=True,
+            ignore_columns={
+                "total_area",  # NOTE: previously empty, now real value
+                "time_spent_max_allowed",  # NOTE: previously empty, now real value
+                "project_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
+            },
+        )
+        assert expected_groups == actual_groups, "Difference found for groups export file."
+
+        # Check tasks export
+        tasks_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.TASKS,
+        ).first()
+        assert tasks_project_asset is not None, "Tasks project asset not found"
+
+        expected_tasks = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["tasks"]),
+            sort_column=operator.itemgetter("task_id"),
+            ignore_columns={
+                "",  # NOTE: dataframe index
+                "urlB",  # fixme: old system contains this field
+                "tile_x",  # FIXME: old system contains this field
+                "tile_y",  # FIXME: old system contains this field
+            },
+        )
+        actual_tasks = read_csv(
+            tasks_project_asset.file,
+            compressed=True,
+            sort_column=operator.itemgetter("task_id"),
+            ignore_columns={
+                "",  # NOTE: dataframe index
+                "project_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
+                "task_internal_id",  # NOTE: added for referencing
+            },
+        )
+        assert expected_tasks == actual_tasks, "Difference found for tasks export file."
+
+        # Check results export
+        results_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.RESULTS,
+        ).first()
+        assert results_project_asset is not None, "Results project asset not found"
+
+        expected_results = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["results"]),
+            sort_column=operator.itemgetter("task_id"),
+            ignore_columns={
+                "",  # NOTE: dataframe index
+            },
+        )
+        actual_results = read_csv(
+            results_project_asset.file,
+            sort_column=operator.itemgetter("task_id"),
+            ignore_columns={
+                "",  # NOTE: dataframe index
+                "task_internal_id",  # NOTE: added for referencing
+                "user_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
+                "project_internal_id",  # NOTE: added for referencing
+            },
+            compressed=True,
+        )
+        assert expected_results == actual_results, "Difference found for results export file."
+
+        # Check aggregated results export
+        aggregated_results_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.AGGREGATED_RESULTS,
+        ).first()
+        assert aggregated_results_project_asset is not None, "Aggregated results project asset not found"
+
+        expected_aggregated_results = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["aggregated_results"]),
+            ignore_columns={
+                "urlB",  # FIXME: old system contains this field
+                "tile_x",  # FIXME: old system contains this field
+                "tile_y",  # FIXME: old system contains this field
+                "3_count",  # FIXME: old system contains this field
+                "3_share",  # FIXME: old system contains this field
+            },
+        )
+        actual_aggregated_results = read_csv(
+            aggregated_results_project_asset.file,
+            compressed=True,
+            ignore_columns={
+                "project_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
+                "task_internal_id",  # NOTE: added for referencing
+                "task_id.1",  # FIXME: This column is extra
+            },
+        )
+
+        assert expected_aggregated_results == actual_aggregated_results, (
+            "Difference found for aggregated results export file."
+        )
+
+        # Check aggregated results with geometry export
+        aggregated_results_with_geometry_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY,
+        ).first()
+        assert aggregated_results_with_geometry_project_asset is not None, (
+            "Aggregated results with geometry project asset not found"
+        )
+
+        expected_aggregated_results_with_geometry = read_json(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["aggregated_results_with_geometry"]),
+            ignore_fields={
+                "name",  # NOTE: Previously "tmp", now "tmp" + random_str
+                "urlB",  # FIXME: old system contains this field
+                "tile_x",  # FIXME: old system contains this field
+                "tile_y",  # FIXME: old system contains this field
+                "3_count",  # FIXME: old system contains this field
+                "3_share",  # FIXME: old system contains this field
+            },
+        )
+        actual_aggregated_results_with_geometry = read_json(
+            aggregated_results_with_geometry_project_asset.file,
+            compressed=True,
+            ignore_fields={
+                "name",  # NOTE: Previously "tmp", now "tmp" + random_str
+                "project_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
+                "task_internal_id",  # NOTE: added for referencing
+                "task_id.1",  # FIXME: This column is extra
+            },
+        )
+        assert expected_aggregated_results_with_geometry == actual_aggregated_results_with_geometry, (
+            "Difference found for aggregated results with geometry export file."
+        )
+
+        # Check history export
+        history_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.HISTORY,
+        ).first()
+        assert history_project_asset is not None, "History project asset not found"
+
+        expected_history = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["history"]),
+        )
+        actual_history = read_csv(
+            history_project_asset.file,
+        )
+        assert expected_history == actual_history, "Difference found for history export file."
+
+        # Check users export
+        users_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.USERS,
+        ).first()
+        assert users_project_asset is not None, "Users project asset not found"
+
+        expected_users = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["users"]),
+        )
+        actual_users = read_csv(
+            users_project_asset.file,
+            compressed=True,
+        )
+        assert expected_users == actual_users, "Difference found for users export file."
