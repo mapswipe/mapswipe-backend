@@ -1,5 +1,47 @@
 # Changelog
 
+## [0.2.1](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.1-dev5..v0.2.1) - 2025-10-12
+### Changes:
+
+#### 🚀  Features
+
+- *(health-check)* For stage/prod set disk usages max to 50% - ([6b92356](https://github.com/mapswipe/mapswipe-backend/commit/6b92356539482e614cf826a44e568c7c6b0aaa20))
+- *(test)* Add changes on e2e testing for find project - ([31a8ecd](https://github.com/mapswipe/mapswipe-backend/commit/31a8ecd01e3f3a487f8e71e78397883a06303711))
+- *(test)* Add e2e testing for export file - ([f465dfc](https://github.com/mapswipe/mapswipe-backend/commit/f465dfcdbb0004258ff0d6c648eaa7aea7313534))
+
+#### 🐛 Bug Fixes
+
+- *(completeness)* Add url_b in completeness project - ([941958b](https://github.com/mapswipe/mapswipe-backend/commit/941958b4fa73472182d9b0281a4612ebf58414c6))
+- *(error)* Convert pydantic type to dict recursively in errors - ([78712e7](https://github.com/mapswipe/mapswipe-backend/commit/78712e7d3bd9384740c935fe820fc660a0c9cdcc))
+- *(error)* Handle timeout error in background jobs - ([5b9c3f5](https://github.com/mapswipe/mapswipe-backend/commit/5b9c3f54aef52667f42911a5183316fbe0b19a3f))
+- *(exports)* Fix exports for find project - ([a386145](https://github.com/mapswipe/mapswipe-backend/commit/a3861458f93b4c0b7572cb9b09a857d7248e63f3))
+- *(project)* [**breaking**] Re-use contributors count logic - ([b05f837](https://github.com/mapswipe/mapswipe-backend/commit/b05f83709e0a2f3d4e1b38574553ca12f569bc27))
+- *(slack)* Update status of slack progress notification - ([fcd7cd5](https://github.com/mapswipe/mapswipe-backend/commit/fcd7cd5e4c0f33875ec1df44c08fbcb5a91308e0))
+- *(street)* Fix timeout issue for street project - ([992105c](https://github.com/mapswipe/mapswipe-backend/commit/992105cf3ec1ff68e553a1d021d606ae2c36456b))
+- *(tutorial)* Fix typo in tutorial link - ([d3aec10](https://github.com/mapswipe/mapswipe-backend/commit/d3aec1057aec66c3ef401ed08e9f34e700c38799))
+- *(user)* Change slack_user_id to empty string before field change - ([22a70cc](https://github.com/mapswipe/mapswipe-backend/commit/22a70cc825b0929e340d659435bda6cb035b25ef))
+
+#### 🧪 Testing
+
+- *(project)* Skip checking for export if no expected_project_exports_data - ([7586492](https://github.com/mapswipe/mapswipe-backend/commit/7586492701623cc922d244069609d546c51fd1c8))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(load-data)* Optimization and verbose for mapping data transfer - ([071f032](https://github.com/mapswipe/mapswipe-backend/commit/071f032480d8e84c56965eaeff2d4b2f0edaf967))
+- *(submodules)* Update submodules to latest stable - ([2dff549](https://github.com/mapswipe/mapswipe-backend/commit/2dff549677d387f2e681e03ab0d0caea0672f99a))
+- *(test)* Update completeness and compare data export files - ([64378f4](https://github.com/mapswipe/mapswipe-backend/commit/64378f4a00f6b9856f38a935ea5363e44f1917bc))
+- *(test)* Add project export data for compare and completeness - ([cd274e1](https://github.com/mapswipe/mapswipe-backend/commit/cd274e13a7d727d89cc73ae9380a7f261dfbde7b))
+
+### 🍻 Pull Requests (7)
+- (#189) [Fix(user): change slack_user_id to empty string before field change](https://github.com/mapswipe/mapswipe-backend/pull/189)
+- (#190) [Feature/e2e testing for exports](https://github.com/mapswipe/mapswipe-backend/pull/190)
+- (#191) [Fix(tutorial): fix typo in tutorial link](https://github.com/mapswipe/mapswipe-backend/pull/191)
+- (#192) [Handle timeout error in background jobs](https://github.com/mapswipe/mapswipe-backend/pull/192)
+- (#193) [Feat/load data optimization](https://github.com/mapswipe/mapswipe-backend/pull/193)
+- (#194) [Fix(street): fix timeout issue for street project](https://github.com/mapswipe/mapswipe-backend/pull/194)
+- (#195) [Feature/Export testing for Compare. Completeness](https://github.com/mapswipe/mapswipe-backend/pull/195)
+
+
 ## [0.2.1-dev5](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.1-dev4..v0.2.1-dev5) - 2025-10-08
 ### Changes:
 
