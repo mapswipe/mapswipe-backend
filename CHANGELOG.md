@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.2](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.1..v0.2.2) - 2025-10-12
+### Changes:
+
+#### 🚀  Features
+
+- *(cron)* Add update_community_dashboard_aggregated_data - ([27bf093](https://github.com/mapswipe/mapswipe-backend/commit/27bf0935e1e025342a98b885d46b505400878e6f))
+
+### 🍻 Pull Requests (1)
+- (#196) [Feat(cron): add update_community_dashboard_aggregated_data](https://github.com/mapswipe/mapswipe-backend/pull/196)
+
+
 ## [0.2.1](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.1-dev5..v0.2.1) - 2025-10-12
 ### Changes:
 
@@ -888,7 +899,7 @@ contributor team. - ([bc8ab4a](https://github.com/mapswipe/mapswipe-backend/comm
 
 - [@kopitek8](https://github.com/kopitek8) made their first contribution
 
-## [0.1.0] - 2025-05-30
+## [0.1.0](https://github.com/mapswipe/mapswipe-backend/compare/v0.1.1..v0.1.0) - 2025-05-30
 ### Changes:
 
 #### 🚀  Features
