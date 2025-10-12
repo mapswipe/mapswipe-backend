@@ -2139,7 +2139,7 @@ type StreetMapillaryImageFilters {
 input StreetMapillaryImageFiltersInput {
   creatorId: String = null
   endTime: String = null
-  isPano: Boolean = false
+  isPano: Boolean = null
   organizationId: String = null
   randomizeOrder: Boolean! = false
   samplingThreshold: Int = null
