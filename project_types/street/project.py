@@ -7,7 +7,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
 from pydantic import BaseModel
 from pyfirebase_mapswipe import models as firebase_models
-from shapely import to_wkt
+from shapely import wkt
 from ulid import ULID
 
 from apps.common.models import AssetMimetypeEnum, AssetTypeEnum
@@ -124,16 +124,16 @@ class StreetProject(
         features = list(zip(raw_group["feature_ids"], raw_group["features"], strict=True))
 
         for f_id, feature in features:
-            geometry_str = to_wkt(feature)
+            geometry_str = wkt.dumps(feature)
 
             bulk_mgr.add(
                 ProjectTask(
-                    firebase_id=f"{f_id}",
+                    firebase_id=str(f_id),
                     task_group_id=group.pk,
                     geometry=geometry_str,
                     project_type_specifics=self.project_task_property_class(
-                        task_id=f"{f_id}",
-                        group_id=f"g{group.pk}",
+                        task_id=str(f_id),
+                        group_id=group.firebase_id,
                     ).model_dump(),
                 ),
             )
