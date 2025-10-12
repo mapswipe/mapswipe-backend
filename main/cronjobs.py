@@ -11,11 +11,13 @@ if typing.TYPE_CHECKING:
 
 
 class TimeConstants:
+    SECONDS_IN_A_DAY = 24 * 60 * 60
     SECONDS_IN_A_HOUR = 60 * 60
     SECONDS_IN_A_WEEK = 7 * 24 * 60 * 60
     SECONDS_IN_A_MINUTE = 60
 
     EVERY_WEEK = crontab(minute="1", hour="1", day_of_week="1")
+    EVERY_DAY = crontab(minute="1", hour="1")
     EVERY_HOUR = crontab(minute="0", hour="*")
     EVERY_2_MINUTES = crontab(minute="*/2")
     EVERY_1_MINUTES = crontab(minute="*/1")
@@ -126,6 +128,16 @@ SCHEDULES: dict[str, CronJob] = {
             failure_issue_threshold=2,
             checkin_margin=2,
             max_runtime=2,
+        ),
+    ),
+    "update_community_dashboard_aggregated_data": CronJob(
+        task="apps.community_dashboard.tasks.update_aggregated_data",
+        schedule=TimeConstants.EVERY_DAY,
+        options=CronJobOption(expires=TimeConstants.SECONDS_IN_A_DAY),
+        sentry_config=CronJobSentryConfig(
+            failure_issue_threshold=1,
+            checkin_margin=10,
+            max_runtime=10,
         ),
     ),
     # Queue uptime
