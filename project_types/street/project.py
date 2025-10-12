@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class StreetMapillaryImageFilters(BaseModel):
-    is_pano: custom_fields.PydanticBool | None = False
+    is_pano: custom_fields.PydanticBool | None = None
     creator_id: custom_fields.PydanticLongText | None = None
     organization_id: custom_fields.PydanticLongText | None = None
     start_time: custom_fields.PydanticDate | None = None
@@ -232,7 +232,8 @@ class StreetProject(
     def get_task_specifics_for_firebase(self, task: ProjectTask):
         assert task.geometry is not None, "Task geometry must not be None"
         return firebase_models.FbMappingTaskStreetCreateOnlyInput(
-            taskId=task.firebase_id,
+            # XXX: converting this to int for backwards compatibility
+            taskId=int(task.firebase_id),
             groupId=task.task_group.firebase_id,
         )
 
