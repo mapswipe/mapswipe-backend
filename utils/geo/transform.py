@@ -22,7 +22,7 @@ def to_2d(geom: GEOSGeometry) -> GEOSGeometry:
 
 def get_area_of_geometry(geom: GeometryCollection | GEOSGeometry):
     area_m2: float = geom.transform(6933, clone=True).area
-    return area_m2 / 1000_000
+    return area_m2 / 1_000_000
 
 
 def get_polygon_of_extent(extent: tuple[float, float, float, float]):

@@ -986,7 +986,7 @@ class Command(BaseCommand):
                     output_field=GeometryField(geography=True),
                 ),
             )
-            / 100_000,
+            / 1_000_000,
         )
 
         self.stdout.write("\n")
