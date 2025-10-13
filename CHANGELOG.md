@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.2.3](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.2..v0.2.3) - 2025-10-13
+### Changes:
+
+#### 🚀  Features
+
+- *(test)* Add export e2e testing for validate image - ([ce3e43b](https://github.com/mapswipe/mapswipe-backend/commit/ce3e43b7ee2394bd139b00c316c64e43cfd49e18))
+- *(user)* Add slack column and filter in admin panel - ([bac54af](https://github.com/mapswipe/mapswipe-backend/commit/bac54af88e16a0a38c15e531290b29f9818d78e7))
+
+#### 🐛 Bug Fixes
+
+- *(export)* Drop duplicate columns on export file - ([3e30aba](https://github.com/mapswipe/mapswipe-backend/commit/3e30abac706ab3cc2757fdf2208e177055429019))
+- *(street)* Fix e2e test for street project - ([0876e98](https://github.com/mapswipe/mapswipe-backend/commit/0876e981e4550909e1fdcb9622ef1e377c271778))
+- *(test)* Sort task file data with task_id - ([a79131e](https://github.com/mapswipe/mapswipe-backend/commit/a79131e619286b155f7d635b4fa380804280dd00))
+
+#### 🧪 Testing
+
+- *(project)* Remove empty fields from dataset - ([1a9b570](https://github.com/mapswipe/mapswipe-backend/commit/1a9b5703954cdd4ad8510def6300fd8101feb9cd))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(export)* Skip and track exports for old projects - ([47216da](https://github.com/mapswipe/mapswipe-backend/commit/47216da57d61545aee69ea16fde51122913ec051))
+- *(schema)* Generate latest schema.graphql - ([0440b69](https://github.com/mapswipe/mapswipe-backend/commit/0440b69f4eb239910d52ca83b86a888558474dc4))
+- *(test)* Update commit HEAD for assets - ([ecbe71b](https://github.com/mapswipe/mapswipe-backend/commit/ecbe71ba59f42a8050676108458b8781fbe0b816))
+- *(test)* Update version for shapely and use wkt dump - ([6a06550](https://github.com/mapswipe/mapswipe-backend/commit/6a06550773b295eff9c43d483d5258b942b94e2a))
+- *(test)* Update HEAD for the asset file - ([7c3aa8b](https://github.com/mapswipe/mapswipe-backend/commit/7c3aa8b20f205230111c4da182460f3b81728fa2))
+- *(test)* Update README file for validate image - ([11032df](https://github.com/mapswipe/mapswipe-backend/commit/11032df5df54cc985f3992f9050bffcc9a178185))
+- *(test)* Add export testing for validate project - ([838b174](https://github.com/mapswipe/mapswipe-backend/commit/838b1745b51b548121124de64a4f19cc08e0e6f1))
+- *(test)* Add test case for result for street. - ([a1d2a0e](https://github.com/mapswipe/mapswipe-backend/commit/a1d2a0eacea702f567ff32a044d6509496f5b57e))
+- *(test)* Add test case for result for validate, validate-image - ([ad18543](https://github.com/mapswipe/mapswipe-backend/commit/ad18543dcb0a912615491687a1bbb7248c9cdcef))
+
+### 🍻 Pull Requests (2)
+- (#188) [Result test case for validate, validate-image, street](https://github.com/mapswipe/mapswipe-backend/pull/188)
+- (#198) [Fix/export old](https://github.com/mapswipe/mapswipe-backend/pull/198)
+
+
 ## [0.2.2](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.1..v0.2.2) - 2025-10-12
 ### Changes:
 
@@ -354,7 +389,6 @@
 - *(project)* Use enum label on error message instead of enum value - ([be08f15](https://github.com/mapswipe/mapswipe-backend/commit/be08f15c63f457f4b3efd673d3798ffaea740708))
 - *(project)* Convert to geography before calculating group area - ([a759caf](https://github.com/mapswipe/mapswipe-backend/commit/a759cafb0e704041395be82de73f1bdbccd6301e))
 - *(project)* Set progress status when progress is 100 - ([ea71f53](https://github.com/mapswipe/mapswipe-backend/commit/ea71f537082940518c4e3c95e0b829ca27930393))
-- *(rastertile)* Add mkt param for bing url - ([1b0d564](https://github.com/mapswipe/mapswipe-backend/commit/1b0d5646da922e38681ff5fdcd0d298dafe09ebd))
 
 #### 🧪 Testing
 
@@ -899,7 +933,7 @@ contributor team. - ([bc8ab4a](https://github.com/mapswipe/mapswipe-backend/comm
 
 - [@kopitek8](https://github.com/kopitek8) made their first contribution
 
-## [0.1.0](https://github.com/mapswipe/mapswipe-backend/compare/v0.1.1..v0.1.0) - 2025-05-30
+## [0.1.0] - 2025-05-30
 ### Changes:
 
 #### 🚀  Features
