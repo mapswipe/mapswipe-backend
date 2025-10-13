@@ -45,6 +45,8 @@ def normalize_project_type_specifics(path: Path):
             typing.cast("list[dict[typing.Any, typing.Any]]", df["project_type_specifics"]),
         )
         normalized.index = df.index
+        normalized.drop(columns=normalized.columns.intersection(df.columns), inplace=True)
+
         df = pd.concat([df, normalized], axis=1).drop(columns=["project_type_specifics"])
         for column in list(normalized.columns):
             if "properties" in column:

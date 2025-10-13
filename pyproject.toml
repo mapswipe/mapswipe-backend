@@ -44,8 +44,9 @@ dependencies = [
     "firebase-admin==6.9.0",
     "pyfirebase-mapswipe",
     "python-magic>=0.4.27",
+    "shapely>=2.1.2",
     "mercantile>=1.2.1",
-    "vt2geojson",
+    "vt2geojson>=0.2.1",
     "pandas~=2.3.1",
     "slack-sdk>=3.36.0",
 ]

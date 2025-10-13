@@ -174,7 +174,6 @@ def download_and_process_tile(
     z = row["z"]
     x = row["x"]
     y = row["y"]
-    z, x, y = row["z"], row["x"], row["y"]
 
     url = f"{Config.MAPILLARY_API_LINK}{z}/{x}/{y}?access_token={Config.MAPILLARY_API_KEY}"
 
@@ -292,7 +291,7 @@ def get_image_metadata(
     *,
     aoi_geojson: dict[str, Any],
     level: int = 14,
-    is_pano: bool | None = False,
+    is_pano: bool | None = None,
     creator_id: str | None = None,
     organization_id: str | None = None,
     start_time: str | None = None,
@@ -335,6 +334,7 @@ def get_image_metadata(
         )
 
     return Grouping[StreetFeature](
-        feature_ids=downloaded_metadata["id"].tolist(),
-        features=downloaded_metadata["geometry"].tolist(),
+        # XXX: Reversing the list for backward compatibility of generated tasks
+        feature_ids=downloaded_metadata["id"].tolist()[::-1],
+        features=downloaded_metadata["geometry"].tolist()[::-1],
     )

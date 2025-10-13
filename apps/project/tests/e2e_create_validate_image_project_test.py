@@ -1,3 +1,4 @@
+import operator
 import typing
 from contextlib import contextmanager
 from datetime import datetime
@@ -7,9 +8,20 @@ import json5
 from django.db.models.signals import pre_save
 from ulid import ULID
 
+from apps.common.models import AssetTypeEnum
 from apps.common.utils import remove_object_keys
 from apps.contributor.factories import ContributorUserFactory
-from apps.project.models import Organization, Project
+from apps.contributor.models import ContributorUserGroup
+from apps.mapping.firebase.pull import pull_results_from_firebase
+from apps.mapping.models import (
+    MappingSession,
+    MappingSessionResult,
+    MappingSessionResultTemp,
+    MappingSessionUserGroup,
+    MappingSessionUserGroupTemp,
+)
+from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetExportTypeEnum
+from apps.project.tests.e2e_create_project_tile_map_service_test import read_csv, read_json
 from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
 from main.config import Config
@@ -21,7 +33,7 @@ def create_override():
     def pre_save_override(sender: typing.Any, instance: typing.Any, **kwargs):  # type: ignore[reportMissingParameterType]
         if sender == Tutorial:
             instance.firebase_id = f"tutorial_{instance.client_id}"
-        elif sender in {Project, Organization}:
+        elif sender in {Project, Organization, ContributorUserGroup}:
             instance.firebase_id = instance.client_id
 
     pre_save.connect(pre_save_override)
@@ -244,6 +256,34 @@ class TestValidateImageProjectE2E(TestCase):
                     status
                     }
                   }
+                }
+            }
+        """
+
+        CREATE_CONTRIBUTOR_USER_GROUP = """
+            mutation CreateContributorUserGroup($data: ContributorUserGroupCreateInput!) {
+                createContributorUserGroup(data: $data) {
+                    ... on OperationInfo {
+                      __typename
+                      messages {
+                        code
+                        field
+                        kind
+                        message
+                      }
+                    }
+                    ... on ContributorUserGroupTypeMutationResponseType {
+                        errors
+                        ok
+                        result {
+                            id
+                            name
+                            description
+                            clientId
+                            isArchived
+                            firebaseId
+                        }
+                    }
                 }
             }
         """
@@ -527,3 +567,237 @@ class TestValidateImageProjectE2E(TestCase):
         assert sanitized_tasks_actual == sanitized_tasks_expected, (
             "Differences found between expected and actual tasks on project in firebase."
         )
+
+        # Create contributor user group
+        old_contributor_user_group_data = test_data["create_contributor_user_group"]
+        for input_data in old_contributor_user_group_data:
+            usergroup_content = self.query_check(
+                self.Mutation.CREATE_CONTRIBUTOR_USER_GROUP,
+                variables={
+                    "data": input_data,
+                },
+            )
+            usergroup_response = usergroup_content["data"]["createContributorUserGroup"]
+            assert usergroup_response is not None, "usergroup create response is None"
+            assert usergroup_response["ok"]
+
+        # Pull results from firebase
+        input_data = test_data["create_results"]
+        ref_results = self.firebase_helper.ref(f"/v2/results/{project_fb_id}")
+        ref_results.set(input_data)
+
+        fb_results_data = ref_results.get()
+        assert fb_results_data is not None
+
+        assert [
+            MappingSession.objects.count(),
+            MappingSessionResult.objects.count(),
+            MappingSessionUserGroup.objects.count(),
+            MappingSessionUserGroupTemp.objects.count(),
+            MappingSessionResultTemp.objects.count(),
+        ] == [0, 0, 0, 0, 0], "Mapping session data should be empty before pull from firebase"
+
+        project = Project.objects.get(id=project_id)
+        assert project.progress == 0
+
+        with self.captureOnCommitCallbacks(execute=True):
+            pull_results_from_firebase()
+
+        assert [
+            MappingSession.objects.count(),
+            MappingSessionResult.objects.count(),
+            MappingSessionUserGroup.objects.count(),
+            MappingSessionUserGroupTemp.objects.count(),
+            MappingSessionResultTemp.objects.count(),
+        ] == [
+            test_data["expected_pulled_results_data"]["mapping_session_count"],
+            test_data["expected_pulled_results_data"]["mapping_session_results_count"],
+            test_data["expected_pulled_results_data"]["mapping_session_user_groups_count"],
+            0,
+            0,
+        ], "Difference found for pulled results data."
+
+        project.refresh_from_db()
+        assert project.progress == test_data["expected_pulled_results_data"]["progress"]
+
+        # Check if progress and contributorCount synced to firebase
+        project_fb_data = project_fb_ref.get()
+        assert project_fb_data is not None, "Project in firebase is None"
+        assert isinstance(project_fb_data, dict), "Project in firebase should be a dictionary"
+        assert project_fb_data["progress"] == project.progress, "Progress should be synced with firebase"
+        assert project_fb_data["contributorCount"] == 1, "Contributor count should be synced with firebase"
+
+        if not test_data.get("expected_project_exports_data"):
+            return
+
+        # Check groups export
+        groups_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.GROUPS,
+        ).first()
+        assert groups_project_asset is not None, "Groups project asset not found"
+
+        expected_groups = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["groups"]),
+            ignore_columns={
+                "total_area",  # NOTE: previously empty, now real value
+                "time_spent_max_allowed",  # NOTE: previously empty, now real value
+            },
+        )
+        actual_groups = read_csv(
+            groups_project_asset.file,
+            compressed=True,
+            ignore_columns={
+                "total_area",  # NOTE: previously empty, now real value
+                "time_spent_max_allowed",  # NOTE: previously empty, now real value
+                "project_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
+            },
+        )
+        assert expected_groups == actual_groups, "Difference found for groups export file."
+
+        # Check tasks export
+        tasks_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.TASKS,
+        ).first()
+        assert tasks_project_asset is not None, "Tasks project asset not found"
+
+        expected_tasks = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["tasks"]),
+            sort_column=operator.itemgetter("task_id"),
+            ignore_columns={
+                "",  # NOTE: dataframe index
+            },
+        )
+        actual_tasks = read_csv(
+            tasks_project_asset.file,
+            compressed=True,
+            sort_column=operator.itemgetter("task_id"),
+            ignore_columns={
+                "",  # NOTE: dataframe index
+                "project_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
+                "task_internal_id",  # NOTE: added for referencing
+            },
+        )
+        assert expected_tasks == actual_tasks, "Difference found for tasks export file."
+
+        # Check results export
+        results_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.RESULTS,
+        ).first()
+        assert results_project_asset is not None, "Results project asset not found"
+
+        expected_results = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["results"]),
+            sort_column=operator.itemgetter("task_id"),
+            ignore_columns={
+                "",  # NOTE: dataframe index
+            },
+        )
+        actual_results = read_csv(
+            results_project_asset.file,
+            sort_column=operator.itemgetter("task_id"),
+            ignore_columns={
+                "",  # NOTE: dataframe index
+                "task_internal_id",  # NOTE: added for referencing
+                "user_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
+                "project_internal_id",  # NOTE: added for referencing
+            },
+            compressed=True,
+        )
+        assert expected_results == actual_results, "Difference found for results export file."
+
+        # Check aggregated results export
+        aggregated_results_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.AGGREGATED_RESULTS,
+        ).first()
+        assert aggregated_results_project_asset is not None, "Aggregated results project asset not found"
+
+        expected_aggregated_results = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["aggregated_results"]),
+        )
+        actual_aggregated_results = read_csv(
+            aggregated_results_project_asset.file,
+            compressed=True,
+            ignore_columns={
+                "project_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
+                "task_internal_id",  # NOTE: added for referencing
+            },
+        )
+
+        assert expected_aggregated_results == actual_aggregated_results, (
+            "Difference found for aggregated results export file."
+        )
+
+        # Check aggregated results with geometry export
+        aggregated_results_with_geometry_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY,
+        ).first()
+        assert aggregated_results_with_geometry_project_asset is not None, (
+            "Aggregated results with geometry project asset not found"
+        )
+
+        expected_aggregated_results_with_geometry = read_json(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["aggregated_results_with_geometry"]),
+            ignore_fields={
+                "name",  # NOTE: Previously "tmp", now "tmp" + random_str
+            },
+        )
+        actual_aggregated_results_with_geometry = read_json(
+            aggregated_results_with_geometry_project_asset.file,
+            compressed=True,
+            ignore_fields={
+                "name",  # NOTE: Previously "tmp", now "tmp" + random_str
+                "project_internal_id",  # NOTE: added for referencing
+                "group_internal_id",  # NOTE: added for referencing
+                "task_internal_id",  # NOTE: added for referencing
+            },
+        )
+        assert expected_aggregated_results_with_geometry == actual_aggregated_results_with_geometry, (
+            "Difference found for aggregated results with geometry export file."
+        )
+
+        # Check history export
+        history_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.HISTORY,
+        ).first()
+        assert history_project_asset is not None, "History project asset not found"
+
+        expected_history = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["history"]),
+        )
+        actual_history = read_csv(
+            history_project_asset.file,
+        )
+        assert expected_history == actual_history, "Difference found for history export file."
+
+        # Check users export
+        users_project_asset = ProjectAsset.objects.filter(
+            project=project,
+            type=AssetTypeEnum.EXPORT,
+            export_type=ProjectAssetExportTypeEnum.USERS,
+        ).first()
+        assert users_project_asset is not None, "Users project asset not found"
+
+        expected_users = read_csv(
+            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["users"]),
+        )
+        actual_users = read_csv(
+            users_project_asset.file,
+            compressed=True,
+        )
+        assert expected_users == actual_users, "Difference found for users export file."
