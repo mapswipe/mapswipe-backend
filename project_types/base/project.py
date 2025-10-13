@@ -156,7 +156,7 @@ class BaseProject[
                             ),
                         ),
                     )
-                    / 100_000,
+                    / 1_000_000,
                 )
                 .values("total_task_group_area")[:1],
             ),
