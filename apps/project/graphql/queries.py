@@ -54,8 +54,9 @@ def get_tile_servers() -> RasterTileServersType:
         raster=[
             _get_raster_tile_server_type(RasterTileServerNameEnum.BING),
             _get_raster_tile_server_type(RasterTileServerNameEnum.MAPBOX),
-            _get_raster_tile_server_type(RasterTileServerNameEnum.MAXAR_STANDARD),
-            _get_raster_tile_server_type(RasterTileServerNameEnum.MAXAR_PREMIUM),
+            # NOTE: Disabled because it's not working for 2+ years
+            # _get_raster_tile_server_type(RasterTileServerNameEnum.MAXAR_STANDARD),
+            # _get_raster_tile_server_type(RasterTileServerNameEnum.MAXAR_PREMIUM),
             _get_raster_tile_server_type(RasterTileServerNameEnum.ESRI),
             _get_raster_tile_server_type(RasterTileServerNameEnum.ESRI_BETA),
         ],
