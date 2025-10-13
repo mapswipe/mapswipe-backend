@@ -742,7 +742,6 @@ class TestValidateImageProjectE2E(TestCase):
                 "project_internal_id",  # NOTE: added for referencing
                 "group_internal_id",  # NOTE: added for referencing
                 "task_internal_id",  # NOTE: added for referencing
-                "task_id.1",  # FIXME: This column is extra
             },
         )
 
@@ -779,7 +778,6 @@ class TestValidateImageProjectE2E(TestCase):
                 "project_internal_id",  # NOTE: added for referencing
                 "group_internal_id",  # NOTE: added for referencing
                 "task_internal_id",  # NOTE: added for referencing
-                "task_id.1",  # FIXME: This column is extra
             },
         )
         assert expected_aggregated_results_with_geometry == actual_aggregated_results_with_geometry, (
