@@ -112,6 +112,29 @@ class BaseProject[
         return None
 
     def analyze_groups(self):
+        # Check for uniqueness for project tasks
+        duplicated_task_ids_qs = (
+            ProjectTaskGroup.objects
+            .filter(project_id=25)
+            .values("firebase_id")
+            .annotate(firebase_id_count=models.Count("id"))
+            .filter(firebase_id_count__gt=1)
+        )
+
+        duplicated_task_ids_count = duplicated_task_ids_qs.count()
+        if duplicated_task_ids_count > 0:
+            EXAMPLES_COUNT = 5
+            duplicated_task_ids_examples = (
+                duplicated_task_ids_qs
+                .values_list("firebase_id", flat=True)[:EXAMPLES_COUNT]
+            )
+            examples = ", ".join(duplicated_task_ids_examples)
+            error_message = f"There are {duplicated_task_ids_count} tasks with duplicate identifiers: {examples}"
+            if duplicated_task_ids_count > EXAMPLES_COUNT:
+                error_message += ", ..."
+
+            raise ValidationException(error_message)
+
         # Update number_of_tasks
         self.project.update_processing_status(Project.ProcessingStatus.ANALYZING_GROUPS_AND_TASK, True)
 
