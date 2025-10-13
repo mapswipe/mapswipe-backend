@@ -692,8 +692,8 @@ class ProjectTask(FirebasePushResource):
     id: int
     task_group_id: int
 
-    # FIXME: Quick fix involves removing uniqueness constriant
-    # As firebase_id for tasks are dervied from user input,
+    # FIXME: Quick fix involves removing uniqueness constraint
+    # As firebase_id for tasks are derived from user input,
     # we should discuss if we need db level uniqueness
     # class Meta:
     #     unique_together = (
