@@ -68,7 +68,7 @@ class ProjectAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, UserResourceAdmin
         "processing_status",
         "progress",
     )
-    readonly_fields = ("generate_name",)
+    readonly_fields = ("generate_name", "slack_progress_notifications", "slack_thread_ts")
     search_fields = ("topic", "region")
     ordering = ("topic", "region")
     list_filter = (
