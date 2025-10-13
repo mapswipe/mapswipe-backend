@@ -265,6 +265,23 @@ def _export_project_data(project: Project, tmp_directory: Path):
 
 
 def export_project_data(project: Project):
+    if project.old_id and project.old_id not in [
+        # XXX: whitelist for prod project's active during migration
+        # TODO: Remove this whitelist
+        "-OZFXKuj8LuLnBeE3lay",  # Validate - Sragen East - Indonesia (1) American Red Cross
+        "-OUoQBZkwX2q2t_Sx0uI",  # STREET - Waste Mapping - Dar es Salaam, Tanzania (3) HeiGIT
+    ]:
+        logger.error(
+            "Project export called for old project.. Not running",
+            extra=log_extra(
+                {
+                    "project_id": project.id,
+                    "project_old_id": project.old_id,
+                },
+            ),
+        )
+        return
+
     new_temp_directory = Config.TEMP_DIR / str(ULID())
     new_temp_directory.mkdir(parents=True)
     try:
