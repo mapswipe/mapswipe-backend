@@ -92,7 +92,7 @@ echo "Preparing $version_tag..."
 # update the version
 msg="# managed by release.sh"
 sed -E -i "s/^version = .* $msg$/version = \"${version_tag#v}\"  $msg/" "./pyproject.toml"
-uv sync
+uv sync --all-groups --all-extras
 git add ./pyproject.toml ./uv.lock
 
 sed -E -i "s/^version: .* $msg$/version: ${version_tag#v}-SET-BY-CICD  $msg/" "./helm/Chart.yaml"
