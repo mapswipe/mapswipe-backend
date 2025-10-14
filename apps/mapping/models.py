@@ -11,7 +11,9 @@ from apps.project.models import ProjectTask, ProjectTaskGroup
 
 
 class MappingSessionClientTypeEnum(models.IntegerChoices):
-    """Enum representing client type used during a mapping session."""
+    """Enum representing client type used during a mapping session.
+    https://github.com/react-native-device-info/react-native-device-info#getsystemname.
+    """
 
     UNKNOWN = 0, "Unknown"
     MOBILE_ANDROID = 1, "Mobile (Android)"
@@ -23,6 +25,8 @@ class MappingSessionClientTypeEnum(models.IntegerChoices):
         return {
             "mobile-android": cls.MOBILE_ANDROID,
             "mobile-ios": cls.MOBILE_IOS,
+            "mobile-iphone os": cls.MOBILE_IOS,
+            "mobile-ipados": cls.MOBILE_IOS,
             "web": cls.WEB,
         }.get(value, cls.UNKNOWN)
 
