@@ -77,7 +77,7 @@ def generate_mapping_results(*, destination_filename: Path, project: Project) ->
         logger.info("there are no results for this project %s", project.id)
     else:
         # TODO: Is this required?
-        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df["timestamp"] = pd.to_datetime(df["timestamp"], format="ISO8601")
         df["day"] = df["timestamp"].apply(lambda x: datetime.datetime(year=x.year, month=x.month, day=x.day))
         logger.info("added day attribute for results for %s", project.id)
     return df
