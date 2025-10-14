@@ -5,6 +5,7 @@ from django.db import connection, transaction
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 
+from apps.common.models import FirebasePushStatusEnum
 from apps.contributor.models import (
     ContributorUser,
     ContributorUserGroupMembershipLogActionEnum,
@@ -41,6 +42,9 @@ def pull_users_from_firebase():
             username=valid_user.username,
             created_at=valid_user.created,
             modified_at=valid_user.created,
+            # NOTE: Setting firebase_last_pushed so that we can send updates to firebase.
+            firebase_last_pushed=datetime.datetime.now(),
+            firebae_push_status=FirebasePushStatusEnum.SUCCESS,
         )
         users_to_pull.append(user)
 
