@@ -115,7 +115,7 @@ class BaseProject[
     def analyze_groups(self):
         # Check for uniqueness for project tasks
         groups = ProjectTaskGroup.objects.filter(
-            project_id=self.project.pk
+            project_id=self.project.pk,
         ).values("id")
         duplicated_task_ids_qs = (
             ProjectTask.objects.filter(task_group__in=Subquery(groups))
