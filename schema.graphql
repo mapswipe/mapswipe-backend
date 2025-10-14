@@ -1820,7 +1820,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   statusMessage: String
   team: ContributorTeamType
   topic: String!
-  totalArea: Float
+  totalArea: Float @deprecated(reason: "Use AOI Geometry instead")
 
   """Tutorial used for this project."""
   tutorial: TutorialType
