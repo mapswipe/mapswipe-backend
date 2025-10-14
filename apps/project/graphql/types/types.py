@@ -167,7 +167,6 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
     processing_status: strawberry.auto
     status_message: strawberry.auto
 
-    total_area: strawberry.auto
     team: ContributorTeamType | None
     is_private: strawberry.auto
     required_results: strawberry.auto
@@ -180,6 +179,8 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
     number_of_results: strawberry.auto
     number_of_results_for_progress: strawberry.auto
     last_contribution_date: strawberry.auto
+
+    total_area: strawberry.auto = strawberry.field(deprecation_reason="Use AOI Geometry instead")
 
     @strawberry_django.field(
         description=str(Project._meta.get_field("progress").help_text),  # type: ignore[reportAttributeAccessIssue]
