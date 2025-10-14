@@ -536,6 +536,7 @@ def parse_project_status(existing_project: existing_db_models.Project) -> Projec
         "active": ProjectStatusEnum.PUBLISHED,
         "private_active": ProjectStatusEnum.PUBLISHED,
         "private_finished": ProjectStatusEnum.FINISHED,
+        "private_inactive": ProjectStatusEnum.PAUSED,
         "finished": ProjectStatusEnum.FINISHED,
         "archived": ProjectStatusEnum.WITHDRAWN,
     }[existing_project.status]
@@ -573,6 +574,8 @@ def create_project(
             requesting_organization=get_organization_by_name(requesting_organization, bot_user),
             created_by_id=get_user_by_contributor_user_firebase_id(existing_project.created_by, fallback=bot_user),
             modified_by_id=get_user_by_contributor_user_firebase_id(existing_project.created_by, fallback=bot_user),
+            project_type_specifics=existing_project.project_type_specifics,
+            description=existing_project.project_details.strip() if existing_project.project_details else "",
         )
 
         # Progress metadata
