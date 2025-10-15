@@ -256,7 +256,7 @@ class TestCommunityDashboardQuery(TestCase):
     def test_user_group_aggregated_calc(self):
         query = """
             query MyQuery($userGroupId: ID!) {
-              communityUserGroupStats(userGroupId: $userGroupId) {
+              communityUserGroupStats(userGroupId: {id: $userGroupId}) {
                 stats {
                   totalAreaSwiped
                   totalContributors
@@ -306,7 +306,7 @@ class TestCommunityDashboardQuery(TestCase):
     def test_user_group_query(self):
         query = """
             query MyQuery($userGroupId: ID!, $pagination: OffsetPaginationInput!) {
-              contributorUserGroup(id: $userGroupId) {
+              contributorUserGroup(userGroupId: {id: $userGroupId}) {
                 id
                 name
                 createdAt
@@ -502,13 +502,13 @@ class TestCommunityDashboardQuery(TestCase):
               $toDate: Date!,
           ) {
 
-            contributorUserByFirebaseId(firebaseId: $firebaseId) {
+            contributorUser(userId: {firebaseId: $firebaseId}) {
               id
               firebaseId
               username
             }
 
-            communityUserStats(firebaseId: $firebaseId) {
+            communityUserStats(userId: {firebaseId: $firebaseId}) {
               id
               stats {
                 totalSwipes
@@ -644,7 +644,7 @@ class TestCommunityDashboardQuery(TestCase):
             )
 
             assert {
-                "contributorUserByFirebaseId": {
+                "contributorUser": {
                     "id": self.gID(contributor_user.pk),
                     "firebaseId": contributor_user.firebase_id,
                     "username": contributor_user.username,
