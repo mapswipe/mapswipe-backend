@@ -532,11 +532,11 @@ def parse_project_name(
 def parse_project_status(existing_project: existing_db_models.Project) -> ProjectStatusEnum:
     assert existing_project.status is not None
     return {
-        "inactive": ProjectStatusEnum.PAUSED,
+        "inactive": ProjectStatusEnum.DISCARDED,
         "active": ProjectStatusEnum.PUBLISHED,
         "private_active": ProjectStatusEnum.PUBLISHED,
         "private_finished": ProjectStatusEnum.FINISHED,
-        "private_inactive": ProjectStatusEnum.PAUSED,
+        "private_inactive": ProjectStatusEnum.DISCARDED,
         "finished": ProjectStatusEnum.FINISHED,
         "archived": ProjectStatusEnum.WITHDRAWN,
     }[existing_project.status]
