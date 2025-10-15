@@ -627,7 +627,7 @@ class TestProjectMutation(TestCase):
                 additionalInfoUrl=latest_project.additional_info_url,
                 description=latest_project.description,
                 verificationNumber=3,
-                groupSize=25,
+                groupSize=120,
                 maxTasksPerUser=None,
                 isFeatured=latest_project.is_featured,
                 status=self.genum(Project.Status.DRAFT),
@@ -1394,7 +1394,7 @@ class TestProjectTypeMutation(TestCase):
                 "firebase_id": "g101",
                 "number_of_tasks": 18,
                 "required_count": 10,
-                "total_area": 210.10735845202447,
+                "total_area": 21.010735845202447,
                 "project_type_specifics": {
                     "x_max": 24152,
                     "x_min": 24147,
@@ -1406,7 +1406,7 @@ class TestProjectTypeMutation(TestCase):
                 "firebase_id": "g102",
                 "number_of_tasks": 24,
                 "required_count": 10,
-                "total_area": 280.2915392364502,
+                "total_area": 28.02915392364502,
                 "project_type_specifics": {
                     "x_max": 24153,
                     "x_min": 24146,
@@ -1418,7 +1418,7 @@ class TestProjectTypeMutation(TestCase):
                 "firebase_id": "g103",
                 "number_of_tasks": 24,
                 "required_count": 10,
-                "total_area": 280.4398676951218,
+                "total_area": 28.043986769512177,
                 "project_type_specifics": {
                     "x_max": 24153,
                     "x_min": 24146,
@@ -1430,7 +1430,7 @@ class TestProjectTypeMutation(TestCase):
                 "firebase_id": "g104",
                 "number_of_tasks": 6,
                 "required_count": 10,
-                "total_area": 70.14703242812156,
+                "total_area": 7.014703242812157,
                 "project_type_specifics": {
                     "x_max": 24150,
                     "x_min": 24149,

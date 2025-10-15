@@ -150,7 +150,7 @@ class ValidateImageProject(
             if annotations:
                 for annotation in annotations:
                     valid_image: ValidImage = {
-                        "source_identifier": asset_specifics.image.id,
+                        "source_identifier": annotation.id,
                         "url": image_asset.external_url,
                         "file_name": asset_specifics.image.file_name,
                         "width": asset_specifics.image.width,

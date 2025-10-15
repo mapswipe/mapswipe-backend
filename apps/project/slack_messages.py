@@ -44,8 +44,8 @@ class SlackMessage:
         return f"<{tutorial_url}|{tutorial.name}>"
 
     @staticmethod
-    def format_project_name(project: Project):
-        if project.is_private:
+    def format_project_name(project: Project, *, show_private_indicator=False):
+        if project.is_private and show_private_indicator:
             return f"{project.generate_name()} :lock:"
         return project.generate_name()
 
@@ -122,7 +122,7 @@ class SlackMessage:
         website_url = Config.WebsiteKeys.project(firebase_id=project.firebase_id)
 
         if progress >= 100:
-            text = "Project reached 100%"
+            text = f"Project '{SlackMessage.format_project_name(project)}' reached 100%"
             blocks = [
                 {
                     "type": "header",
@@ -163,7 +163,7 @@ class SlackMessage:
             }
 
         if 90 <= progress < 100:
-            text = "Progress reached 90%"
+            text = f"Project '{SlackMessage.format_project_name(project)}' reached 90%"
             blocks = [
                 {
                     "type": "header",
@@ -185,7 +185,7 @@ class SlackMessage:
                 "blocks": blocks,
             }
 
-        text = f"Project reached {project.progress}%"
+        text = f"Project '{SlackMessage.format_project_name(project)}' reached {project.progress}%"
         blocks = [
             {
                 "type": "section",
@@ -213,7 +213,7 @@ class SlackMessage:
                 "type": "header",
                 "text": {
                     "type": "plain_text",
-                    "text": SlackMessage.format_project_name(project),
+                    "text": SlackMessage.format_project_name(project, show_private_indicator=True),
                 },
             },
             SlackMessage.get_project_information_block(project),
@@ -275,22 +275,11 @@ class SlackMessage:
         if action_failed:
             text = "Project status could not be updated!"
 
-        heading = "Project status updated :pushpin:"
-        if action_failed:
-            heading = "Project status could not be updated :x:"
-
         description = f"The project has been *{status_label}* by {username} at {modified_at}"
         if action_failed:
             description = f"The project could be *{status_label}* by {username} at {modified_at}"
 
         blocks = [
-            {
-                "type": "header",
-                "text": {
-                    "type": "plain_text",
-                    "text": heading,
-                },
-            },
             {
                 "type": "section",
                 "text": {

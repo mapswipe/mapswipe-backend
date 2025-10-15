@@ -3,11 +3,11 @@ import typing
 import strawberry
 import strawberry_django
 from django.db.models import QuerySet
-from django.shortcuts import aget_object_or_404
 from strawberry_django.pagination import OffsetPaginated
 from strawberry_django.permissions import IsAuthenticated
 
 from apps.contributor.models import ContributorTeam, ContributorUser, ContributorUserGroup, ContributorUserGroupMembership
+from utils.graphql.inputs import FirebaseOrInternalIdInputType
 
 from .filters import (
     ContributorTeamFilter,
@@ -31,17 +31,24 @@ class Query:
         filters=ContributorUserFilter,
     )
 
-    contributor_user: ContributorUserType = strawberry_django.field()
-
-    contributor_user_group: ContributorUserGroupType = strawberry_django.field()
-
     # Team
     contributor_team: ContributorTeamType = strawberry_django.field()
 
     @strawberry.field
-    async def contributor_user_by_firebase_id(self, firebase_id: strawberry.ID) -> ContributorUserType:
-        obj = await aget_object_or_404(ContributorUser, firebase_id=firebase_id)
+    async def contributor_user(
+        self,
+        user_id: FirebaseOrInternalIdInputType,
+    ) -> ContributorUserType:
+        obj = await FirebaseOrInternalIdInputType.aget_object_or_404(ContributorUser, object_id=user_id)
         return typing.cast("ContributorUserType", obj)
+
+    @strawberry.field
+    async def contributor_user_group(
+        self,
+        user_group_id: FirebaseOrInternalIdInputType,
+    ) -> ContributorUserGroupType:
+        obj = await FirebaseOrInternalIdInputType.aget_object_or_404(ContributorUserGroup, object_id=user_group_id)
+        return typing.cast("ContributorUserGroupType", obj)
 
     # --- Paginated
     # --- ContributorUserGroup

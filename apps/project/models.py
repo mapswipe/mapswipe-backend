@@ -465,7 +465,7 @@ class Project(UserResource, FirebasePushResource):
         help_text=gettext_lazy("Timestamp of the base slack message"),
     )
 
-    slack_progress_notifications = models.PositiveIntegerField[int, int](
+    slack_progress_notifications = models.PositiveIntegerField[int | None, int | None](
         null=True,
         blank=True,
         help_text=gettext_lazy("Stores the last progress checkpoint notified via Slack."),
@@ -692,12 +692,14 @@ class ProjectTask(FirebasePushResource):
     id: int
     task_group_id: int
 
-    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
-        unique_together = (
-            # FIXME(tnagorra): Should we use project instead of task_group here?
-            "task_group",
-            "firebase_id",
-        )
+    # FIXME: Quick fix involves removing uniqueness constraint
+    # As firebase_id for tasks are derived from user input,
+    # we should discuss if we need db level uniqueness
+    # class Meta:
+    #     unique_together = (
+    #         "task_group",
+    #         "firebase_id",
+    #     )
 
     @typing.override
     def __str__(self):

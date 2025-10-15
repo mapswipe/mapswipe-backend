@@ -114,9 +114,9 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
         group_size: int
         match project_type:
             case Project.Type.FIND:
-                group_size = 25
-            case Project.Type.VALIDATE:
                 group_size = 120
+            case Project.Type.VALIDATE:
+                group_size = 25
             case Project.Type.VALIDATE_IMAGE:
                 group_size = 25
             case Project.Type.COMPARE:

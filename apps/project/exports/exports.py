@@ -188,12 +188,12 @@ def _export_project_data(project: Project, tmp_directory: Path):
         if project.progress >= 100:
             project.progress_status = ProjectProgressStatusEnum.COMPLETED
 
-        if project.progress >= 90 and project.slack_progress_notifications < 90:
+        if project.progress >= 90 and (project.slack_progress_notifications or 0) < 90:
             transaction.on_commit(
                 lambda: send_slack_message_for_project.delay(project_id=project.id, action="progress-change"),
             )
 
-        if project.progress >= 100 and project.slack_progress_notifications < 100:
+        if project.progress >= 100 and (project.slack_progress_notifications or 0) < 100:
             transaction.on_commit(
                 lambda: send_slack_message_for_project.delay(project_id=project.id, action="progress-change"),
             )
@@ -201,7 +201,7 @@ def _export_project_data(project: Project, tmp_directory: Path):
         if project.progress != previous_progress:
             # FIXME(tnagorra): Do we only send updates for the 2 fields?
             transaction.on_commit(
-                lambda: push_project_to_firebase.delay(project_id=project.id),
+                lambda: push_project_to_firebase.delay(project_id=project.id, only_stats=True),
             )
             project.update_firebase_push_status(FirebasePushStatusEnum.PENDING, False)
 

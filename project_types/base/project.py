@@ -9,7 +9,8 @@ from django.contrib.gis.db.models import GeometryField
 from django.contrib.gis.db.models.functions import Area
 from django.core.files.base import ContentFile
 from django.db import models
-from django.db.models.functions import Cast
+from django.db.models.expressions import Subquery
+from django.db.models.functions import Cast, Coalesce
 from firebase_admin.db import Reference as FbReference  # type: ignore[reportMissingTypeStubs]
 from pydantic import BaseModel, ConfigDict
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
@@ -115,51 +116,78 @@ class BaseProject[
         # Update number_of_tasks
         self.project.update_processing_status(Project.ProcessingStatus.ANALYZING_GROUPS_AND_TASK, True)
 
+        # Check for uniqueness for project tasks
+        groups = ProjectTaskGroup.objects.filter(
+            project_id=self.project.pk,
+        ).values("id")
+        duplicated_task_ids_qs = (
+            ProjectTask.objects.filter(task_group__in=Subquery(groups))
+            .values("firebase_id")
+            .annotate(firebase_id_count=models.Count("id"))
+            .filter(firebase_id_count__gt=1)
+        )
+        duplicated_task_ids_count = duplicated_task_ids_qs.count()
+        if duplicated_task_ids_count > 0:
+            MAX_EXAMPLES = 5
+            duplicated_task_ids_examples = duplicated_task_ids_qs.values_list("firebase_id", flat=True)[:MAX_EXAMPLES]
+            examples = ", ".join(duplicated_task_ids_examples)
+            error_message = f"There are {duplicated_task_ids_count} tasks with duplicate identifiers: {examples}"
+            if duplicated_task_ids_count > MAX_EXAMPLES:
+                error_message += ", ..."
+            raise ValidationException(error_message)
+
+        # Calculating aggregates on groups
         project_task_groups_qs = ProjectTaskGroup.objects.filter(project_id=self.project.pk)
         project_task_groups_qs.update(
-            number_of_tasks=models.Subquery(
-                ProjectTask.objects.filter(task_group_id=models.OuterRef("id"))
-                .values("task_group_id")
-                .annotate(total_tasks=models.Count("*"))
-                .values("total_tasks")[:1],
+            number_of_tasks=Coalesce(
+                models.Subquery(
+                    ProjectTask.objects.filter(task_group_id=models.OuterRef("id"))
+                    .values("task_group_id")
+                    .annotate(total_tasks=models.Count("*"))
+                    .values("total_tasks")[:1],
+                ),
+                models.Value(0),
             ),
-            total_area=models.Subquery(
-                ProjectTask.objects.filter(task_group_id=models.OuterRef("id"))
-                .values("task_group_id")
-                .annotate(
-                    total_task_group_area=models.Sum(
-                        Area(
-                            Cast(
-                                "geometry",
-                                output_field=GeometryField(geography=True),
+            total_area=Coalesce(
+                models.Subquery(
+                    ProjectTask.objects.filter(task_group_id=models.OuterRef("id"))
+                    .values("task_group_id")
+                    .annotate(
+                        total_task_group_area=models.Sum(
+                            Area(
+                                Cast(
+                                    "geometry",
+                                    output_field=GeometryField(geography=True),
+                                ),
                             ),
-                        ),
+                        )
+                        / 1_000_000,
                     )
-                    / 100_000,
-                )
-                .values("total_task_group_area")[:1],
+                    .values("total_task_group_area")[:1],
+                ),
+                models.Value(0),
             ),
-        )
-        # NOTE: After number_of_tasks is calculated
-        project_task_groups_qs.update(
             required_count=self.project.verification_number,
+        )
+        # NOTE: calculation of time_spent_max_allowed depends on number_of_tasks
+        project_task_groups_qs.update(
             time_spent_max_allowed=(models.F("number_of_tasks") * self.get_max_time_spend_percentile()),
         )
 
+        # Calculation aggregates on project
         self.project.required_results = (
             ProjectTaskGroup.objects.filter(project_id=self.project.pk).aggregate(
                 required_results=models.Sum("number_of_tasks") * self.project.verification_number,
             )
         )["required_results"] or 0
-
-        if self.project.required_results == 0:
-            raise ValidationException("Project does not contain any groups or tasks")
-
         self.project.total_area = (
             ProjectTaskGroup.objects.filter(project_id=self.project.pk).aggregate(agg_area=models.Sum("total_area"))
         )["agg_area"] or 0
 
-        self.project.save(update_fields=(["required_results"]))
+        if self.project.required_results == 0:
+            raise ValidationException("Project does not contain any groups or tasks")
+
+        self.project.save(update_fields=(["required_results", "total_area"]))
 
     @abstractmethod
     def get_max_time_spend_percentile(self) -> float:
@@ -424,9 +452,26 @@ class BaseProject[
             },
         )
 
-    def update_project_on_firebase(self, project_ref: FbReference, fb_project: firebase_ext_models.FbProject):
+    def update_project_on_firebase(
+        self,
+        project_ref: FbReference,
+        fb_project: firebase_ext_models.FbProject,
+        *,
+        only_stats: bool = False,
+    ):
         assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
         assert self.project.tutorial is not None, "Tutorial is required before project can be pushed to firebase"
+
+        if only_stats:
+            project_ref.update(
+                value=firebase_utils.serialize(
+                    firebase_models.FbProjectUpdateStatsInput(
+                        contributorCount=self.project.number_of_contributor_users,
+                        progress=self.project.progress,
+                    ),
+                ),
+            )
+            return
 
         project_ref.update(
             value=firebase_utils.serialize(
@@ -454,7 +499,7 @@ class BaseProject[
             ),
         )
 
-    def _push_project_on_firebase(self):
+    def _push_project_on_firebase(self, *, only_stats: bool = False):
         if self.project.status_enum not in [
             Project.Status.READY_TO_PUBLISH,
             Project.Status.PUBLISHED,
@@ -497,11 +542,11 @@ class BaseProject[
             valid_project = RelaxedModel.model_validate(obj=fb_project)
             valid_project = firebase_ext_models.FbProject.model_validate(obj=valid_project)
 
-            self.update_project_on_firebase(project_ref, valid_project)
+            self.update_project_on_firebase(project_ref, valid_project, only_stats=only_stats)
 
-    def push_project_on_firebase(self):
+    def push_project_on_firebase(self, *, only_stats: bool = False):
         try:
-            self._push_project_on_firebase()
+            self._push_project_on_firebase(only_stats=only_stats)
         except Exception as ex:
             if isinstance(ex, ValidationException):
                 logger.warning(

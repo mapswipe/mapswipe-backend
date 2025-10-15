@@ -532,10 +532,11 @@ def parse_project_name(
 def parse_project_status(existing_project: existing_db_models.Project) -> ProjectStatusEnum:
     assert existing_project.status is not None
     return {
-        "inactive": ProjectStatusEnum.PAUSED,
+        "inactive": ProjectStatusEnum.DISCARDED,
         "active": ProjectStatusEnum.PUBLISHED,
         "private_active": ProjectStatusEnum.PUBLISHED,
         "private_finished": ProjectStatusEnum.FINISHED,
+        "private_inactive": ProjectStatusEnum.DISCARDED,
         "finished": ProjectStatusEnum.FINISHED,
         "archived": ProjectStatusEnum.WITHDRAWN,
     }[existing_project.status]
@@ -573,6 +574,8 @@ def create_project(
             requesting_organization=get_organization_by_name(requesting_organization, bot_user),
             created_by_id=get_user_by_contributor_user_firebase_id(existing_project.created_by, fallback=bot_user),
             modified_by_id=get_user_by_contributor_user_firebase_id(existing_project.created_by, fallback=bot_user),
+            project_type_specifics=existing_project.project_type_specifics,
+            description=existing_project.project_details.strip() if existing_project.project_details else "",
         )
 
         # Progress metadata
@@ -986,7 +989,7 @@ class Command(BaseCommand):
                     output_field=GeometryField(geography=True),
                 ),
             )
-            / 100_000,
+            / 1_000_000,
         )
 
         self.stdout.write("\n")

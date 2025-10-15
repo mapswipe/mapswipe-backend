@@ -663,6 +663,7 @@ type ContributorUserStatType {
 
 type ContributorUserStats {
   filteredStats(dateRange: DateRangeInput = null): ContributorUserFilteredStats!
+  firebaseId: ID!
   id: ID!
   stats: ContributorUserStatType!
 
@@ -802,6 +803,11 @@ type FindTutorialTaskPropertyType {
   tileX: Int!
   tileY: Int!
   tileZ: Int!
+}
+
+input FirebaseOrInternalIdInputType @oneOf {
+  firebaseId: ID
+  id: ID
 }
 
 interface FirebasePushResourceTypeMixin {
@@ -1820,7 +1826,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   statusMessage: String
   team: ContributorTeamType
   topic: String!
-  totalArea: Float
+  totalArea: Float @deprecated(reason: "Use AOI Geometry instead")
 
   """Tutorial used for this project."""
   tutorial: TutorialType
@@ -2009,13 +2015,12 @@ type Query {
 
   """Stats from last 30 days."""
   communityStatsLatest: CommunityStatsType!
-  communityUserGroupStats(userGroupId: ID!): ContributorUserGroupStats!
-  communityUserStats(firebaseId: ID!): ContributorUserStats!
+  communityUserGroupStats(userGroupId: FirebaseOrInternalIdInputType!): ContributorUserGroupStats!
+  communityUserStats(userId: FirebaseOrInternalIdInputType!): ContributorUserStats!
   contributorTeam(id: ID!): ContributorTeamType!
   contributorTeams(includeAll: Boolean! = false, filters: ContributorTeamFilter, order: ContributorTeamOrder, pagination: OffsetPaginationInput): ContributorTeamTypeOffsetPaginated! @isAuthenticated
-  contributorUser(id: ID!): ContributorUserType!
-  contributorUserByFirebaseId(firebaseId: ID!): ContributorUserType!
-  contributorUserGroup(id: ID!): ContributorUserGroupType!
+  contributorUser(userId: FirebaseOrInternalIdInputType!): ContributorUserType!
+  contributorUserGroup(userGroupId: FirebaseOrInternalIdInputType!): ContributorUserGroupType!
   contributorUserGroupMembers(includeAll: Boolean! = false, filters: ContributorUserGroupMembershipFilter, order: ContributorUserGroupMembershipOrder, pagination: OffsetPaginationInput): ContributorUserGroupMembershipTypeOffsetPaginated!
   contributorUserGroups(includeAll: Boolean! = false, filters: ContributorUserGroupFilter, order: ContributorUserGroupOrder, pagination: OffsetPaginationInput): ContributorUserGroupTypeOffsetPaginated!
   contributorUsers(pagination: OffsetPaginationInput, filters: ContributorUserFilter, order: ContributorUserOrder): ContributorUserTypeOffsetPaginated!
