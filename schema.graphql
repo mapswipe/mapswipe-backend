@@ -2003,6 +2003,58 @@ type ProjectVectorTileServerCustomConfig {
   url: String!
 }
 
+"""Model representing the project."""
+type PublicProjectType implements ProjectExportAssetTypeMixin {
+  aoiGeometry: GeometryType
+  createdAt: DateTime!
+  description: String
+  exportAggregatedResults: ProjectAssetType
+  exportAggregatedResultsWithGeometry: ProjectAssetType
+  exportAreaOfInterest: ProjectAssetType
+  exportGroups: ProjectAssetType
+  exportHistory: ProjectAssetType
+  exportHotTaskingManagerGeometries: ProjectAssetType
+  exportModerateToHighAgreementYesMaybeGeometries: ProjectAssetType
+  exportResults: ProjectAssetType
+  exportTasks: ProjectAssetType
+  exportUsers: ProjectAssetType
+  firebaseId: String!
+  id: ID!
+  image: ProjectAssetType
+  modifiedAt: DateTime!
+
+  """
+  Project name generated from topic, region, project number, and requesting organization name.
+  """
+  name: String!
+
+  """Number of users who made contributions to this project"""
+  numberOfContributorUsers: Int!
+
+  """Percentage of the required contribution that has been completed"""
+  progress: Float!
+  projectType: ProjectTypeEnum!
+  region: String!
+
+  """Which group, institution or community is requesting this project?"""
+  requestingOrganization: OrganizationType!
+
+  """Which group, institution or community is requesting this project?"""
+  requestingOrganizationId: ID!
+  status: ProjectStatusEnum!
+  totalArea: Float
+}
+
+type PublicProjectTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """List of paginated results."""
+  results: [PublicProjectType!]!
+
+  """Total count of existing results."""
+  totalCount: Int!
+}
+
 type Query {
   communityFilteredStats(dateRange: DateRangeInput = null): CommunityFilteredStats!
   communityStats: CommunityStatsType!
@@ -2033,8 +2085,8 @@ type Query {
   projects(includeAll: Boolean! = false, filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated! @isAuthenticated
   publicOrganization(id: ID!): OrganizationType!
   publicOrganizations(filters: OrganizationFilter, order: OrganizationOrder, pagination: OffsetPaginationInput): OrganizationTypeOffsetPaginated!
-  publicProject(id: ID!): ProjectType!
-  publicProjects(filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated!
+  publicProject(id: ID!): PublicProjectType!
+  publicProjects(filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): PublicProjectTypeOffsetPaginated!
   tileServers: RasterTileServersType! @isAuthenticated
   tutorial(id: ID!): TutorialType! @isAuthenticated
   tutorialAsset(id: ID!): TutorialAssetType! @isAuthenticated

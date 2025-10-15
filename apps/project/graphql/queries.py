@@ -7,6 +7,7 @@ from strawberry_django.permissions import IsAuthenticated
 
 from apps.project.custom_options import get_custom_options
 from apps.project.graphql.inputs.inputs import ProjectNameInput
+from apps.project.graphql.types.public.types import PublicProjectType
 from apps.project.models import Organization, Project, ProjectTypeEnum
 from utils.geo.raster_tile_server.config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNameEnumWithoutCustom
 from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum, VectorTileServerNameEnumWithoutCustom
@@ -82,7 +83,7 @@ class Query:
 
     # Private --------------------
     project: ProjectType = strawberry_django.field(extensions=[IsAuthenticated()])
-    public_project: ProjectType = strawberry_django.field()
+    public_project: PublicProjectType = strawberry_django.field()
 
     project_asset: ProjectAssetType = strawberry_django.field(extensions=[IsAuthenticated()])
 
@@ -145,7 +146,7 @@ class Query:
         ).all()
 
     @strawberry_django.offset_paginated(
-        OffsetPaginated[ProjectType],
+        OffsetPaginated[PublicProjectType],
         order=ProjectOrder,
         filters=ProjectFilter,
     )
