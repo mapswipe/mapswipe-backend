@@ -44,7 +44,7 @@ def pull_users_from_firebase():
             modified_at=valid_user.created,
             # NOTE: Setting firebase_last_pushed so that we can send updates to firebase.
             firebase_last_pushed=datetime.datetime.now(),
-            firebae_push_status=FirebasePushStatusEnum.SUCCESS,
+            firebase_push_status=FirebasePushStatusEnum.SUCCESS,
         )
         users_to_pull.append(user)
 
