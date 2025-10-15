@@ -155,8 +155,9 @@ class Query:
     ) -> QuerySet[Project]:
         return Project.objects.filter(
             status__in=[
-                Project.Status.FINISHED,
                 Project.Status.PUBLISHED,
+                Project.Status.PAUSED,
+                Project.Status.FINISHED,
             ],
         ).all()
 
