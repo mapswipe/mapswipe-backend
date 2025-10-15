@@ -16,7 +16,7 @@ def push_tutorial_to_firebase(tutorial_id: int):
             logger.warning("Tutorial(id: %s) push tutorial to firebase already running", tutorial_id)
             return None
 
-    tutorial = Tutorial.objects.get(pk=tutorial_id)
-    tutorial_type_handler = get_tutorial_type_handler(tutorial.project.project_type_enum)(tutorial)
-    tutorial_type_handler.push_tutorial_on_firebase()
-    return True
+        tutorial = Tutorial.objects.get(pk=tutorial_id)
+        tutorial_type_handler = get_tutorial_type_handler(tutorial.project.project_type_enum)(tutorial)
+        tutorial_type_handler.push_tutorial_on_firebase()
+        return True

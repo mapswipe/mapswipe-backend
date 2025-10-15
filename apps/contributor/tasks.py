@@ -15,7 +15,7 @@ def pull_users_from_firebase_task():
             logger.warning("Pull users from firebase is already running")
             return
 
-    pull_users_from_firebase()
+        pull_users_from_firebase()
 
 
 @shared_task
@@ -25,4 +25,4 @@ def pull_user_group_memberships_from_firebase_task():
             logger.warning("Pull user group memberships from firebase is already running")
             return
 
-    pull_user_group_memberships_from_firebase()
+        pull_user_group_memberships_from_firebase()

@@ -24,10 +24,10 @@ def process_project_task(project_id: int):
             logger.warning("Project(id: %s) processing is already running", project_id)
             return None
 
-    project = Project.objects.get(pk=project_id)
-    project_type_handler = get_project_type_handler(project.project_type_enum)(project)
-    project_type_handler.process_project()
-    return True
+        project = Project.objects.get(pk=project_id)
+        project_type_handler = get_project_type_handler(project.project_type_enum)(project)
+        project_type_handler.process_project()
+        return True
 
 
 @shared_task
@@ -37,10 +37,10 @@ def push_project_to_firebase(project_id: int, *, only_stats: bool = False):
             logger.warning("Project(id: %s) push project to firebase already running", project_id)
             return None
 
-    project = Project.objects.get(pk=project_id)
-    project_type_handler = get_project_type_handler(project.project_type_enum)(project)
-    project_type_handler.push_project_on_firebase(only_stats=only_stats)
-    return True
+        project = Project.objects.get(pk=project_id)
+        project_type_handler = get_project_type_handler(project.project_type_enum)(project)
+        project_type_handler.push_project_on_firebase(only_stats=only_stats)
+        return True
 
 
 # TODO: How to trigger this? Scheduled or trigger by pull_mapping_session_from_firebase task?
@@ -62,9 +62,9 @@ def generate_project_exports(
             logger.warning("Project(id: %s) exports generate already running", project.id)
             return None
 
-    project_type_handler = get_project_type_handler(project.project_type_enum)(project)
-    project_type_handler.generate_exports()
-    return True
+        project_type_handler = get_project_type_handler(project.project_type_enum)(project)
+        project_type_handler.generate_exports()
+        return True
 
 
 @shared_task
@@ -74,8 +74,8 @@ def regenerate_global_project_assets():
             logger.warning("regenerate_global_project_assets already running")
             return None
 
-    overall_stats.generate()
-    return True
+        overall_stats.generate()
+        return True
 
 
 @shared_task

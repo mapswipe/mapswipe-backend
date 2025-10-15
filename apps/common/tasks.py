@@ -17,7 +17,7 @@ def clear_expired_django_sessions():
         if not acquired:
             logger.warning("Clear expired django sessions")
             return
-    management.call_command("clearsessions", verbosity=0)
+        management.call_command("clearsessions", verbosity=0)
 
 
 @shared_task

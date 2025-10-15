@@ -19,4 +19,4 @@ def pull_mapping_session_from_firebase():
             logger.warning("Mapping Session Pull from Firebase already running")
             return
 
-    pull_results_from_firebase()
+        pull_results_from_firebase()

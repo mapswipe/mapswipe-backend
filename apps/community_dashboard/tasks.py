@@ -19,4 +19,4 @@ def update_aggregated_data():
             logger.warning("Community Dashboard update aggregate already running")
             return
 
-    UpdateAggregateCommand().handle()
+        UpdateAggregateCommand().handle()
