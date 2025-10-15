@@ -28,7 +28,7 @@ from main.bulk_managers import BulkCreateManager
 from main.config import Config
 from project_types.base import project as base_project
 from project_types.tile_map_service.base.project import create_json_dump
-from project_types.validate.api_calls import ohsome
+from project_types.validate.api_calls import ValidateApiCallError, ohsome
 from utils import fields as custom_fields
 from utils.asset_types.models import AoiGeometryAssetProperty
 from utils.common import Grouping, clean_up_none_keys, to_groups
@@ -144,24 +144,47 @@ class ValidateProject(
         )
 
     def _get_object_geometry_from_ohsome(self, geojson: dict):  # type: ignore[reportMissingTypeArgument]
-        feature_collection = PydanticFeatureCollection.model_validate(geojson)
+        try:
+            feature_collection = PydanticFeatureCollection.model_validate(geojson)
+        except Exception as e:
+            raise base_project.ValidationException(
+                "AOI GeoJSON should be a valid feature collection of polygon or multi-polygon",
+            ) from e
+
         ohsome_request = {
             "endpoint": "elements/geometry",
             "filter": self.project_type_specifics.object_source.ohsome_filter,
         }
 
-        return ohsome(
-            ohsome_request,
-            feature_collection.model_dump_json(),
-            properties="tags, metadata",
-        )
+        try:
+            geojson_result = ohsome(
+                ohsome_request,
+                feature_collection.model_dump_json(),
+                properties="tags, metadata",
+            )
+        except ValidateApiCallError as e:
+            # NOTE: Handles calls from OHSOME, OSMCHA and OSM
+            raise base_project.ValidationException("Failed to fetch data from OHSOME/OSMCHA/OSM") from e
+        except requests.JSONDecodeError as e:
+            # NOTE: Handles calls from OHSOME and OSMCHA
+            # OSM responds in XML format
+            raise base_project.ValidationException(
+                "OHSOME/OSMCHA did not respond with a valid JSON",
+            ) from e
+
+        try:
+            return convert_json_dict_to_features(geojson_result)
+        except Exception as e:
+            raise base_project.ValidationException(
+                "OHSOME did not respond with a valid feature collection of polygon or multi-polygon",
+            ) from e
 
     def _validate_aoi_geojson_file(self):
         if self.project_type_specifics.object_source.aoi_geometry is None:
-            raise base_project.ValidationException("AOI Geometry is missing for validate geojson file")
+            raise base_project.ValidationException("AOI Geometry is missing")
 
         if self.project_type_specifics.object_source.ohsome_filter is None:
-            raise base_project.ValidationException("Ohsome filter is missing for validate geojson file")
+            raise base_project.ValidationException("Ohsome filter is missing")
 
         aoi_asset = self.project.aoi_geometry_input_asset
         if not aoi_asset:
@@ -175,14 +198,9 @@ class ValidateProject(
         with aoi_asset.file.open() as aoi_file:
             aoi_geojson = json.loads(aoi_file.read())
 
-        geojson_result = self._get_object_geometry_from_ohsome(aoi_geojson)
-
         # TODO(tnagorra): Also store intermediate geometries?
 
-        try:
-            return convert_json_dict_to_features(geojson_result)
-        except Exception as e:
-            raise base_project.ValidationException("Invalid Feature Collection") from e
+        return self._get_object_geometry_from_ohsome(aoi_geojson)
 
     def _validate_object_geojson_url(self):
         url = self.project_type_specifics.object_source.object_geojson_url
@@ -192,17 +210,25 @@ class ValidateProject(
         logger.info("Fetching object geojson from %s", url)
 
         # FIXME(frozenhelium): use predefined timeout duration
+        # FIXME(tnagorra): handle timeout error
         response = requests.get(url, timeout=500)
         if response.status_code != 200:
-            logger.warning("Failed to fetch object geojson from %s", url)
+            raise base_project.ValidationException(
+                f"Failed to fetch object geojson from {url}",
+            )
 
         logger.info("Successfully fetched object geojson from %s", url)
-        geojson = response.json()
+        try:
+            geojson = response.json()
+        except Exception as e:
+            raise base_project.ValidationException("GeoJSON URL did not respond with valid JSON") from e
 
         try:
             features, geometry_collection = convert_json_dict_to_geometry_collection(geojson)
         except Exception as e:
-            raise base_project.ValidationException("Invalid Feature Collection") from e
+            raise base_project.ValidationException(
+                "GeoJSON URL did not respond with a valid feature collection of polygon or multi-polygon",
+            ) from e
 
         # TODO(tnagorra): Also store intermediate geometries?
         # TODO(tnagorra): Also create a input geometry?
@@ -242,13 +268,22 @@ class ValidateProject(
             raise base_project.ValidationException("HOT Tasking Manager Project ID is missing")
 
         hot_tm_url = f"{Config.HOT_TASKING_MANAGER_PROJECT_API_LINK}projects/{hot_tm_id}/queries/aoi/?as_file=false"
+        logger.info("Fetching AOI geojson on HOT from %s", hot_tm_url)
 
         # FIXME(frozenhelium): use predefined timeout duration
+        # FIXME(tnagorra): handle timeout error
         aoi_result = requests.get(hot_tm_url, timeout=500)
         if aoi_result.status_code != 200:
-            logger.warning("Failed to fetch AOI geojson from HOT for tm_id %s", hot_tm_id)
+            raise base_project.ValidationException(
+                f"Failed to fetch AOI GeoJSON from HOT Tasking Manager for tm_id {hot_tm_id}",
+            )
 
         logger.info("Successfully fetched AOI geojson from HOT for tm_id %s", hot_tm_id)
+
+        try:
+            geometry_dict = aoi_result.json()
+        except Exception as e:
+            raise base_project.ValidationException("HOT Tasking Manager did not respond with a valid JSON") from e
 
         aoi_geojson = {
             "type": "FeatureCollection",
@@ -259,13 +294,15 @@ class ValidateProject(
             "features": [
                 {
                     "type": "Feature",
-                    "geometry": aoi_result.json(),
+                    "geometry": geometry_dict,
                     "properties": {
                         "hot_tm_project_id": hot_tm_id,
                     },
                 },
             ],
         }
+
+        # TODO(tnagorra): Add area validation for the AOI
 
         # TODO(tnagorra): Also create a input geometry?
         # TODO(tnagorra): Also store intermediate geometries?
@@ -296,12 +333,7 @@ class ValidateProject(
         self.project.centroid = geometry_center
         self.project.save(update_fields=["aoi_geometry", "total_area", "bbox", "centroid"])
 
-        geojson_result = self._get_object_geometry_from_ohsome(aoi_geojson)
-
-        try:
-            return convert_json_dict_to_features(geojson_result)
-        except Exception as e:
-            raise base_project.ValidationException("Invalid Feature Collection") from e
+        return self._get_object_geometry_from_ohsome(aoi_geojson)
 
     @typing.override
     def validate(self) -> list[AoiFeature]:
