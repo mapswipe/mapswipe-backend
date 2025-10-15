@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.2.4](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.3..v0.2.4) - 2025-10-15
+### Changes:
+
+#### 🚀  Features
+
+- *(project)* Update only necessary field to firebase for project stats - ([05b7563](https://github.com/mapswipe/mapswipe-backend/commit/05b756338b4fd08223dfde63944aca1c0809e02d))
+- *(public)* Show PAUSED projects in public endpoint - ([c640894](https://github.com/mapswipe/mapswipe-backend/commit/c640894c5b38570521455edfa365752e2a1f2898))
+- Feat!(firebase): add FirebaseOrInternalIdInputType
+
+for firebase and internal id support for id for Contributor user and userGroup
+BREAKING CHANGE: userId, userGroupId and id for contributor and
+community queries are changed - ([f8197b2](https://github.com/mapswipe/mapswipe-backend/commit/f8197b2a0f434d82e9c9a8e27b615c9ccda4e8be))
+
+#### 🐛 Bug Fixes
+
+- *(client-type)* Add missing ios mappings - ([b190c38](https://github.com/mapswipe/mapswipe-backend/commit/b190c3801be1bc6a4810c7295700a3d5d66f8043))
+- *(contributor)* Set firebase status initially during sync - ([7321bf3](https://github.com/mapswipe/mapswipe-backend/commit/7321bf3cfc9cfc383e5baa86d4415b53c31bad45))
+- *(export)* Use ISO8601 date format for mapping export - ([8ac62f9](https://github.com/mapswipe/mapswipe-backend/commit/8ac62f977e7408789c7072b0d65b643b99091875))
+- *(loaddata)* Fix project's status mapping - ([c37f5ac](https://github.com/mapswipe/mapswipe-backend/commit/c37f5ac8513ffe91be2f60ae2af0d64609da0ec7))
+- *(loaddata)* Add missing projects's project_type_specifics and description - ([bfcd563](https://github.com/mapswipe/mapswipe-backend/commit/bfcd563307aa81065aee437bb1481cc92a306395))
+- *(project)* Handle exceptions from external sources - ([0a6a16a](https://github.com/mapswipe/mapswipe-backend/commit/0a6a16a571582ae6553314199a7b03a5ba8fb270))
+- *(project)* Set 0 as default for total_area and number_of_tasks - ([885c55b](https://github.com/mapswipe/mapswipe-backend/commit/885c55bca9827671a5a8f1c1d389a1fca2e14776))
+- *(project)* Change default group_size when creating a project - ([e08ff69](https://github.com/mapswipe/mapswipe-backend/commit/e08ff694078e29e06576928264cabd48d0e06ab1))
+- *(project)* Fix type for slack_progress_notifications - ([211bd2d](https://github.com/mapswipe/mapswipe-backend/commit/211bd2d925894bca8c9d22b41fd41295197de9d5))
+- *(project)* Fix area conversion to km sq - ([cb034ac](https://github.com/mapswipe/mapswipe-backend/commit/cb034ac226e631c743bad908e7830c2399f96f4a))
+- *(project)* Update uniqueness constraint on project tasks - ([1b76e14](https://github.com/mapswipe/mapswipe-backend/commit/1b76e14329e4c13c003381d33e65fa4c9c002efe))
+- *(release)* Update uv sync command - ([7c57a2d](https://github.com/mapswipe/mapswipe-backend/commit/7c57a2d1682bd000490f662e09005c0e0aef03e1))
+- *(slack)* Update project messages - ([01fffc2](https://github.com/mapswipe/mapswipe-backend/commit/01fffc2eba767cba68bb0c6406233caf7c8d0388))
+- *(tasks)* Fix use of context manager for redis lock - ([60bf58a](https://github.com/mapswipe/mapswipe-backend/commit/60bf58a7c1bd41d2f6b454ba1914f2f6868513d6))
+- *(tileserver)* Remove maxar tile servers from the list - ([2fb8662](https://github.com/mapswipe/mapswipe-backend/commit/2fb86628c6f0d1cc752d99ceb035cae55395de2d))
+- *(validate-image)* Use annotation_id instead of image_id when possible - ([8424a73](https://github.com/mapswipe/mapswipe-backend/commit/8424a733a4f164ae8dda751a6ed0117abd69aab3))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(firebase)* Update submodule for firebase - ([f42c8ce](https://github.com/mapswipe/mapswipe-backend/commit/f42c8ced7a51a29234b166862190cd5aa2f9a6d5))
+- *(project)* Add deprecation_reason for project's total_area - ([6836329](https://github.com/mapswipe/mapswipe-backend/commit/683632932c4e7482a2a6b7e789605ad359ce3698))
+
+### 🍻 Pull Requests (1)
+- (#200) [Post deployment fixes](https://github.com/mapswipe/mapswipe-backend/pull/200)
+
+
 ## [0.2.3](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.2..v0.2.3) - 2025-10-13
 ### Changes:
 
