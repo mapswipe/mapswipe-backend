@@ -627,7 +627,7 @@ class TestProjectMutation(TestCase):
                 additionalInfoUrl=latest_project.additional_info_url,
                 description=latest_project.description,
                 verificationNumber=3,
-                groupSize=25,
+                groupSize=120,
                 maxTasksPerUser=None,
                 isFeatured=latest_project.is_featured,
                 status=self.genum(Project.Status.DRAFT),
