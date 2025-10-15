@@ -39,7 +39,4 @@ class PublicProjectType(ProjectExportAssetTypeMixin):
         description="Project name generated from topic, region, project number, and requesting organization name.",
     )
     def name(self, project: strawberry.Parent[Project]) -> str:
-        if getattr(project, "generated_name", None):
-            return project.generated_name  # type: ignore[reportAttributeAccessIssue]
-        # This is used for mutation response
-        return project.generate_name()
+        return project.generated_name  # type: ignore[reportAttributeAccessIssue]
