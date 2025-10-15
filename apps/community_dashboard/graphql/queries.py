@@ -5,11 +5,11 @@ from dataclasses import field as dataclass_field
 import strawberry
 from asgiref.sync import sync_to_async
 from django.db import models
-from django.shortcuts import aget_object_or_404
 from django.utils import timezone
 
 from apps.community_dashboard.models import AggregatedUserGroupStatData, AggregatedUserStatData
-from apps.contributor.models import ContributorUser
+from apps.contributor.models import ContributorUser, ContributorUserGroup
+from utils.graphql.inputs import FirebaseOrInternalIdInputType
 
 from .types import (
     AggregateHelper,
@@ -117,17 +117,19 @@ class Query:
     ) -> CommunityFilteredStats:
         return CommunityFilteredStats(date_range=date_range)
 
+    # By Internal ID
     @strawberry.field
     async def community_user_stats(
         self,
-        firebase_id: strawberry.ID,
+        user_id: FirebaseOrInternalIdInputType,
     ) -> ContributorUserStats:
-        user = await aget_object_or_404(ContributorUser, firebase_id=firebase_id)
+        user = await FirebaseOrInternalIdInputType.aget_object_or_404(ContributorUser, object_id=user_id)
         return ContributorUserStats(user=user)
 
     @strawberry.field
     async def community_user_group_stats(
         self,
-        user_group_id: strawberry.ID,
+        user_group_id: FirebaseOrInternalIdInputType,
     ) -> ContributorUserGroupStats:
-        return ContributorUserGroupStats(user_group_id=int(user_group_id))
+        user_group = await FirebaseOrInternalIdInputType.aget_object_or_404(ContributorUserGroup, object_id=user_group_id)
+        return ContributorUserGroupStats(user_group=user_group)

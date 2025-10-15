@@ -11,7 +11,7 @@ from django.utils import timezone
 from django_cte import With  # type: ignore[reportMissingTypeStubs]
 
 from apps.community_dashboard.models import AggregatedUserGroupStatData, AggregatedUserStatData
-from apps.contributor.models import ContributorUser
+from apps.contributor.models import ContributorUser, ContributorUserGroup
 from apps.project.models import Project, ProjectTypeEnum
 from utils.graphql.inputs import DateRangeInput
 from utils.graphql.types import AreaSqKm, GenericJSON
@@ -350,6 +350,10 @@ class ContributorUserStats:
         return typing.cast("strawberry.ID", self._user.pk)
 
     @strawberry.field
+    async def firebase_id(self) -> strawberry.ID:
+        return typing.cast("strawberry.ID", self._user.firebase_id)
+
+    @strawberry.field
     async def stats(self) -> ContributorUserStatType:
         # TODO: Cache this
         agg_data = await self.u_qs.aaggregate(
@@ -423,15 +427,15 @@ class ContributorUserGroupFilteredStats(ContributorUserUserGroupBaseFilterStatsQ
 
 @strawberry.type
 class ContributorUserGroupStats:
-    user_group_id: InitVar[int]
+    user_group: InitVar[ContributorUserGroup]
 
     _user_group_id: strawberry.Private[int] = dataclass_field(init=False)
     _ug_qs: strawberry.Private[models.QuerySet[AggregatedUserGroupStatData]] = dataclass_field(init=False)
 
-    def __post_init__(self, user_group_id: int):
-        self._user_group_id = user_group_id
+    def __post_init__(self, user_group: ContributorUserGroup):
+        self._user_group_id = user_group.pk
         self._ug_qs = AggregatedUserGroupStatData.objects.filter(
-            user_group_id=user_group_id,
+            user_group_id=user_group.pk,
         )
 
     @strawberry.field
