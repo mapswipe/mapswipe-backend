@@ -201,7 +201,7 @@ def _export_project_data(project: Project, tmp_directory: Path):
         if project.progress != previous_progress:
             # FIXME(tnagorra): Do we only send updates for the 2 fields?
             transaction.on_commit(
-                lambda: push_project_to_firebase.delay(project_id=project.id),
+                lambda: push_project_to_firebase.delay(project_id=project.id, only_stats=True),
             )
             project.update_firebase_push_status(FirebasePushStatusEnum.PENDING, False)
 
