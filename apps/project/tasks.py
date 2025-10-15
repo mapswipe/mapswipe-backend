@@ -31,7 +31,7 @@ def process_project_task(project_id: int):
 
 
 @shared_task
-def push_project_to_firebase(project_id: int):
+def push_project_to_firebase(project_id: int, *, only_stats: bool = False):
     with CeleryLock.redis_lock(CeleryLock.Key.PUSH_PROJECT_TO_FIREBASE.format(project_id)) as acquired:
         if not acquired:
             logger.warning("Project(id: %s) push project to firebase already running", project_id)
@@ -39,7 +39,7 @@ def push_project_to_firebase(project_id: int):
 
     project = Project.objects.get(pk=project_id)
     project_type_handler = get_project_type_handler(project.project_type_enum)(project)
-    project_type_handler.push_project_on_firebase()
+    project_type_handler.push_project_on_firebase(only_stats=only_stats)
     return True
 
 

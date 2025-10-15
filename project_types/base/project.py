@@ -452,9 +452,26 @@ class BaseProject[
             },
         )
 
-    def update_project_on_firebase(self, project_ref: FbReference, fb_project: firebase_ext_models.FbProject):
+    def update_project_on_firebase(
+        self,
+        project_ref: FbReference,
+        fb_project: firebase_ext_models.FbProject,
+        *,
+        only_stats: bool = False,
+    ):
         assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
         assert self.project.tutorial is not None, "Tutorial is required before project can be pushed to firebase"
+
+        if only_stats:
+            project_ref.update(
+                value=firebase_utils.serialize(
+                    firebase_models.FbProjectUpdateStatsInput(
+                        contributorCount=self.project.number_of_contributor_users,
+                        progress=self.project.progress,
+                    ),
+                ),
+            )
+            return
 
         project_ref.update(
             value=firebase_utils.serialize(
@@ -482,7 +499,7 @@ class BaseProject[
             ),
         )
 
-    def _push_project_on_firebase(self):
+    def _push_project_on_firebase(self, *, only_stats: bool = False):
         if self.project.status_enum not in [
             Project.Status.READY_TO_PUBLISH,
             Project.Status.PUBLISHED,
@@ -525,11 +542,11 @@ class BaseProject[
             valid_project = RelaxedModel.model_validate(obj=fb_project)
             valid_project = firebase_ext_models.FbProject.model_validate(obj=valid_project)
 
-            self.update_project_on_firebase(project_ref, valid_project)
+            self.update_project_on_firebase(project_ref, valid_project, only_stats=only_stats)
 
-    def push_project_on_firebase(self):
+    def push_project_on_firebase(self, *, only_stats: bool = False):
         try:
-            self._push_project_on_firebase()
+            self._push_project_on_firebase(only_stats=only_stats)
         except Exception as ex:
             if isinstance(ex, ValidationException):
                 logger.warning(
