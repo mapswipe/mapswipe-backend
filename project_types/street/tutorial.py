@@ -34,7 +34,7 @@ class StreetTutorial(
         return True
 
     @typing.override
-    def get_task_specifics_for_firebase(self, task: TutorialTask, index: int):
+    def get_task_specifics_for_firebase(self, task: TutorialTask, index: int, screen: int):
         task_specifics = self.tutorial_task_property_class.model_validate(task.project_type_specifics)
         return firebase_models.FbStreetTutorialTask(
             projectId=self.tutorial.firebase_id,
@@ -42,7 +42,7 @@ class StreetTutorial(
             taskId=task_specifics.mapillary_image_id,
             geometry="",
             referenceAnswer=task.reference,
-            screen=task.scenario.scenario_page_number,
+            screen=screen,
         )
 
     @typing.override

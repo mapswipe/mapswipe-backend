@@ -37,7 +37,7 @@ class ValidateImageTutorial(
         super().__init__(tutorial)
 
     @typing.override
-    def get_task_specifics_for_firebase(self, task: TutorialTask, index: int):
+    def get_task_specifics_for_firebase(self, task: TutorialTask, index: int, screen: int):
         task_specifics = self.tutorial_task_property_class.model_validate(task.project_type_specifics)
 
         return firebase_models.FbValidateImageTutorialTask(
@@ -45,7 +45,7 @@ class ValidateImageTutorial(
             groupId=self.get_tutorial_group_key(),
             projectId=self.tutorial.firebase_id,
             referenceAnswer=task.reference,
-            screen=task.scenario.scenario_page_number,
+            screen=screen,
             taskId=task_specifics.image_id or str(index),
             url=task_specifics.url,
             fileName=task_specifics.file_name,
