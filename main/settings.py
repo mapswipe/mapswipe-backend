@@ -201,6 +201,7 @@ INSTALLED_APPS = [
     "djangoql",
     "rest_framework",
     "drf_spectacular",
+    "admin_auto_filters",
     # - Health-check
     "health_check",  # required
     "health_check.db",
@@ -406,7 +407,7 @@ PREMAILER_OPTIONS = dict(
 )
 
 # Redis lock
-REDIS_LOCK_EXPIRE = 60 * 10  # Lock expires in 10min (in seconds)
+DEFAULT_REDIS_LOCK_EXPIRE = 60 * 10  # Lock expires in 10min (in seconds)
 
 # Cache
 CACHE_REDIS_URL = env("CACHE_REDIS_URL")
@@ -419,9 +420,10 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
-        "local-memory": {
-            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        },
+        "KEY_PREFIX": "djc-",
+    },
+    "local-memory": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
     },
 }
 
