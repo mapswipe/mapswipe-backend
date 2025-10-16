@@ -83,13 +83,6 @@ def tile_coords_and_zoom_to_quad_key(tile_x: int, tile_y: int, zoom: int) -> str
     return quad_key
 
 
-# FIXME(tnagorra): This is not used.
-def quad_key_to_bing_url(quad_key: str, api_key: str):
-    """Create a tile image URL linking to a Bing tile server."""
-    # FIXME(tnagorra): We should not hardcode the urls
-    return f"https://ecn.t0.tiles.virtualearth.net/tiles/a{quad_key}.jpeg?g=7505&mkt=en-US&token={api_key}"
-
-
 # FIXME(tnagorra): Add typings for osgeo
 def geometry_from_tile_coords(tile_x: float, tile_y: float, zoom: int, *, skip_flatten: bool = False) -> str:
     """Compute the polygon geometry of a tile map service tile."""
