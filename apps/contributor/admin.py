@@ -2,6 +2,9 @@ import typing
 
 from admin_auto_filters.filters import AutocompleteFilterFactory
 from django.contrib import admin
+from django.db import models
+from django.db.models.functions import Coalesce
+from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.html import format_html
 from djangoql.admin import DjangoQLSearchMixin  # type: ignore[reportMissingTypeStubs]
@@ -69,19 +72,49 @@ class ContributorTeamAdmin(
     UserResourceAdmin,
     admin.ModelAdmin,  # type: ignore[reportMissingTypeArgument]
 ):
-    list_display = ("name", "view_team_members")
+    list_display = (
+        "name",
+        "members_count",
+    )
     ordering = ("name",)
     search_fields = ("name",)
     list_select_related = True
+
+    @typing.override
+    def get_queryset(self, request: HttpRequest) -> models.QuerySet[ContributorTeam]:
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(
+                members_count=Coalesce(
+                    models.Subquery(
+                        ContributorUser.objects.filter(
+                            team=models.OuterRef("id"),
+                        )
+                        .order_by()
+                        .values("team")
+                        .annotate(c=models.Count("id"))
+                        .values("c")[:1],
+                        output_field=models.IntegerField(),
+                    ),
+                    0,
+                ),
+            )
+        )
 
     @typing.override
     def save_model(self, request, obj, form, change):  # type: ignore[reportMissingParameterType]
         super().save_model(request, obj, form, change)
         FirebaseContributorTeam(obj).trigger()
 
-    def view_team_members(self, obj):  # type: ignore[reportMissingParameterType]
-        url = reverse("admin:contributor_contributoruser_changelist") + f"?team__id__exact={obj.id}"
-        return format_html('<a href="{}">View Team Members</a>', url)
+    @admin.display(ordering="members_count", description="Members count")
+    def members_count(self, obj: ContributorTeam):
+        url = reverse("admin:contributor_contributoruser_changelist") + f"?team={obj.id}"
+        return format_html(
+            '<a href="{}">{}</a>',
+            url,
+            obj.members_count,  # type: ignore[reportAttributeAccessIssue]
+        )
 
 
 @admin.register(ContributorUserGroupMembership)
