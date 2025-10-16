@@ -201,6 +201,7 @@ INSTALLED_APPS = [
     "djangoql",
     "rest_framework",
     "drf_spectacular",
+    "admin_auto_filters",
     # - Health-check
     "health_check",  # required
     "health_check.db",

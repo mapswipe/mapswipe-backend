@@ -1,5 +1,6 @@
 import typing
 
+from admin_auto_filters.filters import AutocompleteFilterFactory
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
@@ -23,9 +24,12 @@ class ContributorUserAdmin(DjangoQLSearchMixin, admin.ModelAdmin):  # type: igno
         "modified_at",
     )
     list_display = ("firebase_id", "username", "team", "created_at")
+    list_filter = (
+        AutocompleteFilterFactory("Team", "team"),
+        "created_at",
+    )
     ordering = ("username", "team", "created_at")
     search_fields = ("username",)
-    # list_filter = ("team",)
     list_select_related = True
     autocomplete_fields = ("team",)
 
