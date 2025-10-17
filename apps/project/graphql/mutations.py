@@ -1,8 +1,10 @@
 import strawberry
 import strawberry_django
+from django.utils.translation import gettext
 from strawberry_django.permissions import IsAuthenticated
 
-from apps.project.models import Organization, Project
+from apps.common.models import AssetTypeEnum
+from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum
 from apps.project.serializers import (
     OrganizationSerializer,
     ProcessedProjectUpdateSerializer,
@@ -13,7 +15,7 @@ from apps.project.serializers import (
 )
 from main.graphql.context import Info
 from utils.graphql.mutations import ModelMutation
-from utils.graphql.types import MutationResponseType
+from utils.graphql.types import CustomErrorType, MutationResponseType
 
 from .inputs.inputs import (
     OrganizationCreateInput,
@@ -24,7 +26,7 @@ from .inputs.inputs import (
     ProjectStatusUpdateInput,
     ProjectUpdateInput,
 )
-from .types.types import OrganizationType, ProjectAssetType, ProjectType
+from .types.types import OrganizationType, ProjectAssetsDeleteType, ProjectAssetType, ProjectType
 
 
 @strawberry.type
@@ -90,3 +92,44 @@ class Mutation:
     ) -> MutationResponseType[ProjectType]:
         project = await Project.objects.aget(pk=pk)
         return await ModelMutation(ProjectStatusUpdateSerializer).handle_update_mutation(data, info, project)
+
+    @strawberry_django.mutation(extensions=[IsAuthenticated()])
+    async def delete_project_assets(
+        self,
+        info: Info,
+        project_id: strawberry.ID,
+        asset_input_type: list[ProjectAssetInputTypeEnum],
+    ) -> MutationResponseType[ProjectAssetsDeleteType]:
+        project = await Project.objects.aget(pk=project_id)
+
+        if project.status_enum not in [Project.Status.DRAFT, Project.Status.PROCESSING_FAILED]:
+            return MutationResponseType(
+                ok=False,
+                errors=CustomErrorType(
+                    {
+                        "array_errors": None,
+                        "client_id": project.client_id,
+                        "field": "nonFieldErrors",
+                        "messages": gettext("Cannot delete assets of project with status %s") % project.status_enum.label,
+                    },
+                ),
+                result=None,
+            )
+
+        deleted_count = await (
+            ProjectAsset.usable_objects()
+            .filter(
+                project_id=project_id,
+                type=AssetTypeEnum.INPUT,
+                input_type__in=asset_input_type,
+            )
+            .aupdate(marked_as_deleted=True)
+        )
+
+        return MutationResponseType(
+            ok=True,
+            errors=None,
+            result=ProjectAssetsDeleteType(
+                count=deleted_count,
+            ),
+        )
