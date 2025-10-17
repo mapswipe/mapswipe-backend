@@ -40,7 +40,7 @@ class ValidateTutorial(
         return True
 
     @typing.override
-    def get_task_specifics_for_firebase(self, task: TutorialTask, index: int):
+    def get_task_specifics_for_firebase(self, task: TutorialTask, index: int, screen: int):
         task_specifics = self.tutorial_task_property_class.model_validate(task.project_type_specifics)
 
         geojson = json.loads(task_specifics.object_geometry)
@@ -52,7 +52,7 @@ class ValidateTutorial(
             properties=firebase_models.FbValidateTutorialTaskProperties(
                 id=task_specifics.identifier,
                 reference=task.reference,
-                screen=task.scenario.scenario_page_number,
+                screen=screen,
             ),
             geometry=geometry_wkt,
         )

@@ -61,18 +61,24 @@ class RasterConfig:
         match name:
             case RasterTileServerNameEnum.BING:
                 api_key = settings.MAP_IMAGE_BING_API_KEY
-                url = "https://ecn.t0.tiles.virtualearth.net/tiles/a{{quad_key}}.jpeg?g=7505&mkt=en-US&token={apiKey}"
+                # FIXME(tnagorra):
+                # How do we keep the `g` value up-to-date?
+                # Mapswipe App has a hardcoded value of g=1
+                # https://dev.virtualearth.net/REST/v1/Imagery/Metadata/Aerial?key={key} responds with g=15384
+                g = 15384
+                url = "https://ecn.t0.tiles.virtualearth.net/tiles/a{{quad_key}}.jpeg?g={g}&mkt=en-US&token={apiKey}"
                 return {
-                    "url": url.format(apiKey=api_key),
-                    "raw_url": url.format(apiKey="{apiKey}"),
+                    "url": url.format(apiKey=api_key, g=g),
+                    "raw_url": url.format(apiKey="{apiKey}", g=g),
                     "api_key": api_key,
                     "credits": "© 2019 Microsoft Corporation, Earthstar Geographics SIO",
-                    "min_zoom": 0,
+                    "min_zoom": 1,
                     "max_zoom": 21,
                 }
             case RasterTileServerNameEnum.MAPBOX:
                 api_key = settings.MAP_IMAGE_MAPBOX_API_KEY
                 url = "https://d.tiles.mapbox.com/v4/mapbox.satellite/{{z}}/{{x}}/{{y}}.jpg?access_token={apiKey}"
+                # Documentation at https://docs.mapbox.com/data/tilesets/reference/mapbox-satellite
                 return {
                     "url": url.format(apiKey=api_key),
                     "raw_url": url.format(apiKey="{apiKey}"),
@@ -83,6 +89,7 @@ class RasterConfig:
                 }
             case RasterTileServerNameEnum.MAXAR_PREMIUM:
                 api_key = settings.MAP_IMAGE_MAXAR_PREMIUM_API_KEY
+                # Deprecated
                 url = (
                     "https://services.digitalglobe.com"
                     "/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg"
@@ -99,6 +106,7 @@ class RasterConfig:
                 }
             case RasterTileServerNameEnum.MAXAR_STANDARD:
                 api_key = settings.MAP_IMAGE_MAXAR_STANDARD_API_KEY
+                # Deprecated
                 url = (
                     "https://services.digitalglobe.com"
                     "/earthservice/tmsaccess/tms/1.0.0/DigitalGlobe%3AImageryTileService@EPSG%3A3857@jpg"
@@ -115,6 +123,7 @@ class RasterConfig:
                 }
             case RasterTileServerNameEnum.ESRI:
                 url = "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                # Documentation at https://doc.arcgis.com/en/data-appliance/latest/maps/world-imagery.htm
                 return {
                     "url": url,
                     "raw_url": url,
@@ -125,6 +134,7 @@ class RasterConfig:
                 }
             case RasterTileServerNameEnum.ESRI_BETA:
                 url = "https://clarity.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                # Documentation at https://doc.arcgis.com/en/data-appliance/latest/maps/world-imagery.htm
                 return {
                     "url": url,
                     "raw_url": url,

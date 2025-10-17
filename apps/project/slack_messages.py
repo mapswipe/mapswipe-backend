@@ -78,7 +78,6 @@ class SlackMessage:
     ) -> dict:  # type: ignore[reportMissingTypeArgument]
         progress_bar = SlackMessage.format_progress_bar(project.progress)
         username = SlackMessage.format_user_link(project.created_by)
-        project_text = SlackMessage.format_project_link(project)
         tutorial_text = SlackMessage.format_tutorial_link(project.tutorial)
         status = SlackMessage.format_project_status(project.status_enum)
         project_type = SlackMessage.format_project_type(project.project_type_enum)
@@ -89,7 +88,6 @@ class SlackMessage:
             "text": {
                 "type": "mrkdwn",
                 "text": (
-                    f"Project: {project_text}\n"
                     f"Tutorial: {tutorial_text}\n"
                     f"Project Type: {project_type}\n"
                     f"Requesting Organization: {project.requesting_organization.name}\n"
@@ -122,7 +120,7 @@ class SlackMessage:
         website_url = Config.WebsiteKeys.project(firebase_id=project.firebase_id)
 
         if progress >= 100:
-            text = f"Project '{SlackMessage.format_project_name(project)}' reached 100%"
+            text = "Project reached 100%"
             blocks = [
                 {
                     "type": "header",
@@ -135,21 +133,20 @@ class SlackMessage:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "Congratulations! This project is now complete. Great work!",
+                        "text": f"Congratulations! {SlackMessage.format_project_link(project)} is now complete. Great work!",
                     },
                 },
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"You can now *finish* this <{project_url}|project> and create another one. :mapswipe:",
+                        "text": f"You can now *finish* this <{project_url}|project> and create another one.",
                     },
                     "accessory": {
                         "type": "button",
                         "text": {
                             "type": "plain_text",
                             "text": "Visit Website",
-                            "emoji": True,
                         },
                         "value": "website-link",
                         "url": website_url,
@@ -163,7 +160,7 @@ class SlackMessage:
             }
 
         if 90 <= progress < 100:
-            text = f"Project '{SlackMessage.format_project_name(project)}' reached 90%"
+            text = "Project reached 90%"
             blocks = [
                 {
                     "type": "header",
@@ -176,7 +173,10 @@ class SlackMessage:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "Almost there! Get your next projects ready.",
+                        "text": (
+                            f"Almost there! {SlackMessage.format_project_link(project)} is nearing completion.\n\n"
+                            "Get your next projects ready."
+                        ),
                     },
                 },
             ]
@@ -185,12 +185,19 @@ class SlackMessage:
                 "blocks": blocks,
             }
 
-        text = f"Project '{SlackMessage.format_project_name(project)}' reached {project.progress}%"
+        text = f"Project reached {project.progress}%"
         blocks = [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": f"Project reached {project.progress}%",
+                },
+            },
             {
                 "type": "section",
                 "text": {
-                    "type": "mrkdwn",
+                    "type": "plain_text",
                     "text": "We are getting there! One swipe at a time.",
                 },
             },
@@ -206,6 +213,7 @@ class SlackMessage:
         project: Project,
     ) -> MapswipeSlack.MapswipeSlackMessageArgumentType:
         website_url = Config.WebsiteKeys.project(firebase_id=project.firebase_id)
+        project_url = Config.ManagerDashboardUrls.project_url(project_id=project.pk)
 
         text = "Project published! :raised_hands:"
         blocks = [
@@ -221,20 +229,34 @@ class SlackMessage:
             {
                 "type": "section",
                 "text": {
-                    "type": "mrkdwn",
+                    "type": "plain_text",
                     "text": "Happy Swiping! :slightly_smiling_face: :mapswipe:",
                 },
-                "accessory": {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Visit Website",
-                        "emoji": True,
+            },
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Manage",
+                        },
+                        "value": project.pk,
+                        "url": project_url,
+                        "action_id": "open-manager-dashboard-link",
                     },
-                    "value": "website-link",
-                    "url": website_url,
-                    "action_id": "button-action",
-                },
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Visit Website",
+                        },
+                        "value": project.firebase_id,
+                        "url": website_url,
+                        "action_id": "open-website-link",
+                    },
+                ],
             },
         ]
         return {

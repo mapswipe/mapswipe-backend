@@ -39,14 +39,13 @@ class TileMapServiceBaseTutorial[
         self,
         task: TutorialTask,
         index: int,
+        screen: int,
     ) -> firebase_models.FbTileMapServiceTutorialTask:
         task_specifics = self.tutorial_task_property_class.model_validate(task.project_type_specifics)
 
-        # FIXME(tnagorra): Add validation that scenario_page_number should start from 1
-
         i = index % 6
 
-        task_x = 100 + (2 * task.scenario.scenario_page_number - 1)
+        task_x = 100 + (2 * screen - 1)
         if i < 3:
             task_x += 0
         else:
@@ -65,7 +64,7 @@ class TileMapServiceBaseTutorial[
             groupId=self.get_tutorial_group_key(),
             projectId=self.tutorial.firebase_id,
             referenceAnswer=task.reference,
-            screen=task.scenario.scenario_page_number,
+            screen=screen,
             taskId_real=f"{task_specifics.tile_z}-{task_specifics.tile_x}-{task_specifics.tile_y}",
             taskX=task_x,
             taskY=task_y,

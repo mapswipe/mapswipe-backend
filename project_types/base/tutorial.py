@@ -75,7 +75,7 @@ class BaseTutorial[
         cls._inheritance_checks()
 
     @abstractmethod
-    def get_task_specifics_for_firebase(self, task: TutorialTask, index: int) -> BaseModel: ...
+    def get_task_specifics_for_firebase(self, task: TutorialTask, index: int, screen: int) -> BaseModel: ...
 
     @abstractmethod
     def get_group_specifics_for_firebase(self) -> BaseModel: ...
@@ -121,10 +121,21 @@ class BaseTutorial[
             *self.get_task_sort_keys(["scenario__scenario_page_number"]),
         )
 
+        # NOTE: We want to use the index of the scenario instead of the scenario page
+        scenario_index_map: dict[int, int] = {}
+        # FIXME(tnagorra): We only need to read scenario.pk
+        scenarios = self.tutorial.scenarios.order_by("scenario_page_number").all()
+        for scenario_index, scenario in enumerate(scenarios):
+            scenario_index_map[scenario.pk] = scenario_index + 1
+
         fb_tasks: list[dict[str, typing.Any]] = []
         index = 1
         for task in tasks.iterator():
-            task_tutorial_specific_data = self.get_task_specifics_for_firebase(task, index)
+            task_tutorial_specific_data = self.get_task_specifics_for_firebase(
+                task,
+                index,
+                scenario_index_map[task.scenario.pk],
+            )
             fb_tasks.append(firebase_utils.serialize(task_tutorial_specific_data))
             index += 1
 
@@ -177,8 +188,8 @@ class BaseTutorial[
         self.create_tasks_on_firebase(task_ref)
         self.create_groups_on_firebase(group_ref)
 
-        scenarios = self.tutorial.scenarios.all()
-        informationPages = self.tutorial.information_pages.all()
+        scenarios = self.tutorial.scenarios.order_by("scenario_page_number").all()
+        information_pages = self.tutorial.information_pages.order_by("page_number").all()
 
         tutorial_data = firebase_models.FbBaseTutorial(
             exampleImage1=None,
@@ -186,19 +197,19 @@ class BaseTutorial[
             contributorCount=0,
             informationPages=[
                 firebase_models.FbInformationPage(
-                    title=informationPage.title,
-                    pageNumber=informationPage.page_number,
+                    title=info_page.title,
+                    pageNumber=info_page_index + 1,
                     blocks=[
                         firebase_models.FbInformationPageBlock(
-                            blockNumber=block.block_number,
+                            blockNumber=block_index + 1,
                             blockType=TutorialInformationPageBlockTypeEnum(block.block_type).to_firebase(),
                             textDescription=block.text,
                             image=get_absolute_uri(block.image.file if block.image else None),
                         )
-                        for block in informationPage.blocks.all()
+                        for block_index, block in enumerate(info_page.blocks.order_by("block_number").all())
                     ],
                 )
-                for informationPage in informationPages
+                for info_page_index, info_page in enumerate(information_pages)
             ],
             lookFor=self.tutorial.project.look_for,
             name=self.tutorial.name,
@@ -258,8 +269,8 @@ class BaseTutorial[
         self.create_tasks_on_firebase(task_ref)
         self.create_groups_on_firebase(group_ref)
 
-        scenarios = self.tutorial.scenarios.all()
-        informationPages = self.tutorial.information_pages.all()
+        scenarios = self.tutorial.scenarios.order_by("scenario_page_number").all()
+        information_pages = self.tutorial.information_pages.order_by("page_number").all()
 
         tutorial_data = firebase_models.FbBaseTutorial(
             exampleImage1=None,
@@ -267,19 +278,19 @@ class BaseTutorial[
             contributorCount=0,
             informationPages=[
                 firebase_models.FbInformationPage(
-                    title=informationPage.title,
-                    pageNumber=informationPage.page_number,
+                    title=info_page.title,
+                    pageNumber=info_page_index + 1,
                     blocks=[
                         firebase_models.FbInformationPageBlock(
-                            blockNumber=block.block_number,
+                            blockNumber=block_index + 1,
                             blockType=TutorialInformationPageBlockTypeEnum(block.block_type).to_firebase(),
                             textDescription=block.text,
                             image=get_absolute_uri(block.image.file if block.image else None),
                         )
-                        for block in informationPage.blocks.all()
+                        for block_index, block in enumerate(info_page.blocks.order_by("block_number").all())
                     ],
                 )
-                for informationPage in informationPages
+                for info_page_index, info_page in enumerate(information_pages)
             ],
             lookFor=self.tutorial.project.look_for,
             name=self.tutorial.name,
