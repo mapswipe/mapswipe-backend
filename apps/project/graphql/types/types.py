@@ -86,6 +86,7 @@ class ProjectAssetType(UserResourceTypeMixin, CommonAssetTypeMixin):
 
 
 # Project
+# NOTE: This is also used for public project type.
 @strawberry.interface
 class ProjectExportAssetTypeMixin:
     @strawberry.field
