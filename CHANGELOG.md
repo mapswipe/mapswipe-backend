@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.6](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.5..v0.2.6) - 2025-10-17
+### Changes:
+
+#### 🚀  Features
+
+- *(project)* Add mutation to delete assets in bulk - ([b593148](https://github.com/mapswipe/mapswipe-backend/commit/b593148ae120c9f84ef09598510df6a20eab8ae7))
+
+### 🍻 Pull Requests (1)
+- (#208) [Add mutation to delete assets in bulk](https://github.com/mapswipe/mapswipe-backend/pull/208)
+
+
 ## [0.2.5](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.4..v0.2.5) - 2025-10-17
 ### Changes:
 
@@ -455,7 +466,6 @@ community queries are changed - ([f8197b2](https://github.com/mapswipe/mapswipe-
 - *(project)* Use enum label on error message instead of enum value - ([be08f15](https://github.com/mapswipe/mapswipe-backend/commit/be08f15c63f457f4b3efd673d3798ffaea740708))
 - *(project)* Convert to geography before calculating group area - ([a759caf](https://github.com/mapswipe/mapswipe-backend/commit/a759cafb0e704041395be82de73f1bdbccd6301e))
 - *(project)* Set progress status when progress is 100 - ([ea71f53](https://github.com/mapswipe/mapswipe-backend/commit/ea71f537082940518c4e3c95e0b829ca27930393))
-- *(rastertile)* Add mkt param for bing url - ([1b0d564](https://github.com/mapswipe/mapswipe-backend/commit/1b0d5646da922e38681ff5fdcd0d298dafe09ebd))
 
 #### 🧪 Testing
 
@@ -1000,7 +1010,7 @@ contributor team. - ([bc8ab4a](https://github.com/mapswipe/mapswipe-backend/comm
 
 - [@kopitek8](https://github.com/kopitek8) made their first contribution
 
-## [0.1.0](https://github.com/mapswipe/mapswipe-backend/compare/v0.1.1..v0.1.0) - 2025-05-30
+## [0.1.0] - 2025-05-30
 ### Changes:
 
 #### 🚀  Features
