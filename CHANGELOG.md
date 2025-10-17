@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.2.5](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.4..v0.2.5) - 2025-10-17
+### Changes:
+
+#### 🚀  Features
+
+- *(admin)* Show team members count in team list page - ([1ae590b](https://github.com/mapswipe/mapswipe-backend/commit/1ae590b6f0747caf3d3d88c230dbf4c415ef4318))
+- *(admin)* Add autocomplete-filter to user for team - ([ee97596](https://github.com/mapswipe/mapswipe-backend/commit/ee97596aa1ca57a7a0a0e2ac0452c5e2d3064d90))
+- *(slack)* Update slack messages - ([07d6a51](https://github.com/mapswipe/mapswipe-backend/commit/07d6a5112b5224c8a61bac65d063f5342c2c527a))
+
+#### 🐛 Bug Fixes
+
+- *(raster-tile)* Update imagery parameters - ([68a71ca](https://github.com/mapswipe/mapswipe-backend/commit/68a71cae568bed11304018f6e2fc40012deb6602))
+- Use index instead of number for scenario page, block, information page - ([0edba66](https://github.com/mapswipe/mapswipe-backend/commit/0edba665c9256e3d542a0c1ed0d9467ebff76d19))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(admin)* Add read only fields - ([c765e93](https://github.com/mapswipe/mapswipe-backend/commit/c765e93e97968058b595882012cbeabb41b989ad))
+- *(typo)* Fix redis lock configs and naming - ([95b2c7a](https://github.com/mapswipe/mapswipe-backend/commit/95b2c7a201e85954f92d4537cb183026583caa2d))
+
+### 🍻 Pull Requests (3)
+- (#203) [Chore(admin): add read only fields](https://github.com/mapswipe/mapswipe-backend/pull/203)
+- (#206) [Feat/admin user team ui](https://github.com/mapswipe/mapswipe-backend/pull/206)
+- (#207) [Use index instead of number for scenario page, block, info page](https://github.com/mapswipe/mapswipe-backend/pull/207)
+
+
 ## [0.2.4](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.3..v0.2.4) - 2025-10-15
 ### Changes:
 
@@ -430,6 +455,7 @@ community queries are changed - ([f8197b2](https://github.com/mapswipe/mapswipe-
 - *(project)* Use enum label on error message instead of enum value - ([be08f15](https://github.com/mapswipe/mapswipe-backend/commit/be08f15c63f457f4b3efd673d3798ffaea740708))
 - *(project)* Convert to geography before calculating group area - ([a759caf](https://github.com/mapswipe/mapswipe-backend/commit/a759cafb0e704041395be82de73f1bdbccd6301e))
 - *(project)* Set progress status when progress is 100 - ([ea71f53](https://github.com/mapswipe/mapswipe-backend/commit/ea71f537082940518c4e3c95e0b829ca27930393))
+- *(rastertile)* Add mkt param for bing url - ([1b0d564](https://github.com/mapswipe/mapswipe-backend/commit/1b0d5646da922e38681ff5fdcd0d298dafe09ebd))
 
 #### 🧪 Testing
 
@@ -974,7 +1000,7 @@ contributor team. - ([bc8ab4a](https://github.com/mapswipe/mapswipe-backend/comm
 
 - [@kopitek8](https://github.com/kopitek8) made their first contribution
 
-## [0.1.0] - 2025-05-30
+## [0.1.0](https://github.com/mapswipe/mapswipe-backend/compare/v0.1.1..v0.1.0) - 2025-05-30
 ### Changes:
 
 #### 🚀  Features
