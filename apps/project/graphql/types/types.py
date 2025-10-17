@@ -142,6 +142,11 @@ class ProjectExportAssetTypeMixin:
         return await info.context.dl.project.export.moderate_to_high_agreement_yes_maybe_geometries.load(project.pk)
 
 
+@strawberry.type
+class ProjectAssetsDeleteType:
+    count: int
+
+
 @strawberry_django.type(Project)
 class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePushResourceTypeMixin):
     id: strawberry.ID

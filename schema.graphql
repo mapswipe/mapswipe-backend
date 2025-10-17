@@ -771,6 +771,8 @@ input DeleteInput {
   id: ID!
 }
 
+union DeleteProjectAssetsPayload = OperationInfo | ProjectAssetsDeleteTypeMutationResponseType
+
 union DeleteProjectPayload = OperationInfo | ProjectType
 
 union DeleteTutorialPayload = OperationInfo | TutorialType
@@ -958,6 +960,7 @@ type Mutation {
   createTutorial(data: TutorialCreateInput!): CreateTutorialPayload! @isAuthenticated
   createTutorialAsset(data: TutorialAssetCreateInput!): CreateTutorialAssetPayload! @isAuthenticated
   deleteProject: DeleteProjectPayload! @isAuthenticated
+  deleteProjectAssets(projectId: ID!, assetInputType: [ProjectAssetInputTypeEnum!]!): DeleteProjectAssetsPayload! @isAuthenticated
   deleteTutorial: DeleteTutorialPayload! @isAuthenticated
   login(username: String!, password: String!): UserMeType!
   logout: Boolean!
@@ -1386,6 +1389,16 @@ type ProjectAssetTypeOffsetPaginated {
 
   """Total count of existing results."""
   totalCount: Int!
+}
+
+type ProjectAssetsDeleteType {
+  count: Int!
+}
+
+type ProjectAssetsDeleteTypeMutationResponseType {
+  errors: CustomErrorType
+  ok: Boolean!
+  result: ProjectAssetsDeleteType
 }
 
 """Model representing the project."""
@@ -2033,7 +2046,7 @@ type Query {
   organizations(includeAll: Boolean! = false, filters: OrganizationFilter, order: OrganizationOrder, pagination: OffsetPaginationInput): OrganizationTypeOffsetPaginated! @isAuthenticated
   project(id: ID!): ProjectType! @isAuthenticated
   projectAsset(id: ID!): ProjectAssetType! @isAuthenticated
-  projectAssets(pagination: OffsetPaginationInput, filters: ProjectAssetFilter, order: ProjectAssetOrder): ProjectAssetTypeOffsetPaginated! @isAuthenticated
+  projectAssets(includeAll: Boolean! = false, filters: ProjectAssetFilter, order: ProjectAssetOrder, pagination: OffsetPaginationInput): ProjectAssetTypeOffsetPaginated! @isAuthenticated
   projectName(params: ProjectNameInput): String!
   projects(includeAll: Boolean! = false, filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated! @isAuthenticated
   publicOrganization(id: ID!): OrganizationType!
@@ -2043,7 +2056,7 @@ type Query {
   tileServers: RasterTileServersType! @isAuthenticated
   tutorial(id: ID!): TutorialType! @isAuthenticated
   tutorialAsset(id: ID!): TutorialAssetType! @isAuthenticated
-  tutorialAssets(pagination: OffsetPaginationInput, filters: TutorialAssetFilter, order: TutorialAssetOrder): TutorialAssetTypeOffsetPaginated! @isAuthenticated
+  tutorialAssets(includeAll: Boolean! = false, filters: TutorialAssetFilter, order: TutorialAssetOrder, pagination: OffsetPaginationInput): TutorialAssetTypeOffsetPaginated! @isAuthenticated
   tutorials(includeAll: Boolean! = false, filters: TutorialFilter, order: TutorialOrder, pagination: OffsetPaginationInput): TutorialTypeOffsetPaginated! @isAuthenticated
   users(filters: UserFilter, order: UserOrder, pagination: OffsetPaginationInput): UserTypeOffsetPaginated! @isAuthenticated
 }

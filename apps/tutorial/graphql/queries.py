@@ -4,7 +4,7 @@ from django.db.models import QuerySet
 from strawberry_django.pagination import OffsetPaginated
 from strawberry_django.permissions import IsAuthenticated
 
-from apps.tutorial.models import Tutorial
+from apps.tutorial.models import Tutorial, TutorialAsset
 
 from .filters import TutorialAssetFilter, TutorialFilter
 from .orders import TutorialAssetOrder, TutorialOrder
@@ -35,8 +35,16 @@ class Query:
     tutorial_asset: TutorialAssetType = strawberry_django.field(extensions=[IsAuthenticated()])
 
     # --- Paginated
-    tutorial_assets: OffsetPaginated[TutorialAssetType] = strawberry_django.offset_paginated(
+    @strawberry_django.offset_paginated(
+        OffsetPaginated[TutorialAssetType],
         order=TutorialAssetOrder,
         filters=TutorialAssetFilter,
         extensions=[IsAuthenticated()],
     )
+    def tutorial_assets(
+        self,
+        include_all: bool = False,
+    ) -> QuerySet[TutorialAsset]:
+        if include_all:
+            return TutorialAsset.objects.all()
+        return TutorialAsset.usable_objects()
