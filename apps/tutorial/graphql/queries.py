@@ -35,6 +35,7 @@ class Query:
     tutorial_asset: TutorialAssetType = strawberry_django.field(extensions=[IsAuthenticated()])
 
     # --- Paginated
+    # FIXME: add description of include_all using Annotated
     @strawberry_django.offset_paginated(
         OffsetPaginated[TutorialAssetType],
         order=TutorialAssetOrder,
