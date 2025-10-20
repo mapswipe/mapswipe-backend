@@ -459,9 +459,6 @@ class BaseProject[
         *,
         only_stats: bool = False,
     ):
-        assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
-        assert self.project.tutorial is not None, "Tutorial is required before project can be pushed to firebase"
-
         if only_stats:
             project_ref.update(
                 value=firebase_utils.serialize(
@@ -472,6 +469,9 @@ class BaseProject[
                 ),
             )
             return
+
+        assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
+        assert self.project.tutorial is not None, "Tutorial is required before project can be pushed to firebase"
 
         project_ref.update(
             value=firebase_utils.serialize(
