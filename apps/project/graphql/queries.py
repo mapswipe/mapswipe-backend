@@ -88,6 +88,7 @@ class Query:
     project_asset: ProjectAssetType = strawberry_django.field(extensions=[IsAuthenticated()])
 
     # --- Paginated
+    # FIXME: add description of include_all using Annotated
     @strawberry_django.offset_paginated(
         OffsetPaginated[ProjectAssetType],
         order=ProjectAssetOrder,

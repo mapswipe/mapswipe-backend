@@ -93,6 +93,7 @@ class Mutation:
         project = await Project.objects.aget(pk=pk)
         return await ModelMutation(ProjectStatusUpdateSerializer).handle_update_mutation(data, info, project)
 
+    # FIXME: Add a check that only OBJECT_IMAGE can be deleted
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
     async def delete_project_assets(
         self,
