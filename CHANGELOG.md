@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.2.7](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.6..v0.2.7) - 2025-10-27
+### Changes:
+
+#### 🐛 Bug Fixes
+
+- *(project)* Fix issue with project progress sync without tutorial - ([b3a876c](https://github.com/mapswipe/mapswipe-backend/commit/b3a876c6a9d798c88e27ac30f0468dce4db69993))
+- *(slack)* Remove value field causing type mismatch - ([0651105](https://github.com/mapswipe/mapswipe-backend/commit/0651105b7213dcd3ebdf8d8261eef3054fc8cfba))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(project)* Add notes regarding required docs and checks - ([f4eb10c](https://github.com/mapswipe/mapswipe-backend/commit/f4eb10cac55ad50ca6e70f620cf39580b9a2eba0))
+
+### 🍻 Pull Requests (1)
+- (#209) [Fix  issue with project progress sync without tutorial](https://github.com/mapswipe/mapswipe-backend/pull/209)
+
+
 ## [0.2.6](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.5..v0.2.6) - 2025-10-17
 ### Changes:
 
@@ -1010,7 +1026,7 @@ contributor team. - ([bc8ab4a](https://github.com/mapswipe/mapswipe-backend/comm
 
 - [@kopitek8](https://github.com/kopitek8) made their first contribution
 
-## [0.1.0] - 2025-05-30
+## [0.1.0](https://github.com/mapswipe/mapswipe-backend/compare/v0.1.1..v0.1.0) - 2025-05-30
 ### Changes:
 
 #### 🚀  Features
