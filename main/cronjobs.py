@@ -1,13 +1,17 @@
+import logging
 import typing
-from datetime import datetime
 
+from celery import signals
 from celery.schedules import crontab
+from django.db import models
 from kombu import Queue
 from sentry_sdk.integrations.celery import beat as sentry_celery_beat
 
 if typing.TYPE_CHECKING:
     from celery import Celery
     from sentry_sdk._types import MonitorConfig  # type: ignore[reportPrivateImportUsage]
+
+logger = logging.getLogger(__name__)
 
 
 class TimeConstants:
@@ -33,9 +37,9 @@ class CeleryQueue:
 class CronJobOption(typing.TypedDict, total=False):
     # https://docs.celeryq.dev/en/latest/reference/celery.app.task.html#celery.app.task.Task.apply_async
 
-    expires: float | datetime
+    expire_seconds: float
     """
-    Datetime or seconds in the future for the task should expire.
+    Seconds in the future for the task should expire.
     The task won't be executed after the expiration time.
     """
 
@@ -88,12 +92,12 @@ SCHEDULES: dict[str, CronJob] = {
     "clear_expired_django_sessions": CronJob(
         task="apps.common.tasks.clear_expired_django_sessions",
         schedule=TimeConstants.EVERY_WEEK,
-        options=CronJobOption(expires=TimeConstants.SECONDS_IN_A_WEEK),
+        options=CronJobOption(expire_seconds=TimeConstants.SECONDS_IN_A_WEEK),
     ),
     "pull_users_from_firebase": CronJob(
         task="apps.contributor.tasks.pull_users_from_firebase_task",
         schedule=TimeConstants.EVERY_1_MINUTES,
-        options=CronJobOption(expires=TimeConstants.SECONDS_IN_A_MINUTE),
+        options=CronJobOption(expire_seconds=TimeConstants.SECONDS_IN_A_MINUTE),
         sentry_config=CronJobSentryConfig(
             failure_issue_threshold=10,
             checkin_margin=2,
@@ -103,7 +107,7 @@ SCHEDULES: dict[str, CronJob] = {
     "pull_user_group_memberships_from_firebase_task": CronJob(
         task="apps.contributor.tasks.pull_user_group_memberships_from_firebase_task",
         schedule=TimeConstants.EVERY_2_MINUTES,
-        options=CronJobOption(expires=TimeConstants.SECONDS_IN_A_MINUTE * 2),
+        options=CronJobOption(expire_seconds=TimeConstants.SECONDS_IN_A_MINUTE * 2),
         sentry_config=CronJobSentryConfig(
             failure_issue_threshold=10,
             checkin_margin=2,
@@ -113,7 +117,7 @@ SCHEDULES: dict[str, CronJob] = {
     "pull_mapping_session_from_firebase": CronJob(
         task="apps.mapping.tasks.pull_mapping_session_from_firebase",
         schedule=TimeConstants.EVERY_2_MINUTES,
-        options=CronJobOption(expires=TimeConstants.SECONDS_IN_A_MINUTE * 2),
+        options=CronJobOption(expire_seconds=TimeConstants.SECONDS_IN_A_MINUTE * 2),
         sentry_config=CronJobSentryConfig(
             failure_issue_threshold=10,
             checkin_margin=2,
@@ -123,7 +127,7 @@ SCHEDULES: dict[str, CronJob] = {
     "regenerate_global_project_assets": CronJob(
         task="apps.project.tasks.regenerate_global_project_assets",
         schedule=TimeConstants.EVERY_HOUR,
-        options=CronJobOption(expires=TimeConstants.SECONDS_IN_A_HOUR),
+        options=CronJobOption(expire_seconds=TimeConstants.SECONDS_IN_A_HOUR),
         sentry_config=CronJobSentryConfig(
             failure_issue_threshold=2,
             checkin_margin=2,
@@ -133,7 +137,7 @@ SCHEDULES: dict[str, CronJob] = {
     "update_community_dashboard_aggregated_data": CronJob(
         task="apps.community_dashboard.tasks.update_aggregated_data",
         schedule=TimeConstants.EVERY_DAY,
-        options=CronJobOption(expires=TimeConstants.SECONDS_IN_A_DAY),
+        options=CronJobOption(expire_seconds=TimeConstants.SECONDS_IN_A_DAY),
         sentry_config=CronJobSentryConfig(
             failure_issue_threshold=1,
             checkin_margin=10,
@@ -146,7 +150,7 @@ SCHEDULES: dict[str, CronJob] = {
             task="apps.common.tasks.celery_queue_uptime_check",
             args=(celery_queue.name,),
             schedule=TimeConstants.EVERY_HOUR,
-            options=CronJobOption(expires=TimeConstants.SECONDS_IN_A_HOUR),
+            options=CronJobOption(expire_seconds=TimeConstants.SECONDS_IN_A_HOUR),
             sentry_config=CronJobSentryConfig(
                 failure_issue_threshold=2,
                 checkin_margin=2,
@@ -187,3 +191,37 @@ class SentryMonkeyPatch:
 
 
 sentry_celery_beat._get_monitor_config = SentryMonkeyPatch.custom__get_monitor_config  # type: ignore[reportPrivateUsage]
+
+
+@signals.beat_init.connect
+def update_periodic_tasks(**_):
+    logger.info("Cronjob sync: Start")
+    try:
+        from django_celery_beat.models import PeriodicTask
+
+        base_tasks_qs = PeriodicTask.objects.filter(
+            task__startswith="apps.",  # Our tasks
+        )
+
+        obsolete_tasks_qs = base_tasks_qs.exclude(
+            models.Q(
+                name__in=list(BEAT_SCHEDULES.keys()),
+            )
+            | models.Q(
+                name__startswith="manual:",  # Lets filter-out if it has `manual:` at the start
+            ),
+        )
+
+        logger.info("Cronjob sync - Obsolete tasks: Start")
+        obsolete_tasks = list(obsolete_tasks_qs)
+        if obsolete_tasks:
+            for task in obsolete_tasks:
+                logger.warning("Cronjob Sync - Obsolete tasks: Task <%s> will be deleted", task.name)
+
+            deleted_periodic_task = obsolete_tasks_qs.delete()
+            logger.warning("Cronjob Sync - Obsolete tasks: Deleted %s tasks ", deleted_periodic_task)
+        else:
+            logger.info("Cronjob Sync - Obsolete tasks: Nothing to do")
+
+    except Exception:
+        logger.error("Cronjob Sync: Failed to sync PeriodicTasks", exc_info=True)
