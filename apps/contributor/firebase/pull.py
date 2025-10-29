@@ -39,7 +39,7 @@ def pull_users_from_firebase():
     for key, valid_user in valid_users:
         user = ContributorUser(
             firebase_id=key,
-            username=valid_user.username,
+            username=valid_user.username or key,  # XXX: For OSM users, firebase doesn't include username
             created_at=valid_user.created,
             modified_at=valid_user.created,
             # NOTE: Setting firebase_last_pushed so that we can send updates to firebase.
