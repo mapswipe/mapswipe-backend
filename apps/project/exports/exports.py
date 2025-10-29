@@ -9,6 +9,7 @@ from ulid import ULID
 from apps.common.models import AssetTypeEnum, FirebasePushStatusEnum
 from apps.project.custom_options import get_fallback_custom_options_for_export
 from apps.project.exports.geojson import gzipped_csv_to_gzipped_geojson
+from apps.project.exports.utils.project_progress import calculate_project_progress
 from apps.project.models import Project, ProjectAsset, ProjectAssetExportTypeEnum, ProjectProgressStatusEnum, ProjectTypeEnum
 from apps.project.tasks import push_project_to_firebase, send_slack_message_for_project
 from apps.user.models import User
@@ -183,7 +184,7 @@ def _export_project_data(project: Project, tmp_directory: Path):
         project.last_contribution_date = project_stats_by_date_df.index[-1]
 
         previous_progress = project.progress
-        project.progress = project_stats_by_date_df["cum_progress"].iloc[-1] * 100
+        project.progress = calculate_project_progress(project)
 
         if project.progress >= 100:
             project.progress_status = ProjectProgressStatusEnum.COMPLETED
