@@ -66,6 +66,7 @@ class TestProjectExport(TestCase):
             requesting_organization=cls.organization1,
             project_type=ProjectTypeEnum.FIND,
             status=ProjectStatusEnum.PUBLISHED,
+            verification_number=3,
             project_type_specifics=FindProjectProperty(
                 zoom_level=14,
                 tile_server_property=RasterTileServerConfig(
@@ -182,7 +183,7 @@ class TestProjectExport(TestCase):
         export_project_data(self.project)
 
         assert _get_data() == {
-            "progress": 10,
+            "progress": 100,
             "number_of_contributor_users": 10,
             "number_of_results": 4000,
             "number_of_results_for_progress": 4000,
