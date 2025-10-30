@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.8](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.7..v0.2.8) - 2025-10-30
+### Changes:
+
+#### 🐛 Bug Fixes
+
+- *(ContributorUser)* Fix validation error for osm users - ([b83fcb0](https://github.com/mapswipe/mapswipe-backend/commit/b83fcb0cb9747f89501c84141ec557be235f531c))
+- *(cronjob)* Replace expires with expire_seconds - ([5cef223](https://github.com/mapswipe/mapswipe-backend/commit/5cef2235e427865c98c0b41b8b20b9d8b9711582))
+- *(project)* Fix project progress stuck at 100% - ([85a77a4](https://github.com/mapswipe/mapswipe-backend/commit/85a77a4346e81739293feb08b96c97b38228e1fd))
+
+### 🍻 Pull Requests (1)
+- (#212) [Fix/project progress](https://github.com/mapswipe/mapswipe-backend/pull/212)
+
+
 ## [0.2.7](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.6..v0.2.7) - 2025-10-27
 ### Changes:
 
