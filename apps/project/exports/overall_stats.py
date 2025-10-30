@@ -6,6 +6,7 @@ import tempfile
 import typing
 from pathlib import Path
 
+from django.contrib.gis.db.models.functions import AsWKT
 from django.core.files.base import ContentFile
 from django.db import models
 from django.db.models.fields.files import FieldFile
@@ -43,7 +44,7 @@ def regenerate_project_stats_by_types_csv():
         "project_type": None,
         "project_type_display": MANUAL_FIELD,
         "projects_count": models.Count("*"),
-        "total_area_sqkm": models.F("total_area"),
+        "total_area_sqkm": models.Sum("total_area"),
         "total_number_of_results": models.Count("number_of_results"),
         "total_number_of_results_progress": models.Count("number_of_results_for_progress"),
         "average_number_of_users_per_project": models.Avg("number_of_contributor_users"),
@@ -75,8 +76,10 @@ def regenerate_project_stats_by_types_csv():
 
 def regenerate_projects_csv(temp_projects_csv: typing.IO):  # type: ignore[reportMissingTypeArgument]
     logger.info("Processing regenerate_projects_csv")
+
     fieldnames = {
         "id": None,
+        "firebase_id": None,
         "name": Project.generate_name_query(),
         "description": None,
         "look_for": None,
@@ -90,8 +93,10 @@ def regenerate_projects_csv(temp_projects_csv: typing.IO):  # type: ignore[repor
         "status": None,
         "status_display": MANUAL_FIELD,
         "area_sqkm": models.F("aoi_geometry__total_area"),
-        "centroid": None,  # TODO: use this after removing from model models.F("aoi_geometry__centroid"),
-        "geom": models.F("aoi_geometry__geometry"),
+        # TODO: Change _centroid to centroid after `centroid` field is removed from the project's table
+        "centroid": MANUAL_FIELD,
+        "_centroid": AsWKT("aoi_geometry__centroid"),
+        "geom": AsWKT("aoi_geometry__geometry"),
         "progress": None,  # NOTE: This is changed to float later
         "number_of_contributor_users": None,
         "number_of_results": None,
@@ -100,6 +105,9 @@ def regenerate_projects_csv(temp_projects_csv: typing.IO):  # type: ignore[repor
     }
 
     projects_aggregate_qs = _project_queryset(fieldnames)
+
+    fieldnames.pop("_centroid")
+
     writer = csv.DictWriter(temp_projects_csv, fieldnames=fieldnames)
     writer.writeheader()
 
@@ -113,6 +121,8 @@ def regenerate_projects_csv(temp_projects_csv: typing.IO):  # type: ignore[repor
                 name=image_file,
             ),
         )
+        # TODO: Remove this logic to set centroid after `centroid` field is removed from the project's table
+        data["centroid"] = data.pop("_centroid")
         data["image_url"] = image_file_url
         data["status_display"] = ProjectStatusEnum(data["status"]).label
         data["project_type_display"] = ProjectTypeEnum(data["project_type"]).label
@@ -144,6 +154,13 @@ def _regenerate_projects_centroid_for_geometry_field(
     tmp_geojson_outfile = Config.TEMP_DIR / f"projects_centroid_{geometry_field}_{get_random_string(6)}.geojson"
     inputfile_without_path = projects_csv_inputfile.name.split("/")[-1].replace(".csv", "")
 
+    # TODO: Use EXCLUDE after upgrading gdal to > 3.9.0 https://github.com/OSGeo/gdal/pull/8675
+    # With that, we can use `SELECT * EXCLUDE(geom), CAST(...` to exclude one column
+    with Path.open(projects_csv_inputfile, "r") as fp:
+        csv_reader = csv.DictReader(fp)
+        inputfile_columns = [column for column in csv_reader.fieldnames or [] if column != "geom"]
+        inputfile_columns_str = ",".join(inputfile_columns)
+
     subprocess.run(  # noqa: S603
         [
             "/usr/bin/ogr2ogr",
@@ -154,7 +171,7 @@ def _regenerate_projects_centroid_for_geometry_field(
             str(tmp_geojson_outfile),
             str(projects_csv_inputfile),
             "-sql",
-            f'SELECT *, CAST({geometry_field} as geometry) FROM "{inputfile_without_path}"',
+            f'SELECT {inputfile_columns_str}, CAST({geometry_field} as geometry) FROM "{inputfile_without_path}"',
         ],
         check=True,
     )
