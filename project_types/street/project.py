@@ -37,7 +37,7 @@ class StreetMapillaryImageFilters(BaseModel):
     start_time: custom_fields.PydanticDate | None = None
     end_time: custom_fields.PydanticDate | None = None
     randomize_order: custom_fields.PydanticBool = False
-    sampling_threshold: custom_fields.PydanticPositiveInt | None = None
+    sampling_threshold: custom_fields.PydanticFloat | None = None
 
 
 class StreetProjectProperty(base_project.BaseProjectProperty):

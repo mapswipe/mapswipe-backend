@@ -300,10 +300,16 @@ class TestStreetProjectE2E(TestCase):
 
     @pytest.mark.vcr("assets/tests/projects/street/cassette")
     def test_street_project_e2e(self):
-        # TODO(susilnem): Add more test with filters
         with create_override():
             self._test_project(
                 "assets/tests/projects/street/project_data.json5",
+            )
+
+    @pytest.mark.vcr("assets/tests/projects/street/cassette")
+    def test_street_project_with_filter_e2e(self):
+        with create_override():
+            self._test_project(
+                "assets/tests/projects/street/project_data_with_filter.json5",
             )
 
     # Generic functions

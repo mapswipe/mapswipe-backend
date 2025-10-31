@@ -297,7 +297,7 @@ def get_image_metadata(
     start_time: str | None = None,
     end_time: str | None = None,
     randomize_order: bool = False,
-    sampling_threshold: int | None = None,
+    sampling_threshold: float | None = None,
 ) -> Grouping[StreetFeature]:
     kwargs = {
         "is_pano": is_pano,
