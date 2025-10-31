@@ -335,6 +335,20 @@ def process_invalid_temp_results(
 
     logger.warning("%s results has been flagged as invalid", invalid_results_count)
 
+    # Add unsynced user to firebase, which will be processed by the user sync task
+    invalid_user_firebase_ids = (
+        base_qs.filter(contributor_user_id__isnull=True).values_list("contributor_user_firebase_id", flat=True).distinct()
+    )
+    for invalid_user_firebase_id in invalid_user_firebase_ids:
+        logger.warning(
+            "Adding %s to the firebase user update %s",
+            invalid_user_firebase_id,
+            Config.FirebaseKeys.contributor_user_updates(),
+        )
+        Config.FIREBASE_HELPER.ref(
+            Config.FirebaseKeys.contributor_user_update(invalid_user_firebase_id),
+        ).set(True)
+
     # Skip firebase cleanup for invalid mapping data
     invalid_result_temp_qs = base_qs.values_list(
         "project_firebase_id",
