@@ -84,6 +84,7 @@ env = environ.Env(
     # -- Filesystem (default) XXX: Don't use in production?
     MEDIA_ROOT=(str, BASE_DIR / ".data/media"),
     STATIC_ROOT=(str, BASE_DIR / ".data/static"),
+    INTERNAL_ROOT=(str, BASE_DIR / ".data/internal"),
     # Email
     EMAIL_HOST=str,
     EMAIL_SUBJECT_PREFIX=(str, "Mapswipe:"),
@@ -384,6 +385,8 @@ else:
             "allow_overwrite": True,
         },
     }
+
+INTERNAL_ROOT = env("INTERNAL_ROOT")
 
 assert STORAGE_OVERWRITE_KEY in STORAGES, f"{STORAGE_OVERWRITE_KEY} should be defined in STORAGES"
 
