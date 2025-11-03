@@ -1,9 +1,9 @@
 import typing
-from datetime import datetime
 
 from django.contrib import admin
 from django.db import models
 from django.http import HttpRequest
+from django.utils import timezone
 from djangoql.admin import DjangoQLSearchMixin  # type: ignore[reportMissingTypeStubs]
 
 from apps.common.firebase.push import FirebaseAnnouncementPush
@@ -127,7 +127,7 @@ class ArchivableResourceAdmin(admin.ModelAdmin):  # type: ignore[reportMissingTy
         obj.modified_by = request.user
         if obj.is_archived:
             obj.archived_by = request.user
-            obj.archived_at = datetime.now()
+            obj.archived_at = timezone.now()
         else:
             obj.archived_by = None
             obj.archived_at = None

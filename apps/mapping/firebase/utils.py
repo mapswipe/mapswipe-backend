@@ -1,5 +1,7 @@
+import csv
 import logging
 import typing
+from pathlib import Path
 
 import dateutil.parser
 from django.db import connection, transaction
@@ -322,6 +324,68 @@ def cleanup_temp_tables(cursor: "CursorWrapper | None" = None):
         _cleanup(cursor_)
 
 
+def process_invalid_temp_results(
+    firebase_cleanup: FirebaseCleanup,
+):
+    base_qs = MappingSessionResultTemp.objects.filter(is_firebase_mapping_valid=False)
+
+    invalid_results_count = base_qs.count()
+    if invalid_results_count == 0:
+        return
+
+    logger.warning("%s results has been flagged as invalid", invalid_results_count)
+
+    # Add unsynced user to firebase, which will be processed by the user sync task
+    invalid_user_firebase_ids = (
+        base_qs.filter(contributor_user_id__isnull=True).values_list("contributor_user_firebase_id", flat=True).distinct()
+    )
+    for invalid_user_firebase_id in invalid_user_firebase_ids:
+        logger.warning(
+            "Adding %s to the firebase user update %s",
+            invalid_user_firebase_id,
+            Config.FirebaseKeys.contributor_user_updates(),
+        )
+        Config.FIREBASE_HELPER.ref(
+            Config.FirebaseKeys.contributor_user_update(invalid_user_firebase_id),
+        ).set(True)
+
+    # Skip firebase cleanup for invalid mapping data
+    invalid_result_temp_qs = base_qs.values_list(
+        "project_firebase_id",
+        "group_firebase_id",
+        "contributor_user_firebase_id",
+    ).distinct()
+
+    for project_firebase_id, group_firebase_id, contributor_user_firebase_id in invalid_result_temp_qs:
+        firebase_cleanup.undo_mark_as_delete(
+            project_firebase_id=project_firebase_id,
+            group_firebase_id=group_firebase_id,
+            contributor_user_firebase_id=contributor_user_firebase_id,
+        )
+
+    try:
+        # NOTE: For debugging, store the latest invalid dataset to internal directory
+        with Path.open(
+            Config.InternalDir.LAST_RUN_MAPPING_SESSION_INVALID_DATA,
+            "w",
+            newline="",
+            encoding="utf-8",
+        ) as f:
+            fields = [f.name for f in MappingSessionResultTemp._meta.fields]
+
+            writer = csv.DictWriter(f, fieldnames=fields)
+            writer.writeheader()
+
+            for row in base_qs.values(*fields).iterator(chunk_size=2000):
+                writer.writerow(row)
+            logger.info("Stored invalid mapping data to %s", Config.InternalDir.LAST_RUN_MAPPING_SESSION_INVALID_DATA)
+    except Exception:
+        logger.error(
+            "Failed to generate mapping session invalid data export to internal directory",
+            exc_info=True,
+        )
+
+
 def transfer_results_from_temp_tables(
     firebase_cleanup: FirebaseCleanup,
 ):
@@ -337,21 +401,7 @@ def transfer_results_from_temp_tables(
         cursor.execute(SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_USER_GROUP)
         logger.info("Transferred staging results to real tables")
 
-        invalid_result_temp_qs = (
-            MappingSessionResultTemp.objects.filter(is_firebase_mapping_valid=False)
-            .values_list(
-                "project_firebase_id",
-                "group_firebase_id",
-                "contributor_user_firebase_id",
-            )
-            .distinct()
-        )
-        for project_firebase_id, group_firebase_id, contributor_user_firebase_id in invalid_result_temp_qs:
-            firebase_cleanup.undo_mark_as_delete(
-                project_firebase_id=project_firebase_id,
-                group_firebase_id=group_firebase_id,
-                contributor_user_firebase_id=contributor_user_firebase_id,
-            )
+        process_invalid_temp_results(firebase_cleanup)
 
         cleanup_temp_tables(cursor)
 

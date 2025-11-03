@@ -574,7 +574,8 @@ def create_project(
             requesting_organization=get_organization_by_name(requesting_organization, bot_user),
             created_by_id=get_user_by_contributor_user_firebase_id(existing_project.created_by, fallback=bot_user),
             modified_by_id=get_user_by_contributor_user_firebase_id(existing_project.created_by, fallback=bot_user),
-            project_type_specifics=existing_project.project_type_specifics,
+            # This was modified in the database manually for some projects
+            # project_type_specifics=existing_project.project_type_specifics,
             description=existing_project.project_details.strip() if existing_project.project_details else "",
         )
 

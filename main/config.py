@@ -1,11 +1,11 @@
 import os
 import typing
 from dataclasses import dataclass
+from pathlib import Path
 
 from django.conf import settings
 
 if typing.TYPE_CHECKING:
-    from pathlib import Path
     from urllib.parse import ParseResult as URLParseResult
 
     from utils.firebase import FirebaseHelper
@@ -57,6 +57,11 @@ class Config:
     EXISTING_SYSTEM_POSTGRES_KEY = typing.cast("str", settings.EXISTING_SYSTEM_POSTGRES_KEY)
     EXISTING_SYSTEM_API = typing.cast("URLParseResult", getattr(settings, "EXISTING_SYSTEM_API", None))
     EXISTING_SYSTEM_API_INSECURE = typing.cast("bool", getattr(settings, "EXISTING_SYSTEM_API_INSECURE", False))
+
+    class InternalDir:
+        INTERNAL_ROOT = Path(settings.INTERNAL_ROOT)
+
+        LAST_RUN_MAPPING_SESSION_INVALID_DATA = INTERNAL_ROOT / "last-run-invalid-mapping-sessisons.csv"
 
     class CommunityDashboardKeys:
         @staticmethod
@@ -162,6 +167,8 @@ class Config:
         def announcement():
             return "/v2/announcement"
 
+
+Config.InternalDir.INTERNAL_ROOT.mkdir(parents=True, exist_ok=True)
 
 # FIXME: Import utils/geo/raster_tile_server/config.py here
 # FIXME: Import utils/geo/vector_tile_server/config.py here

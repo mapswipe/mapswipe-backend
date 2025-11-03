@@ -164,7 +164,8 @@ class FirebasePush[T: FirebasePushResource, K: BaseModel](abc.ABC):
             model_obj.update_firebase_push_status(FirebasePushStatusEnum.FAILED)
         except Exception:
             logger.error(
-                "Firebase push error: Unexpected error occurred",
+                "Firebase push error (%s): Unexpected error occurred",
+                f"{self.firebase_model_class.__module__}.{self.firebase_model_class.__qualname__}",
                 extra={"id": model_obj.pk},
                 exc_info=True,
             )

@@ -2,6 +2,7 @@ import datetime
 import logging
 
 from django.db import connection, transaction
+from django.utils import timezone
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 
@@ -37,13 +38,17 @@ def pull_users_from_firebase():
 
     users_to_pull = list[ContributorUser]()
     for key, valid_user in valid_users:
+        username = valid_user.username
+        # XXX: For OSM users, firebase doesn't include username
+        if username in ["", None, firebase_models.UNDEFINED]:
+            username = key
         user = ContributorUser(
             firebase_id=key,
-            username=valid_user.username or key,  # XXX: For OSM users, firebase doesn't include username
+            username=username,
             created_at=valid_user.created,
             modified_at=valid_user.created,
             # NOTE: Setting firebase_last_pushed so that we can send updates to firebase.
-            firebase_last_pushed=datetime.datetime.now(),
+            firebase_last_pushed=timezone.now(),
             firebase_push_status=FirebasePushStatusEnum.SUCCESS,
         )
         users_to_pull.append(user)
