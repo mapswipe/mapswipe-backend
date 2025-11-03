@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.2.9](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.8..v0.2.9) - 2025-11-03
+### Changes:
+
+#### 🐛 Bug Fixes
+
+- *(export)* Global export - ([89ef123](https://github.com/mapswipe/mapswipe-backend/commit/89ef1239fbdf8c40d3873859253dd3ea9f8e2dfd))
+- *(mapping)* Add unsynced user to the firebase user update list - ([841a196](https://github.com/mapswipe/mapswipe-backend/commit/841a196e71d136a9bb99cf104800e2a686d8a523))
+- Replace datetime.now() with timezone.now() - ([764c68f](https://github.com/mapswipe/mapswipe-backend/commit/764c68f99b97a7b2e2d0a21101bb26dca7209526))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(firebase)* Add firebase model class in logger error message - ([dfccc1d](https://github.com/mapswipe/mapswipe-backend/commit/dfccc1dc1ff1513bb65b0279f6583676e83e8b24))
+- *(loaddata)* Comment out project_type_specifics migration - ([ebaf0db](https://github.com/mapswipe/mapswipe-backend/commit/ebaf0dbeac1ec36b3a3605ac914dfb7fa5f3ccda))
+- *(mapping)* Show invalid mapping results dataset for debugging - ([4e9f332](https://github.com/mapswipe/mapswipe-backend/commit/4e9f332b6be98a5308efa7f1b1b6c2107e969e0c))
+
+### 🍻 Pull Requests (1)
+- (#213) [Fix/global exports](https://github.com/mapswipe/mapswipe-backend/pull/213)
+
+
 ## [0.2.8](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.7..v0.2.8) - 2025-10-30
 ### Changes:
 
