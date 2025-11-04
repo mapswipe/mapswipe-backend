@@ -2053,6 +2053,8 @@ type Query {
   publicOrganizations(filters: OrganizationFilter, order: OrganizationOrder, pagination: OffsetPaginationInput): OrganizationTypeOffsetPaginated!
   publicProject(id: ID!): ProjectType!
   publicProjects(filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated!
+  testAoiObjects(projectId: ID, assetId: ID, ohsomeFilter: String): TestValidateAoiObjectsResponse! @isAuthenticated
+  testTaskingManagerProject(hotTmId: String, ohsomeFilter: String): TestValidateTaskingManagerProjectResponse! @isAuthenticated
   tileServers: RasterTileServersType! @isAuthenticated
   tutorial(id: ID!): TutorialType! @isAuthenticated
   tutorialAsset(id: ID!): TutorialAssetType! @isAuthenticated
@@ -2186,6 +2188,23 @@ input StreetTutorialTaskPropertyInput {
 type StreetTutorialTaskPropertyType {
   geometry: String!
   mapillaryImageId: String!
+}
+
+type TestValidateAoiObjectsResponse {
+  assetId: ID
+  error: String
+  objectCount: Int
+  ohsomeFilter: String
+  ok: Boolean!
+  projectId: ID
+}
+
+type TestValidateTaskingManagerProjectResponse {
+  error: String
+  hotTmId: String
+  objectCount: Int
+  ohsomeFilter: String
+  ok: Boolean!
 }
 
 """Model representing assets for a tutorial."""
