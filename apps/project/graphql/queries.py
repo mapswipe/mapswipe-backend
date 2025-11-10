@@ -1,3 +1,5 @@
+import logging
+
 import strawberry
 import strawberry_django
 from django.db.models import QuerySet
@@ -7,7 +9,14 @@ from strawberry_django.permissions import IsAuthenticated
 
 from apps.project.custom_options import get_custom_options
 from apps.project.graphql.inputs.inputs import ProjectNameInput
+from apps.project.graphql.types.project_types.validate import (
+    TestValidateAoiObjectsResponse,
+    TestValidateTaskingManagerProjectResponse,
+)
 from apps.project.models import Organization, Project, ProjectAsset, ProjectTypeEnum
+from project_types.base.project import ValidationException
+from project_types.validate.project import ValidateProject
+from utils import fields
 from utils.geo.raster_tile_server.config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNameEnumWithoutCustom
 from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum, VectorTileServerNameEnumWithoutCustom
 
@@ -24,6 +33,8 @@ from .types.types import (
     ProjectAssetType,
     ProjectType,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_tile_servers() -> RasterTileServersType:
@@ -78,6 +89,73 @@ class Query:
             )
             for item in custom_options
         ]
+
+    @strawberry.field(extensions=[IsAuthenticated()])
+    def test_aoi_objects(
+        self,
+        project_id: strawberry.ID | None,
+        asset_id: strawberry.ID | None,
+        ohsome_filter: str | None,
+    ) -> TestValidateAoiObjectsResponse:
+        response = TestValidateAoiObjectsResponse(
+            project_id=project_id,
+            asset_id=asset_id,
+            ohsome_filter=ohsome_filter,
+        )
+
+        if project_id is None:
+            return response.generate_error("project_id is required to test aoi elements")
+
+        if asset_id is None:
+            return response.generate_error("asset_id is required to test aoi elements")
+
+        if ohsome_filter is None:
+            return response.generate_error("ohsome_filter is required to test aoi elements")
+
+        try:
+            object_count = ValidateProject.test_ohsome_objects_from_aoi_asset(
+                project_id,
+                asset_id,
+                ohsome_filter,
+            )
+
+            response.object_count = object_count
+            return response
+        except ValidationException as e:
+            return response.generate_error(str(e))
+        except Exception as e:
+            raise GraphQLError(str(e)) from e
+
+    @strawberry.field(extensions=[IsAuthenticated()])
+    def test_tasking_manager_project(
+        self,
+        hot_tm_id: fields.PydanticId | None,
+        ohsome_filter: str | None,
+    ) -> TestValidateTaskingManagerProjectResponse:
+        response = TestValidateTaskingManagerProjectResponse(
+            hot_tm_id=hot_tm_id,
+            ohsome_filter=ohsome_filter,
+        )
+
+        if hot_tm_id is None:
+            return response.generate_error("hot_tm_id is required to test HOT project aoi elements")
+
+        if ohsome_filter is None:
+            return response.generate_error("ohsome_filter is required to test HOT project aoi elements")
+
+        try:
+            object_count = ValidateProject.test_tasking_manager_project(
+                hot_tm_id,
+                ohsome_filter,
+            )
+
+            response.object_count = object_count
+
+            return response
+        except ValidationException as e:
+            return response.generate_error(str(e))
+        except Exception as e:
+            raise GraphQLError(str(e)) from e
 
     tile_servers: RasterTileServersType = strawberry.field(resolver=get_tile_servers, extensions=[IsAuthenticated()])
 

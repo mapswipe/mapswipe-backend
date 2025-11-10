@@ -8,6 +8,7 @@ from urllib3.util.retry import Retry
 
 from main.config import Config
 from main.logging import log_extra_response
+from utils.fields import PydanticLongText
 
 logger = logging.getLogger(__name__)
 
@@ -173,6 +174,40 @@ def remove_noise_and_add_user_info(json: dict[str, Any]) -> dict[str, Any]:
         logger.warning("features missing values:\n %s", missing_rows)
 
     return json
+
+
+# fixme(frozenhelium): merge this function with `ohsome` and also add appropriate messages to raised exceptions
+def get_object_count_from_ohsome(area: str, ohsome_filter: PydanticLongText) -> int | None:
+    url = Config.OHSOME_API_LINK + "elements/count"
+    data = {"bpolys": area, "filter": ohsome_filter}
+
+    logger.info("Target: %s", url)
+    logger.info("Filter: %s", ohsome_filter)
+
+    # fixme(frozenhelium): use httpx for proper timeout
+    response = requests.post(url, data=data, timeout=100)
+    if response.status_code != 200:
+        logger.warning(
+            "ohsome element count request failed: check for errors in filter or geometries",
+            extra=log_extra_response(response=response),
+        )
+        raise ValidateApiCallError
+    logger.info("Query successful.")
+
+    response_json = response.json()
+    results = response_json.get("result", None)
+    if results is None:
+        return None
+
+    first_result = results[0]
+    if first_result is None:
+        return None
+
+    value = first_result.get("value", None)
+    if value is None:
+        return None
+
+    return int(value)
 
 
 def ohsome(request: dict[str, Any], area: str, properties: str | None = None) -> dict[str, Any]:

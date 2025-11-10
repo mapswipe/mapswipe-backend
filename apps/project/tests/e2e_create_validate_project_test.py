@@ -294,6 +294,32 @@ class TestValidateProjectE2E(TestCase):
             }
         """
 
+    class Query:
+        TEST_AOI_OBJECTS = """
+        query TestAoiObjects($assetId: ID, $projectId: ID, $ohsomeFilter: String) {
+            testAoiObjects(assetId: $assetId, projectId: $projectId, ohsomeFilter: $ohsomeFilter) {
+                ok
+                error
+                objectCount
+                assetId
+                projectId
+                ohsomeFilter
+            }
+        }
+        """
+
+        TEST_TASKING_MANAGER_PROJECT = """
+        query TestTaskingManagerProject($hotTmId: String, $ohsomeFilter: String) {
+            testTaskingManagerProject(hotTmId: $hotTmId, ohsomeFilter: $ohsomeFilter) {
+                ok
+                error
+                objectCount
+                hotTmId
+                ohsomeFilter
+            }
+        }
+        """
+
     @pytest.mark.vcr("assets/tests/projects/validate/cassette")
     def test_validate_project_e2e(self):
         # TODO(susilnem): Add more test with filters
@@ -397,6 +423,15 @@ class TestValidateProjectE2E(TestCase):
         assert aoi_response is not None, "AOI create response is None"
         assert aoi_response["ok"]
         aoi_id = aoi_response["result"]["id"]
+
+        # Test AOI objects
+        ohsomeFilter = "building=* and geometry:polygon"
+        test_aoi_objects_content = self.query_check(
+            self.Query.TEST_AOI_OBJECTS,
+            variables={"assetId": aoi_id, "projectId": project_id, "ohsomeFilter": ohsomeFilter},
+        )
+        test_aoi_objects_response = test_aoi_objects_content["data"]["testAoiObjects"]
+        assert test_aoi_objects_response["ok"]
 
         # Update project
         update_project_data = test_data["update_project"]

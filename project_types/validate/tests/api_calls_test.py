@@ -7,6 +7,7 @@ from main.config import Config
 from main.tests import TestCase
 from project_types.validate.api_calls import (
     ValidateApiCallError,
+    get_object_count_from_ohsome,
     ohsome,
     query_osm,
     query_osmcha,
@@ -140,6 +141,37 @@ class TestValidateProject(TestCase):
         mock_response.status_code = 500
         with pytest.raises(ValidateApiCallError):
             query_osm([12345], {})
+
+    @patch("requests.post")
+    def test_get_object_count_from_ohsome(self, mock_post):  # type: ignore[reportMissingParameterType]
+        sample_filter = "building=* and geometry:polygon"
+        sample_area = "POLYGON((8.67 49.39,8.68 49.39,8.68 49.40,8.67 49.40,8.67 49.39))"
+
+        sample_object_count = 500
+
+        mock_response_data = {
+            "attribution": {
+                "url": "https://ohsome.org/copyrights",
+                "text": "© OpenStreetMap contributors",
+            },
+            "apiVersion": "1.10.4",
+            "result": [
+                {
+                    "timestamp": "2025-10-01T12:00:00Z",
+                    "value": sample_object_count,
+                },
+            ],
+        }
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = mock_response_data
+        mock_post.return_value = mock_response
+
+        object_count = get_object_count_from_ohsome(sample_area, sample_filter)
+
+        mock_post.assert_called_once()
+        assert object_count == sample_object_count
 
     @patch("requests.post")
     @patch("project_types.validate.api_calls.remove_noise_and_add_user_info")
