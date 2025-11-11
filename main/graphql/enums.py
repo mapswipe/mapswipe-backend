@@ -12,10 +12,12 @@ from project_types.tile_map_service.locate.project import SubGridSizeEnum
 from project_types.validate.project import ValidateObjectSourceTypeEnum
 from project_types.validate_image.project import ValidateImageSourceTypeEnum
 from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
+from utils.geo.street_image_provider.models import StreetImageProviderNameEnum
 from utils.geo.vector_tile_server.config import VectorTileServerNameEnum
 
 ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     RasterTileServerNameEnum,
+    StreetImageProviderNameEnum,
     VectorTileServerNameEnum,
     ValidateObjectSourceTypeEnum,
     ValidateImageSourceTypeEnum,

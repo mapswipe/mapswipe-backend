@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
+from shapely.geometry import Point
 
 
 def distance_on_sphere(
@@ -108,13 +109,13 @@ def filter_points(df: pd.DataFrame, threshold_distance: float) -> pd.DataFrame:
 def spatial_sampling(
     *,
     df: pd.DataFrame,
-    interval_length: float,
+    interval_length: int | None,
 ):
     """Calculate spacing between points in a GeoDataFrame.
 
     Args:
         df (pandas.DataFrame): DataFrame containing points with timestamps.
-        interval_length (float): Interval length for filtering points in kms.
+        interval_length (int): Interval length for filtering points in m.
 
     Returns:
         geopandas.GeoDataFrame: Filtered GeoDataFrame containing selected points.
@@ -130,10 +131,10 @@ def spatial_sampling(
         return df
 
     df["long"] = df["geometry"].apply(
-        lambda geom: geom.x if geom.geom_type == "Point" else None,
+        lambda geom: geom.x if isinstance(geom, Point) else None,
     )
     df["lat"] = df["geometry"].apply(
-        lambda geom: geom.y if geom.geom_type == "Point" else None,
+        lambda geom: geom.y if isinstance(geom, Point) else None,
     )
     sorted_df = df.sort_values(by=["captured_at"])
 
@@ -144,7 +145,7 @@ def spatial_sampling(
         sequence_df = sorted_df[sorted_df["sequence_id"] == sequence]
 
         if interval_length:
-            sequence_df = filter_points(sequence_df, interval_length)
+            sequence_df = filter_points(sequence_df, interval_length / 1000)
         if "is_pano" in sequence_df.columns:
             # below line prevents FutureWarning
             # (https://stackoverflow.com/questions/73800841/add-series-as-a-new-row-into-dataframe-triggers-futurewarning)
