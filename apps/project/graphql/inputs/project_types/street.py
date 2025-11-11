@@ -7,5 +7,9 @@ from project_types.street import project as street_project
 class StreetMapillaryImageFiltersInput: ...
 
 
+@strawberry.experimental.pydantic.input(model=street_project.StreetImageProvider, all_fields=True)
+class StreetImageProviderInput: ...
+
+
 @strawberry.experimental.pydantic.input(model=street_project.StreetProjectProperty, all_fields=True)
 class StreetProjectPropertyInput: ...

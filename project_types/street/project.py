@@ -2,6 +2,7 @@ import json
 import logging
 import math
 import typing
+from enum import Enum
 
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
@@ -40,10 +41,21 @@ class StreetMapillaryImageFilters(BaseModel):
     sampling_threshold: custom_fields.PydanticPositiveInt | None = None
 
 
+class ImageProviderNameEnum(str, Enum):
+    MAPILLARY = "mapillary"
+    PANORAMAX = "panoramax"
+
+
+class StreetImageProvider(BaseModel):
+    name: ImageProviderNameEnum | None = None
+    url: custom_fields.PydanticUrl | None = None
+
+
 class StreetProjectProperty(base_project.BaseProjectProperty):
     aoi_geometry: custom_fields.PydanticId
     custom_options: list[CustomOption] | None = None
     mapillary_image_filters: StreetMapillaryImageFilters
+    image_provider: StreetImageProvider | None = None
 
 
 class StreetTaskGroupProperty(base_project.BaseProjectTaskGroupProperty): ...
