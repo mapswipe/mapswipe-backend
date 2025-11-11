@@ -2,7 +2,7 @@ apiVersion: v2
 name: mapswipe-backend-helm
 description: "Helm Chart to deploy the Mapswipe Backend (Alpha instances)"
 type: application
-version: 0.2.9-SET-BY-CICD  # managed by release.sh
+version: 0.2.10-SET-BY-CICD  # managed by release.sh
 sources:
   - https://github.com/mapswipe/mapswipe-backend/
 

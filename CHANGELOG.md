@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.2.10](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.9..v0.2.10) - 2025-11-11
+### Changes:
+
+#### 🚀  Features
+
+- *(validate)* Add queries to test object counts - ([c3c3e1e](https://github.com/mapswipe/mapswipe-backend/commit/c3c3e1e533cd6e1803b19e68a0d4edf543b735ab))
+
+#### 🐛 Bug Fixes
+
+- *(release)* Add check for git-cliff - ([55cfbe5](https://github.com/mapswipe/mapswipe-backend/commit/55cfbe58a7adb9dd4d382f1c1409a366ac6d4737))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(validate)* Add test for aoi test - ([6d7ec41](https://github.com/mapswipe/mapswipe-backend/commit/6d7ec419dcdb40d2312f85bda84f25c30b26fb7d))
+
+### 🍻 Pull Requests (1)
+- (#214) [Add queries to test AOI for validate project](https://github.com/mapswipe/mapswipe-backend/pull/214)
+
+### :tada: New Contributors (1)
+
+- [@frozenhelium](https://github.com/frozenhelium) made their first contribution in [#214](https://github.com/mapswipe/mapswipe-backend/pull/214)
+
 ## [0.2.9](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.8..v0.2.9) - 2025-11-03
 ### Changes:
 
@@ -1058,7 +1080,7 @@ contributor team. - ([bc8ab4a](https://github.com/mapswipe/mapswipe-backend/comm
 
 - [@kopitek8](https://github.com/kopitek8) made their first contribution
 
-## [0.1.0](https://github.com/mapswipe/mapswipe-backend/compare/v0.1.1..v0.1.0) - 2025-05-30
+## [0.1.0] - 2025-05-30
 ### Changes:
 
 #### 🚀  Features
