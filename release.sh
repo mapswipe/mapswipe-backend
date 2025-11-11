@@ -32,6 +32,12 @@ if ! command -v typos &>/dev/null; then
   exit 1
 fi
 
+if ! command -v git-cliff &>/dev/null; then
+  log_error "git-cliff is not installed."
+  log_error "Follow the instruction from https://git-cliff.org/docs/installation/"
+  exit 1
+fi
+
 if ! command -v semver &>/dev/null; then
   log_error "semver is required to validate the tag."
   exit 1
