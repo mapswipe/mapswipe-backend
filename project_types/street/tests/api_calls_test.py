@@ -20,6 +20,7 @@ from project_types.street.api_calls import (
     geojson_to_polygon,
     get_image_metadata,
 )
+from utils.geo.street_image_provider.models import StreetImageProvider, StreetImageProviderNameEnum
 
 if typing.TYPE_CHECKING:
     from collections.abc import Hashable
@@ -31,6 +32,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
     empty_polygon: Polygon  # type: ignore[reportUninitializedInstanceVariable]
     empty_geometry: GeometryCollection  # type: ignore[reportUninitializedInstanceVariable]
     row: pd.Series  # type: ignore[reportUninitializedInstanceVariable]
+    provider: StreetImageProvider  # type: ignore[reportUninitializedInstanceVariable]
 
     @typing.override
     @classmethod
@@ -50,6 +52,10 @@ class TestTileGroupingFunctions(unittest.TestCase):
         self.empty_polygon = Polygon()
         self.empty_geometry = GeometryCollection()
         self.row = pd.Series({"x": 1, "y": 1, "z": self.level})
+        self.provider = StreetImageProvider(
+            name=StreetImageProviderNameEnum.MAPILLARY,
+            url=Config.MAPILLARY_API_LINK,
+        )
 
     def test_create_tiles_with_valid_polygon(self):
         tiles = create_tiles(polygon=self.test_polygon, level=self.level)
@@ -176,7 +182,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
 
         polygon = wkt.loads("POLYGON ((-1 -1, -1 1, 1 1, 1 -1, -1 -1))")
 
-        result = download_and_process_tile(row=row, polygon=polygon, kwargs={})
+        result = download_and_process_tile(row=row, polygon=polygon, kwargs={}, provider=self.provider)
         assert result is not None
         assert len(result) == 1
         assert result["geometry"][0].wkt == "POINT (0 0)"
@@ -187,11 +193,11 @@ class TestTileGroupingFunctions(unittest.TestCase):
         mock_response.status_code = 500
         mock_get.return_value = mock_response
 
-        result = download_and_process_tile(row=self.row, polygon=self.test_polygon, kwargs={})
+        result = download_and_process_tile(row=self.row, polygon=self.test_polygon, kwargs={}, provider=self.provider)
         assert result is None
 
-    @patch("project_types.street.api_calls.get_mapillary_data")
-    def test_download_and_process_tile_spatial_filtering(self, mock_get_mapillary_data):  # type: ignore[reportMissingParameterType]
+    @patch("project_types.street.api_calls.get_street_image_data")
+    def test_download_and_process_tile_spatial_filtering(self, mock_get_street_image_data):  # type: ignore[reportMissingParameterType]
         inside_points = [
             (0.2, 0.2),
             (0.5, 0.5),
@@ -209,9 +215,9 @@ class TestTileGroupingFunctions(unittest.TestCase):
             for x, y in points
         ]
 
-        mock_get_mapillary_data.return_value = pd.DataFrame(data)
+        mock_get_street_image_data.return_value = pd.DataFrame(data)
 
-        metadata = download_and_process_tile(row=self.row, polygon=self.test_polygon, kwargs={})
+        metadata = download_and_process_tile(row=self.row, polygon=self.test_polygon, kwargs={}, provider=self.provider)
         assert metadata is not None
         metadata = metadata.drop_duplicates()
         assert len(metadata) == len(inside_points)
@@ -220,7 +226,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
     def test_coordinate_download_with_failures(self, mock_download_and_process_tile):  # type: ignore[reportMissingParameterType]
         mock_download_and_process_tile.return_value = pd.DataFrame()
 
-        metadata = coordinate_download(polygon=self.test_polygon, level=self.level, kwargs={})
+        metadata = coordinate_download(polygon=self.test_polygon, level=self.level, kwargs={}, provider=self.provider)
 
         assert metadata.empty
 

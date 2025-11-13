@@ -908,6 +908,11 @@ enum IconEnum {
   WARNING_OUTLINE
 }
 
+enum ImageProviderNameEnum {
+  mapillary
+  panoramax
+}
+
 input IntComparisonFilterLookup {
   """Exact match. Filter will be skipped on `null` value"""
   exact: Int
@@ -2193,13 +2198,23 @@ input StrFilterLookup {
   startsWith: String
 }
 
+type StreetImageProvider {
+  name: ImageProviderNameEnum
+  url: String
+}
+
+input StreetImageProviderInput {
+  name: ImageProviderNameEnum = null
+  url: String = null
+}
+
 type StreetMapillaryImageFilters {
   creatorId: String
   endTime: String
   isPano: Boolean
   organizationId: String
   randomizeOrder: Boolean!
-  samplingThreshold: Float
+  samplingThreshold: Int
   startTime: String
 }
 
@@ -2209,7 +2224,7 @@ input StreetMapillaryImageFiltersInput {
   isPano: Boolean = null
   organizationId: String = null
   randomizeOrder: Boolean! = false
-  samplingThreshold: Float = null
+  samplingThreshold: Int = null
   startTime: String = null
 }
 
@@ -2217,6 +2232,7 @@ input StreetProjectPropertyInput {
   """Numeric value as string"""
   aoiGeometry: String!
   customOptions: [CustomOptionInput!] = null
+  imageProvider: StreetImageProviderInput = null
   mapillaryImageFilters: StreetMapillaryImageFiltersInput!
 }
 
@@ -2224,6 +2240,7 @@ type StreetProjectPropertyType {
   """Numeric value as string"""
   aoiGeometry: String!
   customOptions: [ProjectCustomOption!]
+  imageProvider: StreetImageProvider
   mapillaryImageFilters: StreetMapillaryImageFilters!
 }
 
