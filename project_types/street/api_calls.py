@@ -25,6 +25,7 @@ from main.config import Config
 from main.logging import log_extra_response
 from project_types.base.project import ValidationException
 from utils.common import Grouping
+from utils.geo.street_image_provider.models import StreetImageProvider, StreetImageProviderNameEnum
 from utils.spatial_sampling import spatial_sampling
 
 logger = logging.getLogger(__name__)
@@ -109,6 +110,7 @@ def coordinate_download(
     *,
     polygon: ShapelyBaseGeometry,
     level: int,
+    provider: StreetImageProvider,
     kwargs: dict[str, Any],
 ) -> pd.DataFrame:
     tiles = create_tiles(
@@ -118,13 +120,18 @@ def coordinate_download(
     if tiles.empty:
         return pd.DataFrame()
 
-    logger.info("Images will be queried in roughly %s requests from mapillary", len(tiles.index))
+    logger.info(
+        "Images will be queried in roughly %s requests from %s",
+        len(tiles.index),
+        getattr(provider.name, "value", "unknown provider"),
+    )
 
     downloaded_metadata: list[pd.DataFrame] = []
     for i, row in enumerate(tiles.to_dict(orient="records")):
         df = download_and_process_tile(
             row=row,
             polygon=polygon,
+            provider=provider,
             kwargs=kwargs,
         )
         if df is not None and not df.empty:
@@ -168,6 +175,7 @@ def download_and_process_tile(
     *,
     row: dict[Hashable, Any] | pd.Series,
     polygon: ShapelyBaseGeometry,
+    provider: StreetImageProvider,
     kwargs: dict[str, Any],
     attempt_limit: int = 3,
 ) -> pd.DataFrame | None:
@@ -175,14 +183,29 @@ def download_and_process_tile(
     x = row["x"]
     y = row["y"]
 
-    url = f"{Config.MAPILLARY_API_LINK}{z}/{x}/{y}?access_token={Config.MAPILLARY_API_KEY}"
+    if provider.name == StreetImageProviderNameEnum.MAPILLARY:
+        url = f"{provider.url or Config.MAPILLARY_API_LINK}{z}/{x}/{y}?access_token={Config.MAPILLARY_API_KEY}"
+    elif provider.name == StreetImageProviderNameEnum.PANORAMAX:
+        url = f"{provider.url or Config.PANORAMAX_API_LINK}api/map/{z}/{x}/{y}.mvt"
+    else:
+        raise Exception(f"Unknown provider {getattr(provider.name, 'value', '')}")
 
     for _ in range(attempt_limit):
         try:
-            data = get_mapillary_data(url, x, y, z)
+            data = get_street_image_data(url, x, y, z)
 
             if data.isna().all() is False or data.empty is False:
                 data = data[data["geometry"].apply(lambda point: point.within(polygon))]
+                if provider.name == StreetImageProviderNameEnum.PANORAMAX:
+                    data = data.rename(
+                        columns={
+                            "account_id": "creator_id",
+                            "ts": "captured_at",
+                            "type": "is_pano",
+                            "first_sequence": "sequence_id",
+                        },
+                    )
+                    data["is_pano"] = data["is_pano"].eq("equirectangular")
                 target_columns = [
                     "id",
                     "geometry",
@@ -202,7 +225,8 @@ def download_and_process_tile(
             return None
         except StreetException:
             logger.warning(
-                "Error while fetching Mapillary data for tile %s/%s/%s",
+                "Error while fetching %s data for tile %s/%s/%s",
+                provider.name.value,
                 z,
                 x,
                 y,
@@ -210,7 +234,7 @@ def download_and_process_tile(
     return None
 
 
-def get_mapillary_data(
+def get_street_image_data(
     url: str,
     x: int,
     y: int,
@@ -219,7 +243,8 @@ def get_mapillary_data(
     response = requests.get(url, timeout=100)
     if response.status_code != 200:
         logger.warning(
-            "Mapillary API request failed",
+            "API request at %s failed",
+            url,
             extra=log_extra_response(response=response),
         )
         raise StreetException
@@ -253,27 +278,27 @@ def filter_results(
     df = results_df.copy()
     if creator_id is not None:
         if df["creator_id"].isna().all():
-            logger.info("No Mapillary Feature in the AoI has a 'creator_id' value.")
+            logger.info("No feature in the AoI has a 'creator_id' value.")
             return None
         df = df[df["creator_id"] == creator_id]
 
     if is_pano is not None:
         if df["is_pano"].isna().all():
-            logger.info("No Mapillary Feature in the AoI has a 'is_pano' value.")
+            logger.info("No feature in the AoI has a 'is_pano' value.")
             return None
         df = df[df["is_pano"] == is_pano]
 
     if organization_id is not None:
         if df["organization_id"].isna().all():
             logger.info(
-                "No Mapillary Feature in the AoI has an 'organization_id' value.",
+                "No feature in the AoI has an 'organization_id' value.",
             )
             return None
         df = df[df["organization_id"] == organization_id]
 
     if start_time is not None:
         if df["captured_at"].isna().all():
-            logger.info("No Mapillary Feature in the AoI has a 'captured_at' value.")
+            logger.info("No feature in the AoI has a 'captured_at' value.")
             return None
         df = filter_by_timerange(df, start_time, end_time)
 
@@ -298,6 +323,7 @@ def get_image_metadata(
     end_time: str | None = None,
     randomize_order: bool = False,
     sampling_threshold: int | None = None,
+    provider: StreetImageProvider | None = None,
 ) -> Grouping[StreetFeature]:
     kwargs = {
         "is_pano": is_pano,
@@ -307,14 +333,24 @@ def get_image_metadata(
         "end_time": end_time,
     }
     aoi_polygon = geojson_to_polygon(aoi_geojson)
+
+    if provider is None:
+        provider = StreetImageProvider(
+            name=StreetImageProviderNameEnum.MAPILLARY,
+            url=Config.MAPILLARY_API_LINK,
+        )
+
+    level = 15 if getattr(provider.name, "value", None) == "panoramax" else 14
+
     downloaded_metadata = coordinate_download(
         polygon=aoi_polygon,
         level=level,
+        provider=provider,
         kwargs=kwargs,
     )
     if downloaded_metadata.empty or downloaded_metadata.isna().all() is True:
         raise ValidationException(
-            "No Mapillary features found in the area of interest with the provided filters.",
+            "No features found in the area of interest with the provided filters.",
         )
     if sampling_threshold is not None:
         downloaded_metadata = spatial_sampling(

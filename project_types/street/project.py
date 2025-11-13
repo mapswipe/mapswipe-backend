@@ -2,7 +2,6 @@ import json
 import logging
 import math
 import typing
-from enum import Enum
 
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
@@ -27,6 +26,7 @@ from utils import fields as custom_fields
 from utils.asset_types.models import AoiGeometryAssetProperty
 from utils.common import Grouping, create_json_dump
 from utils.custom_options.models import CustomOption
+from utils.geo.street_image_provider.models import StreetImageProvider
 
 logger = logging.getLogger(__name__)
 
@@ -39,16 +39,6 @@ class StreetMapillaryImageFilters(BaseModel):
     end_time: custom_fields.PydanticDate | None = None
     randomize_order: custom_fields.PydanticBool = False
     sampling_threshold: custom_fields.PydanticPositiveInt | None = None
-
-
-class ImageProviderNameEnum(str, Enum):
-    MAPILLARY = "mapillary"
-    PANORAMAX = "panoramax"
-
-
-class StreetImageProvider(BaseModel):
-    name: ImageProviderNameEnum | None = None
-    url: custom_fields.PydanticUrl | None = None
 
 
 class StreetProjectProperty(base_project.BaseProjectProperty):
@@ -112,6 +102,8 @@ class StreetProject(
 
         mapillary_image_filters = self.project_type_specifics.mapillary_image_filters
 
+        provider = self.project_type_specifics.image_provider
+
         return get_image_metadata(
             aoi_geojson=aoi_geojson,
             is_pano=mapillary_image_filters.is_pano,
@@ -121,6 +113,7 @@ class StreetProject(
             end_time=mapillary_image_filters.end_time,
             randomize_order=mapillary_image_filters.randomize_order,
             sampling_threshold=mapillary_image_filters.sampling_threshold,
+            provider=provider,
         )
 
     @typing.override
@@ -244,8 +237,7 @@ class StreetProject(
     def get_task_specifics_for_firebase(self, task: ProjectTask):
         assert task.geometry is not None, "Task geometry must not be None"
         return firebase_models.FbMappingTaskStreetCreateOnlyInput(
-            # XXX: converting this to int for backwards compatibility
-            taskId=int(task.firebase_id),
+            taskId=task.firebase_id,
             groupId=task.task_group.firebase_id,
         )
 
