@@ -64,6 +64,8 @@ class SlackMessage:
             Project.Type.STREET: ":street:",
             Project.Type.COMPLETENESS: ":completeness:",
             Project.Type.VALIDATE_IMAGE: ":validate_image:",
+            # TODO: add custom :conflation: icon in slack
+            Project.Type.CONFLATION: ":construction:",
         }
         # FIXME: better way to concatenate this
         return f"{label} {type_to_icon.get(project_type, '')}".strip()
