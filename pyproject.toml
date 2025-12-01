@@ -33,7 +33,7 @@ dependencies = [
     "django-health-check",
     "cachetools",
     "pillow", # Required by django ImageField
-    "pydantic==2.10.6",
+    "pydantic==2.12.5",
     # Geo (Used by utils/geo)
     "gdal==3.6.2", # NOTE: version depends on the available libgdal-dev version in debian
     "ogr",
