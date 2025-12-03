@@ -318,7 +318,7 @@ type CompareProjectPropertyType {
   zoomLevel: Int!
 }
 
-union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyTypeStreetProjectPropertyType = CompareProjectPropertyType | CompletenessProjectPropertyType | FindProjectPropertyType | StreetProjectPropertyType | ValidateImageProjectPropertyType | ValidateProjectPropertyType
+union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyTypeStreetProjectPropertyTypeConflationProjectPropertyType = CompareProjectPropertyType | CompletenessProjectPropertyType | ConflationProjectPropertyType | FindProjectPropertyType | StreetProjectPropertyType | ValidateImageProjectPropertyType | ValidateProjectPropertyType
 
 input CompareTutorialTaskPropertyInput {
   tileX: Int!
@@ -332,7 +332,7 @@ type CompareTutorialTaskPropertyType {
   tileZ: Int!
 }
 
-union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyType = CompareTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | FindTutorialTaskPropertyType | StreetTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | ValidateTutorialTaskPropertyType
+union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyTypeConflationTutorialTaskPropertyType = CompareTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | ConflationTutorialTaskPropertyType | FindTutorialTaskPropertyType | StreetTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | ValidateTutorialTaskPropertyType
 
 input CompletenessProjectPropertyInput {
   """Numeric value as string"""
@@ -364,6 +364,36 @@ type CompletenessTutorialTaskPropertyType {
   tileX: Int!
   tileY: Int!
   tileZ: Int!
+}
+
+type ConflationObjectSourceConfig {
+  objectGeojsonUrl: String
+}
+
+input ConflationObjectSourceConfigInput {
+  objectGeojsonUrl: String = null
+}
+
+input ConflationProjectPropertyInput {
+  customOptions: [CustomOptionInput!] = null
+  objectSource: ConflationObjectSourceConfigInput!
+  tileServerProperty: ProjectRasterTileServerConfigInput!
+}
+
+type ConflationProjectPropertyType {
+  customOptions: [ProjectCustomOption!]
+  objectSource: ConflationObjectSourceConfig!
+  tileServerProperty: ProjectRasterTileServerConfig!
+}
+
+input ConflationTutorialTaskPropertyInput {
+  identifier: Int!
+  objectGeometry: String!
+}
+
+type ConflationTutorialTaskPropertyType {
+  identifier: Int!
+  objectGeometry: String!
 }
 
 type ContributorSwipeStatType {
@@ -1826,7 +1856,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   projectNumber: Int!
   projectType: ProjectTypeEnum!
   projectTypeSpecificOutputAsset: ProjectAssetType
-  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyTypeStreetProjectPropertyType
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyTypeStreetProjectPropertyTypeConflationProjectPropertyType
   region: String!
 
   """Which group, institution or community is requesting this project?"""
@@ -1863,6 +1893,7 @@ type ProjectTypeAreaStatsType {
 enum ProjectTypeEnum {
   COMPARE
   COMPLETENESS
+  CONFLATION
   FIND
   STREET
   VALIDATE
@@ -1936,6 +1967,7 @@ type ProjectTypeOffsetPaginated {
 input ProjectTypeSpecificInput @oneOf {
   compare: CompareProjectPropertyInput
   completeness: CompletenessProjectPropertyInput
+  conflation: ConflationProjectPropertyInput
   find: FindProjectPropertyInput
   street: StreetProjectPropertyInput
   validate: ValidateProjectPropertyInput
@@ -2545,6 +2577,7 @@ input TutorialTaskInput {
 input TutorialTaskProjectTypeSpecificInput @oneOf {
   compare: CompareTutorialTaskPropertyInput
   completeness: CompletenessTutorialTaskPropertyInput
+  conflation: ConflationTutorialTaskPropertyInput
   find: FindTutorialTaskPropertyInput
   street: StreetTutorialTaskPropertyInput
   validate: ValidateTutorialTaskPropertyInput
@@ -2559,7 +2592,7 @@ type TutorialTaskType implements UserResourceTypeMixin {
   id: ID!
   modifiedAt: DateTime!
   modifiedBy: UserType!
-  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyType
+  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyTypeConflationTutorialTaskPropertyType
   reference: Int!
   scenarioId: ID!
 }
