@@ -66,7 +66,7 @@ class ConflationTutorial(
         tsp = self.project_type_specifics.tile_server_property
 
         projectType = ProjectTypeEnum.CONFLATION.value
-        assert projectType == 8, "Project Validate should be 8"
+        assert projectType == 8, "Project Conflation should be 8"
 
         return firebase_models.FbConflationTutorial(
             # FIXME(tnagorra): This is the path to local storage.
