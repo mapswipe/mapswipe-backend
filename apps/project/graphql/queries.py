@@ -47,6 +47,7 @@ def get_tile_servers() -> RasterTileServersType:
             credits=config["credits"],
             min_zoom=config["min_zoom"],
             max_zoom=config["max_zoom"],
+            disabled=config["disabled"],
         )
 
     def _get_vector_tile_server_type(enum: VectorTileServerNameEnumWithoutCustom):
@@ -65,9 +66,8 @@ def get_tile_servers() -> RasterTileServersType:
         raster=[
             _get_raster_tile_server_type(RasterTileServerNameEnum.BING),
             _get_raster_tile_server_type(RasterTileServerNameEnum.MAPBOX),
-            # NOTE: Disabled because it's not working for 2+ years
-            # _get_raster_tile_server_type(RasterTileServerNameEnum.MAXAR_STANDARD),
-            # _get_raster_tile_server_type(RasterTileServerNameEnum.MAXAR_PREMIUM),
+            _get_raster_tile_server_type(RasterTileServerNameEnum.MAXAR_STANDARD),
+            _get_raster_tile_server_type(RasterTileServerNameEnum.MAXAR_PREMIUM),
             _get_raster_tile_server_type(RasterTileServerNameEnum.ESRI),
             _get_raster_tile_server_type(RasterTileServerNameEnum.ESRI_BETA),
         ],

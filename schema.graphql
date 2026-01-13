@@ -2086,6 +2086,7 @@ enum RasterTileServerNameEnum {
 
 type RasterTileServerType {
   credits: String!
+  disabled: Boolean!
   label: String!
   maxZoom: Int
   minZoom: Int
