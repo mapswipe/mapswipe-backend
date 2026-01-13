@@ -213,9 +213,9 @@ class TileMapServiceBaseProject[
             raise Exception("Could not find AOI geometry asset")
 
         asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_asset.asset_type_specifics)
-        allowed_area = 5 * (4 ** (23 - self.project_type_specifics.zoom_level))
-        if asset_specific_data.area > allowed_area:
-            raise base_project.ValidationException(f"Area for AOI Geometry must be less than {allowed_area} sq. km")
+        max_aoi_area = 5 * (4 ** (23 - self.project_type_specifics.zoom_level))
+        if asset_specific_data.area > max_aoi_area:
+            raise base_project.ValidationException(f"Area for AOI Geometry must be less than {max_aoi_area} sq. km")
 
         extension = Path(aoi_asset.file.name).suffix
         with tempfile.NamedTemporaryFile(suffix=extension, dir=Config.TEMP_DIR) as temp_file:
