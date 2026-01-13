@@ -296,7 +296,7 @@ class TestValidateProjectE2E(TestCase):
 
     class Query:
         TEST_AOI_OBJECTS = """
-        query TestAoiObjects($assetId: ID, $projectId: ID, $ohsomeFilter: String) {
+        query TestAoiObjects($assetId: ID!, $projectId: ID!, $ohsomeFilter: String!) {
             testAoiObjects(assetId: $assetId, projectId: $projectId, ohsomeFilter: $ohsomeFilter) {
                 ok
                 error
@@ -309,7 +309,7 @@ class TestValidateProjectE2E(TestCase):
         """
 
         TEST_TASKING_MANAGER_PROJECT = """
-        query TestTaskingManagerProject($hotTmId: String, $ohsomeFilter: String) {
+        query TestTaskingManagerProject($hotTmId: String!, $ohsomeFilter: String!) {
             testTaskingManagerProject(hotTmId: $hotTmId, ohsomeFilter: $ohsomeFilter) {
                 ok
                 error

@@ -93,24 +93,15 @@ class Query:
     @strawberry.field(extensions=[IsAuthenticated()])
     def test_aoi_objects(
         self,
-        project_id: strawberry.ID | None,
-        asset_id: strawberry.ID | None,
-        ohsome_filter: str | None,
+        project_id: strawberry.ID,
+        asset_id: strawberry.ID,
+        ohsome_filter: str,
     ) -> TestValidateAoiObjectsResponse:
         response = TestValidateAoiObjectsResponse(
             project_id=project_id,
             asset_id=asset_id,
             ohsome_filter=ohsome_filter,
         )
-
-        if project_id is None:
-            return response.generate_error("project_id is required to test aoi elements")
-
-        if asset_id is None:
-            return response.generate_error("asset_id is required to test aoi elements")
-
-        if ohsome_filter is None:
-            return response.generate_error("ohsome_filter is required to test aoi elements")
 
         try:
             object_count = ValidateProject.test_ohsome_objects_from_aoi_asset(
@@ -129,19 +120,13 @@ class Query:
     @strawberry.field(extensions=[IsAuthenticated()])
     def test_tasking_manager_project(
         self,
-        hot_tm_id: fields.PydanticId | None,
-        ohsome_filter: str | None,
+        hot_tm_id: fields.PydanticId,
+        ohsome_filter: str,
     ) -> TestValidateTaskingManagerProjectResponse:
         response = TestValidateTaskingManagerProjectResponse(
             hot_tm_id=hot_tm_id,
             ohsome_filter=ohsome_filter,
         )
-
-        if hot_tm_id is None:
-            return response.generate_error("hot_tm_id is required to test HOT project aoi elements")
-
-        if ohsome_filter is None:
-            return response.generate_error("ohsome_filter is required to test HOT project aoi elements")
 
         try:
             object_count = ValidateProject.test_tasking_manager_project(
