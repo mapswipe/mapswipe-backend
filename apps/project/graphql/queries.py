@@ -13,7 +13,7 @@ from apps.project.graphql.types.project_types.validate import (
     TestValidateAoiObjectsResponse,
     TestValidateTaskingManagerProjectResponse,
 )
-from apps.project.models import Organization, Project, ProjectAsset, ProjectTypeEnum
+from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
 from project_types.base.project import ValidationException
 from project_types.validate.project import ValidateProject
 from utils import fields
@@ -104,9 +104,19 @@ class Query:
         )
 
         try:
-            object_count = ValidateProject.test_ohsome_objects_from_aoi_asset(
-                project_id,
-                asset_id,
+            aoi_asset = (
+                ProjectAsset.usable_objects()
+                .filter(
+                    id=asset_id,
+                    type=ProjectAsset.Type.INPUT,
+                    input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
+                    project_id=project_id,
+                )
+                .first()
+            )
+
+            object_count, _ = ValidateProject.test_ohsome_objects_from_aoi_asset(
+                aoi_asset,
                 ohsome_filter,
             )
 
@@ -129,7 +139,7 @@ class Query:
         )
 
         try:
-            object_count = ValidateProject.test_tasking_manager_project(
+            object_count, _, _ = ValidateProject.test_tasking_manager_project(
                 hot_tm_id,
                 ohsome_filter,
             )
