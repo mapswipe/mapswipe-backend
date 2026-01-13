@@ -13,7 +13,7 @@ from apps.project.graphql.types.project_types.validate import (
     TestValidateAoiObjectsResponse,
     TestValidateTaskingManagerProjectResponse,
 )
-from apps.project.models import Organization, Project, ProjectAsset, ProjectTypeEnum
+from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
 from project_types.base.project import ValidationException
 from project_types.validate.project import ValidateProject
 from utils import fields
@@ -47,6 +47,7 @@ def get_tile_servers() -> RasterTileServersType:
             credits=config["credits"],
             min_zoom=config["min_zoom"],
             max_zoom=config["max_zoom"],
+            disabled=config["disabled"],
         )
 
     def _get_vector_tile_server_type(enum: VectorTileServerNameEnumWithoutCustom):
@@ -65,9 +66,8 @@ def get_tile_servers() -> RasterTileServersType:
         raster=[
             _get_raster_tile_server_type(RasterTileServerNameEnum.BING),
             _get_raster_tile_server_type(RasterTileServerNameEnum.MAPBOX),
-            # NOTE: Disabled because it's not working for 2+ years
-            # _get_raster_tile_server_type(RasterTileServerNameEnum.MAXAR_STANDARD),
-            # _get_raster_tile_server_type(RasterTileServerNameEnum.MAXAR_PREMIUM),
+            _get_raster_tile_server_type(RasterTileServerNameEnum.MAXAR_STANDARD),
+            _get_raster_tile_server_type(RasterTileServerNameEnum.MAXAR_PREMIUM),
             _get_raster_tile_server_type(RasterTileServerNameEnum.ESRI),
             _get_raster_tile_server_type(RasterTileServerNameEnum.ESRI_BETA),
         ],
@@ -93,9 +93,9 @@ class Query:
     @strawberry.field(extensions=[IsAuthenticated()])
     def test_aoi_objects(
         self,
-        project_id: strawberry.ID | None,
-        asset_id: strawberry.ID | None,
-        ohsome_filter: str | None,
+        project_id: strawberry.ID,
+        asset_id: strawberry.ID,
+        ohsome_filter: str,
     ) -> TestValidateAoiObjectsResponse:
         response = TestValidateAoiObjectsResponse(
             project_id=project_id,
@@ -103,19 +103,20 @@ class Query:
             ohsome_filter=ohsome_filter,
         )
 
-        if project_id is None:
-            return response.generate_error("project_id is required to test aoi elements")
-
-        if asset_id is None:
-            return response.generate_error("asset_id is required to test aoi elements")
-
-        if ohsome_filter is None:
-            return response.generate_error("ohsome_filter is required to test aoi elements")
-
         try:
-            object_count = ValidateProject.test_ohsome_objects_from_aoi_asset(
-                project_id,
-                asset_id,
+            aoi_asset = (
+                ProjectAsset.usable_objects()
+                .filter(
+                    id=asset_id,
+                    type=ProjectAsset.Type.INPUT,
+                    input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
+                    project_id=project_id,
+                )
+                .first()
+            )
+
+            object_count, _ = ValidateProject.test_ohsome_objects_from_aoi_asset(
+                aoi_asset,
                 ohsome_filter,
             )
 
@@ -129,22 +130,16 @@ class Query:
     @strawberry.field(extensions=[IsAuthenticated()])
     def test_tasking_manager_project(
         self,
-        hot_tm_id: fields.PydanticId | None,
-        ohsome_filter: str | None,
+        hot_tm_id: fields.PydanticId,
+        ohsome_filter: str,
     ) -> TestValidateTaskingManagerProjectResponse:
         response = TestValidateTaskingManagerProjectResponse(
             hot_tm_id=hot_tm_id,
             ohsome_filter=ohsome_filter,
         )
 
-        if hot_tm_id is None:
-            return response.generate_error("hot_tm_id is required to test HOT project aoi elements")
-
-        if ohsome_filter is None:
-            return response.generate_error("ohsome_filter is required to test HOT project aoi elements")
-
         try:
-            object_count = ValidateProject.test_tasking_manager_project(
+            object_count, _, _ = ValidateProject.test_tasking_manager_project(
                 hot_tm_id,
                 ohsome_filter,
             )

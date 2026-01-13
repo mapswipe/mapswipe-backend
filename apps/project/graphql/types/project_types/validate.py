@@ -22,6 +22,7 @@ class ValidateTestAoiResponse:
     object_count: int | None = None
     ohsome_filter: str | None = None
 
+    # TODO(tnagorra): This needs to be generic. Create a base response class.
     def generate_error(self, message: str = DEFAULT_TEST_RESPONSE_ERROR_MESSAGE):
         self.ok = False
         self.error = message

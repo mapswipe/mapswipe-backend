@@ -47,6 +47,7 @@ class RasterTileServerType:
     min_zoom: int | None
     max_zoom: int | None
     credits: str
+    disabled: bool
 
 
 @strawberry.type

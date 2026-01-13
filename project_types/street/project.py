@@ -91,9 +91,9 @@ class StreetProject(
             raise Exception("Could not find AOI geometry asset")
 
         asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_asset.asset_type_specifics)
-        allowed_area = 20
-        if asset_specific_data.area > allowed_area:
-            raise base_project.ValidationException(f"Area for AOI Geometry must be less than {allowed_area} sq. km")
+        MAX_AOI_AREA = 20
+        if asset_specific_data.area > MAX_AOI_AREA:
+            raise base_project.ValidationException(f"Area for AOI Geometry must be less than {MAX_AOI_AREA} sq. km")
 
         with aoi_asset.file.open() as aoi_file:
             aoi_geojson = json.loads(aoi_file.read())

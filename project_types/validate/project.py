@@ -4,7 +4,6 @@ import typing
 from typing import Any
 
 import requests
-import strawberry
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
 from django.db import models
@@ -82,7 +81,7 @@ class ValidateObjectSourceConfig(BaseModel):
                 if self.aoi_geometry is None:
                     raise ValueError("AOI Geometry File is required")
                 if self.ohsome_filter is None:
-                    raise ValueError("Ohsome filter is required for AOI GeoJson File")
+                    raise ValueError("OHSOME filter is required for AOI GeoJson File")
                 return self
             case ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL:
                 if self.object_geojson_url is None:
@@ -92,7 +91,7 @@ class ValidateObjectSourceConfig(BaseModel):
                 if self.tasking_manager_project_id is None:
                     raise ValueError("Tasking Manager Project ID is required")
                 if self.ohsome_filter is None:
-                    raise ValueError("Ohsome filter is required")
+                    raise ValueError("OHSOME filter is required")
                 return self
 
 
@@ -131,57 +130,74 @@ class ValidateProject(
         super().__init__(project)
 
     @staticmethod
-    def validate_geojson_aoi(geo_json: dict):  # type: ignore[reportMissingTypeArgument]
-        try:
-            _, geometry_collection = convert_json_dict_to_geometry_collection(geo_json)
-        except Exception as e:
-            raise base_project.ValidationException(
-                "GeoJSON does not contain a valid feature collection of polygon or multi-polygon",
-            ) from e
-
-        area_km2 = get_area_of_geometry(geometry_collection)
-        allowed_area = 20
-
-        if area_km2 > allowed_area:
-            raise base_project.ValidationException(f"Area for AOI Geometry must be less than {allowed_area} sq. km")
-
-        return PydanticFeatureCollection.model_validate(geo_json)
+    def _validate_geojson_aoi_area(area_km2: float) -> float:
+        MAX_AOI_AREA = 500
+        if area_km2 > MAX_AOI_AREA:
+            raise base_project.ValidationException(f"Area for AOI Geometry must be less than {MAX_AOI_AREA} sq. km")
+        return area_km2
 
     @staticmethod
-    def validate_object_count(count: int | None) -> int:
+    def _validate_object_count(count: int | None) -> int:
         if count is None or count <= 0:
             raise base_project.ValidationException(
                 "AOI does not contain objects from selected filter.",
             )
 
-        allowed_count = 100000
-
-        if count > allowed_count:
+        MAX_OBJECTS_COUNT = 100_000
+        if count > MAX_OBJECTS_COUNT:
             raise base_project.ValidationException(
-                f"AOI contains more than 100,000 objects. -> {count}",
+                f"AOI contains more than {MAX_OBJECTS_COUNT} objects. -> {count}",
             )
 
         return count
 
     @staticmethod
-    def test_ohsome_objects_from_aoi_asset(project_id: strawberry.ID, asset_id: strawberry.ID, ohsome_filter: str) -> int:
-        aoi_asset = (
-            ProjectAsset.usable_objects()
-            .filter(
-                id=asset_id,
-                type=ProjectAsset.Type.INPUT,
-                input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
-                project_id=project_id,
+    def test_geojson_url_project(url: str):
+        logger.info("Fetching object geojson from %s", url)
+
+        # FIXME(frozenhelium): use predefined timeout duration
+        # FIXME(tnagorra): handle timeout error
+        response = requests.get(url, timeout=500)
+        if response.status_code != 200:
+            raise base_project.ValidationException(
+                f"Failed to fetch object geojson from {url}",
             )
-            .first()
+
+        logger.info("Successfully fetched object geojson from %s", url)
+
+        try:
+            geojson = response.json()
+        except Exception as e:
+            raise base_project.ValidationException("GeoJSON URL did not respond with valid JSON") from e
+
+        try:
+            features, geometry_collection = convert_json_dict_to_geometry_collection(geojson)
+        except Exception as e:
+            raise base_project.ValidationException(
+                "GeoJSON URL did not respond with a valid feature collection of polygon or multi-polygon",
+            ) from e
+
+        return (
+            ValidateProject._validate_object_count(len(features)),
+            features,
+            geometry_collection,
         )
 
+    @staticmethod
+    def test_ohsome_objects_from_aoi_asset(
+        aoi_asset: ProjectAsset | None,
+        ohsome_filter: str,
+    ):
         if not aoi_asset:
-            raise Exception("Could not find AOI geometry asset")
+            # NOTE: This error scenario is not expected.
+            logger.error("Could not find AOI geometry asset")
+            raise base_project.ValidationException("Could not find AOI geometry asset")
+
+        asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_asset.asset_type_specifics)
+        ValidateProject._validate_geojson_aoi_area(asset_specific_data.area)
 
         with aoi_asset.file.open() as aoi_file:
             aoi_geojson = json.loads(aoi_file.read())
-
         feature_collection = PydanticFeatureCollection.model_validate(aoi_geojson)
 
         try:
@@ -192,17 +208,19 @@ class ValidateProject(
         except Exception as e:
             raise base_project.ValidationException("Failed to get object_count from ohsome") from e
 
-        return ValidateProject.validate_object_count(object_count)
+        return (
+            ValidateProject._validate_object_count(object_count),
+            aoi_geojson,
+        )
 
     @staticmethod
     def test_tasking_manager_project(
         hot_tm_id: custom_fields.PydanticId,
         ohsome_filter: str,
-    ) -> int:
+    ):
         hot_tm_url = f"{Config.HOT_TASKING_MANAGER_PROJECT_API_LINK}projects/{hot_tm_id}/queries/aoi/?as_file=false"
         logger.info("Fetching AOI geojson on HOT from %s", hot_tm_url)
 
-        # FIXME(frozenhelium): duplicated logic from _validate_tasking_manager
         aoi_result = requests.get(hot_tm_url, timeout=500)
         if aoi_result.status_code != 200:
             raise base_project.ValidationException(
@@ -232,7 +250,18 @@ class ValidateProject(
             ],
         }
 
-        feature_collection = ValidateProject.validate_geojson_aoi(aoi_geojson)
+        try:
+            _, geometry_collection = convert_json_dict_to_geometry_collection(aoi_geojson)
+        except Exception as e:
+            raise base_project.ValidationException(
+                "GeoJSON does not contain a valid feature collection of polygon or multi-polygon",
+            ) from e
+
+        area_km2 = get_area_of_geometry(geometry_collection)
+        ValidateProject._validate_geojson_aoi_area(area_km2)
+
+        feature_collection = PydanticFeatureCollection.model_validate(aoi_geojson)
+
         try:
             object_count = get_object_count_from_ohsome(
                 feature_collection.model_dump_json(),
@@ -241,7 +270,11 @@ class ValidateProject(
         except Exception as e:
             raise base_project.ValidationException("Failed to get object_count from ohsome") from e
 
-        return ValidateProject.validate_object_count(object_count)
+        return (
+            ValidateProject._validate_object_count(object_count),
+            aoi_geojson,
+            aoi_result,
+        )
 
     @typing.override
     def get_aoi_geometry_asset(self) -> ProjectAsset | None:
@@ -257,7 +290,7 @@ class ValidateProject(
             project_id=self.project.pk,
         )
 
-    def _get_object_geometry_from_ohsome(self, geojson: dict):  # type: ignore[reportMissingTypeArgument]
+    def _get_object_geometry_from_ohsome(self, geojson: dict[typing.Any, typing.Any]):
         try:
             feature_collection = PydanticFeatureCollection.model_validate(geojson)
         except Exception as e:
@@ -291,7 +324,7 @@ class ValidateProject(
 
             # FIXME(frozenhelium): verify if object count validation is required
             object_count = len(features)
-            ValidateProject.validate_object_count(object_count)
+            ValidateProject._validate_object_count(object_count)
 
             return features
         except Exception as e:
@@ -300,27 +333,22 @@ class ValidateProject(
             ) from e
 
     def _validate_aoi_geojson_file(self):
-        if self.project_type_specifics.object_source.aoi_geometry is None:
+        aoi_geometry_ref = self.project_type_specifics.object_source.aoi_geometry
+        aoi_geometry_asset = self.project.aoi_geometry_input_asset
+        ohsome_filter = self.project_type_specifics.object_source.ohsome_filter
+
+        if aoi_geometry_ref is None or aoi_geometry_asset is None:
             raise base_project.ValidationException("AOI Geometry is missing")
 
-        if self.project_type_specifics.object_source.ohsome_filter is None:
-            raise base_project.ValidationException("Ohsome filter is missing")
+        if ohsome_filter is None:
+            raise base_project.ValidationException("OHSOME filter is missing")
 
-        aoi_asset = self.project.aoi_geometry_input_asset
-        if not aoi_asset:
-            raise Exception("Could not find AOI geometry asset")
+        _, aoi_geojson = ValidateProject.test_ohsome_objects_from_aoi_asset(
+            self.project.aoi_geometry_input_asset,
+            ohsome_filter,
+        )
 
-        asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_asset.asset_type_specifics)
-
-        # FIXME(frozenhelium): reuse validate_aoi_geojson
-        allowed_area = 20
-        if asset_specific_data.area > allowed_area:
-            raise base_project.ValidationException(f"Area for AOI Geometry must be less than {allowed_area} sq. km")
-
-        with aoi_asset.file.open() as aoi_file:
-            aoi_geojson = json.loads(aoi_file.read())
-
-        # TODO(tnagorra): Also store intermediate geometries?
+        # TODO(tnagorra): Store intermediate geometries?
 
         return self._get_object_geometry_from_ohsome(aoi_geojson)
 
@@ -329,28 +357,7 @@ class ValidateProject(
         if url is None:
             raise base_project.ValidationException("Object Geojson URL is missing")
 
-        logger.info("Fetching object geojson from %s", url)
-
-        # FIXME(frozenhelium): use predefined timeout duration
-        # FIXME(tnagorra): handle timeout error
-        response = requests.get(url, timeout=500)
-        if response.status_code != 200:
-            raise base_project.ValidationException(
-                f"Failed to fetch object geojson from {url}",
-            )
-
-        logger.info("Successfully fetched object geojson from %s", url)
-        try:
-            geojson = response.json()
-        except Exception as e:
-            raise base_project.ValidationException("GeoJSON URL did not respond with valid JSON") from e
-
-        try:
-            features, geometry_collection = convert_json_dict_to_geometry_collection(geojson)
-        except Exception as e:
-            raise base_project.ValidationException(
-                "GeoJSON URL did not respond with a valid feature collection of polygon or multi-polygon",
-            ) from e
+        _, features, geometry_collection = ValidateProject.test_geojson_url_project(url)
 
         # TODO(tnagorra): Also store intermediate geometries?
         # TODO(tnagorra): Also create a input geometry?
@@ -376,57 +383,25 @@ class ValidateProject(
             proj_aoi_geometry.geometry = hull
             proj_aoi_geometry.total_area = area_km2
             proj_aoi_geometry.save()
+
         self.project.total_area = area_km2
         self.project.bbox = hull_bbox
         self.project.centroid = hull_center
         self.project.save(update_fields=["aoi_geometry", "total_area", "bbox", "centroid"])
 
-        # FIXME(frozenhelium): add validation for object count?
-
         return features
 
     def _validate_tasking_manager(self):
         hot_tm_id = self.project_type_specifics.object_source.tasking_manager_project_id
+        ohsome_filter = self.project_type_specifics.object_source.ohsome_filter
 
         if hot_tm_id is None:
             raise base_project.ValidationException("HOT Tasking Manager Project ID is missing")
 
-        hot_tm_url = f"{Config.HOT_TASKING_MANAGER_PROJECT_API_LINK}projects/{hot_tm_id}/queries/aoi/?as_file=false"
-        logger.info("Fetching AOI geojson on HOT from %s", hot_tm_url)
+        if ohsome_filter is None:
+            raise base_project.ValidationException("OHSOME filter is missing")
 
-        # FIXME(frozenhelium): use predefined timeout duration
-        # FIXME(tnagorra): handle timeout error
-        aoi_result = requests.get(hot_tm_url, timeout=500)
-        if aoi_result.status_code != 200:
-            raise base_project.ValidationException(
-                f"Failed to fetch AOI GeoJSON from HOT Tasking Manager for tm_id {hot_tm_id}",
-            )
-
-        logger.info("Successfully fetched AOI geojson from HOT for tm_id %s", hot_tm_id)
-
-        try:
-            geometry_dict = aoi_result.json()
-        except Exception as e:
-            raise base_project.ValidationException("HOT Tasking Manager did not respond with a valid JSON") from e
-
-        aoi_geojson = {
-            "type": "FeatureCollection",
-            "metadata": {
-                "project_id": self.project.pk,
-                "hot_tm_project_id": hot_tm_id,
-            },
-            "features": [
-                {
-                    "type": "Feature",
-                    "geometry": geometry_dict,
-                    "properties": {
-                        "hot_tm_project_id": hot_tm_id,
-                    },
-                },
-            ],
-        }
-
-        # TODO(tnagorra): Add area validation for the AOI
+        _, aoi_geojson, aoi_result = ValidateProject.test_tasking_manager_project(hot_tm_id, ohsome_filter)
 
         # TODO(tnagorra): Also create a input geometry?
         # TODO(tnagorra): Also store intermediate geometries?
@@ -452,6 +427,7 @@ class ValidateProject(
             proj_aoi_geometry.geometry = geometry
             proj_aoi_geometry.total_area = area_km2
             proj_aoi_geometry.save()
+
         self.project.total_area = area_km2
         self.project.bbox = geometry_bbox
         self.project.centroid = geometry_center

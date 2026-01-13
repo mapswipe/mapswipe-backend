@@ -40,6 +40,7 @@ class RasterTileServerConfig(BaseModel):
                 "credits": self.custom.credits,
                 "min_zoom": self.custom.min_zoom,
                 "max_zoom": self.custom.max_zoom,
+                "disabled": False,
             }
         return RasterConfig.get_config(self.name)
 
