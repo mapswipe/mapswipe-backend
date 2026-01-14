@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.2.11](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.10..v0.2.11) - 2026-01-14
+### Changes:
+
+#### 🚀  Features
+
+- *(project)* Add option "offset" for validate - ([d96d6c7](https://github.com/mapswipe/mapswipe-backend/commit/d96d6c718afea433d62b9b2471cb18749c9a3671))
+- *(project)* Increase max area to 2500sqkm for validate - ([04c74ea](https://github.com/mapswipe/mapswipe-backend/commit/04c74ea382ad6f5966954607ec1440985e72a007))
+- *(project)* Reuse validate project checks for test and validate functions - ([f5bb688](https://github.com/mapswipe/mapswipe-backend/commit/f5bb68852a04a7eabc70566ef1a8098045a3f51e))
+- Add disabled prop for raster tiles - ([ad37364](https://github.com/mapswipe/mapswipe-backend/commit/ad37364aeef0a1e8f11586da195c9e1ea39b852e))
+
+#### 🐛 Bug Fixes
+
+- Make filter variables mandatory for test queries - ([bf23755](https://github.com/mapswipe/mapswipe-backend/commit/bf237551efdd4208b1e629dfa47b686971be7a1a))
+
+#### 🚜 Refactor
+
+- Rename allowed_area to max_aoi_area - ([10ed21d](https://github.com/mapswipe/mapswipe-backend/commit/10ed21dd5b9003497fa78e23e28b820a604655d8))
+
+### 🍻 Pull Requests (2)
+- (#222) [Feat: add disabled prop for raster tiles](https://github.com/mapswipe/mapswipe-backend/pull/222)
+- (#223) [Feat(project): increase max area to 2500sqkm for validate](https://github.com/mapswipe/mapswipe-backend/pull/223)
+
+
 ## [0.2.10](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.9..v0.2.10) - 2025-11-11
 ### Changes:
 
@@ -18,9 +41,6 @@
 ### 🍻 Pull Requests (1)
 - (#214) [Add queries to test AOI for validate project](https://github.com/mapswipe/mapswipe-backend/pull/214)
 
-### :tada: New Contributors (1)
-
-- [@frozenhelium](https://github.com/frozenhelium) made their first contribution in [#214](https://github.com/mapswipe/mapswipe-backend/pull/214)
 
 ## [0.2.9](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.8..v0.2.9) - 2025-11-03
 ### Changes:
