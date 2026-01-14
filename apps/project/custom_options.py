@@ -34,8 +34,15 @@ class CustomOptionDefaults:
             "title": "Not Sure",
             "icon": IconEnum.REMOVE_OUTLINE,
             "value": 2,
-            "description": "if you're not sure or unsure about the image",
+            "description": "you're not sure or there is cloud cover/bad imagery",
             "icon_color": "#616161",
+        },
+        {
+            "title": "Offset",
+            "icon": IconEnum.ALERT_OUTLINE,
+            "value": 3,
+            "description": "",
+            "icon_color": "#9e9e9e",
         },
     ]
 
