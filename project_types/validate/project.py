@@ -131,7 +131,9 @@ class ValidateProject(
 
     @staticmethod
     def _validate_geojson_aoi_area(area_km2: float) -> float:
-        MAX_AOI_AREA = 500
+        # NOTE: This value was previously 20sqkm. We are increasing this to 2500 to accommodate
+        # projects like https://tasks.hotosm.org/projects/4757
+        MAX_AOI_AREA = 2500
         if area_km2 > MAX_AOI_AREA:
             raise base_project.ValidationException(f"Area for AOI Geometry must be less than {MAX_AOI_AREA} sq. km")
         return area_km2
