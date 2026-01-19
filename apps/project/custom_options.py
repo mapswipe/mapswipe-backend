@@ -39,10 +39,10 @@ class CustomOptionDefaults:
         },
         {
             "title": "Offset",
-            "icon": IconEnum.ALERT_OUTLINE,
+            "icon": IconEnum.FLAG_OUTLINE,
             "value": 3,
-            "description": "",
-            "icon_color": "#9e9e9e",
+            "description": "building outline is correct, but not aligned to the imagery",
+            "icon_color": "#ff9800",
         },
     ]
 

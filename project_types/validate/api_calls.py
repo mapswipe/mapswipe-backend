@@ -27,7 +27,7 @@ def remove_troublesome_chars(string: str | None):
     return string
 
 
-def retry_get(url: str, retries: int | None = 3, timeout: int | None = 4, to_osmcha: bool = False):
+def retry_get(url: str, retries: int | None = 3, timeout: int | None = 10, to_osmcha: bool = False):
     """Retry a query for a variable amount of tries."""
     retry = Retry(total=retries)
     with requests.Session() as session:
