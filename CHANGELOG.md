@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.12](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.11..v0.2.12) - 2026-01-19
+### Changes:
+
+#### 🐛 Bug Fixes
+
+- *(custom-options)* Update offset option - ([aac2f17](https://github.com/mapswipe/mapswipe-backend/commit/aac2f17db303c16f26cfc17efd74de1299b321f4))
+- *(validate)* Increase connection timeout to 10s - ([b2f83d8](https://github.com/mapswipe/mapswipe-backend/commit/b2f83d857c6e73988bc92dfcc9eb8c69a2e1a954))
+
+### 🍻 Pull Requests (1)
+- (#224) [Fix(custom-options): update offset option](https://github.com/mapswipe/mapswipe-backend/pull/224)
+
+
 ## [0.2.11](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.10..v0.2.11) - 2026-01-14
 ### Changes:
 
