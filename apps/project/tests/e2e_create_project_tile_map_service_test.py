@@ -771,6 +771,7 @@ class TestTileMapServiceProjectE2E(TestCase):
                 "user_internal_id",  # NOTE: added for referencing
                 "group_internal_id",  # NOTE: added for referencing
                 "project_internal_id",  # NOTE: added for referencing
+                "reference",
             },
             compressed=True,
         )
