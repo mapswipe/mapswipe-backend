@@ -10,7 +10,6 @@ from pathlib import Path
 import json5
 import pytest
 from django.db.models.signals import pre_save
-from ulid import ULID
 
 from apps.common.models import AssetTypeEnum
 from apps.common.utils import decode_tasks, remove_object_keys
@@ -24,7 +23,7 @@ from apps.mapping.models import (
     MappingSessionUserGroup,
     MappingSessionUserGroupTemp,
 )
-from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetExportTypeEnum, ProjectAssetInputTypeEnum
+from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetExportTypeEnum
 from apps.project.tests.e2e_create_project_tile_map_service_test import read_csv, read_json
 from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
@@ -293,7 +292,7 @@ class TestConflationProjectE2E(TestCase):
                 }
             }
         """
-    
+
     @pytest.mark.vcr("assets/tests/projects/conflation/cassette")
     def test_conflation_project_e2e(self):
         with create_override():
@@ -377,7 +376,7 @@ class TestConflationProjectE2E(TestCase):
         assert image_response is not None, "Image create response is None"
         assert image_response["ok"]
         image_id = image_response["result"]["id"]
-        
+
         # Update project
         update_project_data = test_data["update_project"]
         update_project_data["image"] = image_id
@@ -454,7 +453,7 @@ class TestConflationProjectE2E(TestCase):
 
         tutorial_fb_ref = self.firebase_helper.ref(f"/v2/projects/{tutorial_fb_id}")
         tutorial_fb_data = tutorial_fb_ref.get()
-        
+
         # Check tutorial in firebase
         assert tutorial_fb_data is not None, "Tutorial in firebase is None"
         assert isinstance(tutorial_fb_data, dict), "Tutorial in firebase should be a dictionary"
@@ -462,15 +461,15 @@ class TestConflationProjectE2E(TestCase):
         filtered_tutorial_actual = tutorial_fb_data
         filtered_tutorial_expected = test_data["expected_tutorial_data"]
         assert filtered_tutorial_actual == filtered_tutorial_expected, "Difference found for tutorial data in firebase."
-        
+
         # Check tutorial groups in firebase
         tutorial_groups_fb_ref = self.firebase_helper.ref(f"/v2/groups/{tutorial_fb_id}/")
         tutorial_groups_fb_data = tutorial_groups_fb_ref.get()
-        
+
         filtered_group_actual = tutorial_groups_fb_data
         filtered_group_expected = test_data["expected_tutorial_groups_data"]
         assert filtered_group_actual == filtered_group_expected, "Difference found for tutorial group data in firebase."
-        
+
         # Check tutorial tasks in firebase
         tutorial_tasks_ref = self.firebase_helper.ref(f"/v2/tasks/{tutorial_fb_id}/")
         tutorial_task_fb_data: dict[str, typing.Any] = tutorial_tasks_ref.get()  # type: ignore[reportArgumentType]
@@ -535,7 +534,7 @@ class TestConflationProjectE2E(TestCase):
         filtered_group_actual = groups_fb_data
         filtered_group_expected = test_data["expected_project_groups_data"]
         assert filtered_group_actual == filtered_group_expected, "Difference found for group data on project in firebase."
-        
+
         # Check project tasks in firebase
         project_tasks_ref = self.firebase_helper.ref(f"/v2/tasks/{project_fb_id}/")
         project_tasks_fb_data: dict[str, typing.Any] = project_tasks_ref.get()  # type: ignore[reportArgumentType]
@@ -647,7 +646,7 @@ class TestConflationProjectE2E(TestCase):
             export_type=ProjectAssetExportTypeEnum.TASKS,
         ).first()
         assert tasks_project_asset is not None, "Tasks project asset not found"
-        
+
         expected_tasks = read_csv(
             Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["tasks"]),
             sort_column=operator.itemgetter("task_id"),
