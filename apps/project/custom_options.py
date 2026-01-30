@@ -118,6 +118,8 @@ def get_fallback_custom_options_for_export(project_type: ProjectTypeEnum) -> lis
         project_type == ProjectTypeEnum.FIND
         or project_type == ProjectTypeEnum.COMPARE
         or project_type == ProjectTypeEnum.COMPLETENESS
+        # TODO(susilnem): Verify custom options for locate? setting default for now.
+        or project_type == ProjectTypeEnum.LOCATE
     ):
         return [
             0,  # No

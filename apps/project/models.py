@@ -114,6 +114,9 @@ class ProjectTypeEnum(models.IntegerChoices):
     STREET = 7, "View Streets"
     """ Street project type. """
 
+    LOCATE = 9, "Locate Features"
+    """ Locate project type. """
+
     # TODO(thenav56): Confirm if we have more/less
 
     @classmethod
@@ -136,6 +139,8 @@ class ProjectTypeEnum(models.IntegerChoices):
                 return firebase_models.FbEnumProjectType.VALIDATE_IMAGE
             case ProjectTypeEnum.STREET:
                 return firebase_models.FbEnumProjectType.STREET
+            case ProjectTypeEnum.LOCATE:
+                return firebase_models.FbEnumProjectType.LOCATE
 
 
 # TODO(tnagorra): Reset the values later

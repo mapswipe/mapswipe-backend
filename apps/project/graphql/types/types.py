@@ -18,6 +18,7 @@ from project_types.street import project as street_project
 from project_types.tile_map_service.compare import project as compare_project
 from project_types.tile_map_service.completeness import project as completeness_project
 from project_types.tile_map_service.find import project as find_project
+from project_types.tile_map_service.locate import project as locate_project
 from project_types.validate import project as validate_project
 from project_types.validate_image import project as validate_image_project
 from utils.asset_types.models import AoiGeometryAssetProperty, ObjectImageAssetProperty
@@ -32,6 +33,7 @@ from .project_types import base  # noqa: F401  # isort: skip # type: ignore[repo
 from .project_types.compare import CompareProjectPropertyType
 from .project_types.completeness import CompletenessProjectPropertyType
 from .project_types.find import FindProjectPropertyType
+from .project_types.locate import LocateProjectPropertyType
 from .project_types.street import StreetProjectPropertyType
 from .project_types.validate import ValidateProjectPropertyType
 from .project_types.validate_image import ValidateImageProjectPropertyType
@@ -219,6 +221,7 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
         | ValidateImageProjectPropertyType
         | CompletenessProjectPropertyType
         | StreetProjectPropertyType
+        | LocateProjectPropertyType
         | None
     ):
         data = project.project_type_specifics
@@ -244,5 +247,10 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
             return typing.cast(
                 "StreetProjectPropertyType",
                 street_project.StreetProjectProperty.model_validate(data),
+            )
+        if project.project_type_enum == Project.Type.LOCATE:
+            return typing.cast(
+                "LocateProjectPropertyType",
+                locate_project.LocateProjectProperty.model_validate(data),
             )
         typing.assert_never(project.project_type_enum)
