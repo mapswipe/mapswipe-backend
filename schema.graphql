@@ -37,6 +37,7 @@ type AppEnumCollection {
   ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
   RasterTileServerNameEnum: [AppEnumCollectionRasterTileServerNameEnum!]!
+  SubGridSizeEnum: [AppEnumCollectionSubGridSizeEnum!]!
   TutorialAssetInputTypeEnum: [AppEnumCollectionTutorialAssetInputTypeEnum!]!
   TutorialInformationPageBlockTypeEnum: [AppEnumCollectionTutorialInformationPageBlockTypeEnum!]!
   TutorialStatusEnum: [AppEnumCollectionTutorialStatusEnum!]!
@@ -117,6 +118,11 @@ type AppEnumCollectionProjectTypeEnum {
 
 type AppEnumCollectionRasterTileServerNameEnum {
   key: RasterTileServerNameEnum!
+  label: String!
+}
+
+type AppEnumCollectionSubGridSizeEnum {
+  key: SubGridSizeEnum!
   label: String!
 }
 

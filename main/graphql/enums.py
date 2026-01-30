@@ -8,6 +8,7 @@ from apps.mapping import models as mapping_models
 from apps.project import models as project_models
 from apps.tutorial import models as tutorial_models
 from project_types.tile_map_service.completeness.project import OverlayLayerTypeEnum
+from project_types.tile_map_service.locate.project import SubGridSizeEnum
 from project_types.validate.project import ValidateObjectSourceTypeEnum
 from project_types.validate_image.project import ValidateImageSourceTypeEnum
 from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
@@ -19,6 +20,7 @@ ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     ValidateObjectSourceTypeEnum,
     ValidateImageSourceTypeEnum,
     OverlayLayerTypeEnum,
+    SubGridSizeEnum,
     project_models.ProjectTypeEnum,
     project_models.ProjectProgressStatusEnum,
     project_models.ProjectStatusEnum,
