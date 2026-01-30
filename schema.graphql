@@ -324,7 +324,7 @@ type CompareProjectPropertyType {
   zoomLevel: Int!
 }
 
-union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyTypeStreetProjectPropertyType = CompareProjectPropertyType | CompletenessProjectPropertyType | FindProjectPropertyType | StreetProjectPropertyType | ValidateImageProjectPropertyType | ValidateProjectPropertyType
+union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyTypeStreetProjectPropertyTypeLocateProjectPropertyType = CompareProjectPropertyType | CompletenessProjectPropertyType | FindProjectPropertyType | LocateProjectPropertyType | StreetProjectPropertyType | ValidateImageProjectPropertyType | ValidateProjectPropertyType
 
 input CompareTutorialTaskPropertyInput {
   tileX: Int!
@@ -338,7 +338,7 @@ type CompareTutorialTaskPropertyType {
   tileZ: Int!
 }
 
-union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyType = CompareTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | FindTutorialTaskPropertyType | StreetTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | ValidateTutorialTaskPropertyType
+union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyTypeLocateTutorialTaskPropertyType = CompareTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | FindTutorialTaskPropertyType | LocateTutorialTaskPropertyType | StreetTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | ValidateTutorialTaskPropertyType
 
 input CompletenessProjectPropertyInput {
   """Numeric value as string"""
@@ -939,6 +939,22 @@ input IntComparisonFilterLookup {
 input IntRangeLookup {
   end: Int = null
   start: Int = null
+}
+
+type LocateProjectPropertyType {
+  """Numeric value as string"""
+  aoiGeometry: String!
+  subGridSize: SubGridSizeEnum!
+  tileServerProperty: ProjectRasterTileServerConfig!
+
+  """Zoom level from 14 to 22"""
+  zoomLevel: Int!
+}
+
+type LocateTutorialTaskPropertyType {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
 }
 
 type MapContributionStatsType {
@@ -1832,7 +1848,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   projectNumber: Int!
   projectType: ProjectTypeEnum!
   projectTypeSpecificOutputAsset: ProjectAssetType
-  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyTypeStreetProjectPropertyType
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyTypeStreetProjectPropertyTypeLocateProjectPropertyType
   region: String!
 
   """Which group, institution or community is requesting this project?"""
@@ -1870,6 +1886,7 @@ enum ProjectTypeEnum {
   COMPARE
   COMPLETENESS
   FIND
+  LOCATE
   STREET
   VALIDATE
   VALIDATE_IMAGE
@@ -2195,6 +2212,12 @@ input StreetTutorialTaskPropertyInput {
 type StreetTutorialTaskPropertyType {
   geometry: String!
   mapillaryImageId: String!
+}
+
+enum SubGridSizeEnum {
+  SIZE_2X2
+  SIZE_4X4
+  SIZE_8X8
 }
 
 type TestValidateAoiObjectsResponse {
@@ -2565,7 +2588,7 @@ type TutorialTaskType implements UserResourceTypeMixin {
   id: ID!
   modifiedAt: DateTime!
   modifiedBy: UserType!
-  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyType
+  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyTypeLocateTutorialTaskPropertyType
   reference: Int!
   scenarioId: ID!
 }
