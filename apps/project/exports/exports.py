@@ -19,6 +19,7 @@ from project_types.store import get_project_type_handler
 from project_types.tile_map_service.compare.project import CompareProjectProperty
 from project_types.tile_map_service.completeness.project import CompletenessProjectProperty
 from project_types.tile_map_service.find.project import FindProjectProperty
+from project_types.tile_map_service.locate.project import LocateProjectProperty
 from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
 
 from .mapping_results import generate_mapping_results
@@ -91,7 +92,8 @@ def _export_project_data(project: Project, tmp_directory: Path):
     if not isinstance(
         project_type_handler.project_type_specifics,
         # NOTE: Using negate test to throw type error if new project type is added
-        (CompareProjectProperty | CompletenessProjectProperty | FindProjectProperty),
+        # TODO(susilnem): verify Custom options for locate project type?
+        (CompareProjectProperty | CompletenessProjectProperty | FindProjectProperty | LocateProjectProperty),
     ):
         custom_options_raw = [
             {"value": custom_option.value}
