@@ -941,6 +941,16 @@ input IntRangeLookup {
   start: Int = null
 }
 
+input LocateProjectPropertyInput {
+  """Numeric value as string"""
+  aoiGeometry: String!
+  subGridSize: SubGridSizeEnum!
+  tileServerProperty: ProjectRasterTileServerConfigInput!
+
+  """Zoom level from 14 to 22"""
+  zoomLevel: Int!
+}
+
 type LocateProjectPropertyType {
   """Numeric value as string"""
   aoiGeometry: String!
@@ -1960,6 +1970,7 @@ input ProjectTypeSpecificInput @oneOf {
   compare: CompareProjectPropertyInput
   completeness: CompletenessProjectPropertyInput
   find: FindProjectPropertyInput
+  locate: LocateProjectPropertyInput
   street: StreetProjectPropertyInput
   validate: ValidateProjectPropertyInput
   validateImage: ValidateImageProjectPropertyInput
