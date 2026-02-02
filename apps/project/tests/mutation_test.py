@@ -27,6 +27,8 @@ from main.config import Config
 from main.tests import TestCase
 from project_types.street import project as street_project
 from project_types.tile_map_service.compare import project as compare_project
+from project_types.tile_map_service.locate import project as locate_project
+from project_types.tile_map_service.locate.project import SubGridSizeEnum
 from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -1692,3 +1694,302 @@ class TestProjectTypeMutation(TestCase):
         assert resp_data["result"]["status"] == self.genum(Project.Status.READY_TO_PROCESS)
 
         mock_requests.assert_called_once()
+
+    @patch("apps.project.serializers.process_project_task.delay")
+    def test_project_locate(self, mock_requests):  # type: ignore[reportMissingParameterType]
+        self.force_login(self.user)
+        project_data = {
+            **self.project_data,
+            "projectType": self.genum(ProjectTypeEnum.LOCATE),
+            "clientId": str(ULID()),
+        }
+        content = self._create_project_mutation(project_data)
+        resp_data = content["data"]["createProject"]
+        assert resp_data["errors"] is None, content
+
+        project_id = resp_data["result"]["id"]
+        project_client_id = resp_data["result"]["clientId"]
+
+        # Creating AOI Project Asset
+        project_asset_data = {
+            "project": project_id,
+            "clientId": str(ULID()),
+        }
+        content = self._create_project_aoi_asset(project_asset_data)
+        resp_data = content["data"]["createProjectAsset"]
+        assert resp_data["errors"] is None, content
+        aoi_geometry_asset = resp_data["result"]
+
+        # Creating Project Image Asset
+        project_asset_data = {
+            "project": project_id,
+            "clientId": str(ULID()),
+        }
+        content = self._create_project_image_asset(project_asset_data)
+        resp_data = content["data"]["createProjectAsset"]
+        assert resp_data["errors"] is None, content
+        image_asset = resp_data["result"]
+
+        # Updating Project
+        project_data = {
+            "clientId": project_client_id,
+            "image": image_asset["id"],
+            "verificationNumber": 10,
+            "projectTypeSpecifics": {
+                "locate": {
+                    "aoiGeometry": aoi_geometry_asset["id"],
+                    "zoomLevel": 15,
+                    "tileServerProperty": {
+                        "name": self.genum(RasterTileServerNameEnum.CUSTOM),
+                        "custom": {
+                            "url": "https://hi-there/{x}/{y}/{z}",
+                            "credits": "My Map",
+                        },
+                    },
+                    "subGridSize": self.genum(SubGridSizeEnum.SIZE_2X2),
+                },
+            },
+        }
+        content = self._update_project_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProject"]
+        assert resp_data["errors"] is None, content
+
+        latest_project = Project.objects.get(pk=project_id)
+        assert latest_project.created_by_id == self.user.pk
+        assert latest_project.modified_by_id == self.user.pk
+        assert latest_project.image_id == int(image_asset["id"])
+        assert latest_project.aoi_geometry_input_asset
+        assert latest_project.aoi_geometry_input_asset.id == int(aoi_geometry_asset["id"])
+        assert latest_project.project_type_specifics == {
+            "aoi_geometry": aoi_geometry_asset["id"],
+            "zoom_level": 15,
+            "tile_server_property": {
+                "name": RasterTileServerNameEnum.CUSTOM.value,
+                "custom": {
+                    "url": "https://hi-there/{x}/{y}/{z}",
+                    "credits": "My Map",
+                },
+            },
+            "sub_grid_size": SubGridSizeEnum.SIZE_2X2.value,
+        }
+        locate_project.LocateProjectProperty.model_validate(
+            latest_project.project_type_specifics,
+            context={"project_id": latest_project.pk},
+        )
+
+        # Updating Project:
+        # Test project processing
+        project_data = {
+            "clientId": project_client_id,
+            "status": self.genum(Project.Status.READY_TO_PROCESS),
+        }
+        content = self._update_project_status_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProjectStatus"]
+        assert resp_data["errors"] is None, content
+        assert resp_data["result"]["status"] == self.genum(Project.Status.READY_TO_PROCESS)
+        latest_project.refresh_from_db()
+        assert latest_project.processing_status is None
+
+        mock_requests.assert_called_once()
+        mock_requests.assert_has_calls([call(int(project_id))])
+
+        process_project_task(int(project_id))
+
+        latest_project.refresh_from_db()
+
+        project_task_group_qs = ProjectTaskGroup.objects.filter(project=latest_project)
+        project_task_qs = ProjectTask.objects.filter(task_group__project=latest_project)
+
+        class TaskGroupSpecificsType(typing.TypedDict):
+            x_max: int
+            x_min: int
+            y_max: int
+            y_min: int
+
+        class TaskGroupType(typing.TypedDict):
+            firebase_id: str
+            number_of_tasks: int
+            required_count: int
+            total_area: float
+            project_type_specifics: TaskGroupSpecificsType
+
+        expected_tasks_groups: list[TaskGroupType] = [
+            {
+                "firebase_id": "g101",
+                "number_of_tasks": 18,
+                "project_type_specifics": {
+                    "x_max": 24152,
+                    "x_min": 24147,
+                    "y_max": 13755,
+                    "y_min": 13753,
+                },
+                "required_count": 10,
+                "total_area": 21.010735845202447,
+            },
+            {
+                "firebase_id": "g102",
+                "number_of_tasks": 24,
+                "project_type_specifics": {
+                    "x_max": 24153,
+                    "x_min": 24146,
+                    "y_max": 13758,
+                    "y_min": 13756,
+                },
+                "required_count": 10,
+                "total_area": 28.02915392364502,
+            },
+            {
+                "firebase_id": "g103",
+                "number_of_tasks": 24,
+                "project_type_specifics": {
+                    "x_max": 24153,
+                    "x_min": 24146,
+                    "y_max": 13761,
+                    "y_min": 13759,
+                },
+                "required_count": 10,
+                "total_area": 28.043986769512177,
+            },
+            {
+                "firebase_id": "g104",
+                "number_of_tasks": 6,
+                "project_type_specifics": {
+                    "x_max": 24150,
+                    "x_min": 24149,
+                    "y_max": 13764,
+                    "y_min": 13762,
+                },
+                "required_count": 10,
+                "total_area": 7.014703242812157,
+            },
+        ]
+
+        expected_last_5_tasks = [
+            {
+                "firebase_id": "15-24147-13753",
+                "project_type_specifics": {
+                    "tile_x": 24147,
+                    "tile_y": 13753,
+                    "url": "https://hi-there/24147/13753/15",
+                },
+            },
+            {
+                "firebase_id": "15-24147-13754",
+                "project_type_specifics": {
+                    "tile_x": 24147,
+                    "tile_y": 13754,
+                    "url": "https://hi-there/24147/13754/15",
+                },
+            },
+            {
+                "firebase_id": "15-24147-13755",
+                "project_type_specifics": {
+                    "tile_x": 24147,
+                    "tile_y": 13755,
+                    "url": "https://hi-there/24147/13755/15",
+                },
+            },
+            {
+                "firebase_id": "15-24148-13753",
+                "project_type_specifics": {
+                    "tile_x": 24148,
+                    "tile_y": 13753,
+                    "url": "https://hi-there/24148/13753/15",
+                },
+            },
+            {
+                "firebase_id": "15-24148-13754",
+                "project_type_specifics": {
+                    "tile_x": 24148,
+                    "tile_y": 13754,
+                    "url": "https://hi-there/24148/13754/15",
+                },
+            },
+        ]
+
+        assert {
+            "required_results": (18 + 24 + 24 + 6) * 10,
+            "tasks_groups_count": project_task_group_qs.count(),
+            "tasks_groups": list(
+                project_task_group_qs.order_by("id").values(
+                    "firebase_id",
+                    "number_of_tasks",
+                    "required_count",
+                    "total_area",
+                    "project_type_specifics",
+                ),
+            ),
+            "tasks_count": project_task_qs.count(),
+            "tasks": list(
+                project_task_qs.order_by("id").values(
+                    "firebase_id",
+                    "project_type_specifics",
+                )[:5],
+            ),
+            "status": latest_project.status,
+            "processing_status": latest_project.processing_status,
+        } == {
+            "required_results": latest_project.required_results,
+            "tasks_groups_count": len(expected_tasks_groups),
+            "tasks_groups": expected_tasks_groups,
+            "tasks_count": 72,
+            "tasks": expected_last_5_tasks,
+            "status": Project.Status.PROCESSED,
+            "processing_status": Project.ProcessingStatus.COMPLETED,
+        }
+
+        # Updating Processed Project:
+        # Attaching tutorial
+        locate_tutorial = TutorialFactory.create(
+            **self.user_resource_kwargs,
+            project=latest_project,
+        )
+        project_data = {
+            "clientId": project_client_id,
+            "tutorial": str(locate_tutorial.id),
+        }
+        content = self._update_processed_project_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProcessedProject"]
+        assert resp_data["errors"] is None, content
+        assert resp_data["result"]["tutorialId"] == str(locate_tutorial.id)
+
+        # project is not sync to firebase
+        project_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.project(latest_project.firebase_id),
+        )
+        fb_project: typing.Any = project_ref.get()
+        assert fb_project is None
+
+        # Updating Processed Project:
+        # Publishing project
+        project_data = {
+            "clientId": project_client_id,
+            "status": self.genum(Project.Status.READY_TO_PUBLISH),
+        }
+        content = self._update_project_status_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProjectStatus"]
+        assert resp_data["errors"] is None, content
+        assert resp_data["result"]["status"] == self.genum(Project.Status.READY_TO_PUBLISH)
+
+        latest_project.refresh_from_db()
+        assert latest_project.processing_status == Project.ProcessingStatus.COMPLETED
+
+        # project is sync to firebase after publish
+        fb_project: typing.Any = project_ref.get()
+        assert fb_project is not None
+
+        # Updating Processed Project after publishing
+        project_data = {
+            "clientId": project_client_id,
+            "maxTasksPerUser": 1000,
+        }
+        content = self._update_processed_project_mutation(project_id, project_data)
+        resp_data = content["data"]["updateProcessedProject"]
+        assert resp_data["errors"] is None, content
+        assert resp_data["result"]["maxTasksPerUser"] == 1000
+        project_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.project(latest_project.firebase_id),
+        )
+        fb_project: typing.Any = project_ref.get()
+        assert fb_project is not None
+        assert fb_project["maxTasksPerUser"] == 1000
