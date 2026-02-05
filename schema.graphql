@@ -967,6 +967,12 @@ type LocateProjectPropertyType {
   zoomLevel: Int!
 }
 
+input LocateTutorialTaskPropertyInput {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
+}
+
 type LocateTutorialTaskPropertyType {
   tileX: Int!
   tileY: Int!
@@ -2592,6 +2598,7 @@ input TutorialTaskProjectTypeSpecificInput @oneOf {
   compare: CompareTutorialTaskPropertyInput
   completeness: CompletenessTutorialTaskPropertyInput
   find: FindTutorialTaskPropertyInput
+  locate: LocateTutorialTaskPropertyInput
   street: StreetTutorialTaskPropertyInput
   validate: ValidateTutorialTaskPropertyInput
   validateImage: ValidateImageTutorialTaskPropertyInput

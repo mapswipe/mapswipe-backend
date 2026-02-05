@@ -23,6 +23,7 @@ import apps.project.graphql.inputs.asset_types  # noqa: F401  # isort: skip # ty
 from .project_types.compare import CompareTutorialTaskPropertyInput
 from .project_types.completeness import CompletenessTutorialTaskPropertyInput
 from .project_types.find import FindTutorialTaskPropertyInput
+from .project_types.locate import LocateTutorialTaskPropertyInput
 from .project_types.street import StreetTutorialTaskPropertyInput
 from .project_types.validate import ValidateTutorialTaskPropertyInput
 from .project_types.validate_image import ValidateImageTutorialTaskPropertyInput
@@ -36,6 +37,7 @@ class TutorialTaskProjectTypeSpecificInput:
     validate_image: ValidateImageTutorialTaskPropertyInput | None = strawberry.UNSET
     completeness: CompletenessTutorialTaskPropertyInput | None = strawberry.UNSET
     street: StreetTutorialTaskPropertyInput | None = strawberry.UNSET
+    locate: LocateTutorialTaskPropertyInput | None = strawberry.UNSET
 
 
 @strawberry_django.input(TutorialTask)
