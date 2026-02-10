@@ -944,6 +944,9 @@ input IntRangeLookup {
 input LocateProjectPropertyInput {
   """Numeric value as string"""
   aoiGeometry: String!
+  customOptions: [CustomOptionInput!] = null
+  exportMetaKey: String!
+  exportMetaValue: String!
   subGridSize: SubGridSizeEnum!
   tileServerProperty: ProjectRasterTileServerConfigInput!
 
@@ -954,6 +957,9 @@ input LocateProjectPropertyInput {
 type LocateProjectPropertyType {
   """Numeric value as string"""
   aoiGeometry: String!
+  customOptions: [ProjectCustomOption!]
+  exportMetaKey: String!
+  exportMetaValue: String!
   subGridSize: SubGridSizeEnum!
   tileServerProperty: ProjectRasterTileServerConfig!
 

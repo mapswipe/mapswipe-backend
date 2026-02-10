@@ -1747,6 +1747,23 @@ class TestProjectTypeMutation(TestCase):
                         },
                     },
                     "subGridSize": self.genum(SubGridSizeEnum.SIZE_2X2),
+                    "exportMetaKey": "test1",
+                    "exportMetaValue": "value1",
+                    "customOptions": {
+                        "clientId": str(ULID()),
+                        "description": "Locate project description",
+                        "icon": self.genum(IconEnum.ADD_OUTLINE),
+                        "iconColor": "#FF0000",
+                        "title": "Locate Project Title",
+                        "value": 1,
+                        "subOptions": [
+                            {
+                                "clientId": str(ULID()),
+                                "value": 1,
+                                "description": "Locate sub option description",
+                            },
+                        ],
+                    },
                 },
             },
         }
@@ -1760,6 +1777,7 @@ class TestProjectTypeMutation(TestCase):
         assert latest_project.image_id == int(image_asset["id"])
         assert latest_project.aoi_geometry_input_asset
         assert latest_project.aoi_geometry_input_asset.id == int(aoi_geometry_asset["id"])
+        sub_options = project_data["projectTypeSpecifics"]["locate"]["customOptions"]["subOptions"]  # type: ignore[index]
         assert latest_project.project_type_specifics == {
             "aoi_geometry": aoi_geometry_asset["id"],
             "zoom_level": 15,
@@ -1771,6 +1789,25 @@ class TestProjectTypeMutation(TestCase):
                 },
             },
             "sub_grid_size": SubGridSizeEnum.SIZE_2X2.value,
+            "export_meta_key": "test1",
+            "export_meta_value": "value1",
+            "custom_options": [
+                {
+                    "client_id": project_data["projectTypeSpecifics"]["locate"]["customOptions"]["clientId"],  # type: ignore[index]
+                    "description": "Locate project description",
+                    "icon": IconEnum.ADD_OUTLINE.value,
+                    "icon_color": "#FF0000",
+                    "title": "Locate Project Title",
+                    "value": 1,
+                    "sub_options": [
+                        {
+                            "client_id": sub_options[0]["clientId"],  # type: ignore[index]
+                            "value": 1,
+                            "description": "Locate sub option description",
+                        },
+                    ],
+                },
+            ],
         }
         locate_project.LocateProjectProperty.model_validate(
             latest_project.project_type_specifics,
