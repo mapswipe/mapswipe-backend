@@ -5,6 +5,7 @@ from pyfirebase_mapswipe import models as firebase_models
 
 from apps.project.models import Project, ProjectTypeEnum
 from project_types.tile_map_service.base import project as tile_map_service_project
+from utils.custom_options.models import CustomOption
 
 
 class SubGridSizeEnum(models.TextChoices):
@@ -24,6 +25,10 @@ class SubGridSizeEnum(models.TextChoices):
 
 class LocateProjectProperty(tile_map_service_project.TileMapServiceProjectProperty):
     sub_grid_size: SubGridSizeEnum
+    custom_options: list[CustomOption] | None = None
+    # NOTE: Additional export metadata. Example: {"building": "roof_top"}
+    export_meta_key: str
+    export_meta_value: str
 
 
 class LocateProjectTaskGroupProperty(tile_map_service_project.TileMapServiceProjectTaskGroupProperty): ...
@@ -50,6 +55,7 @@ class LocateProject(
 
     @typing.override
     def get_max_time_spend_percentile(self) -> float:
+        # TODO(susilnem): We might need to adjust this number later.
         return 1.4
 
     @typing.override
@@ -69,9 +75,12 @@ class LocateProject(
     @typing.override
     def get_project_specifics_for_firebase(self):
         tsp = self.project_type_specifics.tile_server_property
+        custom_opts = self.project_type_specifics.custom_options
         return firebase_models.FbProjectLocateCreateOnlyInput(
             zoomLevel=self.project_type_specifics.zoom_level,
             subGridSize=self.project_type_specifics.sub_grid_size.to_firebase(),
+            exportMetaKey=self.project_type_specifics.export_meta_key,
+            exportMetaValue=self.project_type_specifics.export_meta_value,
             tileServer=firebase_models.FbObjRasterTileServer(
                 name=tsp.name.to_firebase(),
                 credits=tsp.get_config()["credits"],
@@ -79,4 +88,25 @@ class LocateProject(
                 apiKey=tsp.get_config()["api_key"],
                 wmtsLayerName=None,
             ),
+            customOptions=[
+                firebase_models.FbObjCustomOption(
+                    title=opt.title,
+                    description=opt.description,
+                    value=opt.value,
+                    icon=str(opt.icon.label),
+                    iconColor=opt.icon_color,
+                    subOptions=[
+                        firebase_models.FbBaseObjCustomSubOption(
+                            value=sub_opt.value,
+                            description=sub_opt.description,
+                        )
+                        for sub_opt in opt.sub_options
+                    ]
+                    if opt.sub_options is not None
+                    else None,
+                )
+                for opt in custom_opts
+            ]
+            if custom_opts is not None
+            else None,
         )

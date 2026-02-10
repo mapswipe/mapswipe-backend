@@ -126,6 +126,7 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
             case Project.Type.STREET:
                 group_size = 25
             case Project.Type.LOCATE:
+                # TODO(susilnem): We might need to adjust this number later.
                 group_size = 120
 
         attrs["group_size"] = group_size

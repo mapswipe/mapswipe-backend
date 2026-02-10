@@ -94,6 +94,30 @@ class CustomOptionDefaults:
         },
     ]
 
+    LOCATE: list[CustomOption] = [
+        {
+            "title": "Single Feature",
+            "icon": IconEnum.CHECKMARK_OUTLINE,
+            "value": 1,
+            "description": "the shape outlines a single feature in the image",
+            "icon_color": "#388E3C",
+        },
+        {
+            "title": "No",
+            "icon": IconEnum.CLOSE_OUTLINE,
+            "value": 0,
+            "description": "the shape does not outline any feature in the image",
+            "icon_color": "#D32F2F",
+        },
+        {
+            "title": "Multiple Features",
+            "icon": IconEnum.CHECKMARK_OUTLINE,
+            "value": 2,
+            "description": "the shape outlines multiple features in the image",
+            "icon_color": "#388E3C",
+        },
+    ]
+
 
 def get_custom_options(project_type: ProjectTypeEnum) -> list[CustomOption]:
     if project_type == ProjectTypeEnum.VALIDATE:
@@ -102,6 +126,8 @@ def get_custom_options(project_type: ProjectTypeEnum) -> list[CustomOption]:
         return CustomOptionDefaults.VALIDATE_IMAGE
     if project_type == ProjectTypeEnum.STREET:
         return CustomOptionDefaults.STREET
+    if project_type == ProjectTypeEnum.LOCATE:
+        return CustomOptionDefaults.LOCATE
     return []
 
 
@@ -113,13 +139,13 @@ def get_fallback_custom_options_for_export(project_type: ProjectTypeEnum) -> lis
         return [item["value"] for item in CustomOptionDefaults.VALIDATE_IMAGE]
     if project_type == ProjectTypeEnum.STREET:
         return [item["value"] for item in CustomOptionDefaults.STREET]
+    if project_type == ProjectTypeEnum.LOCATE:
+        return [item["value"] for item in CustomOptionDefaults.LOCATE]
 
     if (
         project_type == ProjectTypeEnum.FIND
         or project_type == ProjectTypeEnum.COMPARE
         or project_type == ProjectTypeEnum.COMPLETENESS
-        # TODO(susilnem): Verify custom options for locate? setting default for now.
-        or project_type == ProjectTypeEnum.LOCATE
     ):
         return [
             0,  # No
