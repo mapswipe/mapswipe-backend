@@ -902,11 +902,6 @@ enum IconEnum {
   WARNING_OUTLINE
 }
 
-enum ImageProviderNameEnum {
-  mapillary
-  panoramax
-}
-
 input IntComparisonFilterLookup {
   """Exact match. Filter will be skipped on `null` value"""
   exact: Int
@@ -2153,13 +2148,18 @@ input StrFilterLookup {
 }
 
 type StreetImageProvider {
-  name: ImageProviderNameEnum
+  name: StreetImageProviderNameEnum
   url: String
 }
 
 input StreetImageProviderInput {
-  name: ImageProviderNameEnum = null
+  name: StreetImageProviderNameEnum = null
   url: String = null
+}
+
+enum StreetImageProviderNameEnum {
+  MAPILLARY
+  PANORAMAX
 }
 
 type StreetMapillaryImageFilters {
