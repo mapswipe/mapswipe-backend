@@ -184,9 +184,11 @@ def download_and_process_tile(
     y = row["y"]
 
     if provider.name == StreetImageProviderNameEnum.MAPILLARY:
-        url = f"{provider.url or Config.MAPILLARY_API_LINK}{z}/{x}/{y}?access_token={Config.MAPILLARY_API_KEY}"
+        base = (provider.url or Config.MAPILLARY_API_LINK).rstrip("/")
+        url = f"{base}/{z}/{x}/{y}?access_token={Config.MAPILLARY_API_KEY}"
     elif provider.name == StreetImageProviderNameEnum.PANORAMAX:
-        url = f"{provider.url or Config.PANORAMAX_API_LINK}api/map/{z}/{x}/{y}.mvt"
+        base = (provider.url or Config.PANORAMAX_API_LINK).rstrip("/")
+        url = f"{base}/api/map/{z}/{x}/{y}.mvt"
     else:
         raise Exception(f"Unknown provider {getattr(provider.name, 'value', '')}")
 
