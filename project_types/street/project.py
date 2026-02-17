@@ -250,6 +250,7 @@ class StreetProject(
     @typing.override
     def get_project_specifics_for_firebase(self):
         custom_opts = self.project_type_specifics.custom_options
+        image_provider = self.project_type_specifics.image_provider
         number_of_groups = ProjectTaskGroup.objects.filter(project=self.project).count()
         return firebase_models.FbProjectStreetCreateOnlyInput(
             numberOfGroups=number_of_groups,
@@ -274,4 +275,8 @@ class StreetProject(
             ]
             if custom_opts is not None
             else None,
+            imageProvider=firebase_models.FbObjImageProvider(
+                name=image_provider.name,
+                url=image_provider.url,
+            )
         )
