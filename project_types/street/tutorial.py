@@ -52,6 +52,7 @@ class StreetTutorial(
     @typing.override
     def get_tutorial_specifics_for_firebase(self):
         custom_opts = self.project_type_specifics.custom_options
+        image_provider = self.project_type_specifics.image_provider
 
         projectType = ProjectTypeEnum.STREET.value
         assert projectType == 7, "Project Street should be 7"
@@ -79,4 +80,8 @@ class StreetTutorial(
             ]
             if custom_opts is not None
             else None,
+            imageProvider=firebase_models.FbObjImageProvider(
+                name=image_provider.name,
+                url=image_provider.url,
+            ),
         )

@@ -278,5 +278,5 @@ class StreetProject(
             imageProvider=firebase_models.FbObjImageProvider(
                 name=image_provider.name,
                 url=image_provider.url,
-            )
+            ),
         )
