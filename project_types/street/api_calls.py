@@ -208,13 +208,16 @@ def download_and_process_tile(
                         },
                     )
                     data["is_pano"] = data["is_pano"].eq("equirectangular")
+                    data["captured_at"] = pd.to_datetime(data["captured_at"], format="mixed", errors="coerce").dt.tz_localize(None)
+                if provider.name == StreetImageProviderNameEnum.MAPILLARY:
+                    data["captured_at"] = pd.to_datetime(data["captured_at"], unit="ms")
                 target_columns = [
                     "id",
                     "geometry",
                     "captured_at",
                     "is_pano",
                     "compass_angle",
-                    "sequence",
+                    "sequence_id",
                     "organization_id",
                 ]
                 for col in target_columns:
@@ -308,10 +311,10 @@ def filter_results(
 
 
 def filter_by_timerange(df: pd.DataFrame, start_time: str, end_time: str | None = None) -> pd.DataFrame:
-    df["captured_at"] = pd.to_datetime(df["captured_at"], unit="ms")
     converted_start_time = pd.to_datetime(start_time).tz_localize(None)
     converted_end_time = pd.to_datetime(end_time).tz_localize(None) if end_time else pd.Timestamp.now().tz_localize(None)
-    return df[(df["captured_at"] >= converted_start_time) & (df["captured_at"] <= converted_end_time)]
+    filtered_df = df[(df["captured_at"] >= converted_start_time) & (df["captured_at"] <= converted_end_time)]
+    return filtered_df
 
 
 def get_image_metadata(
@@ -354,11 +357,11 @@ def get_image_metadata(
         raise ValidationException(
             "No features found in the area of interest with the provided filters.",
         )
-    if sampling_threshold is not None:
-        downloaded_metadata = spatial_sampling(
-            df=downloaded_metadata,
-            interval_length=sampling_threshold,
-        )
+
+    downloaded_metadata = spatial_sampling(
+        df=downloaded_metadata,
+        interval_length=sampling_threshold,
+    )
 
     if randomize_order is True:
         downloaded_metadata = downloaded_metadata.sample(frac=1).reset_index(drop=True)
