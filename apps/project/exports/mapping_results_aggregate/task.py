@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from apps.project.models import Project, ProjectTypeEnum
 from utils.geo.tile_functions import tile_coords_and_zoom_to_quad_key
 
 CustomOptionType = list[dict[str, typing.Any]]  # TODO: fix typing
@@ -93,6 +94,7 @@ def generate_mapping_results_aggregate_by_task(
     results_df: pd.DataFrame,
     tasks_df: pd.DataFrame,
     custom_options_raw: CustomOptionType,
+    project: Project,
 ):
     custom_options = _get_custom_options(custom_options_raw)
 
@@ -100,7 +102,21 @@ def generate_mapping_results_aggregate_by_task(
     # Eg.
     # project_id, group_id, task_id, 0, 1, 2, 3
     # p-01      , g-01,   , t-01   , 0, 0, 1, 0
-    results_by_task_id_df = results_df.groupby(["project_id", "group_id", "task_id", "result"]).size().unstack(fill_value=0)
+
+    groupby_cols = ["project_id", "group_id", "task_id", "result"]
+    index_cols = ["task_id"]
+
+    # NOTE: `task_partition_index` is only relevant for LOCATE projects,
+    # In LOCATE projects, a task can be split into partitions,
+    # so `task_id` alone is not sufficient to uniquely identify a row.
+    # Adding `task_partition_index` ensures partitions are aggregated separately
+    # and preserved as distinct rows in the output.
+    if "task_partition_index" in results_df.columns and project.project_type_enum == ProjectTypeEnum.LOCATE:
+        task_id_idx = groupby_cols.index("task_id")
+        groupby_cols.insert(task_id_idx + 1, "task_partition_index")
+        index_cols.append("task_partition_index")
+
+    results_by_task_id_df = results_df.groupby(groupby_cols).size().unstack(fill_value=0)
 
     # Add missing columns to the dataframe, if 4 was missing from last df, then it will be added
     # Eg.
@@ -137,7 +153,7 @@ def generate_mapping_results_aggregate_by_task(
     )
 
     # Calculate quadkey from task (TODO) - add new column quadkey
-    results_by_task_id_df.reset_index(level=["task_id"], inplace=True)
+    results_by_task_id_df.reset_index(level=index_cols, inplace=True)
     results_by_task_id_df["quadkey"] = results_by_task_id_df.apply(
         _calc_quadkey,
         axis=1,
