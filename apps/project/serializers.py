@@ -127,7 +127,9 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
                 group_size = 25
             case Project.Type.LOCATE:
                 # TODO(susilnem): We might need to adjust this number later.
-                group_size = 120
+                group_size = 25
+            case _:
+                typing.assert_never(project_type)
 
         attrs["group_size"] = group_size
 

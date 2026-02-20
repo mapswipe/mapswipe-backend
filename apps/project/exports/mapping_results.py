@@ -11,7 +11,7 @@ from apps.mapping.models import (
     MappingSessionClientTypeEnum,
     MappingSessionResult,
 )
-from apps.project.models import Project, ProjectTask, ProjectTaskGroup
+from apps.project.models import Project, ProjectTask, ProjectTaskGroup, ProjectTypeEnum
 from utils.common import fd_name, tb_name
 
 from .utils.common import load_df_from_csv, write_sql_to_gzipped_csv
@@ -20,6 +20,12 @@ logger = logging.getLogger(__name__)
 
 
 def generate_mapping_results(*, destination_filename: Path, project: Project) -> pd.DataFrame:
+    # NOTE: Add task_partition_index for Locate Feature.
+    task_partition_index_col = (
+        f"MSR.{fd_name(MappingSessionResult.task_partition_index)} as task_partition_index,"
+        if project.project_type_enum == ProjectTypeEnum.LOCATE
+        else ""
+    )
     sql_query = sql.SQL(f"""
         COPY (
             SELECT
@@ -32,6 +38,7 @@ def generate_mapping_results(*, destination_filename: Path, project: Project) ->
                 P.{fd_name(Project.firebase_id)} as project_id,
                 PTG.{fd_name(ProjectTaskGroup.firebase_id)} as group_id,
                 PT.{fd_name(ProjectTask.firebase_id)} as task_id,
+                {task_partition_index_col} -- task-partition_index
                 U.{fd_name(ContributorUser.firebase_id)} as user_id,
                 -- Metadata
                 MS.{fd_name(MappingSession.start_time)} as timestamp,
