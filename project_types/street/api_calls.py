@@ -318,8 +318,6 @@ def filter_results(
 def filter_by_timerange(df: pd.DataFrame, start_time: str, end_time: str | None = None) -> pd.DataFrame:
     converted_start_time = pd.to_datetime(start_time).tz_localize(None)
     converted_end_time = pd.to_datetime(end_time).tz_localize(None) if end_time else pd.Timestamp.now().tz_localize(None)
-    if "captured_at" not in df.columns:
-        return df.iloc[0:0]
     return df[(df["captured_at"] >= converted_start_time) & (df["captured_at"] <= converted_end_time)]
 
 
