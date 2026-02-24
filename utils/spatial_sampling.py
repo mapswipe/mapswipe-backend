@@ -126,7 +126,6 @@ def spatial_sampling(
     returns the filtered GeoDataFrame along with the total road length.
 
     """
-
     if len(df) == 1:
         return df
 
