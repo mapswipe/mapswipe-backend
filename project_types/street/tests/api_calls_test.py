@@ -289,10 +289,10 @@ class TestTileGroupingFunctions(unittest.TestCase):
         mock_create_tiles.return_value = pd.DataFrame()
 
         metadata = coordinate_download(
-            polygon=None,
+            polygon=Polygon(),
             level=0,
             kwargs={},
-            provider=None,
+            provider=self.provider,
         )
         assert metadata.empty
 
