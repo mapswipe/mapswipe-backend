@@ -49,12 +49,12 @@ class TestDistanceCalculations(unittest.TestCase):
         df["geometry"] = df["geometry"].apply(wkt.loads)  # type: ignore[reportArgumentType]
 
         df["long"] = df["geometry"].apply(
-            lambda geom: geom.x if geom.geom_type == "Point" else None,
+            lambda geom: geom.x if isinstance(geom, Point) else None,
         )
         df["lat"] = df["geometry"].apply(
-            lambda geom: geom.y if geom.geom_type == "Point" else None,
+            lambda geom: geom.y if isinstance(geom, Point) else None,
         )
-        threshold_distance = 100
+        threshold_distance = 200
         filtered_df = filter_points(df, threshold_distance)
 
         assert isinstance(filtered_df, pd.DataFrame)
