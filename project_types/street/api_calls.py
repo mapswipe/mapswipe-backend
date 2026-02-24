@@ -208,7 +208,11 @@ def download_and_process_tile(
                         },
                     )
                     data["is_pano"] = data["is_pano"].eq("equirectangular")
-                    data["captured_at"] = pd.to_datetime(data["captured_at"], format="mixed", errors="coerce").dt.tz_localize(None)
+                    data["captured_at"] = pd.to_datetime(
+                        data["captured_at"],
+                        format="mixed",
+                        errors="coerce",
+                    ).dt.tz_localize(None)
                 if provider.name == StreetImageProviderNameEnum.MAPILLARY:
                     data["captured_at"] = pd.to_datetime(data["captured_at"], unit="ms")
                 target_columns = [
@@ -313,8 +317,7 @@ def filter_results(
 def filter_by_timerange(df: pd.DataFrame, start_time: str, end_time: str | None = None) -> pd.DataFrame:
     converted_start_time = pd.to_datetime(start_time).tz_localize(None)
     converted_end_time = pd.to_datetime(end_time).tz_localize(None) if end_time else pd.Timestamp.now().tz_localize(None)
-    filtered_df = df[(df["captured_at"] >= converted_start_time) & (df["captured_at"] <= converted_end_time)]
-    return filtered_df
+    return df[(df["captured_at"] >= converted_start_time) & (df["captured_at"] <= converted_end_time)]
 
 
 def get_image_metadata(

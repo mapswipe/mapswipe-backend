@@ -74,13 +74,13 @@ class TestDistanceCalculations(unittest.TestCase):
         df = pd.DataFrame(data)
         df["geometry"] = df["geometry"].apply(wkt.loads)  # type: ignore[reportArgumentType]
 
-        interval_length = 0.1
+        interval_length = 100
         filtered_gdf = spatial_sampling(df=df, interval_length=interval_length)
 
         assert filtered_gdf["captured_at"].is_monotonic_decreasing
 
     def test_spatial_sampling_with_sequence(self):
-        threshold_distance = 0.01
+        threshold_distance = 10
         filtered_df = spatial_sampling(df=self.fixture_df, interval_length=threshold_distance)
         assert isinstance(filtered_df, pd.DataFrame)
         assert len(filtered_df) < len(self.fixture_df)
