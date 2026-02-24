@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
+from shapely.geometry import Point
 
 
 def distance_on_sphere(
@@ -130,10 +131,10 @@ def spatial_sampling(
         return df
 
     df["long"] = df["geometry"].apply(
-        lambda geom: geom.x if geom.geom_type == "Point" else None,
+        lambda geom: geom.x if isinstance(geom, Point) else None,
     )
     df["lat"] = df["geometry"].apply(
-        lambda geom: geom.y if geom.geom_type == "Point" else None,
+        lambda geom: geom.y if isinstance(geom, Point) else None,
     )
     sorted_df = df.sort_values(by=["captured_at"])
 

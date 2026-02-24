@@ -43,6 +43,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
         with Path(Config.BASE_DIR, "assets/fixtures/mapillary_response.csv").open(encoding="utf-8") as file:
             df = pd.read_csv(file)
             df["geometry"] = df["geometry"].apply(wkt.loads)  # type: ignore[reportArgumentType]
+            df["captured_at"] = pd.to_datetime(df["captured_at"], unit="ms")
             cls.fixture_df = df
 
     @typing.override
@@ -333,7 +334,14 @@ class TestTileGroupingFunctions(unittest.TestCase):
         mock_coordinate_download,  # type: ignore[reportMissingParameterType]
         mock_filter_results,  # type: ignore[reportMissingParameterType]
     ):
-        mock_df = pd.DataFrame({"id": range(1, 100002), "geometry": range(1, 100002)})
+        mock_df = pd.DataFrame(
+            {
+                "id": range(1, 100002),
+                "geometry": range(1, 100002),
+                "captured_at": pd.NaT,
+                "sequence_id": 1,
+            },
+        )
         mock_coordinate_download.return_value = mock_df
         with pytest.raises(ValidationException):
             get_image_metadata(aoi_geojson=self.fixture_data)
@@ -344,6 +352,8 @@ class TestTileGroupingFunctions(unittest.TestCase):
             {
                 "id": [1, 2, 2, 3, 4, 4, 5],
                 "geometry": ["a", "b", "b", "c", "d", "d", "e"],
+                "sequence_id": [1, 1, 1, 1, 1, 1, 1],
+                "captured_at": pd.to_datetime(["2020-01-01"] * 7),
             },
         )
         mock_coordinate_download.return_value = test_df
