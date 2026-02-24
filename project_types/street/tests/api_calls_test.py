@@ -191,8 +191,15 @@ class TestTileGroupingFunctions(unittest.TestCase):
     @patch("project_types.street.api_calls.get_street_image_data")
     def test_download_and_process_tile_panoramax(self, mock_get_street_image_data):
         mock_get_street_image_data.return_value = pd.DataFrame(
-            [{"geometry": wkt.loads("POINT (0 0)"), "account_id": 1, "ts": "2026-02-24T10:00:00Z",
-            "type": "equirectangular", "first_sequence": 42}]
+            [
+                {
+                    "geometry": wkt.loads("POINT (0 0)"),
+                    "account_id": 1,
+                    "ts": "2026-02-24T10:00:00Z",
+                    "type": "equirectangular",
+                    "first_sequence": 42,
+                },
+            ],
         )
 
         row: dict[Hashable, typing.Any] = {"x": 1, "y": 1, "z": 14}
@@ -200,14 +207,14 @@ class TestTileGroupingFunctions(unittest.TestCase):
 
         provider = StreetImageProvider(
             name=StreetImageProviderNameEnum.PANORAMAX,
-            url=None
+            url=None,
         )
 
         result = download_and_process_tile(
             row=row,
             polygon=polygon,
-            kwargs={}
-            , provider=provider
+            kwargs={},
+            provider=provider,
         )
 
         assert result is not None
@@ -229,7 +236,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
             row=row,
             polygon=polygon,
             provider=self.provider,
-            kwargs={}
+            kwargs={},
         )
 
         assert result is None
@@ -337,12 +344,14 @@ class TestTileGroupingFunctions(unittest.TestCase):
         assert len(filtered_df) == 3
 
     def test_filter_results_no_creator_id(self):
-        df = pd.DataFrame({
-            "creator_id": [None, None],
-            "is_pano": [True, False],
-            "organization_id": [1, 2],
-            "captured_at": pd.to_datetime(["2026-02-24", "2026-02-25"])
-        })
+        df = pd.DataFrame(
+            {
+                "creator_id": [None, None],
+                "is_pano": [True, False],
+                "organization_id": [1, 2],
+                "captured_at": pd.to_datetime(["2026-02-24", "2026-02-25"]),
+            },
+        )
         filtered_df = filter_results(df, creator_id=123)
         assert filtered_df is None
 
