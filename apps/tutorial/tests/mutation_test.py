@@ -195,6 +195,7 @@ class Mutation:
                     id
                     clientId
                     reference
+                    taskPartitionIndex
                     projectTypeSpecifics {
                       ... on CompareTutorialTaskPropertyType {
                         tileX
@@ -733,6 +734,7 @@ class TestTutorialMutation(TestCase):
                                 "id": self.gID(y.pk),
                                 "clientId": y.client_id,
                                 "reference": y.reference,
+                                "taskPartitionIndex": y.task_partition_index,
                                 "projectTypeSpecifics": format_object_keys(y.project_type_specifics, to_camel_case),
                             }
                             for y in x.tasks.all()
@@ -938,31 +940,37 @@ class TestTutorialMutation(TestCase):
                                 "clientId": "01K748TDZQAX1242QFT3R8V3H1",
                                 "projectTypeSpecifics": {"locate": {"tileZ": 18, "tileX": 193196, "tileY": 110087}},
                                 "reference": 0,
+                                "taskPartitionIndex": 0,
                             },
                             {
                                 "clientId": "01K748TDZQDAHN2RAEJ6KKQZBS",
                                 "projectTypeSpecifics": {"locate": {"tileZ": 18, "tileX": 193196, "tileY": 110088}},
                                 "reference": 1,
+                                "taskPartitionIndex": 1,
                             },
                             {
                                 "clientId": "01K748TDZQN9KR7PPAWY282B8V",
                                 "projectTypeSpecifics": {"locate": {"tileZ": 18, "tileX": 193196, "tileY": 110089}},
                                 "reference": 0,
+                                "taskPartitionIndex": 2,
                             },
                             {
                                 "clientId": "01K748TDZQCYF1Q88MVW3B5J8A",
                                 "projectTypeSpecifics": {"locate": {"tileZ": 18, "tileX": 193197, "tileY": 110087}},
                                 "reference": 0,
+                                "taskPartitionIndex": 3,
                             },
                             {
                                 "clientId": "01K748TDZR861B76GJAYS3WCY6",
                                 "projectTypeSpecifics": {"locate": {"tileZ": 18, "tileX": 193197, "tileY": 110088}},
                                 "reference": 1,
+                                "taskPartitionIndex": 4,
                             },
                             {
                                 "clientId": "01K748TDZRT35XEZFT0SRR1EF0",
                                 "projectTypeSpecifics": {"locate": {"tileZ": 18, "tileX": 193197, "tileY": 110089}},
                                 "reference": 0,
+                                "taskPartitionIndex": 5,
                             },
                         ],
                     },
@@ -1132,6 +1140,7 @@ class TestTutorialMutation(TestCase):
                                 "id": self.gID(y.pk),
                                 "clientId": y.client_id,
                                 "reference": y.reference,
+                                "taskPartitionIndex": y.task_partition_index,
                                 "projectTypeSpecifics": format_object_keys(y.project_type_specifics, to_camel_case),
                             }
                             for y in x.tasks.all()
@@ -1160,3 +1169,33 @@ class TestTutorialMutation(TestCase):
                 ],
             ),
         ), content
+
+        # Publishing tutorial:
+        data = {
+            "clientId": latest_tutorial.client_id,
+            "status": self.genum(TutorialStatusEnum.PUBLISHED),
+        }
+        response = self._update_tutorial_status_mutation(str(latest_tutorial.pk), data)
+        resp_data = response["data"]["updateTutorialStatus"]
+        assert resp_data["errors"] is None, response
+
+        # Tutorial data
+        tutorial_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.tutorial(latest_tutorial.firebase_id),
+        )
+        fb_tutorial: typing.Any = tutorial_ref.get()
+        assert fb_tutorial is not None
+
+        # Tutorial group data
+        tutorial_group_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.tutorial_groups(latest_tutorial.firebase_id),
+        )
+        fb_tutorial_group: typing.Any = tutorial_group_ref.get()
+        assert fb_tutorial_group is not None
+
+        # Tutorial Task data
+        tutorial_task_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.tutorial_tasks(latest_tutorial.firebase_id),
+        )
+        fb_tutorial_task: typing.Any = tutorial_task_ref.get()
+        assert fb_tutorial_task is not None

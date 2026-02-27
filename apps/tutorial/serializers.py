@@ -41,6 +41,7 @@ class TutorialTaskSerializer(UserResourceSerializer[TutorialTask, TutorialTaskSe
         fields = (
             "id",
             "reference",
+            "task_partition_index",
             "project_type_specifics",
         )
 
@@ -94,9 +95,52 @@ class TutorialTaskSerializer(UserResourceSerializer[TutorialTask, TutorialTaskSe
 
         attrs["project_type_specifics"] = project_type_specifics
 
+    def _validate_task_partition_index(self, attrs: dict[str, typing.Any]) -> None:
+        tutorial = self.context.get("tutorial")
+        if tutorial is None:
+            return
+
+        scenario = self.context.get("scenario")
+        task_partition_index = attrs.get(
+            "task_partition_index",
+            getattr(self.instance, "task_partition_index", None),
+        )
+
+        # NOTE: task_partition_index can be None, but if provided
+        # it should not be the same as any other task in the same scenario.
+        if task_partition_index is None:
+            return
+
+        project_type = tutorial.project.project_type
+        if project_type is None:
+            raise serializers.ValidationError(
+                {
+                    "project_type": gettext("Project type is required."),
+                },
+            )
+
+        # Only enforce uniqueness for LOCATE projects
+        if project_type != ProjectTypeEnum.LOCATE:
+            return
+
+        task_qs = TutorialTask.objects.filter(scenario=scenario)
+
+        if self.instance is not None:
+            task_qs = task_qs.exclude(pk=self.instance.pk)
+
+        if task_qs.filter(task_partition_index=task_partition_index).exists():
+            raise serializers.ValidationError(
+                {
+                    "task_partition_index": gettext(
+                        "Task partition index should be unique among tasks of the same scenario.",
+                    ),
+                },
+            )
+
     @typing.override
     def validate(self, attrs: dict[str, typing.Any]):
         self._validate_project_type_specifics(attrs)
+        self._validate_task_partition_index(attrs)
         return super().validate(attrs)
 
     @typing.override

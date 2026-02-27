@@ -38,6 +38,7 @@ class LocateTutorial(
             groupId=resp.groupId,
             projectId=resp.projectId,
             referenceAnswer=resp.referenceAnswer,
+            taskPartitionIndex=resp.taskPartitionIndex,
             screen=resp.screen,
             taskId_real=resp.taskId_real,
             taskX=resp.taskX,

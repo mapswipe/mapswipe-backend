@@ -44,6 +44,7 @@ class TutorialTaskProjectTypeSpecificInput:
 class TutorialTaskCreateInput(UserResourceCreateInputMixin):
     # NOTE: scenario_id will be referenced from parent
     reference: strawberry.auto
+    task_partition_index: strawberry.auto
     project_type_specifics: TutorialTaskProjectTypeSpecificInput
 
 
@@ -51,6 +52,7 @@ class TutorialTaskCreateInput(UserResourceCreateInputMixin):
 class TutorialTaskUpdateInput(UserResourceUpdateInputMixin):
     # NOTE: scenario_id will be referenced from parent
     reference: strawberry.auto
+    task_partition_index: strawberry.auto
     project_type_specifics: TutorialTaskProjectTypeSpecificInput
 
 
