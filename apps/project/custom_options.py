@@ -114,7 +114,7 @@ class CustomOptionDefaults:
             "icon": IconEnum.CHECKMARK_OUTLINE,
             "value": 2,
             "description": "the shape outlines multiple features in the image",
-            "icon_color": "#388E3C",
+            "icon_color": "#ffff00",
         },
     ]
 

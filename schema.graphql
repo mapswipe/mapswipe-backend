@@ -2586,6 +2586,7 @@ input TutorialTaskCreateInput {
   clientId: String!
   projectTypeSpecifics: TutorialTaskProjectTypeSpecificInput!
   reference: Int!
+  taskPartitionIndex: Int
 }
 
 input TutorialTaskInput {
@@ -2615,6 +2616,7 @@ type TutorialTaskType implements UserResourceTypeMixin {
   projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyTypeLocateTutorialTaskPropertyType
   reference: Int!
   scenarioId: ID!
+  taskPartitionIndex: Int
 }
 
 """Model representing a individual task in the scenario."""
@@ -2623,6 +2625,7 @@ input TutorialTaskUpdateInput {
   id: ID!
   projectTypeSpecifics: TutorialTaskProjectTypeSpecificInput!
   reference: Int
+  taskPartitionIndex: Int
 }
 
 """

@@ -50,6 +50,7 @@ class TutorialTaskType(UserResourceTypeMixin):
     id: strawberry.ID
     scenario_id: strawberry.ID
     reference: strawberry.auto
+    task_partition_index: strawberry.auto
 
     @strawberry_django.field(
         only=["project_type_specifics"],

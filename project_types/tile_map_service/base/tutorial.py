@@ -64,6 +64,7 @@ class TileMapServiceBaseTutorial[
             groupId=self.get_tutorial_group_key(),
             projectId=self.tutorial.firebase_id,
             referenceAnswer=task.reference,
+            taskPartitionIndex=task.task_partition_index,
             screen=screen,
             taskId_real=f"{task_specifics.tile_z}-{task_specifics.tile_x}-{task_specifics.tile_y}",
             taskX=task_x,

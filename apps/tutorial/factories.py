@@ -46,6 +46,7 @@ class TutorialTaskFactory(DjangoModelFactory):  # type: ignore[reportMissingType
 
     client_id = factory.LazyFunction(lambda: str(ULID()))
     reference = 1
+    task_partition_index = factory.Sequence(lambda n: n)
     project_type_specifics = factory.LazyAttribute(lambda _: {})
 
 
