@@ -736,7 +736,7 @@ input CustomOptionInput {
   description: String!
   icon: IconEnum!
 
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   iconColor: String!
   subOptions: [CustomSubOptionInput!]
   title: String!
@@ -1475,7 +1475,7 @@ type ProjectCustomOption {
   description: String!
   icon: IconEnum!
 
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   iconColor: String!
   subOptions: [ProjectCustomSubOption!]
   title: String!
@@ -1573,7 +1573,7 @@ input ProjectOverlayTileServerConfigInput {
 }
 
 type ProjectOverlayVectorTileServerConfig {
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   circleColor: String!
 
   """Float value from 0.0 to 1.0"""
@@ -1582,13 +1582,13 @@ type ProjectOverlayVectorTileServerConfig {
   """Positive float value"""
   circleRadius: Float!
 
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   fillColor: String!
 
   """Float value from 0.0 to 1.0"""
   fillOpacity: Float!
 
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   lineColor: String!
   lineDasharray: [Int!]!
 
@@ -1601,7 +1601,7 @@ type ProjectOverlayVectorTileServerConfig {
 }
 
 input ProjectOverlayVectorTileServerConfigInput {
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   circleColor: String!
 
   """Float value from 0.0 to 1.0"""
@@ -1610,13 +1610,13 @@ input ProjectOverlayVectorTileServerConfigInput {
   """Positive float value"""
   circleRadius: Float!
 
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   fillColor: String!
 
   """Float value from 0.0 to 1.0"""
   fillOpacity: Float!
 
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   lineColor: String!
   lineDasharray: [Int!]!
 

@@ -107,7 +107,7 @@ class CustomOptionDefaults:
             "icon": IconEnum.CLOSE_OUTLINE,
             "value": 0,
             "description": "the shape does not outline any feature in the image",
-            "icon_color": "#D32F2F",
+            "icon_color": "transparent",
         },
         {
             "title": "Multiple Features",
