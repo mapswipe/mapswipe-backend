@@ -53,15 +53,15 @@ repos:
 
   # Run the Ruff linter.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.8
+    rev: v0.15.6
     hooks:
       # Linter
       - id: ruff
-        types_or: [python, pyi, jupyter, toml]
-        args: [--fix, --exit-non-zero-on-fix]
+        types_or: [python, pyi, jupyter, pyproject]
+        args: [--fix]
       # Formatter
       - id: ruff-format
-        types_or: [python, pyi, jupyter, toml]
+        types_or: [python, pyi, jupyter, pyproject]
 
   - repo: https://github.com/RobertCraigie/pyright-python
     rev: v1.1.398
