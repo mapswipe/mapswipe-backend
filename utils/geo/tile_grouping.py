@@ -98,7 +98,7 @@ def _get_horizontal_slice(
         TileY = TileY_top
 
         # get rows
-        rows = int(math.ceil(TileHeight / 3))
+        rows = math.ceil(TileHeight / 3)
 
         ############################################################
 
@@ -215,7 +215,7 @@ def _get_vertical_slice(  # noqa: D417
         TileX = TileX_left
 
         # get columns
-        cols = int(math.ceil(TileWidth / width_threshold))
+        cols = math.ceil(TileWidth / width_threshold)
         # avoid zero division error and check if cols is smaller than zero
         if cols < 1:
             continue

@@ -45,8 +45,8 @@ def lat_long_zoom_to_pixel_coords(lat: float, lon: float, zoom: int):
     sinLat = math.sin(lat * math.pi / 180.0)
     x = ((lon + 180) / 360) * 256 * math.pow(2, zoom)
     y = (0.5 - math.log((1 + sinLat) / (1 - sinLat)) / (4 * math.pi)) * 256 * math.pow(2, zoom)
-    p.x = int(math.floor(x))
-    p.y = int(math.floor(y))
+    p.x = math.floor(x)
+    p.y = math.floor(y)
     return p
 
 
@@ -64,8 +64,8 @@ def pixel_coords_zoom_to_lat_lon(pixel_x: float, pixel_y: float, zoom: int):
 def pixel_coords_to_tile_address(pixel_x: float, pixel_y: float):
     """Compute a tile address from pixel coordinates of point within tile."""
     t = _Tile()
-    t.x = int(math.floor(pixel_x / 256))
-    t.y = int(math.floor(pixel_y / 256))
+    t.x = math.floor(pixel_x / 256)
+    t.y = math.floor(pixel_y / 256)
     return t
 
 

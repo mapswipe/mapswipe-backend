@@ -9,7 +9,7 @@ from main.sentry import SentryTransactionMiddlewareHelper
 
 @sync_and_async_middleware
 def sentry_middleware(get_response: typing.Any):
-    from django.conf import settings
+    from django.conf import settings  # noqa: PLC0415
 
     # One-time configuration and initialization goes here.
     graphql_urls = set([reverse("graphql")])

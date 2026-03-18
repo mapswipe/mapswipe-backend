@@ -43,7 +43,7 @@ app.conf.beat_schedule = BEAT_SCHEDULES
 
 @signals.setup_logging.connect
 def config_loggers(**_):
-    from django.conf import settings
+    from django.conf import settings  # noqa: PLC0415
 
     dictConfig(settings.LOGGING)
 

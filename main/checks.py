@@ -7,7 +7,7 @@ from django.core.checks import Warning as DCWarning
 
 @register(Tags.compatibility)
 def celery_beat_tasks(app_configs, **kwargs):  # type: ignore[reportMissingParameterType]
-    from main.cronjobs import SCHEDULES
+    from main.cronjobs import SCHEDULES  # noqa: PLC0415
 
     # Confirm all tasks can be imported
     errors = []

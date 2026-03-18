@@ -54,7 +54,7 @@ FILE_SYSTEM_TEST_STORAGES_CONFIGS = dict(
 class TestCase(BaseTestCase):
     @typing.override
     def setUp(self):
-        from django.core.cache import cache
+        from django.core.cache import cache  # noqa: PLC0415
 
         # Clear all test cache
         logger.info("Clearing cache")
@@ -91,7 +91,7 @@ class TestCase(BaseTestCase):
         files: dict[typing.Any, typing.Any] | None = None,
         **kwargs,  # type: ignore[reportMissingParameterType]
     ) -> dict[typing.Any, typing.Any]:
-        import json
+        import json  # noqa: PLC0415
 
         if files:
             # Request type: form data
