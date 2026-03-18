@@ -64,7 +64,7 @@ class MapswipeDjangoFileType:
         info: Info,
         file: strawberry.Parent[files.FieldFile],
     ) -> str:
-        from apps.common.utils import get_absolute_uri
+        from apps.common.utils import get_absolute_uri  # noqa: PLC0415
 
         return get_absolute_uri(file)
 

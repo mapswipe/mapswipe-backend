@@ -351,7 +351,7 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
                     ) from e
 
                 try:
-                    features, geometry_collection = convert_json_dict_to_geometry_collection(geojson_data)  # type: ignore[reportUnusedVariable]
+                    _, geometry_collection = convert_json_dict_to_geometry_collection(geojson_data)
                 except Exception as e:
                     raise serializers.ValidationError(
                         {
@@ -571,7 +571,7 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
             ) from e
 
         try:
-            features, geometry_collection = convert_json_dict_to_geometry_collection(geojson_data)  # type: ignore[reportUnusedVariable]
+            _, geometry_collection = convert_json_dict_to_geometry_collection(geojson_data)
         except Exception as e:
             raise serializers.ValidationError(
                 {

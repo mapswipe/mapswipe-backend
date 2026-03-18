@@ -602,7 +602,7 @@ class BaseProject[
     # EXPORT
 
     def generate_exports(self):
-        from apps.project.exports.exports import export_project_data
+        from apps.project.exports.exports import export_project_data  # noqa: PLC0415
 
         # NOTE: Currently the logic is same for each project
         export_project_data(self.project)

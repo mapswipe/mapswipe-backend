@@ -197,7 +197,7 @@ sentry_celery_beat._get_monitor_config = SentryMonkeyPatch.custom__get_monitor_c
 def update_periodic_tasks(**_):
     logger.info("Cronjob sync: Start")
     try:
-        from django_celery_beat.models import PeriodicTask
+        from django_celery_beat.models import PeriodicTask  # noqa: PLC0415
 
         base_tasks_qs = PeriodicTask.objects.filter(
             task__startswith="apps.",  # Our tasks

@@ -1210,7 +1210,7 @@ class Command(BaseCommand):
         memray = None
 
         with contextlib.suppress(ImportError):
-            import memray  # type: ignore[reportMissingImports]
+            import memray  # type: ignore[reportMissingImports]  # noqa: PLC0415
 
         memray_enable = options.get("memray_enable")
 
