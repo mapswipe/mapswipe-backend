@@ -300,7 +300,7 @@ def filter_results(
             return None
         df = df[df["creator_id"] == creator_id]
 
-    if pano_only:
+    if pano_only is True:
         if df["is_pano"].isna().all():
             logger.info("No feature in the AoI has a 'is_pano' value.")
             return None
@@ -354,14 +354,11 @@ def get_image_metadata(
     if provider is None:
         provider = StreetImageProvider(
             name=StreetImageProviderNameEnum.MAPILLARY,
-            url=Config.MAPILLARY_API_LINK,
         )
 
-        level = (
-            15
-            if provider.name in (StreetImageProviderNameEnum.PANORAMAX, StreetImageProviderNameEnum.PANORAMAX_CUSTOM)
-            else 14
-        )
+    level = (
+        15 if provider.name in (StreetImageProviderNameEnum.PANORAMAX, StreetImageProviderNameEnum.PANORAMAX_CUSTOM) else 14
+    )
 
     downloaded_metadata = coordinate_download(
         polygon=aoi_polygon,

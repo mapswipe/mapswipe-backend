@@ -330,7 +330,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
     def test_filter_pano_false(self):
         filtered_df = filter_results(self.fixture_df, pano_only=False)
         assert filtered_df is not None
-        assert len(filtered_df) == 3
+        assert len(filtered_df) == len(self.fixture_df)
 
     def test_filter_organization_id(self):
         filtered_df = filter_results(self.fixture_df, organization_id=1)
@@ -368,7 +368,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
     def test_filter_no_rows_after_filter(self):
         filtered_df = filter_results(self.fixture_df, pano_only="False")  # type: ignore[reportArgumentType]
         assert filtered_df is not None
-        assert filtered_df.empty
+        assert len(filtered_df) == len(self.fixture_df)
 
     def test_filter_missing_columns(self):
         columns_to_check = [
@@ -380,10 +380,13 @@ class TestTileGroupingFunctions(unittest.TestCase):
             df_copy = self.fixture_df.copy()
             df_copy[column] = None
 
-            if column == "captured_at":
-                column = "start_time"  # noqa: PLW2901
+            filter_key = column
+            if column == "is_pano":
+                filter_key = "pano_only"
+            elif column == "captured_at":
+                filter_key = "start_time"
 
-            result = filter_results(df_copy, **{column: True})  # type: ignore[reportArgumentType]
+            result = filter_results(df_copy, **{filter_key: True})  # type: ignore[reportArgumentType]
             assert result is None
 
     @patch("project_types.street.api_calls.coordinate_download")
