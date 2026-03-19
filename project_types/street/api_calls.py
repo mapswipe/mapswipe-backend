@@ -38,6 +38,10 @@ class StreetException(Exception):
     pass
 
 
+class StreetConnectionError(StreetException):
+    pass
+
+
 def create_tiles(
     *,
     polygon: ShapelyBaseGeometry,
@@ -186,7 +190,7 @@ def download_and_process_tile(
     if provider.name == StreetImageProviderNameEnum.MAPILLARY:
         base = (provider.url or Config.MAPILLARY_API_LINK).rstrip("/")
         url = f"{base}/{z}/{x}/{y}?access_token={Config.MAPILLARY_API_KEY}"
-    elif provider.name == StreetImageProviderNameEnum.PANORAMAX:
+    elif provider.name in (StreetImageProviderNameEnum.PANORAMAX, StreetImageProviderNameEnum.PANORAMAX_CUSTOM):
         base = (provider.url or Config.PANORAMAX_API_LINK).rstrip("/")
         url = f"{base}/api/map/{z}/{x}/{y}.mvt"
     else:
@@ -198,7 +202,7 @@ def download_and_process_tile(
 
             if data.isna().all() is False or data.empty is False:
                 data = data[data["geometry"].apply(lambda point: point.within(polygon))]
-                if provider.name == StreetImageProviderNameEnum.PANORAMAX:
+                if provider.name in (StreetImageProviderNameEnum.PANORAMAX, StreetImageProviderNameEnum.PANORAMAX_CUSTOM):
                     data = data.rename(
                         columns={
                             "account_id": "creator_id",
@@ -233,6 +237,11 @@ def download_and_process_tile(
                 return data
 
             return None
+        except requests.exceptions.ConnectionError as e:
+            raise StreetConnectionError(
+                f"Could not connect to the image provider API. "
+                f"Please check that the URL is correct and accessible: '{url}'"
+            ) from e
         except StreetException:
             logger.warning(
                 "Error while fetching %s data for tile %s/%s/%s",
@@ -280,7 +289,7 @@ def get_street_image_data(
 def filter_results(
     results_df: pd.DataFrame,
     creator_id: int | None = None,
-    is_pano: bool | None = None,
+    pano_only: bool | None = None,
     organization_id: int | None = None,
     start_time: str | None = None,
     end_time: str | None = None,
@@ -292,11 +301,11 @@ def filter_results(
             return None
         df = df[df["creator_id"] == creator_id]
 
-    if is_pano is not None:
+    if pano_only:
         if df["is_pano"].isna().all():
             logger.info("No feature in the AoI has a 'is_pano' value.")
             return None
-        df = df[df["is_pano"] == is_pano]
+        df = df[df["is_pano"] == True]
 
     if organization_id is not None:
         if df["organization_id"].isna().all():
@@ -325,7 +334,7 @@ def get_image_metadata(
     *,
     aoi_geojson: dict[str, Any],
     level: int = 14,
-    is_pano: bool | None = None,
+    pano_only: bool | None = None,
     creator_id: str | None = None,
     organization_id: str | None = None,
     start_time: str | None = None,
@@ -335,7 +344,7 @@ def get_image_metadata(
     provider: StreetImageProvider | None = None,
 ) -> Grouping[StreetFeature]:
     kwargs = {
-        "is_pano": is_pano,
+        "pano_only": pano_only,
         "creator_id": creator_id,
         "organization_id": organization_id,
         "start_time": start_time,
@@ -349,7 +358,7 @@ def get_image_metadata(
             url=Config.MAPILLARY_API_LINK,
         )
 
-    level = 15 if getattr(provider.name, "value", None) == "panoramax" else 14
+    level = 15 if provider.name in (StreetImageProviderNameEnum.PANORAMAX, StreetImageProviderNameEnum.PANORAMAX_CUSTOM) else 14
 
     downloaded_metadata = coordinate_download(
         polygon=aoi_polygon,
