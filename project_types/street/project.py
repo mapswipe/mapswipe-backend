@@ -280,7 +280,7 @@ class StreetProject(
             else None,
             imageProvider=firebase_models.FbObjImageProvider(
                 name=image_provider.name.value if image_provider.name else "",
-                url=image_provider.url if image_provider.url else None,
+                url=image_provider.url or None,
             )
             if image_provider
             else None,
