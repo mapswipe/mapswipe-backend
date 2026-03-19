@@ -1701,7 +1701,7 @@ class TestProjectTypeMutation(TestCase):
                         ],
                     },
                     "mapillaryImageFilters": {
-                        "isPano": True,
+                        "panoOnly": True,
                         "creatorId": None,
                         "organizationId": None,
                         "startTime": None,

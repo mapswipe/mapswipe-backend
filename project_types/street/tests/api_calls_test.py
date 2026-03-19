@@ -55,7 +55,6 @@ class TestTileGroupingFunctions(unittest.TestCase):
         self.row = pd.Series({"x": 1, "y": 1, "z": self.level})
         self.provider = StreetImageProvider(
             name=StreetImageProviderNameEnum.MAPILLARY,
-            url=Config.MAPILLARY_API_LINK,
         )
 
     def test_create_tiles_with_valid_polygon(self):
