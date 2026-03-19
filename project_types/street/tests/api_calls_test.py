@@ -324,12 +324,12 @@ class TestTileGroupingFunctions(unittest.TestCase):
         assert len(filtered_df) == len(self.fixture_df)
 
     def test_filter_pano_true(self):
-        filtered_df = filter_results(self.fixture_df, is_pano=True)
+        filtered_df = filter_results(self.fixture_df, pano_only=True)
         assert filtered_df is not None
         assert len(filtered_df) == 3
 
     def test_filter_pano_false(self):
-        filtered_df = filter_results(self.fixture_df, is_pano=False)
+        filtered_df = filter_results(self.fixture_df, pano_only=False)
         assert filtered_df is not None
         assert len(filtered_df) == 3
 
@@ -367,7 +367,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
         assert len(filtered_df) == 3
 
     def test_filter_no_rows_after_filter(self):
-        filtered_df = filter_results(self.fixture_df, is_pano="False")  # type: ignore[reportArgumentType]
+        filtered_df = filter_results(self.fixture_df, pano_only="False")  # type: ignore[reportArgumentType]
         assert filtered_df is not None
         assert filtered_df.empty
 

@@ -37,6 +37,7 @@ type AppEnumCollection {
   ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
   RasterTileServerNameEnum: [AppEnumCollectionRasterTileServerNameEnum!]!
+  StreetImageProviderNameEnum: [AppEnumCollectionStreetImageProviderNameEnum!]!
   SubGridSizeEnum: [AppEnumCollectionSubGridSizeEnum!]!
   TutorialAssetInputTypeEnum: [AppEnumCollectionTutorialAssetInputTypeEnum!]!
   TutorialInformationPageBlockTypeEnum: [AppEnumCollectionTutorialInformationPageBlockTypeEnum!]!
@@ -118,6 +119,11 @@ type AppEnumCollectionProjectTypeEnum {
 
 type AppEnumCollectionRasterTileServerNameEnum {
   key: RasterTileServerNameEnum!
+  label: String!
+}
+
+type AppEnumCollectionStreetImageProviderNameEnum {
+  key: StreetImageProviderNameEnum!
   label: String!
 }
 
@@ -2206,13 +2212,14 @@ input StreetImageProviderInput {
 enum StreetImageProviderNameEnum {
   MAPILLARY
   PANORAMAX
+  PANORAMAX_CUSTOM
 }
 
 type StreetMapillaryImageFilters {
   creatorId: String
   endTime: String
-  isPano: Boolean
   organizationId: String
+  panoOnly: Boolean
   randomizeOrder: Boolean!
   samplingThreshold: Int
   startTime: String
@@ -2221,8 +2228,8 @@ type StreetMapillaryImageFilters {
 input StreetMapillaryImageFiltersInput {
   creatorId: String = null
   endTime: String = null
-  isPano: Boolean = null
   organizationId: String = null
+  panoOnly: Boolean = null
   randomizeOrder: Boolean! = false
   samplingThreshold: Int = null
   startTime: String = null

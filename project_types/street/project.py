@@ -21,7 +21,7 @@ from apps.project.models import (
 )
 from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
-from project_types.street.api_calls import StreetFeature, get_image_metadata
+from project_types.street.api_calls import StreetConnectionError, StreetFeature, get_image_metadata
 from utils import fields as custom_fields
 from utils.asset_types.models import AoiGeometryAssetProperty
 from utils.common import Grouping, create_json_dump
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 class StreetMapillaryImageFilters(BaseModel):
-    is_pano: custom_fields.PydanticBool | None = None
+    pano_only: custom_fields.PydanticBool | None = None
     creator_id: custom_fields.PydanticLongText | None = None
     organization_id: custom_fields.PydanticLongText | None = None
     start_time: custom_fields.PydanticDate | None = None
@@ -104,17 +104,20 @@ class StreetProject(
 
         provider = self.project_type_specifics.image_provider
 
-        return get_image_metadata(
-            aoi_geojson=aoi_geojson,
-            is_pano=mapillary_image_filters.is_pano,
-            creator_id=mapillary_image_filters.creator_id,
-            organization_id=mapillary_image_filters.organization_id,
-            start_time=mapillary_image_filters.start_time,
-            end_time=mapillary_image_filters.end_time,
-            randomize_order=mapillary_image_filters.randomize_order,
-            sampling_threshold=mapillary_image_filters.sampling_threshold,
-            provider=provider,
-        )
+        try:
+            return get_image_metadata(
+                aoi_geojson=aoi_geojson,
+                pano_only=mapillary_image_filters.pano_only,
+                creator_id=mapillary_image_filters.creator_id,
+                organization_id=mapillary_image_filters.organization_id,
+                start_time=mapillary_image_filters.start_time,
+                end_time=mapillary_image_filters.end_time,
+                randomize_order=mapillary_image_filters.randomize_order,
+                sampling_threshold=mapillary_image_filters.sampling_threshold,
+                provider=provider,
+            )
+        except StreetConnectionError as e:
+            raise base_project.ValidationException(str(e)) from e
 
     @typing.override
     def create_tasks(
