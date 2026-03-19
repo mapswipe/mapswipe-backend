@@ -239,13 +239,12 @@ def download_and_process_tile(
             return None
         except requests.exceptions.ConnectionError as e:
             raise StreetConnectionError(
-                f"Could not connect to the image provider API. "
-                f"Please check that the URL is correct and accessible: '{url}'"
+                f"Could not connect to the image provider API. Please check that the URL is correct and accessible: '{url}'",
             ) from e
         except StreetException:
             logger.warning(
                 "Error while fetching %s data for tile %s/%s/%s",
-                provider.name.value,
+                getattr(provider.name, "value", "unknown provider"),
                 z,
                 x,
                 y,
@@ -305,7 +304,7 @@ def filter_results(
         if df["is_pano"].isna().all():
             logger.info("No feature in the AoI has a 'is_pano' value.")
             return None
-        df = df[df["is_pano"] == True]
+        df = df[df["is_pano"]]
 
     if organization_id is not None:
         if df["organization_id"].isna().all():
@@ -358,7 +357,11 @@ def get_image_metadata(
             url=Config.MAPILLARY_API_LINK,
         )
 
-    level = 15 if provider.name in (StreetImageProviderNameEnum.PANORAMAX, StreetImageProviderNameEnum.PANORAMAX_CUSTOM) else 14
+        level = (
+            15
+            if provider.name in (StreetImageProviderNameEnum.PANORAMAX, StreetImageProviderNameEnum.PANORAMAX_CUSTOM)
+            else 14
+        )
 
     downloaded_metadata = coordinate_download(
         polygon=aoi_polygon,
