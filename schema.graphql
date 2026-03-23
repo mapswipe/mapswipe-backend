@@ -2154,12 +2154,12 @@ input StrFilterLookup {
 }
 
 type StreetImageProvider {
-  name: StreetImageProviderNameEnum
+  name: StreetImageProviderNameEnum!
   url: String
 }
 
 input StreetImageProviderInput {
-  name: StreetImageProviderNameEnum = null
+  name: StreetImageProviderNameEnum! = MAPILLARY
   url: String = null
 }
 
