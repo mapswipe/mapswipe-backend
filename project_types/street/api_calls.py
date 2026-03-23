@@ -332,7 +332,6 @@ def filter_by_timerange(df: pd.DataFrame, start_time: str, end_time: str | None 
 def get_image_metadata(
     *,
     aoi_geojson: dict[str, Any],
-    level: int = 14,
     pano_only: bool | None = None,
     creator_id: str | None = None,
     organization_id: str | None = None,
@@ -356,13 +355,9 @@ def get_image_metadata(
             name=StreetImageProviderNameEnum.MAPILLARY,
         )
 
-    level = (
-        15 if provider.name in (StreetImageProviderNameEnum.PANORAMAX, StreetImageProviderNameEnum.PANORAMAX_CUSTOM) else 14
-    )
-
     downloaded_metadata = coordinate_download(
         polygon=aoi_polygon,
-        level=level,
+        level=provider.tile_level,
         provider=provider,
         kwargs=kwargs,
     )
