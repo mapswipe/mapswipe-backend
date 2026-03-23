@@ -115,7 +115,7 @@ def spatial_sampling(
 
     Args:
         df (pandas.DataFrame): DataFrame containing points with timestamps.
-        interval_length (float): Interval length for filtering points in m.
+        interval_length (int): Interval length for filtering points in m.
 
     Returns:
         geopandas.GeoDataFrame: Filtered GeoDataFrame containing selected points.
