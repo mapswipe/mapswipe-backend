@@ -5,7 +5,7 @@ import typing
 
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from pyfirebase_mapswipe import models as firebase_models
 from shapely import wkt
 from ulid import ULID
@@ -26,7 +26,7 @@ from utils import fields as custom_fields
 from utils.asset_types.models import AoiGeometryAssetProperty
 from utils.common import Grouping, create_json_dump
 from utils.custom_options.models import CustomOption
-from utils.geo.street_image_provider.models import StreetImageProvider
+from utils.geo.street_image_provider.models import StreetImageProvider, StreetImageProviderNameEnum
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,14 @@ class StreetProjectProperty(base_project.BaseProjectProperty):
     custom_options: list[CustomOption] | None = None
     mapillary_image_filters: StreetMapillaryImageFilters
     image_provider: StreetImageProvider | None = None
+
+    @model_validator(mode="after")
+    def default_image_provider(self) -> "StreetProjectProperty":
+        if self.image_provider is None:
+            self.image_provider = StreetImageProvider(
+                name=StreetImageProviderNameEnum.MAPILLARY,
+            )
+        return self
 
 
 class StreetTaskGroupProperty(base_project.BaseProjectTaskGroupProperty): ...
@@ -279,7 +287,7 @@ class StreetProject(
             if custom_opts is not None
             else None,
             imageProvider=firebase_models.FbObjImageProvider(
-                name=image_provider.name.value if image_provider.name else "",
+                name=image_provider.name.value,
                 url=image_provider.url or None,
             )
             if image_provider
