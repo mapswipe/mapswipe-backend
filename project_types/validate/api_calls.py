@@ -30,12 +30,15 @@ def remove_troublesome_chars(string: str | None):
 def retry_get(url: str, retries: int | None = 3, timeout: int | None = 10, to_osmcha: bool = False):
     """Retry a query for a variable amount of tries."""
     retry = Retry(total=retries)
+    headers = {
+        "User-Agent": f"mapswipe-{Config.APP_ENVIRONMENT}/{Config.APP_RELEASE}",
+    }
     with requests.Session() as session:
         session.mount("https://", HTTPAdapter(max_retries=retry))
         if to_osmcha:
-            headers = {"Authorization": f"Token {Config.OSMCHA_API_KEY}"}
+            headers["Authorization"] = f"Token {Config.OSMCHA_API_KEY}"
             return session.get(url, timeout=timeout, headers=headers)
-        return session.get(url, timeout=timeout)
+        return session.get(url, timeout=timeout, headers=headers)
 
 
 # FIXME(rup): Not used anywhere

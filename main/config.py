@@ -58,6 +58,10 @@ class Config:
     EXISTING_SYSTEM_API = typing.cast("URLParseResult", getattr(settings, "EXISTING_SYSTEM_API", None))
     EXISTING_SYSTEM_API_INSECURE = typing.cast("bool", getattr(settings, "EXISTING_SYSTEM_API_INSECURE", False))
 
+    # App info
+    APP_RELEASE = typing.cast("str", settings.APP_RELEASE)
+    APP_ENVIRONMENT = typing.cast("str", settings.APP_ENVIRONMENT)
+
     class InternalDir:
         INTERNAL_ROOT = Path(settings.INTERNAL_ROOT)
 
