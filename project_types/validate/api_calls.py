@@ -35,7 +35,7 @@ def retry_get(url: str, retries: int | None = 3, timeout: int | None = 10, to_os
         if to_osmcha:
             headers = {"Authorization": f"Token {Config.OSMCHA_API_KEY}"}
             return session.get(url, timeout=timeout, headers=headers)
-        return session.get(url, timeout=timeout)
+        return session.get(url, timeout=timeout, headers=Config.DEFAULT_HEADERS)
 
 
 # FIXME(rup): Not used anywhere
