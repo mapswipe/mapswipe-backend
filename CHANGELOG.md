@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.13](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.12..v0.2.13) - 2026-03-31
+### Changes:
+
+#### 🐛 Bug Fixes
+
+- *(precommit)* Manually fix precommit warnings and lint issues - ([6c9dd95](https://github.com/mapswipe/mapswipe-backend/commit/6c9dd9555ce9ff66cd05812a783e4ae4cd94e178))
+- *(validate)* Add custom User-Agent for OSM/OSMCha requests - ([4243a81](https://github.com/mapswipe/mapswipe-backend/commit/4243a8107898be3fe81fb8870c8d173865087bd6))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(precommit)* Exclude ruff-format for uv.lock file - ([a7a9a6e](https://github.com/mapswipe/mapswipe-backend/commit/a7a9a6e42522335394b1388442be340b88620827))
+
+### 🍻 Pull Requests (2)
+- (#241) [Pre-commit/Exclude ruff-format for uv.lock file](https://github.com/mapswipe/mapswipe-backend/pull/241)
+- (#247) [Validate/add custom User-Agent for OSM/OSMCha requests](https://github.com/mapswipe/mapswipe-backend/pull/247)
+
+
 ## [0.2.12](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.11..v0.2.12) - 2026-01-19
 ### Changes:
 
