@@ -248,14 +248,16 @@ SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_RESULTS = f"""
         {fd_name(MappingSessionResult.session)},
         {fd_name(MappingSessionResult.project_task)},
         -- Value
-        {fd_name(MappingSessionResult.result)}
+        {fd_name(MappingSessionResult.result)},
+        {fd_name(MappingSessionResult.reference)}
     ) (
         SELECT
             -- Ref
             MS.{fd_name(MappingSession.id)},               -- mapping_session_id
             RT.{fd_name(MappingSessionResultTemp.task_id)},   -- task_id
             -- Value
-            RT.{fd_name(MappingSessionResultTemp.result)}  -- result [TODO: ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(RT.result), 3857), 4326)]
+            RT.{fd_name(MappingSessionResultTemp.result)},  -- result [TODO: ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(RT.result), 3857), 4326)]
+            RT.{fd_name(MappingSessionResultTemp.reference)}
         FROM {tb_name(MappingSessionResultTemp)} RT
             LEFT JOIN {tb_name(MappingSession)} MS ON
                 MS.{fd_name(MappingSession.project_task_group)} = RT.{fd_name(MappingSessionResultTemp.group_id)} AND
@@ -489,6 +491,8 @@ def results_to_temp_table(
                 continue
 
             # Collect results for each tasks
+            reference_map = mapping_session_data.get("reference", {})
+
             for task_firebase_id, result in session_results_iterator:
                 if result is None:
                     # TODO: Do we treat it as 0?
@@ -499,6 +503,8 @@ def results_to_temp_table(
                 # if result_type == "geometry":
                 #     result = geojson.dumps(geojson.GeometryCollection(result))
 
+                reference_for_task = reference_map.get(task_firebase_id)
+
                 bulk_create_manager.add(
                     MappingSessionResultTemp(
                         project_firebase_id=project.firebase_id,
@@ -508,6 +514,7 @@ def results_to_temp_table(
                         start_time=start_time,
                         end_time=end_time,
                         result=result,
+                        reference=reference_for_task,
                         app_version=app_version,
                         client_type=client_type,
                     ),

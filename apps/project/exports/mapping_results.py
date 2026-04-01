@@ -42,6 +42,7 @@ def generate_mapping_results(*, destination_filename: Path, project: Project) ->
                     {MappingSessionClientTypeEnum.get_client_type_label_sql(f"MS.{fd_name(MappingSession.client_type)}")}
                 ) as client_type,
                 MSR.{fd_name(MappingSessionResult.result)} as result,
+                MSR.{fd_name(MappingSessionResult.reference)}::text as reference,
                 -- the username for users which login to MapSwipe with their
                 -- OSM account is not defined or ''.
                 -- We capture this here as it will cause problems

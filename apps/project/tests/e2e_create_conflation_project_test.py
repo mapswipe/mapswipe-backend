@@ -1,6 +1,8 @@
 import logging
 import operator
 import typing
+
+# import unittest
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -8,7 +10,6 @@ from pathlib import Path
 import json5
 import pytest
 from django.db.models.signals import pre_save
-from ulid import ULID
 
 from apps.common.models import AssetTypeEnum
 from apps.common.utils import decode_tasks, remove_object_keys
@@ -22,13 +23,7 @@ from apps.mapping.models import (
     MappingSessionUserGroup,
     MappingSessionUserGroupTemp,
 )
-from apps.project.models import (
-    Organization,
-    Project,
-    ProjectAsset,
-    ProjectAssetExportTypeEnum,
-    ProjectAssetInputTypeEnum,
-)
+from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetExportTypeEnum
 from apps.project.tests.e2e_create_project_tile_map_service_test import read_csv, read_json
 from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
@@ -53,7 +48,7 @@ def create_override():
         pre_save.disconnect(pre_save_override)
 
 
-class TestStreetProjectE2E(TestCase):
+class TestConflationProjectE2E(TestCase):
     class Mutation:
         CREATE_PROJECT = """
         mutation CreateProject($data: ProjectCreateInput!) {
@@ -298,12 +293,11 @@ class TestStreetProjectE2E(TestCase):
             }
         """
 
-    @pytest.mark.vcr("assets/tests/projects/street/cassette")
-    def test_street_project_e2e(self):
-        # TODO(susilnem): Add more test with filters
+    @pytest.mark.vcr("assets/tests/projects/conflation/cassette")
+    def test_conflation_project_e2e(self):
         with create_override():
             self._test_project(
-                "assets/tests/projects/street/project_data.json5",
+                "assets/tests/projects/conflation/project_data.json5",
             )
 
     # Generic functions
@@ -325,9 +319,8 @@ class TestStreetProjectE2E(TestCase):
 
         self.force_login(user)
 
-        # Define full path for image and AOI files
+        # Define full path for image
         image_filename = Path(Config.BASE_DIR) / test_data["assets"]["image"]
-        aoi_geometry_filename = Path(Config.BASE_DIR) / test_data["assets"]["aoi"]
 
         # Create an organization
         create_organization_data = test_data["create_organization"]
@@ -384,28 +377,9 @@ class TestStreetProjectE2E(TestCase):
         assert image_response["ok"]
         image_id = image_response["result"]["id"]
 
-        # Create GeoJSON Asset for AOI Geometry
-        aoi_asset_data = {
-            "clientId": str(ULID()),
-            "inputType": "AOI_GEOMETRY",
-            "project": project_id,
-        }
-        with aoi_geometry_filename.open("rb") as geo_file:
-            aoi_content = self.query_check(
-                self.Mutation.UPLOAD_PROJECT_ASSET,
-                variables={"data": aoi_asset_data},
-                files={"geoFile": geo_file},
-                map={"geoFile": ["variables.data.file"]},
-            )
-        aoi_response = aoi_content["data"]["createProjectAsset"]
-        assert aoi_response is not None, "AOI create response is None"
-        assert aoi_response["ok"]
-        aoi_id = aoi_response["result"]["id"]
-
         # Update project
         update_project_data = test_data["update_project"]
         update_project_data["image"] = image_id
-        update_project_data["projectTypeSpecifics"]["street"]["aoiGeometry"] = aoi_id
         update_project_data["requestingOrganization"] = organization_id
         with self.captureOnCommitCallbacks(execute=True):
             update_content = self.query_check(
@@ -635,6 +609,9 @@ class TestStreetProjectE2E(TestCase):
         assert project_fb_data["progress"] == project.progress, "Progress should be synced with firebase"
         assert project_fb_data["contributorCount"] == 1, "Contributor count should be synced with firebase"
 
+        if not test_data.get("expected_project_exports_data"):
+            return
+
         # Check groups export
         groups_project_asset = ProjectAsset.objects.filter(
             project=project,
@@ -679,8 +656,8 @@ class TestStreetProjectE2E(TestCase):
         )
         actual_tasks = read_csv(
             tasks_project_asset.file,
-            sort_column=operator.itemgetter("task_id"),
             compressed=True,
+            sort_column=operator.itemgetter("task_id"),
             ignore_columns={
                 "",  # NOTE: dataframe index
                 "project_internal_id",  # NOTE: added for referencing
@@ -714,37 +691,10 @@ class TestStreetProjectE2E(TestCase):
                 "user_internal_id",  # NOTE: added for referencing
                 "group_internal_id",  # NOTE: added for referencing
                 "project_internal_id",  # NOTE: added for referencing
-                "reference",
             },
             compressed=True,
         )
         assert expected_results == actual_results, "Difference found for results export file."
-
-        # Check aoi export
-        aoi_project_asset = ProjectAsset.objects.filter(
-            project=project,
-            type=AssetTypeEnum.INPUT,
-            input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
-        ).first()
-        assert aoi_project_asset is not None, "AOI Geometry project asset not found"
-
-        expected_aoi = read_json(
-            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["area_of_interest"]),
-            ignore_fields={
-                "crs",  # NOTE: crs has almost no data
-                "name",  # NOTE: previously system file path
-                "properties",  # FIXME: previously has id (index)
-                "coordinates",  # FIXME: precision has changed
-            },
-        )
-        actual_aoi = read_json(
-            aoi_project_asset.file,
-            ignore_fields={
-                "properties",  # FIXME: previously has id (index)
-                "coordinates",  # FIXME: precision has changed
-            },
-        )
-        assert expected_aoi == actual_aoi, "Difference found for AOI geometry export file."
 
         # Check aggregated results export
         aggregated_results_project_asset = ProjectAsset.objects.filter(

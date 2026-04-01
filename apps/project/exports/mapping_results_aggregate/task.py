@@ -1,3 +1,4 @@
+import json
 import typing
 from pathlib import Path
 
@@ -87,6 +88,30 @@ def _get_custom_options(custom_options: CustomOptionType):
     }
 
 
+def _add_reference_to_agg_results(
+    results_df: pd.DataFrame,
+    agg_results_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Adds a 'reference' column to agg_results_df if it exists in results_df.
+    For each task_id, all unique non-empty refs are collected into a list.
+    If no refs exist for a task, the corresponding value is empty string.
+    If results_df has no 'ref' column, agg_results_df is returned unchanged.
+    """
+    if "reference" not in results_df.columns:
+        return agg_results_df
+
+    refs_per_task = (
+        results_df.groupby("task_id")["reference"]
+        .apply(lambda x: list({r for r in x if pd.notna(r) and r not in ({}, "")}))
+        .apply(lambda lst: json.dumps([json.loads(r) for r in lst]) if lst else "")
+    )
+
+    if refs_per_task.apply(lambda x: len(x) > 0).any():
+        agg_results_df["reference"] = agg_results_df["task_id"].map(refs_per_task).fillna("")
+
+    return agg_results_df
+
+
 def generate_mapping_results_aggregate_by_task(
     *,
     destination_filename: Path,
@@ -152,6 +177,8 @@ def generate_mapping_results_aggregate_by_task(
         left_on="task_id",
         right_on="task_id",
     )
+
+    agg_results_df = _add_reference_to_agg_results(results_df, agg_results_df)
 
     agg_results_df.to_csv(destination_filename, index_label="idx")
 

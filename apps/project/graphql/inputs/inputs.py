@@ -17,6 +17,7 @@ from .project_types import base  # noqa: F401  # isort: skip # type: ignore[repo
 
 from .project_types.compare import CompareProjectPropertyInput
 from .project_types.completeness import CompletenessProjectPropertyInput
+from .project_types.conflation import ConflationProjectPropertyInput
 from .project_types.find import FindProjectPropertyInput
 from .project_types.street import StreetProjectPropertyInput
 from .project_types.validate import ValidateProjectPropertyInput
@@ -53,6 +54,7 @@ class ProjectTypeSpecificInput:
     validate: ValidateProjectPropertyInput | None = strawberry.UNSET
     validate_image: ValidateImageProjectPropertyInput | None = strawberry.UNSET
     street: StreetProjectPropertyInput | None = strawberry.UNSET
+    conflation: ConflationProjectPropertyInput | None = strawberry.UNSET
 
 
 # NOTE: Make sure this matches with the serializers ../serializers.py

@@ -4,6 +4,8 @@ from apps.project.models import ProjectTypeEnum
 from project_types.street.project import StreetProject, StreetProjectProperty
 from project_types.street.tutorial import StreetTutorial, StreetTutorialTaskProperty
 
+from .conflation.project import ConflationProject, ConflationProjectProperty
+from .conflation.tutorial import ConflationTutorial, ConflationTutorialTaskProperty
 from .tile_map_service.compare.project import CompareProject, CompareProjectProperty
 from .tile_map_service.compare.tutorial import CompareTutorial, CompareTutorialTaskProperty
 from .tile_map_service.completeness.project import CompletenessProject, CompletenessProjectProperty
@@ -32,6 +34,8 @@ def get_tutorial_task_property(project_type: ProjectTypeEnum | None):
         return ("completeness", CompletenessTutorialTaskProperty)
     if project_type == ProjectTypeEnum.STREET:
         return ("street", StreetTutorialTaskProperty)
+    if project_type == ProjectTypeEnum.CONFLATION:
+        return ("conflation", ConflationTutorialTaskProperty)
     typing.assert_never(project_type)
 
 
@@ -51,11 +55,19 @@ def get_project_property(project_type: ProjectTypeEnum | None):
         return ("completeness", CompletenessProjectProperty)
     if project_type == ProjectTypeEnum.STREET:
         return ("street", StreetProjectProperty)
+    if project_type == ProjectTypeEnum.CONFLATION:
+        return ("conflation", ConflationProjectProperty)
     typing.assert_never(project_type)
 
 
 type ProjectTypeHandlers = type[
-    CompareProject | ValidateProject | ValidateImageProject | FindProject | CompletenessProject | StreetProject
+    CompareProject
+    | ValidateProject
+    | ValidateImageProject
+    | FindProject
+    | CompletenessProject
+    | StreetProject
+    | ConflationProject
 ]
 
 
@@ -95,6 +107,12 @@ def get_project_type_handler(
 ) -> type[StreetProject]: ...
 
 
+@typing.overload
+def get_project_type_handler(
+    project_type: typing.Literal[ProjectTypeEnum.CONFLATION],
+) -> type[ConflationProject]: ...
+
+
 def get_project_type_handler(project_type: ProjectTypeEnum) -> ProjectTypeHandlers:
     match project_type:
         case ProjectTypeEnum.FIND:
@@ -109,10 +127,18 @@ def get_project_type_handler(project_type: ProjectTypeEnum) -> ProjectTypeHandle
             return ValidateImageProject
         case ProjectTypeEnum.STREET:
             return StreetProject
+        case ProjectTypeEnum.CONFLATION:
+            return ConflationProject
 
 
 type TutorialTypeHandlers = type[
-    CompareTutorial | ValidateTutorial | FindTutorial | CompletenessTutorial | ValidateImageTutorial | StreetTutorial
+    CompareTutorial
+    | ValidateTutorial
+    | FindTutorial
+    | CompletenessTutorial
+    | ValidateImageTutorial
+    | StreetTutorial
+    | ConflationTutorial
 ]
 
 
@@ -153,6 +179,12 @@ def get_tutorial_type_handler(
 ) -> type[typing.Any]: ...
 
 
+@typing.overload
+def get_tutorial_type_handler(
+    tutorial_type: typing.Literal[ProjectTypeEnum.CONFLATION],
+) -> type[ConflationTutorial]: ...
+
+
 def get_tutorial_type_handler(tutorial_type: ProjectTypeEnum) -> TutorialTypeHandlers:
     match tutorial_type:
         case ProjectTypeEnum.FIND:
@@ -167,3 +199,5 @@ def get_tutorial_type_handler(tutorial_type: ProjectTypeEnum) -> TutorialTypeHan
             return ValidateImageTutorial
         case ProjectTypeEnum.STREET:
             return StreetTutorial
+        case ProjectTypeEnum.CONFLATION:
+            return ConflationTutorial

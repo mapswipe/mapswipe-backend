@@ -125,6 +125,8 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
                 group_size = 80
             case Project.Type.STREET:
                 group_size = 25
+            case Project.Type.CONFLATION:
+                group_size = 25
 
         attrs["group_size"] = group_size
 

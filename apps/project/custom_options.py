@@ -118,11 +118,12 @@ def get_fallback_custom_options_for_export(project_type: ProjectTypeEnum) -> lis
         project_type == ProjectTypeEnum.FIND
         or project_type == ProjectTypeEnum.COMPARE
         or project_type == ProjectTypeEnum.COMPLETENESS
+        or project_type == ProjectTypeEnum.CONFLATION
     ):
         return [
-            0,  # No
-            1,  # Yes
-            2,  # Maybe
-            3,  # Bad Imagery
+            0,  # No / Conflation: No | OSM feature is more accurate
+            1,  # Yes / Conflation: Yes | Other feature is more accurate
+            2,  # Maybe / Conflation: Not sure | Neither is accurate
+            3,  # Bad Imagery / Conflation: Skipped because of multiple OSM features intersecting
         ]
     typing.assert_never(project_type)

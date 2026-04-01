@@ -14,6 +14,7 @@ from apps.project.models import Geometry, Organization, Project, ProjectAsset, P
 from apps.tutorial.graphql.types.types import TutorialType
 from main.config import Config
 from main.graphql.context import Info
+from project_types.conflation import project as conflation_project
 from project_types.street import project as street_project
 from project_types.tile_map_service.compare import project as compare_project
 from project_types.tile_map_service.completeness import project as completeness_project
@@ -31,6 +32,7 @@ from .project_types import base  # noqa: F401  # isort: skip # type: ignore[repo
 
 from .project_types.compare import CompareProjectPropertyType
 from .project_types.completeness import CompletenessProjectPropertyType
+from .project_types.conflation import ConflationProjectPropertyType
 from .project_types.find import FindProjectPropertyType
 from .project_types.street import StreetProjectPropertyType
 from .project_types.validate import ValidateProjectPropertyType
@@ -219,6 +221,7 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
         | ValidateImageProjectPropertyType
         | CompletenessProjectPropertyType
         | StreetProjectPropertyType
+        | ConflationProjectPropertyType
         | None
     ):
         data = project.project_type_specifics
@@ -244,5 +247,10 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
             return typing.cast(
                 "StreetProjectPropertyType",
                 street_project.StreetProjectProperty.model_validate(data),
+            )
+        if project.project_type_enum == Project.Type.CONFLATION:
+            return typing.cast(
+                "ConflationProjectPropertyType",
+                conflation_project.ConflationProjectProperty.model_validate(data),
             )
         typing.assert_never(project.project_type_enum)

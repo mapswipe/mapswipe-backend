@@ -15,6 +15,7 @@ from apps.project.tasks import push_project_to_firebase, send_slack_message_for_
 from apps.user.models import User
 from main.config import Config
 from main.logging import log_extra
+from project_types.conflation.project import ConflationProjectProperty
 from project_types.store import get_project_type_handler
 from project_types.tile_map_service.compare.project import CompareProjectProperty
 from project_types.tile_map_service.completeness.project import CompletenessProjectProperty
@@ -87,11 +88,11 @@ def _export_project_data(project: Project, tmp_directory: Path):
 
     custom_options_raw = []
 
-    # NOTE: We do not have custom options for Compare, Completeness and Find projects
+    # NOTE: We do not have custom options for Compare, Completeness, Conflation and Find projects
     if not isinstance(
         project_type_handler.project_type_specifics,
         # NOTE: Using negate test to throw type error if new project type is added
-        (CompareProjectProperty | CompletenessProjectProperty | FindProjectProperty),
+        (CompareProjectProperty | CompletenessProjectProperty | FindProjectProperty | ConflationProjectProperty),
     ):
         custom_options_raw = [
             {"value": custom_option.value}
