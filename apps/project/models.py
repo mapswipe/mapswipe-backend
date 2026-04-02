@@ -689,7 +689,7 @@ class ProjectTask(FirebasePushResource):
     project_type_specifics = models.JSONField()
 
     # Type hints
-    id: int | str
+    id: int
     task_group_id: int
 
     # FIXME: Quick fix involves removing uniqueness constraint

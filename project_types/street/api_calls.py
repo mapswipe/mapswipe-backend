@@ -2,7 +2,7 @@ import logging
 from collections.abc import Hashable
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
-from typing import Any
+from typing import Any, assert_never
 from warnings import deprecated
 
 import mercantile  # type: ignore[reportMissingTypeStubs]
@@ -194,7 +194,7 @@ def download_and_process_tile(
         base = (provider.url or Config.PANORAMAX_API_LINK).rstrip("/")
         url = f"{base}/api/map/{z}/{x}/{y}.mvt"
     else:
-        raise Exception(f"Unknown provider {getattr(provider.name, 'value', '')}")
+        assert_never(provider.name)
 
     for _ in range(attempt_limit):
         try:
