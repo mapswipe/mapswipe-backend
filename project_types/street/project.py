@@ -247,8 +247,13 @@ class StreetProject(
     @typing.override
     def get_task_specifics_for_firebase(self, task: ProjectTask):
         assert task.geometry is not None, "Task geometry must not be None"
+        image_provider = self.project_type_specifics.image_provider
+        task_id: int | str = task.firebase_id
+        if image_provider and image_provider.name == StreetImageProviderNameEnum.MAPILLARY:
+            task_id = int(task.firebase_id)
+
         return firebase_models.FbMappingTaskStreetCreateOnlyInput(
-            taskId=task.firebase_id,
+            taskId=task_id,
             groupId=task.task_group.firebase_id,
         )
 
