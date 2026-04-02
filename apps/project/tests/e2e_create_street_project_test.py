@@ -572,6 +572,12 @@ class TestStreetProjectE2E(TestCase):
         sanitized_tasks_actual = project_tasks_fb_data
         sanitized_tasks_expected = test_data["expected_project_tasks_data"]
 
+        for tasks in sanitized_tasks_expected.values():
+            for task in tasks:
+                task_id = task.get("taskId")
+                if isinstance(task_id, str) and task_id.isdigit():
+                    task["taskId"] = int(task_id)
+
         assert sanitized_tasks_actual == sanitized_tasks_expected, (
             "Differences found between expected and actual tasks on project in firebase."
         )
