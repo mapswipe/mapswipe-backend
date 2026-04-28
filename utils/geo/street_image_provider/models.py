@@ -1,7 +1,7 @@
 from typing import assert_never
 
 from django.db import models
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, field_validator
 
 from utils import fields as custom_fields
 
@@ -13,15 +13,8 @@ class StreetImageProviderNameEnum(models.TextChoices):
 
 
 class StreetImageProvider(BaseModel):
-    name: StreetImageProviderNameEnum = StreetImageProviderNameEnum.MAPILLARY
+    name: StreetImageProviderNameEnum
     url: custom_fields.PydanticUrl | None = None
-
-    @model_validator(mode="before")
-    @classmethod
-    def default_name(cls, data):
-        if isinstance(data, dict) and data.get("name") is None:
-            data["name"] = StreetImageProviderNameEnum.MAPILLARY
-        return data
 
     @field_validator("url", mode="after")
     @classmethod

@@ -5,7 +5,7 @@ import typing
 
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 from pyfirebase_mapswipe import models as firebase_models
 from shapely import wkt
 from ulid import ULID
@@ -45,15 +45,7 @@ class StreetProjectProperty(base_project.BaseProjectProperty):
     aoi_geometry: custom_fields.PydanticId
     custom_options: list[CustomOption] | None = None
     mapillary_image_filters: StreetImageFilters
-    image_provider: StreetImageProvider | None = None
-
-    @model_validator(mode="after")
-    def default_image_provider(self) -> "StreetProjectProperty":
-        if self.image_provider is None:
-            self.image_provider = StreetImageProvider(
-                name=StreetImageProviderNameEnum.MAPILLARY,
-            )
-        return self
+    image_provider: StreetImageProvider
 
 
 class StreetTaskGroupProperty(base_project.BaseProjectTaskGroupProperty): ...
