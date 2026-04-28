@@ -13,16 +13,16 @@ def migrate_is_pano_to_pano_only(apps, schema_editor):
     for all STREET-type projects to conform with updated schema.
     """
     Project = apps.get_model('project', 'Project')
-    
+
     migrated_count = 0
-    
+
     for project in Project._default_manager.all():
         if project.project_type != 7:  # STREET type
             continue
-        
+
         if project.project_type_specifics is None:
             continue
-        
+
         if 'mapillaryImageFilters' in project.project_type_specifics:
             filters = project.project_type_specifics['mapillaryImageFilters']
             if isinstance(filters, dict) and 'isPano' in filters:
@@ -32,7 +32,7 @@ def migrate_is_pano_to_pano_only(apps, schema_editor):
                 filters['panoOnly'] = filters.pop('isPano')
                 project.save(update_fields=['project_type_specifics'])
                 migrated_count += 1
-    
+
     logger.info(f"Field migration completed: {migrated_count} projects migrated isPano to panoOnly")
 
 
@@ -41,16 +41,16 @@ def reverse_pano_migration(apps, schema_editor):
     Revert panoOnly back to isPano for compatibility.
     """
     Project = apps.get_model('project', 'Project')
-    
+
     reverted_count = 0
 
     for project in Project._default_manager.all():
         if project.project_type != 7:  # STREET type
             continue
-        
+
         if project.project_type_specifics is None:
             continue
-        
+
         if 'mapillaryImageFilters' in project.project_type_specifics:
             filters = project.project_type_specifics['mapillaryImageFilters']
             if isinstance(filters, dict) and 'panoOnly' in filters:
@@ -60,7 +60,7 @@ def reverse_pano_migration(apps, schema_editor):
                 filters['isPano'] = filters.pop('panoOnly')
                 project.save(update_fields=['project_type_specifics'])
                 reverted_count += 1
-    
+
     logger.info(f"Reverse migration completed: {reverted_count} projects reverted panoOnly to isPano")
 
 
