@@ -188,7 +188,7 @@ def download_and_process_tile(
     y = row["y"]
 
     if provider.name == StreetImageProviderNameEnum.MAPILLARY:
-        base = (provider.url or Config.MAPILLARY_API_LINK).rstrip("/")
+        base = Config.MAPILLARY_API_LINK.rstrip("/")
         url = f"{base}/{z}/{x}/{y}?access_token={Config.MAPILLARY_API_KEY}"
     elif provider.name in (StreetImageProviderNameEnum.PANORAMAX, StreetImageProviderNameEnum.PANORAMAX_CUSTOM):
         base = (provider.url or Config.PANORAMAX_API_LINK).rstrip("/")
