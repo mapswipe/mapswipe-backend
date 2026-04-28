@@ -31,7 +31,7 @@ from utils.geo.street_image_provider.models import StreetImageProvider, StreetIm
 logger = logging.getLogger(__name__)
 
 
-class StreetMapillaryImageFilters(BaseModel):
+class StreetImageFilters(BaseModel):
     pano_only: custom_fields.PydanticBool | None = None
     creator_id: custom_fields.PydanticLongText | None = None
     organization_id: custom_fields.PydanticLongText | None = None
@@ -44,7 +44,7 @@ class StreetMapillaryImageFilters(BaseModel):
 class StreetProjectProperty(base_project.BaseProjectProperty):
     aoi_geometry: custom_fields.PydanticId
     custom_options: list[CustomOption] | None = None
-    mapillary_image_filters: StreetMapillaryImageFilters
+    mapillary_image_filters: StreetImageFilters
     image_provider: StreetImageProvider | None = None
 
     @model_validator(mode="after")

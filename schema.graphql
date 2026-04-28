@@ -2153,6 +2153,26 @@ input StrFilterLookup {
   startsWith: String
 }
 
+type StreetImageFilters {
+  creatorId: String
+  endTime: String
+  organizationId: String
+  panoOnly: Boolean
+  randomizeOrder: Boolean!
+  samplingThreshold: Int
+  startTime: String
+}
+
+input StreetImageFiltersInput {
+  creatorId: String = null
+  endTime: String = null
+  organizationId: String = null
+  panoOnly: Boolean = null
+  randomizeOrder: Boolean! = false
+  samplingThreshold: Int = null
+  startTime: String = null
+}
+
 type StreetImageProvider {
   name: StreetImageProviderNameEnum!
   url: String
@@ -2169,32 +2189,12 @@ enum StreetImageProviderNameEnum {
   PANORAMAX_CUSTOM
 }
 
-type StreetMapillaryImageFilters {
-  creatorId: String
-  endTime: String
-  organizationId: String
-  panoOnly: Boolean
-  randomizeOrder: Boolean!
-  samplingThreshold: Int
-  startTime: String
-}
-
-input StreetMapillaryImageFiltersInput {
-  creatorId: String = null
-  endTime: String = null
-  organizationId: String = null
-  panoOnly: Boolean = null
-  randomizeOrder: Boolean! = false
-  samplingThreshold: Int = null
-  startTime: String = null
-}
-
 input StreetProjectPropertyInput {
   """Numeric value as string"""
   aoiGeometry: String!
   customOptions: [CustomOptionInput!] = null
   imageProvider: StreetImageProviderInput = null
-  mapillaryImageFilters: StreetMapillaryImageFiltersInput!
+  mapillaryImageFilters: StreetImageFiltersInput!
 }
 
 type StreetProjectPropertyType {
@@ -2202,7 +2202,7 @@ type StreetProjectPropertyType {
   aoiGeometry: String!
   customOptions: [ProjectCustomOption!]
   imageProvider: StreetImageProvider
-  mapillaryImageFilters: StreetMapillaryImageFilters!
+  mapillaryImageFilters: StreetImageFilters!
 }
 
 input StreetTutorialTaskPropertyInput {
