@@ -1709,6 +1709,9 @@ class TestProjectTypeMutation(TestCase):
                         "randomizeOrder": False,
                         "samplingThreshold": None,
                     },
+                    "imageProvider": {
+                        "name": "MAPILLARY",
+                    },
                 },
             },
         }
