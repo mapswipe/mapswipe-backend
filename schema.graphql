@@ -2179,7 +2179,7 @@ type StreetImageProvider {
 }
 
 input StreetImageProviderInput {
-  name: StreetImageProviderNameEnum! = MAPILLARY
+  name: StreetImageProviderNameEnum!
   url: String = null
 }
 
@@ -2193,7 +2193,7 @@ input StreetProjectPropertyInput {
   """Numeric value as string"""
   aoiGeometry: String!
   customOptions: [CustomOptionInput!] = null
-  imageProvider: StreetImageProviderInput = null
+  imageProvider: StreetImageProviderInput!
   mapillaryImageFilters: StreetImageFiltersInput!
 }
 
@@ -2201,7 +2201,7 @@ type StreetProjectPropertyType {
   """Numeric value as string"""
   aoiGeometry: String!
   customOptions: [ProjectCustomOption!]
-  imageProvider: StreetImageProvider
+  imageProvider: StreetImageProvider!
   mapillaryImageFilters: StreetImageFilters!
 }
 
