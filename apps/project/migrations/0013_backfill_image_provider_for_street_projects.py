@@ -8,10 +8,10 @@ def backfill_image_provider(apps, schema_editor):
     for project in Project._default_manager.all():
         if project.project_type != 7:  # STREET type
             continue
-        
+
         if project.project_type_specifics is None:
             project.project_type_specifics = {}
-        
+
         if 'imageProvider' not in project.project_type_specifics:
             project.project_type_specifics['imageProvider'] = {
                 'name': 'MAPILLARY'
