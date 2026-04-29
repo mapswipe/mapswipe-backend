@@ -20,6 +20,7 @@ from project_types.street.api_calls import (
     geojson_to_polygon,
     get_image_metadata,
 )
+from utils.geo.street_image_provider.models import StreetImageProvider, StreetImageProviderNameEnum
 
 if typing.TYPE_CHECKING:
     from collections.abc import Hashable
@@ -31,6 +32,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
     empty_polygon: Polygon  # type: ignore[reportUninitializedInstanceVariable]
     empty_geometry: GeometryCollection  # type: ignore[reportUninitializedInstanceVariable]
     row: pd.Series  # type: ignore[reportUninitializedInstanceVariable]
+    provider: StreetImageProvider  # type: ignore[reportUninitializedInstanceVariable]
 
     @typing.override
     @classmethod
@@ -41,6 +43,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
         with Path(Config.BASE_DIR, "assets/fixtures/mapillary_response.csv").open(encoding="utf-8") as file:
             df = pd.read_csv(file)
             df["geometry"] = df["geometry"].apply(wkt.loads)  # type: ignore[reportArgumentType]
+            df["captured_at"] = pd.to_datetime(df["captured_at"], unit="ms")
             cls.fixture_df = df
 
     @typing.override
@@ -50,6 +53,9 @@ class TestTileGroupingFunctions(unittest.TestCase):
         self.empty_polygon = Polygon()
         self.empty_geometry = GeometryCollection()
         self.row = pd.Series({"x": 1, "y": 1, "z": self.level})
+        self.provider = StreetImageProvider(
+            name=StreetImageProviderNameEnum.MAPILLARY,
+        )
 
     def test_create_tiles_with_valid_polygon(self):
         tiles = create_tiles(polygon=self.test_polygon, level=self.level)
@@ -176,10 +182,63 @@ class TestTileGroupingFunctions(unittest.TestCase):
 
         polygon = wkt.loads("POLYGON ((-1 -1, -1 1, 1 1, 1 -1, -1 -1))")
 
-        result = download_and_process_tile(row=row, polygon=polygon, kwargs={})
+        result = download_and_process_tile(row=row, polygon=polygon, kwargs={}, provider=self.provider)
         assert result is not None
         assert len(result) == 1
         assert result["geometry"][0].wkt == "POINT (0 0)"
+
+    @patch("project_types.street.api_calls.get_street_image_data")
+    def test_download_and_process_tile_panoramax(self, mock_get_street_image_data):
+        mock_get_street_image_data.return_value = pd.DataFrame(
+            [
+                {
+                    "geometry": wkt.loads("POINT (0 0)"),
+                    "account_id": 1,
+                    "ts": "2026-02-24T10:00:00Z",
+                    "type": "equirectangular",
+                    "first_sequence": 42,
+                },
+            ],
+        )
+
+        row: dict[Hashable, typing.Any] = {"x": 1, "y": 1, "z": 14}
+        polygon = wkt.loads("POLYGON ((-1 -1, -1 1, 1 1, 1 -1, -1 -1))")
+
+        provider = StreetImageProvider(
+            name=StreetImageProviderNameEnum.PANORAMAX,
+            url=None,
+        )
+
+        result = download_and_process_tile(
+            row=row,
+            polygon=polygon,
+            kwargs={},
+            provider=provider,
+        )
+
+        assert result is not None
+        assert "creator_id" in result.columns
+        assert "captured_at" in result.columns
+        assert pd.api.types.is_datetime64_ns_dtype(result["captured_at"])
+        assert result["captured_at"].iloc[0] == pd.to_datetime("2026-02-24T10:00:00Z").tz_localize(None)
+        assert "is_pano" in result.columns
+        assert result["is_pano"].iloc[0]
+
+    @patch("project_types.street.api_calls.get_street_image_data")
+    def test_download_and_process_tile_returns_none(self, mock_get_street_image_data):
+        mock_get_street_image_data.return_value = pd.DataFrame()
+
+        row: dict[Hashable, typing.Any] = {"x": 1, "y": 1, "z": 14}
+        polygon = wkt.loads("POLYGON ((-1 -1, -1 1, 1 1, 1 -1, -1 -1))")
+
+        result = download_and_process_tile(
+            row=row,
+            polygon=polygon,
+            provider=self.provider,
+            kwargs={},
+        )
+
+        assert result is None
 
     @patch("project_types.street.api_calls.requests.get")
     def test_download_and_process_tile_failure(self, mock_get):  # type: ignore[reportMissingParameterType]
@@ -187,11 +246,11 @@ class TestTileGroupingFunctions(unittest.TestCase):
         mock_response.status_code = 500
         mock_get.return_value = mock_response
 
-        result = download_and_process_tile(row=self.row, polygon=self.test_polygon, kwargs={})
+        result = download_and_process_tile(row=self.row, polygon=self.test_polygon, kwargs={}, provider=self.provider)
         assert result is None
 
-    @patch("project_types.street.api_calls.get_mapillary_data")
-    def test_download_and_process_tile_spatial_filtering(self, mock_get_mapillary_data):  # type: ignore[reportMissingParameterType]
+    @patch("project_types.street.api_calls.get_street_image_data")
+    def test_download_and_process_tile_spatial_filtering(self, mock_get_street_image_data):  # type: ignore[reportMissingParameterType]
         inside_points = [
             (0.2, 0.2),
             (0.5, 0.5),
@@ -209,9 +268,9 @@ class TestTileGroupingFunctions(unittest.TestCase):
             for x, y in points
         ]
 
-        mock_get_mapillary_data.return_value = pd.DataFrame(data)
+        mock_get_street_image_data.return_value = pd.DataFrame(data)
 
-        metadata = download_and_process_tile(row=self.row, polygon=self.test_polygon, kwargs={})
+        metadata = download_and_process_tile(row=self.row, polygon=self.test_polygon, kwargs={}, provider=self.provider)
         assert metadata is not None
         metadata = metadata.drop_duplicates()
         assert len(metadata) == len(inside_points)
@@ -220,8 +279,20 @@ class TestTileGroupingFunctions(unittest.TestCase):
     def test_coordinate_download_with_failures(self, mock_download_and_process_tile):  # type: ignore[reportMissingParameterType]
         mock_download_and_process_tile.return_value = pd.DataFrame()
 
-        metadata = coordinate_download(polygon=self.test_polygon, level=self.level, kwargs={})
+        metadata = coordinate_download(polygon=self.test_polygon, level=self.level, kwargs={}, provider=self.provider)
 
+        assert metadata.empty
+
+    @patch("project_types.street.api_calls.create_tiles")
+    def test_coordinate_download_no_tiles(self, mock_create_tiles):
+        mock_create_tiles.return_value = pd.DataFrame()
+
+        metadata = coordinate_download(
+            polygon=Polygon(),
+            level=0,
+            kwargs={},
+            provider=self.provider,
+        )
         assert metadata.empty
 
     def test_filter_within_time_range(self):
@@ -252,14 +323,14 @@ class TestTileGroupingFunctions(unittest.TestCase):
         assert len(filtered_df) == len(self.fixture_df)
 
     def test_filter_pano_true(self):
-        filtered_df = filter_results(self.fixture_df, is_pano=True)
+        filtered_df = filter_results(self.fixture_df, pano_only=True)
         assert filtered_df is not None
         assert len(filtered_df) == 3
 
     def test_filter_pano_false(self):
-        filtered_df = filter_results(self.fixture_df, is_pano=False)
+        filtered_df = filter_results(self.fixture_df, pano_only=False)
         assert filtered_df is not None
-        assert len(filtered_df) == 3
+        assert len(filtered_df) == len(self.fixture_df)
 
     def test_filter_organization_id(self):
         filtered_df = filter_results(self.fixture_df, organization_id=1)
@@ -270,6 +341,18 @@ class TestTileGroupingFunctions(unittest.TestCase):
         filtered_df = filter_results(self.fixture_df, creator_id=102506575322825)
         assert filtered_df is not None
         assert len(filtered_df) == 3
+
+    def test_filter_results_no_creator_id(self):
+        df = pd.DataFrame(
+            {
+                "creator_id": [None, None],
+                "is_pano": [True, False],
+                "organization_id": [1, 2],
+                "captured_at": pd.to_datetime(["2026-02-24", "2026-02-25"]),
+            },
+        )
+        filtered_df = filter_results(df, creator_id=123)
+        assert filtered_df is None
 
     def test_filter_time_range(self):
         start_time = "2016-01-20 00:00:00"
@@ -283,9 +366,9 @@ class TestTileGroupingFunctions(unittest.TestCase):
         assert len(filtered_df) == 3
 
     def test_filter_no_rows_after_filter(self):
-        filtered_df = filter_results(self.fixture_df, is_pano="False")  # type: ignore[reportArgumentType]
+        filtered_df = filter_results(self.fixture_df, pano_only="False")  # type: ignore[reportArgumentType]
         assert filtered_df is not None
-        assert filtered_df.empty
+        assert len(filtered_df) == len(self.fixture_df)
 
     def test_filter_missing_columns(self):
         columns_to_check = [
@@ -297,10 +380,13 @@ class TestTileGroupingFunctions(unittest.TestCase):
             df_copy = self.fixture_df.copy()
             df_copy[column] = None
 
-            if column == "captured_at":
-                column = "start_time"  # noqa: PLW2901
+            filter_key = column
+            if column == "is_pano":
+                filter_key = "pano_only"
+            elif column == "captured_at":
+                filter_key = "start_time"
 
-            result = filter_results(df_copy, **{column: True})  # type: ignore[reportArgumentType]
+            result = filter_results(df_copy, **{filter_key: True})  # type: ignore[reportArgumentType]
             assert result is None
 
     @patch("project_types.street.api_calls.coordinate_download")
@@ -327,7 +413,14 @@ class TestTileGroupingFunctions(unittest.TestCase):
         mock_coordinate_download,  # type: ignore[reportMissingParameterType]
         mock_filter_results,  # type: ignore[reportMissingParameterType]
     ):
-        mock_df = pd.DataFrame({"id": range(1, 100002), "geometry": range(1, 100002)})
+        mock_df = pd.DataFrame(
+            {
+                "id": range(1, 100002),
+                "geometry": range(1, 100002),
+                "captured_at": pd.NaT,
+                "sequence_id": 1,
+            },
+        )
         mock_coordinate_download.return_value = mock_df
         with pytest.raises(ValidationException):
             get_image_metadata(aoi_geojson=self.fixture_data)
@@ -338,6 +431,8 @@ class TestTileGroupingFunctions(unittest.TestCase):
             {
                 "id": [1, 2, 2, 3, 4, 4, 5],
                 "geometry": ["a", "b", "b", "c", "d", "d", "e"],
+                "sequence_id": [1, 1, 1, 1, 1, 1, 1],
+                "captured_at": pd.to_datetime(["2020-01-01"] * 7),
             },
         )
         mock_coordinate_download.return_value = test_df

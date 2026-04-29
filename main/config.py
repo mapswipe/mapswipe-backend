@@ -44,6 +44,7 @@ class Config:
     # NOTE: We get mapillary data from mapillary
     MAPILLARY_API_LINK = "https://tiles.mapillary.com/maps/vtp/mly1_computed_public/2/"
     MAPILLARY_API_KEY = typing.cast("str", settings.MAPILLARY_API_KEY)
+    PANORAMAX_API_LINK = "https://api.panoramax.xyz/"
 
     FIREBASE_HELPER = typing.cast("FirebaseHelper", settings.FIREBASE_HELPER)
     FIREBASE_EMULATOR_USE = typing.cast("str | None", settings.FIREBASE_EMULATOR_USE)

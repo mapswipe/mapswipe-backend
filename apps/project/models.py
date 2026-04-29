@@ -671,7 +671,7 @@ class ProjectTask(FirebasePushResource):
     in the context of a larger mapping or data collection project.
     """
 
-    firebase_id = models.CharField[str, str](max_length=30)
+    firebase_id = models.CharField[str, str](max_length=36)
 
     task_group: ProjectTaskGroup = models.ForeignKey[ProjectTaskGroup, ProjectTaskGroup](  # type: ignore[reportAssignmentType]
         ProjectTaskGroup,

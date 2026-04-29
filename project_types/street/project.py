@@ -21,17 +21,18 @@ from apps.project.models import (
 )
 from main.bulk_managers import BulkCreateManager
 from project_types.base import project as base_project
-from project_types.street.api_calls import StreetFeature, get_image_metadata
+from project_types.street.api_calls import StreetConnectionError, StreetFeature, get_image_metadata
 from utils import fields as custom_fields
 from utils.asset_types.models import AoiGeometryAssetProperty
 from utils.common import Grouping, create_json_dump
 from utils.custom_options.models import CustomOption
+from utils.geo.street_image_provider.models import StreetImageProvider, StreetImageProviderNameEnum
 
 logger = logging.getLogger(__name__)
 
 
-class StreetMapillaryImageFilters(BaseModel):
-    is_pano: custom_fields.PydanticBool | None = None
+class StreetImageFilters(BaseModel):
+    pano_only: custom_fields.PydanticBool | None = None
     creator_id: custom_fields.PydanticLongText | None = None
     organization_id: custom_fields.PydanticLongText | None = None
     start_time: custom_fields.PydanticDate | None = None
@@ -43,7 +44,8 @@ class StreetMapillaryImageFilters(BaseModel):
 class StreetProjectProperty(base_project.BaseProjectProperty):
     aoi_geometry: custom_fields.PydanticId
     custom_options: list[CustomOption] | None = None
-    mapillary_image_filters: StreetMapillaryImageFilters
+    mapillary_image_filters: StreetImageFilters
+    image_provider: StreetImageProvider
 
 
 class StreetTaskGroupProperty(base_project.BaseProjectTaskGroupProperty): ...
@@ -100,16 +102,22 @@ class StreetProject(
 
         mapillary_image_filters = self.project_type_specifics.mapillary_image_filters
 
-        return get_image_metadata(
-            aoi_geojson=aoi_geojson,
-            is_pano=mapillary_image_filters.is_pano,
-            creator_id=mapillary_image_filters.creator_id,
-            organization_id=mapillary_image_filters.organization_id,
-            start_time=mapillary_image_filters.start_time,
-            end_time=mapillary_image_filters.end_time,
-            randomize_order=mapillary_image_filters.randomize_order,
-            sampling_threshold=mapillary_image_filters.sampling_threshold,
-        )
+        provider = self.project_type_specifics.image_provider
+
+        try:
+            return get_image_metadata(
+                aoi_geojson=aoi_geojson,
+                pano_only=mapillary_image_filters.pano_only,
+                creator_id=mapillary_image_filters.creator_id,
+                organization_id=mapillary_image_filters.organization_id,
+                start_time=mapillary_image_filters.start_time,
+                end_time=mapillary_image_filters.end_time,
+                randomize_order=mapillary_image_filters.randomize_order,
+                sampling_threshold=mapillary_image_filters.sampling_threshold,
+                provider=provider,
+            )
+        except StreetConnectionError as e:
+            raise base_project.ValidationException(str(e)) from e
 
     @typing.override
     def create_tasks(
@@ -231,9 +239,13 @@ class StreetProject(
     @typing.override
     def get_task_specifics_for_firebase(self, task: ProjectTask):
         assert task.geometry is not None, "Task geometry must not be None"
+        image_provider = self.project_type_specifics.image_provider
+        task_id: int | str = task.firebase_id
+        if image_provider and image_provider.name == StreetImageProviderNameEnum.MAPILLARY:
+            task_id = int(task.firebase_id)
+
         return firebase_models.FbMappingTaskStreetCreateOnlyInput(
-            # XXX: converting this to int for backwards compatibility
-            taskId=int(task.firebase_id),
+            taskId=task_id,
             groupId=task.task_group.firebase_id,
         )
 
@@ -246,6 +258,7 @@ class StreetProject(
     @typing.override
     def get_project_specifics_for_firebase(self):
         custom_opts = self.project_type_specifics.custom_options
+        image_provider = self.project_type_specifics.image_provider
         number_of_groups = ProjectTaskGroup.objects.filter(project=self.project).count()
         return firebase_models.FbProjectStreetCreateOnlyInput(
             numberOfGroups=number_of_groups,
@@ -269,5 +282,11 @@ class StreetProject(
                 for opt in custom_opts
             ]
             if custom_opts is not None
+            else None,
+            imageProvider=firebase_models.FbObjImageProvider(
+                name=image_provider.name.value,
+                url=image_provider.url or None,
+            )
+            if image_provider
             else None,
         )

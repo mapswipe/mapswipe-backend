@@ -139,7 +139,8 @@ class FirebasePushResource(Model):
     # NOTE: We should not directly use old_id. This is ID reference to old system
     old_id = models.CharField[str | None, str | None](max_length=30, db_index=True, null=True, blank=True)
 
-    firebase_id = models.CharField[str, str](max_length=30, unique=True, default=ULID)
+    # NOTE: Panoramax uses UUIDv4 (length 36) for identifiers, which we use as firebase_id for street project tasks
+    firebase_id = models.CharField[str, str](max_length=36, unique=True, default=ULID)
 
     firebase_push_status: int | None = IntegerChoicesField(  # type: ignore[reportAssignmentType]
         choices_enum=FirebasePushStatusEnum,

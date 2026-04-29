@@ -37,6 +37,7 @@ type AppEnumCollection {
   ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
   RasterTileServerNameEnum: [AppEnumCollectionRasterTileServerNameEnum!]!
+  StreetImageProviderNameEnum: [AppEnumCollectionStreetImageProviderNameEnum!]!
   TutorialAssetInputTypeEnum: [AppEnumCollectionTutorialAssetInputTypeEnum!]!
   TutorialInformationPageBlockTypeEnum: [AppEnumCollectionTutorialInformationPageBlockTypeEnum!]!
   TutorialStatusEnum: [AppEnumCollectionTutorialStatusEnum!]!
@@ -117,6 +118,11 @@ type AppEnumCollectionProjectTypeEnum {
 
 type AppEnumCollectionRasterTileServerNameEnum {
   key: RasterTileServerNameEnum!
+  label: String!
+}
+
+type AppEnumCollectionStreetImageProviderNameEnum {
+  key: StreetImageProviderNameEnum!
   label: String!
 }
 
@@ -2147,38 +2153,56 @@ input StrFilterLookup {
   startsWith: String
 }
 
-type StreetMapillaryImageFilters {
+type StreetImageFilters {
   creatorId: String
   endTime: String
-  isPano: Boolean
   organizationId: String
+  panoOnly: Boolean
   randomizeOrder: Boolean!
   samplingThreshold: Int
   startTime: String
 }
 
-input StreetMapillaryImageFiltersInput {
+input StreetImageFiltersInput {
   creatorId: String = null
   endTime: String = null
-  isPano: Boolean = null
   organizationId: String = null
+  panoOnly: Boolean = null
   randomizeOrder: Boolean! = false
   samplingThreshold: Int = null
   startTime: String = null
+}
+
+type StreetImageProvider {
+  name: StreetImageProviderNameEnum!
+  url: String
+}
+
+input StreetImageProviderInput {
+  name: StreetImageProviderNameEnum!
+  url: String = null
+}
+
+enum StreetImageProviderNameEnum {
+  MAPILLARY
+  PANORAMAX
+  PANORAMAX_CUSTOM
 }
 
 input StreetProjectPropertyInput {
   """Numeric value as string"""
   aoiGeometry: String!
   customOptions: [CustomOptionInput!] = null
-  mapillaryImageFilters: StreetMapillaryImageFiltersInput!
+  imageProvider: StreetImageProviderInput!
+  mapillaryImageFilters: StreetImageFiltersInput!
 }
 
 type StreetProjectPropertyType {
   """Numeric value as string"""
   aoiGeometry: String!
   customOptions: [ProjectCustomOption!]
-  mapillaryImageFilters: StreetMapillaryImageFilters!
+  imageProvider: StreetImageProvider!
+  mapillaryImageFilters: StreetImageFilters!
 }
 
 input StreetTutorialTaskPropertyInput {
