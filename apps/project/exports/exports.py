@@ -116,6 +116,7 @@ def _export_project_data(project: Project, tmp_directory: Path):
         results_df=results_df,
         tasks_df=tasks_df,
         custom_options_raw=custom_options_raw,
+        project=project,
     )
 
     gzipped_csv_to_gzipped_geojson(

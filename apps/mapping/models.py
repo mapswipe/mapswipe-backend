@@ -104,6 +104,7 @@ class MappingSessionResult(models.Model):
     session = models.ForeignKey[MappingSession, MappingSession](MappingSession, on_delete=models.PROTECT)
     project_task = models.ForeignKey[ProjectTask, ProjectTask](ProjectTask, on_delete=models.PROTECT)
     result = models.PositiveSmallIntegerField[int, int]()
+    task_partition_index = models.PositiveSmallIntegerField[int, int](null=True)
 
     # TODO(thenav56): Add constraint to make sure we have non-duplicate row with task_id, .session.user_id
 
@@ -112,7 +113,7 @@ class MappingSessionResult(models.Model):
     project_task_id: int
 
     class Meta:
-        unique_together = (("session", "project_task"),)
+        unique_together = (("session", "project_task", "task_partition_index"),)
 
     @typing.override
     def __str__(self):
@@ -155,6 +156,7 @@ class MappingSessionResultTemp(models.Model):
     start_time = models.DateTimeField[datetime.datetime, datetime.datetime]()
     end_time = models.DateTimeField[datetime.datetime, datetime.datetime]()
     result = models.PositiveSmallIntegerField[int, int]()
+    task_partition_index = models.PositiveSmallIntegerField[int, int](null=True)
     app_version = models.CharField[str, str](max_length=255)
     client_type: int = IntegerChoicesField(choices_enum=MappingSessionClientTypeEnum)  # type: ignore[reportAssignmentType]
 

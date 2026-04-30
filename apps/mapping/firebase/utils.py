@@ -248,14 +248,16 @@ SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_RESULTS = f"""
         {fd_name(MappingSessionResult.session)},
         {fd_name(MappingSessionResult.project_task)},
         -- Value
-        {fd_name(MappingSessionResult.result)}
+        {fd_name(MappingSessionResult.result)},
+        {fd_name(MappingSessionResult.task_partition_index)}
     ) (
         SELECT
             -- Ref
             MS.{fd_name(MappingSession.id)},               -- mapping_session_id
             RT.{fd_name(MappingSessionResultTemp.task_id)},   -- task_id
             -- Value
-            RT.{fd_name(MappingSessionResultTemp.result)}  -- result [TODO: ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(RT.result), 3857), 4326)]
+            RT.{fd_name(MappingSessionResultTemp.result)},  -- result [TODO: ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(RT.result), 3857), 4326)]
+            RT.{fd_name(MappingSessionResultTemp.task_partition_index)}  -- task partition index
         FROM {tb_name(MappingSessionResultTemp)} RT
             LEFT JOIN {tb_name(MappingSession)} MS ON
                 MS.{fd_name(MappingSession.project_task_group)} = RT.{fd_name(MappingSessionResultTemp.group_id)} AND
@@ -265,7 +267,8 @@ SQL_QUERY_TO_TRANSFER_TEMP_TABLE_DATA_TO_MAPPING_SESSION_RESULTS = f"""
     )
     ON CONFLICT (
         {fd_name(MappingSessionResult.session)},
-        {fd_name(MappingSessionResult.project_task)}
+        {fd_name(MappingSessionResult.project_task)},
+        {fd_name(MappingSessionResult.task_partition_index)}
     )
     DO NOTHING;
 """  # noqa: E501
@@ -499,19 +502,40 @@ def results_to_temp_table(
                 # if result_type == "geometry":
                 #     result = geojson.dumps(geojson.GeometryCollection(result))
 
-                bulk_create_manager.add(
-                    MappingSessionResultTemp(
-                        project_firebase_id=project.firebase_id,
-                        group_firebase_id=group_firebase_id,
-                        contributor_user_firebase_id=contributor_user_firebase_id,
-                        task_firebase_id=task_firebase_id,
-                        start_time=start_time,
-                        end_time=end_time,
-                        result=result,
-                        app_version=app_version,
-                        client_type=client_type,
-                    ),
-                )
+                # NOTE [Important]:
+                # If the result is a list (e.g. Locate Features project),
+                # example: result = [1, 0, 0, 1]
+                # Each index represents a partition of the same task.
+                # We create one row per partition using:
+                #   task_partition_index = list index
+                #   result = value at that index
+                #
+                # Example:
+                #   result = [1, 0, 0, 1]
+                #   -> (partition 0, value 1)
+                #   -> (partition 1, value 0)
+                #   -> (partition 2, value 0)
+                #   -> (partition 3, value 1)
+                #
+                # For non-list results (fallback to default),
+                # task_partition_index defaults to 0.
+
+                results_list = result if isinstance(result, list) else [result]
+                for index, result_value in enumerate(results_list):
+                    bulk_create_manager.add(
+                        MappingSessionResultTemp(
+                            task_partition_index=index,
+                            project_firebase_id=project.firebase_id,
+                            group_firebase_id=group_firebase_id,
+                            contributor_user_firebase_id=contributor_user_firebase_id,
+                            task_firebase_id=task_firebase_id,
+                            start_time=start_time,
+                            end_time=end_time,
+                            result=result_value,
+                            app_version=app_version,
+                            client_type=client_type,
+                        ),
+                    )
 
             # Tag this session to all user groups mentioned
             for user_group_firebase_id, is_selected in mapping_session_data.get("userGroups", {}).items():
