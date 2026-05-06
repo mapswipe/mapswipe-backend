@@ -328,6 +328,9 @@ class BaseProject[
     def skip_tasks_on_firebase(self) -> bool:
         return False
 
+    def generate_hot_tm_geometries(self) -> bool:
+        return False
+
     def compress_tasks_on_firebase(self) -> bool:
         return False
 

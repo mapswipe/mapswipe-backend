@@ -10,7 +10,7 @@ from apps.common.models import AssetTypeEnum, FirebasePushStatusEnum
 from apps.project.custom_options import get_fallback_custom_options_for_export
 from apps.project.exports.geojson import gzipped_csv_to_gzipped_geojson
 from apps.project.exports.utils.project_progress import calculate_project_progress
-from apps.project.models import Project, ProjectAsset, ProjectAssetExportTypeEnum, ProjectProgressStatusEnum, ProjectTypeEnum
+from apps.project.models import Project, ProjectAsset, ProjectAssetExportTypeEnum, ProjectProgressStatusEnum
 from apps.project.tasks import push_project_to_firebase, send_slack_message_for_project
 from apps.user.models import User
 from main.config import Config
@@ -132,6 +132,7 @@ def _export_project_data(project: Project, tmp_directory: Path):
         aggregate_results_by_user_df = generate_mapping_results_aggregate_by_user(
             results_df=results_df,
             agg_results_df=aggregate_results_by_task_df,
+            project=project,
         )
 
         aggregate_results_by_user_df.to_csv(
@@ -163,14 +164,7 @@ def _export_project_data(project: Project, tmp_directory: Path):
         tmp_project_stats_by_date_csv.name,
     )
 
-    # FIXME(tnagorra): move this to project handler
-    generate_hot_tm_geometries = project.project_type_enum in [
-        ProjectTypeEnum.COMPARE,
-        ProjectTypeEnum.COMPLETENESS,
-        ProjectTypeEnum.FIND,
-    ]
-
-    if generate_hot_tm_geometries:
+    if project_type_handler.generate_hot_tm_geometries():
         generate_tasking_manager_geometries(
             project=project,
             agg_results_filename=tmp_mapping_results_aggregate_by_task_csv,

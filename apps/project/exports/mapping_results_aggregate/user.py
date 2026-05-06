@@ -1,5 +1,7 @@
 import pandas as pd
 
+from apps.project.models import Project, ProjectTypeEnum
+
 
 def get_agreeing_contributions_per_user_and_task(row: pd.Series) -> int:
     """Compare user contribution to classifications of other users by calculating
@@ -28,6 +30,7 @@ def generate_mapping_results_aggregate_by_user(
     *,
     results_df: pd.DataFrame,
     agg_results_df: pd.DataFrame,
+    project: Project,
 ) -> pd.DataFrame:
     """For each user we calculate the number of total contributions (tasks)
     and completed groups.
@@ -38,10 +41,17 @@ def generate_mapping_results_aggregate_by_user(
     results from other users are the same as the results for that user.
     Returns a pandas dataframe.
     """
+    # NOTE: `task_partition_index` is only relevant for LOCATE projects,
+    left_on = ["task_id"]
+    right_on = ["task_id"]
+    if "task_partition_index" in results_df.columns and project.project_type_enum == ProjectTypeEnum.LOCATE:
+        left_on.append("task_partition_index")
+        right_on.append("task_partition_index")
+
     raw_contributions_df = results_df.merge(
         agg_results_df,
-        left_on="task_id",
-        right_on="task_id",
+        left_on=left_on,
+        right_on=right_on,
     )
 
     raw_contributions_df["agreeing_contributions"] = raw_contributions_df.apply(

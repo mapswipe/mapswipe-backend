@@ -25,11 +25,18 @@ from apps.mapping.models import (
     MappingSessionUserGroup,
     MappingSessionUserGroupTemp,
 )
-from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetExportTypeEnum, ProjectAssetInputTypeEnum
+from apps.project.models import (
+    Organization,
+    Project,
+    ProjectAsset,
+    ProjectAssetExportTypeEnum,
+    ProjectAssetInputTypeEnum,
+)
 from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
 from main.config import Config
 from main.tests import TestCase
+from project_types.store import get_project_type_handler
 
 
 def read_json(
@@ -369,6 +376,13 @@ class TestTileMapServiceProjectE2E(TestCase):
                 "assets/tests/projects/compare/project_data.json5",
             )
 
+    def test_locate_project_e2e(self):
+        with create_override():
+            self._test_project(
+                "locate",
+                "assets/tests/projects/locate/project_data.json5",
+            )
+
     # Generic functions
 
     def _test_project(self, projectKey: str, filename: str):
@@ -661,6 +675,7 @@ class TestTileMapServiceProjectE2E(TestCase):
         ] == [0, 0, 0, 0, 0], "Mapping session data should be empty before pull from firebase"
 
         project = Project.objects.get(id=project_id)
+        project_type_handler = get_project_type_handler(project.project_type_enum)(project)
         assert project.progress == 0
 
         with self.captureOnCommitCallbacks(execute=True):
@@ -893,49 +908,50 @@ class TestTileMapServiceProjectE2E(TestCase):
         )
         assert expected_users == actual_users, "Difference found for users export file."
 
-        # Check hot tasking manager geometry export
-        hot_aoi_project_asset = ProjectAsset.objects.filter(
-            project=project,
-            type=AssetTypeEnum.EXPORT,
-            export_type=ProjectAssetExportTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES,
-        ).first()
-        assert hot_aoi_project_asset is not None, "HOT TM AOI Geometry project asset not found"
+        if project_type_handler.generate_hot_tm_geometries():
+            # Check hot tasking manager geometry export
+            hot_aoi_project_asset = ProjectAsset.objects.filter(
+                project=project,
+                type=AssetTypeEnum.EXPORT,
+                export_type=ProjectAssetExportTypeEnum.HOT_TASKING_MANAGER_GEOMETRIES,
+            ).first()
+            assert hot_aoi_project_asset is not None, "HOT TM AOI Geometry project asset not found"
 
-        expected_hot_aoi = read_json(
-            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["hot_tasking_manager_geometry"]),
-            ignore_fields={
-                "name",  # NOTE: previously full path, not just filename
-            },
-        )
-        expected_hot_aoi["features"].sort(key=lambda x: x["properties"]["group_id"])  # type: ignore[reportArgumentType, reportCallIssue]
-        actual_hot_aoi = read_json(
-            hot_aoi_project_asset.file,
-            ignore_fields={
-                "name",  # NOTE: previously full path, not just filename
-            },
-        )
+            expected_hot_aoi = read_json(
+                Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["hot_tasking_manager_geometry"]),
+                ignore_fields={
+                    "name",  # NOTE: previously full path, not just filename
+                },
+            )
+            expected_hot_aoi["features"].sort(key=lambda x: x["properties"]["group_id"])  # type: ignore[reportArgumentType, reportCallIssue]
+            actual_hot_aoi = read_json(
+                hot_aoi_project_asset.file,
+                ignore_fields={
+                    "name",  # NOTE: previously full path, not just filename
+                },
+            )
 
-        actual_hot_aoi["features"].sort(key=lambda x: x["properties"]["group_id"])  # type: ignore[reportArgumentType, reportCallIssue]
-        assert expected_hot_aoi == actual_hot_aoi, "Difference found for HOT TM AOI geometry export file."
+            actual_hot_aoi["features"].sort(key=lambda x: x["properties"]["group_id"])  # type: ignore[reportArgumentType, reportCallIssue]
+            assert expected_hot_aoi == actual_hot_aoi, "Difference found for HOT TM AOI geometry export file."
 
-        # Check for moderate to high agreement export
-        agreement_project_asset = ProjectAsset.objects.filter(
-            project=project,
-            type=AssetTypeEnum.EXPORT,
-            export_type=ProjectAssetExportTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES,
-        ).first()
-        assert agreement_project_asset is not None, "Moderate to high agreement project asset not found"
+            # Check for moderate to high agreement export
+            agreement_project_asset = ProjectAsset.objects.filter(
+                project=project,
+                type=AssetTypeEnum.EXPORT,
+                export_type=ProjectAssetExportTypeEnum.MODERATE_TO_HIGH_AGREEMENT_YES_MAYBE_GEOMETRIES,
+            ).first()
+            assert agreement_project_asset is not None, "Moderate to high agreement project asset not found"
 
-        expected_agreement = read_json(
-            Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["moderate_to_high_agreement"]),
-            ignore_fields={
-                "name",  # NOTE: previously full path, not just filename
-            },
-        )
-        actual_agreement = read_json(
-            agreement_project_asset.file,
-            ignore_fields={
-                "name",  # NOTE: previously full path, not just filename
-            },
-        )
-        assert expected_agreement == actual_agreement, "Difference found for moderate to high agreement export file."
+            expected_agreement = read_json(
+                Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["moderate_to_high_agreement"]),
+                ignore_fields={
+                    "name",  # NOTE: previously full path, not just filename
+                },
+            )
+            actual_agreement = read_json(
+                agreement_project_asset.file,
+                ignore_fields={
+                    "name",  # NOTE: previously full path, not just filename
+                },
+            )
+            assert expected_agreement == actual_agreement, "Difference found for moderate to high agreement export file."
