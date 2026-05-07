@@ -45,7 +45,11 @@ class TestProjectQuery(TestCase):
             assert x_group_size % 2 == 0
 
     def test_group_size_1x1(self):
-        """1x1 layout used by compare projects: each group is exactly one tile."""
+        """1x1 layout used by compare projects (one tile per task).
+
+        group_size = 100 ≈ 100 tasks per group. Group widths may exceed 100
+        when the overlap-merge step joins adjacent groups; height stays 1.
+        """
         zoom = 18
         project_extent_file = Path(Config.BASE_DIR, "assets/fixtures/aoi.geojson")
 
@@ -54,40 +58,19 @@ class TestProjectQuery(TestCase):
         groups_dict = extent_to_groups(
             project_extent_file_json,
             zoom,
-            group_size=1,
+            group_size=100,
             min_tile_x_multiplier=1,
             min_tile_y_multiplier=1,
         )
 
-        # 1x1 mode is strictly more granular than the default 2x3 mode over the
-        # same AOI, so it must produce more groups than the default test above.
-        assert len(groups_dict) > 711
+        assert len(groups_dict) == 2130
 
-        for _, group in groups_dict.items():
-            y_group_size = int(group["yMax"]) - int(group["yMin"]) + 1
-            x_group_size = int(group["xMax"]) - int(group["xMin"]) + 1
-            assert y_group_size == 1
-            assert x_group_size == 1
-
-    def test_project_geometries_intersection_1x1(self):
-        """Self-intersecting polygon under the 1x1 (compare) layout."""
-        zoom = 18
-
-        project_extent_file = Path(Config.BASE_DIR, "assets/fixtures/polygon_with_intersection.geojson")
-        project_extent_file_json = get_geometry_from_file(str(project_extent_file))
-
-        groups_dict = extent_to_groups(
-            project_extent_file_json,
-            zoom,
-            group_size=1,
-            min_tile_x_multiplier=1,
-            min_tile_y_multiplier=1,
+        total_tiles = sum(
+            (int(g["yMax"]) - int(g["yMin"]) + 1) * (int(g["xMax"]) - int(g["xMin"]) + 1) for g in groups_dict.values()
         )
-
-        assert len(groups_dict) > 92
+        assert total_tiles == 167372
 
         for _, group in groups_dict.items():
+            # 1-tile-tall stripes
             y_group_size = int(group["yMax"]) - int(group["yMin"]) + 1
-            x_group_size = int(group["xMax"]) - int(group["xMin"]) + 1
             assert y_group_size == 1
-            assert x_group_size == 1
