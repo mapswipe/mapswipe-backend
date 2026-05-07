@@ -31,6 +31,7 @@ from apps.project.models import (
     ProjectAsset,
     ProjectAssetExportTypeEnum,
     ProjectAssetInputTypeEnum,
+    ProjectTypeEnum,
 )
 from apps.tutorial.models import Tutorial
 from apps.user.factories import UserFactory
@@ -392,15 +393,20 @@ class TestTileMapServiceProjectE2E(TestCase):
             test_data = json5.load(f)
 
         # Create contributor user and login
-        contributor_user = ContributorUserFactory.create(
-            username="Ram Bahadur",
-            firebase_id=test_data["contributor_user_firebase_id"],
-        )
-        user = UserFactory.create(
-            contributor_user=contributor_user,
-        )
+        default_user = None
+        for contributor_data in test_data["contributors"]:
+            contributor_user = ContributorUserFactory.create(
+                username=contributor_data["name"],
+                firebase_id=contributor_data["firebase_id"],
+            )
 
-        self.force_login(user)
+            user = UserFactory.create(
+                contributor_user=contributor_user,
+            )
+            if contributor_data.get("is_default"):
+                default_user = user
+
+        self.force_login(default_user)
 
         # Define full path for image and AOI files
         image_filename = Path(Config.BASE_DIR) / test_data["assets"]["image"]
@@ -704,7 +710,9 @@ class TestTileMapServiceProjectE2E(TestCase):
         assert project_fb_data is not None, "Project in firebase is None"
         assert isinstance(project_fb_data, dict), "Project in firebase should be a dictionary"
         assert project_fb_data["progress"] == project.progress, "Progress should be synced with firebase"
-        assert project_fb_data["contributorCount"] == 1, "Contributor count should be synced with firebase"
+        assert project_fb_data["contributorCount"] == len(test_data["contributors"]), (
+            "Contributor count should be synced with firebase"
+        )
 
         # Check groups export
         groups_project_asset = ProjectAsset.objects.filter(
@@ -716,15 +724,19 @@ class TestTileMapServiceProjectE2E(TestCase):
 
         expected_groups = read_csv(
             Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["groups"]),
+            sort_column=operator.itemgetter("group_id"),
             ignore_columns={
+                "",
                 "total_area",  # NOTE: previously empty, now real value
                 "time_spent_max_allowed",  # NOTE: previously empty, now real value
             },
         )
         actual_groups = read_csv(
             groups_project_asset.file,
+            sort_column=operator.itemgetter("group_id"),
             compressed=True,
             ignore_columns={
+                "",
                 "total_area",  # NOTE: previously empty, now real value
                 "time_spent_max_allowed",  # NOTE: previously empty, now real value
                 "project_internal_id",  # NOTE: added for referencing
@@ -772,14 +784,18 @@ class TestTileMapServiceProjectE2E(TestCase):
 
         expected_results = read_csv(
             Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["results"]),
-            sort_column=operator.itemgetter("task_id"),
+            sort_column=operator.itemgetter("task_id", "task_partition_index", "user_id")
+            if project.project_type_enum == ProjectTypeEnum.LOCATE
+            else operator.itemgetter("task_id", "user_id"),
             ignore_columns={
                 "",  # NOTE: dataframe index
             },
         )
         actual_results = read_csv(
             results_project_asset.file,
-            sort_column=operator.itemgetter("task_id"),
+            sort_column=operator.itemgetter("task_id", "task_partition_index", "user_id")
+            if project.project_type_enum == ProjectTypeEnum.LOCATE
+            else operator.itemgetter("task_id", "user_id"),
             ignore_columns={
                 "",  # NOTE: dataframe index
                 "task_internal_id",  # NOTE: added for referencing
@@ -859,6 +875,9 @@ class TestTileMapServiceProjectE2E(TestCase):
             ignore_fields={
                 "name",  # NOTE: Previously "tmp", now "tmp" + random_str
                 "urlB",  # FIXME: old system contains this field
+                "project_internal_id",  # NOTE: adding this for locate project only
+                "group_internal_id",  # NOTE: adding this for locate project only
+                "task_internal_id",  # NOTE: adding this for locate project only
             },
         )
         actual_aggregated_results_with_geometry = read_json(
