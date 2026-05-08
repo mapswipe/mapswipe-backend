@@ -87,8 +87,8 @@ PydanticPositiveInt = typing.Annotated[
 PydanticHexColor = typing.Annotated[
     str,
     Field(
-        pattern=r"^#(?:[0-9a-fA-F]{3}){1,2}$",
-        description="Hex color string like '#fff' or '#ffffff'",
+        pattern=r"^(#(?:[0-9a-fA-F]{3}){1,2}|transparent)$",
+        description="Hex color string like '#fff' or '#ffffff' or 'transparent'",
     ),
 ]
 
@@ -133,6 +133,8 @@ PydanticUlid = typing.Annotated[
 ]
 
 PydanticBool = typing.Annotated[bool, Field(strict=True)]
+
+PydanticFloat = typing.Annotated[float, Field(strict=True)]
 
 PydanticDate = typing.Annotated[
     str,

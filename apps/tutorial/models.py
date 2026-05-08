@@ -218,6 +218,8 @@ class TutorialTask(UserResource):
 
     reference = models.PositiveSmallIntegerField[int, int]()
 
+    task_partition_index = models.PositiveSmallIntegerField[int, int](null=True, blank=True)
+
     project_type_specifics = models.JSONField()
 
     # Type hints

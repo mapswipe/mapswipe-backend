@@ -125,6 +125,10 @@ class ProjectCreateSerializer(UserResourceSerializer[Project]):
                 group_size = 80
             case Project.Type.STREET:
                 group_size = 25
+            case Project.Type.LOCATE:
+                group_size = 25
+            case _:
+                typing.assert_never(project_type)
 
         attrs["group_size"] = group_size
 

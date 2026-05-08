@@ -5,6 +5,7 @@ from pathlib import Path
 from django.core.files.temp import NamedTemporaryFile
 from PIL import Image
 
+from apps.common.models import IconEnum
 from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
     ProjectTypeEnum,
@@ -23,6 +24,7 @@ from apps.tutorial.serializers import VALID_TUTORIAL_STATUS_TRANSITIONS
 from apps.user.factories import UserFactory
 from main.config import Config
 from main.tests import TestCase
+from project_types.tile_map_service.locate.project import SubGridSizeEnum
 from utils.common import format_object_keys, to_camel_case
 from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
 
@@ -124,6 +126,11 @@ class Mutation:
                         tileY
                         tileZ
                       }
+                      ... on LocateTutorialTaskPropertyType {
+                        tileX
+                        tileY
+                        tileZ
+                      }
                       ... on CompletenessTutorialTaskPropertyType {
                         tileX
                         tileY
@@ -188,6 +195,7 @@ class Mutation:
                     id
                     clientId
                     reference
+                    taskPartitionIndex
                     projectTypeSpecifics {
                       ... on CompareTutorialTaskPropertyType {
                         tileX
@@ -195,6 +203,11 @@ class Mutation:
                         tileZ
                       }
                       ... on FindTutorialTaskPropertyType {
+                        tileX
+                        tileY
+                        tileZ
+                      }
+                      ... on LocateTutorialTaskPropertyType {
                         tileX
                         tileY
                         tileZ
@@ -721,6 +734,7 @@ class TestTutorialMutation(TestCase):
                                 "id": self.gID(y.pk),
                                 "clientId": y.client_id,
                                 "reference": y.reference,
+                                "taskPartitionIndex": y.task_partition_index,
                                 "projectTypeSpecifics": format_object_keys(y.project_type_specifics, to_camel_case),
                             }
                             for y in x.tasks.all()
@@ -846,3 +860,342 @@ class TestTutorialMutation(TestCase):
             assert "Tutorial status cannot be changed" in resp_data["errors"][0]["messages"], response
             tutorial.refresh_from_db()
             assert tutorial.status == old_status
+
+    def test_create_locate_tutorial(self):
+        project_type_specifics = {
+            "zoom_level": 15,
+            "aoi_geometry": "1",
+            "sub_grid_size": SubGridSizeEnum.SIZE_2X2.value,
+            "export_meta_key": "test1",
+            "export_meta_value": "value1",
+            "tile_server_property": {
+                "name": RasterTileServerNameEnum.CUSTOM.value,
+                "custom": {
+                    "credits": "My Map",
+                    "url": "https://hi-there/{x}/{y}/{z}",
+                },
+            },
+        }
+        locate_project = ProjectFactory.create(
+            **self.user_resource_kwargs,
+            project_type=ProjectTypeEnum.LOCATE,
+            topic="Locate Project",
+            region="Locate Region",
+            project_number=2,
+            requesting_organization=self.organization,
+            look_for="",
+            additional_info_url="https://hi-there/locate-about.html",
+            description="The new **locate project** from hi-there.",
+            project_type_specifics=project_type_specifics,
+        )
+
+        tutorial_data = {
+            "clientId": "01K748SHD9W5BTQA8EB9RCZGB8",
+            "name": "Locate Tutorial",
+            "project": locate_project.pk,
+        }
+
+        # Creating Locate Tutorial: With Authentication
+        self.force_login(self.user)
+        content = self._create_tutorial_mutation(tutorial_data)
+        resp_data = content["data"]["createTutorial"]
+        assert resp_data["errors"] is None, content
+
+        latest_tutorial = Tutorial.objects.get(pk=resp_data["result"]["id"])
+        assert latest_tutorial.status == TutorialStatusEnum.DRAFT
+
+        # Create page block image
+
+        # Creating Project Image Asset
+        tutorial_asset_data = {
+            "tutorial": latest_tutorial.pk,
+            "clientId": "01K748TDZPSDKPX1QVC5J5H558",
+        }
+        content = self._create_tutorial_image_asset(tutorial_asset_data)
+        resp_data = content["data"]["createTutorialAsset"]
+        assert resp_data["errors"] is None, content
+        image_asset = resp_data["result"]
+
+        # Update Tutorial
+        tutorial_data.pop("project")
+
+        tutorial_data = {
+            **tutorial_data,
+            "scenarios": [
+                {
+                    "create": {
+                        "clientId": "01K748TDZPADVS0XX5FV59Q8JK",
+                        "scenarioPageNumber": 1,
+                        "instructionsDescription": "Anything that is not naturally occurring",
+                        "instructionsIcon": self.genum(IconEnum.STAR_OUTLINE),
+                        "instructionsTitle": "Identify man-made structures",
+                        "hintDescription": "They have sharp boundaries",
+                        "hintIcon": self.genum(IconEnum.INFORMATION_OUTLINE),
+                        "hintTitle": "Look closer!",
+                        "successDescription": "You identified all man-made structures",
+                        "successIcon": self.genum(IconEnum.CHECK),
+                        "successTitle": "Well done!",
+                        "tasks": [
+                            {
+                                "clientId": "01K748TDZQAX1242QFT3R8V3H1",
+                                "projectTypeSpecifics": {"locate": {"tileZ": 18, "tileX": 193196, "tileY": 110087}},
+                                "reference": 0,
+                                "taskPartitionIndex": 0,
+                            },
+                            {
+                                "clientId": "01K748TDZQDAHN2RAEJ6KKQZBS",
+                                "projectTypeSpecifics": {"locate": {"tileZ": 18, "tileX": 193196, "tileY": 110088}},
+                                "reference": 1,
+                                "taskPartitionIndex": 1,
+                            },
+                            {
+                                "clientId": "01K748TDZQN9KR7PPAWY282B8V",
+                                "projectTypeSpecifics": {"locate": {"tileZ": 18, "tileX": 193196, "tileY": 110089}},
+                                "reference": 0,
+                                "taskPartitionIndex": 2,
+                            },
+                            {
+                                "clientId": "01K748TDZQCYF1Q88MVW3B5J8A",
+                                "projectTypeSpecifics": {"locate": {"tileZ": 18, "tileX": 193197, "tileY": 110087}},
+                                "reference": 0,
+                                "taskPartitionIndex": 3,
+                            },
+                            {
+                                "clientId": "01K748TDZR861B76GJAYS3WCY6",
+                                "projectTypeSpecifics": {"locate": {"tileZ": 18, "tileX": 193197, "tileY": 110088}},
+                                "reference": 1,
+                                "taskPartitionIndex": 4,
+                            },
+                            {
+                                "clientId": "01K748TDZRT35XEZFT0SRR1EF0",
+                                "projectTypeSpecifics": {"locate": {"tileZ": 18, "tileX": 193197, "tileY": 110089}},
+                                "reference": 0,
+                                "taskPartitionIndex": 5,
+                            },
+                        ],
+                    },
+                },
+            ],
+            "informationPages": [
+                {
+                    "create": {
+                        "clientId": "01K748TDZTPW7Y19MEMPH0332S",
+                        "title": "Man-made structures",
+                        "pageNumber": 1,
+                        "blocks": [
+                            {
+                                "clientId": "01K748TDZTPVP7HF5VX03HTW9Z",
+                                "blockNumber": 1,
+                                "blockType": "TEXT",
+                                "text": "Man-made structures are physical constructions created by humans, typically "
+                                "using tools, materials, and engineering principles.",
+                            },
+                            {
+                                "clientId": "01K748TDZT5T9D33D78VV5NFKS",
+                                "blockNumber": 2,
+                                "blockType": "TEXT",
+                                "text": "These structures are built to serve specific purposes, such as housing, "
+                                "transportation, defense, communication, or recreation.",
+                            },
+                            {
+                                "clientId": "01K748TDZT7PV91ZX9W5H4BS47",
+                                "blockNumber": 3,
+                                "blockType": "IMAGE",
+                                "image": image_asset["id"],
+                            },
+                        ],
+                    },
+                },
+                {
+                    "create": {
+                        "clientId": "01K748TDZTZ2M1FJWEKHGDVSV9",
+                        "title": "Natural structures",
+                        "pageNumber": 2,
+                        "blocks": [
+                            {
+                                "clientId": "01K748TDZTS0MK857GPZHKYDWW",
+                                "blockNumber": 1,
+                                "blockType": "TEXT",
+                                "text": "Natural structures are physical formations that are created by nature "
+                                "without human intervention",
+                            },
+                        ],
+                    },
+                },
+            ],
+        }
+
+        # Updating Tutorial: With Authentication and correct data
+        content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
+        resp_data = content["data"]["updateTutorial"]
+        assert resp_data["errors"] is None, content
+
+        latest_tutorial.refresh_from_db()
+
+        # Update tutorial status to publish
+        status_data = {
+            "clientId": latest_tutorial.client_id,
+            "status": self.genum(TutorialStatusEnum.READY_TO_PUBLISH),
+        }
+        self._update_tutorial_status_mutation(latest_tutorial.pk, status_data)
+        latest_tutorial.refresh_from_db()
+
+        # Updating Tutorial: Nested Updates
+        def get_update_for_task(tut: dict[str, typing.Any]):
+            return {"update": {**tut, "projectTypeSpecifics": {"locate": tut.get("projectTypeSpecifics")}}}
+
+        tutorial_from_res = resp_data["result"]
+        tutorial_from_res.pop("projectId")
+        tutorial_from_res.pop("id")
+        tutorial_from_res.pop("status")
+
+        tutorial_data = {
+            **tutorial_from_res,
+            "scenarios": [
+                {
+                    "update": {
+                        **tutorial_from_res["scenarios"][0],
+                        "tasks": [
+                            get_update_for_task(tutorial_from_res["scenarios"][0]["tasks"][0]),
+                            get_update_for_task(tutorial_from_res["scenarios"][0]["tasks"][1]),
+                            get_update_for_task(tutorial_from_res["scenarios"][0]["tasks"][2]),
+                            get_update_for_task(tutorial_from_res["scenarios"][0]["tasks"][3]),
+                            get_update_for_task(tutorial_from_res["scenarios"][0]["tasks"][4]),
+                            get_update_for_task(tutorial_from_res["scenarios"][0]["tasks"][5]),
+                        ],
+                    },
+                },
+            ],
+            "informationPages": [
+                {
+                    "update": {
+                        **tutorial_from_res["informationPages"][0],
+                        "blocks": [
+                            {
+                                "update": {
+                                    **tutorial_from_res["informationPages"][0]["blocks"][0],
+                                },
+                            },
+                            {
+                                "delete": {
+                                    "id": tutorial_from_res["informationPages"][0]["blocks"][1]["id"],
+                                },
+                            },
+                            {
+                                "create": {
+                                    "clientId": "01K748TDZTRDF6Z3X2VTNKJEGF",
+                                    # NOTE: blockNumber 2 is previously deleted so should not error on unique constraint
+                                    "blockNumber": 2,
+                                    "blockType": "TEXT",
+                                    "text": "These structures are built to serve various purposes",
+                                },
+                            },
+                        ],
+                    },
+                },
+                {
+                    "update": {
+                        **tutorial_from_res["informationPages"][1],
+                        "blocks": [
+                            {
+                                "update": {
+                                    **tutorial_from_res["informationPages"][1]["blocks"][0],
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        }
+
+        # Updating Tutorial: With Authentication and correct data
+        content = self._update_tutorial_mutation(str(latest_tutorial.pk), tutorial_data)
+        resp_data = content["data"]["updateTutorial"]
+        assert resp_data["errors"] is None, content
+        latest_tutorial.refresh_from_db()
+
+        assert resp_data == self.g_mutation_response(
+            ok=True,
+            result=dict(
+                clientId=latest_tutorial.client_id,
+                id=self.gID(latest_tutorial.pk),
+                status=self.genum(TutorialStatusEnum.PUBLISHED),
+                projectId=self.gID(latest_tutorial.project_id),
+                scenarios=[
+                    {
+                        "id": self.gID(x.pk),
+                        "clientId": x.client_id,
+                        "scenarioPageNumber": x.scenario_page_number,
+                        "hintDescription": x.hint_description,
+                        "hintIcon": self.genum(x.hint_icon),  # type: ignore[reportArgumentType]
+                        "hintTitle": x.hint_title,
+                        "instructionsDescription": x.instructions_description,
+                        "instructionsIcon": self.genum(x.instructions_icon),  # type: ignore[reportArgumentType]
+                        "instructionsTitle": x.instructions_title,
+                        "successDescription": x.success_description,
+                        "successIcon": self.genum(x.success_icon),  # type: ignore[reportArgumentType]
+                        "successTitle": x.success_title,
+                        "tasks": [
+                            {
+                                "id": self.gID(y.pk),
+                                "clientId": y.client_id,
+                                "reference": y.reference,
+                                "taskPartitionIndex": y.task_partition_index,
+                                "projectTypeSpecifics": format_object_keys(y.project_type_specifics, to_camel_case),
+                            }
+                            for y in x.tasks.all()
+                        ],
+                    }
+                    for x in latest_tutorial.scenarios.all()
+                ],
+                informationPages=[
+                    {
+                        "id": self.gID(x.pk),
+                        "clientId": x.client_id,
+                        "pageNumber": x.page_number,
+                        "title": x.title,
+                        "blocks": [
+                            {
+                                "id": self.gID(y.pk),
+                                "clientId": y.client_id,
+                                "blockNumber": y.block_number,
+                                "blockType": self.genum(y.block_type),  # type: ignore[reportArgumentType]
+                                "text": y.text,
+                            }
+                            for y in x.blocks.all()
+                        ],
+                    }
+                    for x in latest_tutorial.information_pages.all()
+                ],
+            ),
+        ), content
+
+        # Publishing tutorial:
+        data = {
+            "clientId": latest_tutorial.client_id,
+            "status": self.genum(TutorialStatusEnum.PUBLISHED),
+        }
+        response = self._update_tutorial_status_mutation(str(latest_tutorial.pk), data)
+        resp_data = response["data"]["updateTutorialStatus"]
+        assert resp_data["errors"] is None, response
+
+        # Tutorial data
+        tutorial_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.tutorial(latest_tutorial.firebase_id),
+        )
+        fb_tutorial: typing.Any = tutorial_ref.get()
+        assert fb_tutorial is not None
+
+        # Tutorial group data
+        tutorial_group_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.tutorial_groups(latest_tutorial.firebase_id),
+        )
+        fb_tutorial_group: typing.Any = tutorial_group_ref.get()
+        assert fb_tutorial_group is not None
+
+        # Tutorial Task data
+        tutorial_task_ref = self.firebase_helper.ref(
+            Config.FirebaseKeys.tutorial_tasks(latest_tutorial.firebase_id),
+        )
+        fb_tutorial_task: typing.Any = tutorial_task_ref.get()
+        assert fb_tutorial_task is not None

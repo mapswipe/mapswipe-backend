@@ -37,6 +37,7 @@ type AppEnumCollection {
   ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
   RasterTileServerNameEnum: [AppEnumCollectionRasterTileServerNameEnum!]!
+  SubGridSizeEnum: [AppEnumCollectionSubGridSizeEnum!]!
   TutorialAssetInputTypeEnum: [AppEnumCollectionTutorialAssetInputTypeEnum!]!
   TutorialInformationPageBlockTypeEnum: [AppEnumCollectionTutorialInformationPageBlockTypeEnum!]!
   TutorialStatusEnum: [AppEnumCollectionTutorialStatusEnum!]!
@@ -117,6 +118,11 @@ type AppEnumCollectionProjectTypeEnum {
 
 type AppEnumCollectionRasterTileServerNameEnum {
   key: RasterTileServerNameEnum!
+  label: String!
+}
+
+type AppEnumCollectionSubGridSizeEnum {
+  key: SubGridSizeEnum!
   label: String!
 }
 
@@ -318,7 +324,7 @@ type CompareProjectPropertyType {
   zoomLevel: Int!
 }
 
-union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyTypeStreetProjectPropertyType = CompareProjectPropertyType | CompletenessProjectPropertyType | FindProjectPropertyType | StreetProjectPropertyType | ValidateImageProjectPropertyType | ValidateProjectPropertyType
+union CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyTypeStreetProjectPropertyTypeLocateProjectPropertyType = CompareProjectPropertyType | CompletenessProjectPropertyType | FindProjectPropertyType | LocateProjectPropertyType | StreetProjectPropertyType | ValidateImageProjectPropertyType | ValidateProjectPropertyType
 
 input CompareTutorialTaskPropertyInput {
   tileX: Int!
@@ -332,7 +338,7 @@ type CompareTutorialTaskPropertyType {
   tileZ: Int!
 }
 
-union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyType = CompareTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | FindTutorialTaskPropertyType | StreetTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | ValidateTutorialTaskPropertyType
+union CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyTypeLocateTutorialTaskPropertyType = CompareTutorialTaskPropertyType | CompletenessTutorialTaskPropertyType | FindTutorialTaskPropertyType | LocateTutorialTaskPropertyType | StreetTutorialTaskPropertyType | ValidateImageTutorialTaskPropertyType | ValidateTutorialTaskPropertyType
 
 input CompletenessProjectPropertyInput {
   """Numeric value as string"""
@@ -730,7 +736,7 @@ input CustomOptionInput {
   description: String!
   icon: IconEnum!
 
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   iconColor: String!
   subOptions: [CustomSubOptionInput!]
   title: String!
@@ -933,6 +939,44 @@ input IntComparisonFilterLookup {
 input IntRangeLookup {
   end: Int = null
   start: Int = null
+}
+
+input LocateProjectPropertyInput {
+  """Numeric value as string"""
+  aoiGeometry: String!
+  customOptions: [CustomOptionInput!] = null
+  exportMetaKey: String!
+  exportMetaValue: String!
+  subGridSize: SubGridSizeEnum!
+  tileServerProperty: ProjectRasterTileServerConfigInput!
+
+  """Zoom level from 14 to 22"""
+  zoomLevel: Int!
+}
+
+type LocateProjectPropertyType {
+  """Numeric value as string"""
+  aoiGeometry: String!
+  customOptions: [ProjectCustomOption!]
+  exportMetaKey: String!
+  exportMetaValue: String!
+  subGridSize: SubGridSizeEnum!
+  tileServerProperty: ProjectRasterTileServerConfig!
+
+  """Zoom level from 14 to 22"""
+  zoomLevel: Int!
+}
+
+input LocateTutorialTaskPropertyInput {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
+}
+
+type LocateTutorialTaskPropertyType {
+  tileX: Int!
+  tileY: Int!
+  tileZ: Int!
 }
 
 type MapContributionStatsType {
@@ -1431,7 +1475,7 @@ type ProjectCustomOption {
   description: String!
   icon: IconEnum!
 
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   iconColor: String!
   subOptions: [ProjectCustomSubOption!]
   title: String!
@@ -1529,7 +1573,7 @@ input ProjectOverlayTileServerConfigInput {
 }
 
 type ProjectOverlayVectorTileServerConfig {
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   circleColor: String!
 
   """Float value from 0.0 to 1.0"""
@@ -1538,13 +1582,13 @@ type ProjectOverlayVectorTileServerConfig {
   """Positive float value"""
   circleRadius: Float!
 
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   fillColor: String!
 
   """Float value from 0.0 to 1.0"""
   fillOpacity: Float!
 
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   lineColor: String!
   lineDasharray: [Int!]!
 
@@ -1557,7 +1601,7 @@ type ProjectOverlayVectorTileServerConfig {
 }
 
 input ProjectOverlayVectorTileServerConfigInput {
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   circleColor: String!
 
   """Float value from 0.0 to 1.0"""
@@ -1566,13 +1610,13 @@ input ProjectOverlayVectorTileServerConfigInput {
   """Positive float value"""
   circleRadius: Float!
 
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   fillColor: String!
 
   """Float value from 0.0 to 1.0"""
   fillOpacity: Float!
 
-  """Hex color string like '#fff' or '#ffffff'"""
+  """Hex color string like '#fff' or '#ffffff' or 'transparent'"""
   lineColor: String!
   lineDasharray: [Int!]!
 
@@ -1826,7 +1870,7 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   projectNumber: Int!
   projectType: ProjectTypeEnum!
   projectTypeSpecificOutputAsset: ProjectAssetType
-  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyTypeStreetProjectPropertyType
+  projectTypeSpecifics: CompareProjectPropertyTypeFindProjectPropertyTypeValidateProjectPropertyTypeValidateImageProjectPropertyTypeCompletenessProjectPropertyTypeStreetProjectPropertyTypeLocateProjectPropertyType
   region: String!
 
   """Which group, institution or community is requesting this project?"""
@@ -1864,6 +1908,7 @@ enum ProjectTypeEnum {
   COMPARE
   COMPLETENESS
   FIND
+  LOCATE
   STREET
   VALIDATE
   VALIDATE_IMAGE
@@ -1937,6 +1982,7 @@ input ProjectTypeSpecificInput @oneOf {
   compare: CompareProjectPropertyInput
   completeness: CompletenessProjectPropertyInput
   find: FindProjectPropertyInput
+  locate: LocateProjectPropertyInput
   street: StreetProjectPropertyInput
   validate: ValidateProjectPropertyInput
   validateImage: ValidateImageProjectPropertyInput
@@ -2153,7 +2199,7 @@ type StreetMapillaryImageFilters {
   isPano: Boolean
   organizationId: String
   randomizeOrder: Boolean!
-  samplingThreshold: Int
+  samplingThreshold: Float
   startTime: String
 }
 
@@ -2163,7 +2209,7 @@ input StreetMapillaryImageFiltersInput {
   isPano: Boolean = null
   organizationId: String = null
   randomizeOrder: Boolean! = false
-  samplingThreshold: Int = null
+  samplingThreshold: Float = null
   startTime: String = null
 }
 
@@ -2189,6 +2235,12 @@ input StreetTutorialTaskPropertyInput {
 type StreetTutorialTaskPropertyType {
   geometry: String!
   mapillaryImageId: String!
+}
+
+enum SubGridSizeEnum {
+  SIZE_2X2
+  SIZE_4X4
+  SIZE_8X8
 }
 
 type TestValidateAoiObjectsResponse {
@@ -2534,6 +2586,7 @@ input TutorialTaskCreateInput {
   clientId: String!
   projectTypeSpecifics: TutorialTaskProjectTypeSpecificInput!
   reference: Int!
+  taskPartitionIndex: Int
 }
 
 input TutorialTaskInput {
@@ -2546,6 +2599,7 @@ input TutorialTaskProjectTypeSpecificInput @oneOf {
   compare: CompareTutorialTaskPropertyInput
   completeness: CompletenessTutorialTaskPropertyInput
   find: FindTutorialTaskPropertyInput
+  locate: LocateTutorialTaskPropertyInput
   street: StreetTutorialTaskPropertyInput
   validate: ValidateTutorialTaskPropertyInput
   validateImage: ValidateImageTutorialTaskPropertyInput
@@ -2559,9 +2613,10 @@ type TutorialTaskType implements UserResourceTypeMixin {
   id: ID!
   modifiedAt: DateTime!
   modifiedBy: UserType!
-  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyType
+  projectTypeSpecifics: CompareTutorialTaskPropertyTypeFindTutorialTaskPropertyTypeValidateTutorialTaskPropertyTypeValidateImageTutorialTaskPropertyTypeCompletenessTutorialTaskPropertyTypeStreetTutorialTaskPropertyTypeLocateTutorialTaskPropertyType
   reference: Int!
   scenarioId: ID!
+  taskPartitionIndex: Int
 }
 
 """Model representing a individual task in the scenario."""
@@ -2570,6 +2625,7 @@ input TutorialTaskUpdateInput {
   id: ID!
   projectTypeSpecifics: TutorialTaskProjectTypeSpecificInput!
   reference: Int
+  taskPartitionIndex: Int
 }
 
 """

@@ -56,6 +56,10 @@ class CompareProject(
             ),
         )
 
+    @typing.override
+    def generate_hot_tm_geometries(self):
+        return True
+
     # FIREBASE
 
     @typing.override
