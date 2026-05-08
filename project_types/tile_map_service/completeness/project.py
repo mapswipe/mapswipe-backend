@@ -129,6 +129,10 @@ class CompletenessProject(
             url_b=url_b or url,
         )
 
+    @typing.override
+    def generate_hot_tm_geometries(self):
+        return True
+
     # FIREBASE
 
     @typing.override
