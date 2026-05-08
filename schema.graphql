@@ -2199,7 +2199,7 @@ type StreetMapillaryImageFilters {
   isPano: Boolean
   organizationId: String
   randomizeOrder: Boolean!
-  samplingThreshold: Int
+  samplingThreshold: Float
   startTime: String
 }
 
@@ -2209,7 +2209,7 @@ input StreetMapillaryImageFiltersInput {
   isPano: Boolean = null
   organizationId: String = null
   randomizeOrder: Boolean! = false
-  samplingThreshold: Int = null
+  samplingThreshold: Float = null
   startTime: String = null
 }
 

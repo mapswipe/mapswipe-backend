@@ -134,6 +134,8 @@ PydanticUlid = typing.Annotated[
 
 PydanticBool = typing.Annotated[bool, Field(strict=True)]
 
+PydanticFloat = typing.Annotated[float, Field(strict=True)]
+
 PydanticDate = typing.Annotated[
     str,
     Field(
