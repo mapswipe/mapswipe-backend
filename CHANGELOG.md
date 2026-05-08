@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.3.0](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.13..v0.3.0) - 2026-05-08
+### Changes:
+
+#### 🚀  Features
+
+- *(locate)* Add e2e test for locate project - ([80b8ab1](https://github.com/mapswipe/mapswipe-backend/commit/80b8ab18706a8b91dd0f8f4856ca7a8ad93c9cbc))
+- *(locate)* Changes on result for locate project - ([5516baa](https://github.com/mapswipe/mapswipe-backend/commit/5516baa5854918c386843ef0a207fcc2e755d7b2))
+- *(locate)* Add tutorial properties for locate project type - ([6a3388e](https://github.com/mapswipe/mapswipe-backend/commit/6a3388eeebcb1e715ac85a46052c2a047a39f9bb))
+- *(locate)* Add new fields export meta and custom_options - ([816be47](https://github.com/mapswipe/mapswipe-backend/commit/816be4773622afa2ae2236c7af1727ccc9c12c80))
+- *(locate)* Add test cases for project locate features - ([691241c](https://github.com/mapswipe/mapswipe-backend/commit/691241c7e31b1c544abf9a9da8e6c9175e5c7b14))
+- *(locate)* Add tutorial for locate features - ([7d6480b](https://github.com/mapswipe/mapswipe-backend/commit/7d6480b4b9d3c28e4cb3b7d77a397fcd3141aa5e))
+- *(locate)* Add new project type locate features - ([8f7b796](https://github.com/mapswipe/mapswipe-backend/commit/8f7b79618b49a47f2172cc8f4ee63418326b0512))
+- *(project)* Fix typing issue on street project - ([b4e06f4](https://github.com/mapswipe/mapswipe-backend/commit/b4e06f43ad78ff2b006558882540b3a485542bef))
+- *(tutorial)* Add task partition index fields - ([fdc9103](https://github.com/mapswipe/mapswipe-backend/commit/fdc910374850c4965ac10e7743f16908d957ba4f))
+
+#### 🐛 Bug Fixes
+
+- *(e2e)* Update on e2e test cases on tile server - ([44a272a](https://github.com/mapswipe/mapswipe-backend/commit/44a272a54d4c683bacc9a0859f96829c67175f43))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(icon)* Update iconColor regex to accept transparent - ([a4718df](https://github.com/mapswipe/mapswipe-backend/commit/a4718df46052759b8a87de15af7a24537012b3d5))
+- *(test)* Add missing files on assets - ([60ad1ad](https://github.com/mapswipe/mapswipe-backend/commit/60ad1adf589df5b2c2e44f486d5a59d74bd46518))
+
+### 🍻 Pull Requests (3)
+- (#199) [Chore(test): Add missing files on assets](https://github.com/mapswipe/mapswipe-backend/pull/199)
+- (#250) [Project/Locate features](https://github.com/mapswipe/mapswipe-backend/pull/250)
+- (#251) [Feat: add e2e test for locate project](https://github.com/mapswipe/mapswipe-backend/pull/251)
+
+
 ## [0.2.13](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.12..v0.2.13) - 2026-03-31
 ### Changes:
 
