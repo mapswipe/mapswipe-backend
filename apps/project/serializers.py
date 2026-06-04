@@ -383,12 +383,22 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
                 proj_aoi_geometry = proj.aoi_geometry
                 if proj_aoi_geometry:
                     proj_aoi_geometry.delete()
+                    proj.aoi_geometry = None
 
             # FIXME(tnagorra): remove these later
             proj.total_area = total_area
             proj.bbox = bbox
             proj.centroid = centroid
-            proj.save(update_fields=["aoi_geometry", "aoi_geometry_input_asset", "total_area"])
+            proj.save(
+                update_fields=[
+                    "total_area",
+                    "bbox",
+                    "centroid",
+                    "aoi_geometry",
+                    "aoi_geometry_input_asset",
+                    "total_area",
+                ],
+            )
 
         return proj
 
