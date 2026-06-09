@@ -114,7 +114,7 @@ class ProjectTypeEnum(models.IntegerChoices):
     STREET = 7, "View Streets"
     """ Street project type. """
 
-    LOCATE = 9, "Locate Features"
+    LOCATE = 9, "Locate Objects"
     """ Locate project type. """
 
     # TODO(thenav56): Confirm if we have more/less

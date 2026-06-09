@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def generate_mapping_results(*, destination_filename: Path, project: Project) -> pd.DataFrame:
-    # NOTE: Add task_partition_index for Locate Feature.
+    # NOTE: Add task_partition_index for Locate Objects.
     task_partition_index_col = (
         f"MSR.{fd_name(MappingSessionResult.task_partition_index)} as task_partition_index,"
         if project.project_type_enum == ProjectTypeEnum.LOCATE
