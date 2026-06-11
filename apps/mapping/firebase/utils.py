@@ -503,7 +503,7 @@ def results_to_temp_table(
                 #     result = geojson.dumps(geojson.GeometryCollection(result))
 
                 # NOTE [Important]:
-                # If the result is a list (e.g. Locate Features project),
+                # If the result is a list (e.g. Locate Objects project),
                 # example: result = [1, 0, 0, 1]
                 # Each index represents a partition of the same task.
                 # We create one row per partition using:
