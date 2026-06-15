@@ -22,6 +22,17 @@ class SubGridSizeEnum(models.TextChoices):
             case SubGridSizeEnum.SIZE_8X8:
                 return firebase_models.FBEnumSubGridSize.SIZE_8X8
 
+    def partition_count(self) -> int:
+        match self:
+            case SubGridSizeEnum.SIZE_2X2:
+                return 4
+            case SubGridSizeEnum.SIZE_4X4:
+                return 16
+            case SubGridSizeEnum.SIZE_8X8:
+                return 64
+            case _:
+                typing.assert_never(self)
+
 
 class LocateProjectProperty(tile_map_service_project.TileMapServiceProjectProperty):
     sub_grid_size: SubGridSizeEnum

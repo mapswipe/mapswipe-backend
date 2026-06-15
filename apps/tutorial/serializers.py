@@ -11,6 +11,7 @@ from apps.common.models import AssetMimetypeEnum, CommonAsset, FirebasePushStatu
 from apps.common.serializers import CommonAssetSerializer, DrfContextType, UserResourceSerializer
 from apps.project.models import Project, ProjectTypeEnum
 from project_types.store import get_tutorial_task_property
+from project_types.tile_map_service.locate.project import LocateProjectProperty
 from utils.common import clean_up_none_keys
 from utils.graphql.drf import handle_pydantic_validation_error
 
@@ -122,6 +123,30 @@ class TutorialTaskSerializer(UserResourceSerializer[TutorialTask, TutorialTaskSe
         # Only enforce uniqueness for LOCATE projects
         if project_type != ProjectTypeEnum.LOCATE:
             return
+
+        if task_partition_index is None:
+            raise serializers.ValidationError(
+                {
+                    "task_partition_index": gettext("Task partition index is required for project type %s.")
+                    % ProjectTypeEnum.get_display(project_type),
+                },
+            )
+
+        locate_property = LocateProjectProperty.model_validate(tutorial.project.project_type_specifics)
+
+        max_partition_count = locate_property.sub_grid_size.partition_count()
+        if not (0 <= task_partition_index < max_partition_count):
+            raise serializers.ValidationError(
+                {
+                    "task_partition_index": gettext(
+                        "Task partition index should be between 0 and %s for project type %s.",
+                    )
+                    % (
+                        max_partition_count - 1,
+                        ProjectTypeEnum.get_display(project_type),
+                    ),
+                },
+            )
 
         task_qs = TutorialTask.objects.filter(scenario=scenario)
 
