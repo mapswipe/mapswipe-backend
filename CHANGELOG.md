@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.3.1](https://github.com/mapswipe/mapswipe-backend/compare/v0.3.0..v0.3.1) - 2026-06-17
+### Changes:
+
+#### 🚀  Features
+
+- *(ci)* Update codecov version on github action - ([b6dee48](https://github.com/mapswipe/mapswipe-backend/commit/b6dee48a6e5181ab7ce31c0a7e9947674e9ab1ab))
+- *(locate)* Rename to Locate Objects - ([9796476](https://github.com/mapswipe/mapswipe-backend/commit/97964762d0b3e4ef35a3bd08b6cd435288003269))
+- *(project)* Add new migration file to backfill project geometry metadata - ([6b710fd](https://github.com/mapswipe/mapswipe-backend/commit/6b710fd53043187ee0761f0e2e7bf294f74f6d64))
+- *(tutorial)* Add validation check for task_partition_index range - ([edc247f](https://github.com/mapswipe/mapswipe-backend/commit/edc247f0ac44e40a148351e684552a4c02c59d5e))
+
+#### 🐛 Bug Fixes
+
+- *(project)* Check project status for uniqueness constraint - ([124a2df](https://github.com/mapswipe/mapswipe-backend/commit/124a2dfcee7a7bab6a54cc38eb4f9d808964bfca))
+- *(project)* Null relation when delete aoi_geometry - ([f651ded](https://github.com/mapswipe/mapswipe-backend/commit/f651dede90eb5c6dbade35b0362e9b4f18b90ec8))
+
+#### ⚙️ Miscellaneous Tasks
+
+- *(migration)* Generate new migration for project unique constraint - ([cc53390](https://github.com/mapswipe/mapswipe-backend/commit/cc533902604b78674071533686599246ceff56ce))
+
+### 🍻 Pull Requests (4)
+- (#226) [Fix(project): check project status for uniqueness constraint](https://github.com/mapswipe/mapswipe-backend/pull/226)
+- (#257) [Feat: Update validation checks on locate tutorial task](https://github.com/mapswipe/mapswipe-backend/pull/257)
+- (#259) [Feat: update geometry logic on community stat api](https://github.com/mapswipe/mapswipe-backend/pull/259)
+- (#261) [Locate: rename to Locate Objects](https://github.com/mapswipe/mapswipe-backend/pull/261)
+
+
 ## [0.3.0](https://github.com/mapswipe/mapswipe-backend/compare/v0.2.13..v0.3.0) - 2026-05-08
 ### Changes:
 
