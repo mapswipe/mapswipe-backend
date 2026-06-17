@@ -30,6 +30,10 @@ class CompareProject(
     project_task_group_property_class = CompareProjectTaskGroupProperty
     project_task_property_class = CompareProjectTaskProperty
 
+    # Compare uses one tile per task, so groups are 1x1 in tile units.
+    min_tile_x_multiplier = 1
+    min_tile_y_multiplier = 1
+
     def __init__(self, project: Project):
         super().__init__(project)
         if typing.TYPE_CHECKING:
