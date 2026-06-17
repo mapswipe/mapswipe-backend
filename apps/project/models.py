@@ -492,6 +492,7 @@ class Project(UserResource, FirebasePushResource):
                 Lower("region"),
                 "project_number",
                 "requesting_organization",
+                condition=~Q(status__in=[ProjectStatusEnum.DISCARDED, ProjectStatusEnum.WITHDRAWN]),
                 name="unique_project_name",
                 violation_error_message=gettext_lazy(
                     "A project with the same type, topic, region, number and requesting organization already exists.",

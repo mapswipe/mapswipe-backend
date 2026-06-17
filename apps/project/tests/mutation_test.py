@@ -669,6 +669,53 @@ class TestProjectMutation(TestCase):
             },
         ], content
 
+        # Creating a project and discarding it so that we can create same project again
+
+    def test_project_create_uniqueness(self):
+        proj = ProjectFactory.create(
+            **self.user_resource_kwargs,
+            project_type=ProjectTypeEnum.FIND,
+            topic="Test Project",
+            region="Test Region",
+            project_number=1,
+            requesting_organization=self.organization,
+            project_instruction="Buildings",
+            additional_info_url="https://hi-there/about.html",
+            description="The new **project** from hi-there.",
+            project_type_specifics={},
+        )
+
+        self.force_login(self.user)
+        project_data = {
+            "clientId": str(ULID()),
+            "projectType": self.genum(ProjectTypeEnum.FIND),
+            "topic": "Test Project",
+            "region": "Test Region",
+            "projectNumber": 1,
+            "requestingOrganization": self.organization.pk,
+            "projectInstruction": "Buildings",
+            "additionalInfoUrl": "https://hi-there/about.html",
+            "description": "The new **project** from hi-there.",
+        }
+        content = self._create_project_mutation(project_data)
+        assert content["data"]["createProject"]["errors"] == [
+            {
+                "array_errors": None,
+                "client_id": project_data["clientId"],
+                "field": "topic",
+                "messages": "Project name already exists in database",
+                "object_errors": None,
+                "pydantic_errors": None,
+            },
+        ], content
+
+        # should pass if the project that already exists is discarded
+        proj.status = ProjectStatusEnum.DISCARDED
+        proj.save()
+
+        content = self._create_project_mutation(project_data)
+        assert content["data"]["createProject"]["ok"]
+
     @patch("apps.project.serializers.process_project_task.delay")
     def test_project_update(self, mock_requests):  # type: ignore[reportMissingParameterType]
         proj = ProjectFactory.create(

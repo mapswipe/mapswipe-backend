@@ -19,7 +19,15 @@ from utils.common import clean_up_none_keys
 from utils.geo.transform import convert_json_dict_to_geometry_collection, get_area_of_geometry, get_polygon_of_extent
 from utils.graphql.drf import handle_pydantic_validation_error
 
-from .models import Geometry, Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
+from .models import (
+    Geometry,
+    Organization,
+    Project,
+    ProjectAsset,
+    ProjectAssetInputTypeEnum,
+    ProjectStatusEnum,
+    ProjectTypeEnum,
+)
 from .tasks import process_project_task, push_project_to_firebase, send_slack_message_for_project
 
 if typing.TYPE_CHECKING:
@@ -47,7 +55,6 @@ VALID_PROJECT_STATUS_TRANSITIONS = set(
 )
 
 
-# XXX: Changing this also requires changes in the update-serializer/models
 def _validate_project_name(
     attrs: dict[str, typing.Any],
     project: Project | None = None,
@@ -78,6 +85,9 @@ def _validate_project_name(
         project_type=project_type,
         project_number=project_number,
         requesting_organization=requesting_organization,
+    ).exclude(
+        # NOTE: We want to remove discarded and withdrawn projects when checking for uniqueness
+        status__in=[ProjectStatusEnum.DISCARDED, ProjectStatusEnum.WITHDRAWN],
     )
 
     if existing_projects.exists():
