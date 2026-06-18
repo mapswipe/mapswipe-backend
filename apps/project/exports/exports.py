@@ -7,7 +7,7 @@ from django.db import transaction
 from ulid import ULID
 
 from apps.common.models import AssetTypeEnum, FirebasePushStatusEnum
-from apps.project.custom_options import get_fallback_custom_options_for_export
+from apps.project.custom_options import get_custom_options
 from apps.project.exports.geojson import gzipped_csv_to_gzipped_geojson
 from apps.project.exports.utils.project_progress import calculate_project_progress
 from apps.project.models import Project, ProjectAsset, ProjectAssetExportTypeEnum, ProjectProgressStatusEnum
@@ -100,10 +100,7 @@ def _export_project_data(project: Project, tmp_directory: Path):
 
     # Fallback if custom options is not defined
     if not custom_options_raw:
-        custom_options_raw = [
-            {"value": custom_option_value}
-            for custom_option_value in get_fallback_custom_options_for_export(project.project_type_enum)
-        ]
+        custom_options_raw = get_custom_options(project.project_type_enum)
 
     # TODO: Cache tasks and groups as they don't change (if cached, make sure to remove Unnamed column)
     tasks_df = generate_project_tasks(destination_filename=tmp_project_task_csv, project=project)
