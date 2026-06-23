@@ -1,7 +1,9 @@
 import typing
 
+from django.conf import settings
+
 from apps.project.factories import OrganizationFactory, ProjectFactory
-from apps.project.models import Project, ProjectTypeEnum
+from apps.project.models import Project, ProjectStatusEnum, ProjectTypeEnum
 from apps.user.factories import UserFactory
 from main.tests import TestCase
 from utils.common import format_object_keys, to_camel_case
@@ -349,3 +351,126 @@ class TestProjectQuery(TestCase):
             generated_name_from_query = project.gen_name  # type: ignore[reportAttributeAccessIssue]
 
             assert generated_name == generated_name_from_query, f"Name mismatch for project {project.pk}"
+
+
+class TestPublicQueriesQuery(TestCase):
+    class Query:
+        PUBLIC_PROJECTS = """
+            query PublicProjects($pagination: OffsetPaginationInput) {
+              publicProjects(order: {id: ASC}, pagination: $pagination) {
+                totalCount
+                pageInfo {
+                  offset
+                  limit
+                }
+                results {
+                  id
+                }
+              }
+            }
+        """
+        PUBLIC_ORGANIZATIONS = """
+            query PublicOrganizations($pagination: OffsetPaginationInput) {
+              publicOrganizations(order: {id: ASC}, pagination: $pagination) {
+                totalCount
+                pageInfo {
+                  offset
+                  limit
+                }
+                results {
+                  id
+                }
+              }
+            }
+        """
+
+    MAX_LIMIT: int = settings.STRAWBERRY_DJANGO["PUBLIC_PAGINATION_MAX_LIMIT"]
+
+    @typing.override
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.user = UserFactory.create()
+        cls.user_resource_kwargs = dict(
+            created_by=cls.user,
+            modified_by=cls.user,
+        )
+        cls.active_organization = OrganizationFactory.create(**cls.user_resource_kwargs)
+        cls.archived_organization = OrganizationFactory.create(
+            **cls.user_resource_kwargs,
+            is_archived=True,
+        )
+        cls.published_project = ProjectFactory.create(
+            **cls.user_resource_kwargs,
+            requesting_organization=cls.active_organization,
+            project_type=ProjectTypeEnum.FIND,
+            status=ProjectStatusEnum.PUBLISHED,
+        )
+        cls.paused_project = ProjectFactory.create(
+            **cls.user_resource_kwargs,
+            requesting_organization=cls.active_organization,
+            project_type=ProjectTypeEnum.FIND,
+            status=ProjectStatusEnum.PAUSED,
+        )
+        cls.finished_project = ProjectFactory.create(
+            **cls.user_resource_kwargs,
+            requesting_organization=cls.active_organization,
+            project_type=ProjectTypeEnum.FIND,
+            status=ProjectStatusEnum.FINISHED,
+        )
+        cls.draft_project = ProjectFactory.create(
+            **cls.user_resource_kwargs,
+            requesting_organization=cls.active_organization,
+            project_type=ProjectTypeEnum.FIND,
+            status=ProjectStatusEnum.DRAFT,
+        )
+
+    def test_public_projects_returns_only_public_statuses(self) -> None:
+        content = self.query_check(self.Query.PUBLIC_PROJECTS, variables={"pagination": {"limit": 10, "offset": 0}})
+        result = content["data"]["publicProjects"]
+        returned_ids = {r["id"] for r in result["results"]}
+        assert result["totalCount"] == 3
+        assert self.gID(self.published_project.pk) in returned_ids
+        assert self.gID(self.paused_project.pk) in returned_ids
+        assert self.gID(self.finished_project.pk) in returned_ids
+        assert self.gID(self.draft_project.pk) not in returned_ids
+
+    def test_public_projects_high_limit_is_capped(self) -> None:
+        for _ in range(self.MAX_LIMIT):
+            ProjectFactory.create(
+                **self.user_resource_kwargs,
+                requesting_organization=self.active_organization,
+                project_type=ProjectTypeEnum.FIND,
+                status=ProjectStatusEnum.PUBLISHED,
+            )
+        content = self.query_check(
+            self.Query.PUBLIC_PROJECTS,
+            variables={"pagination": {"limit": self.MAX_LIMIT + 10, "offset": 0}},
+        )
+        assert len(content["data"]["publicProjects"]["results"]) == self.MAX_LIMIT
+
+    def test_public_organizations_returns_only_active(self) -> None:
+        content = self.query_check(self.Query.PUBLIC_ORGANIZATIONS, variables={"pagination": {"limit": 10, "offset": 0}})
+        result = content["data"]["publicOrganizations"]
+        returned_ids = {r["id"] for r in result["results"]}
+        assert self.gID(self.active_organization.pk) in returned_ids
+        assert self.gID(self.archived_organization.pk) not in returned_ids
+
+    def test_public_organizations_high_limit_is_capped(self) -> None:
+        for _ in range(self.MAX_LIMIT):
+            OrganizationFactory.create(**self.user_resource_kwargs)
+        content = self.query_check(
+            self.Query.PUBLIC_ORGANIZATIONS,
+            variables={"pagination": {"limit": self.MAX_LIMIT + 10, "offset": 0}},
+        )
+        assert len(content["data"]["publicOrganizations"]["results"]) == self.MAX_LIMIT
+
+    def test_public_projects_no_pagination_uses_default(self) -> None:
+        content = self.query_check(self.Query.PUBLIC_PROJECTS)
+        result = content["data"]["publicProjects"]
+        assert result["pageInfo"]["limit"] == self.MAX_LIMIT
+
+    def test_public_organizations_no_pagination_uses_default(self) -> None:
+        content = self.query_check(self.Query.PUBLIC_ORGANIZATIONS)
+        result = content["data"]["publicOrganizations"]
+        assert result["pageInfo"]["limit"] == self.MAX_LIMIT

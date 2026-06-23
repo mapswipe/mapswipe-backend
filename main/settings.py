@@ -550,6 +550,8 @@ STRAWBERRY_DJANGO = {
     "TYPE_DESCRIPTION_FROM_MODEL_DOCSTRING": True,
     "MUTATIONS_DEFAULT_HANDLE_ERRORS": True,
     "PAGINATION_DEFAULT_LIMIT": 20,
+    # NOTE: Using for public queries, we will enforce max limit in pagination class
+    "PUBLIC_PAGINATION_MAX_LIMIT": 100,
     "DEFAULT_PK_FIELD_NAME": "id",
 }
 
