@@ -19,6 +19,7 @@ from project_types.validate.project import ValidateProject
 from utils import fields
 from utils.geo.raster_tile_server.config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNameEnumWithoutCustom
 from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum, VectorTileServerNameEnumWithoutCustom
+from utils.graphql.pagination import PublicOffsetPaginated
 
 from .filters import OrganizationFilter, ProjectAssetFilter, ProjectFilter
 from .orders import OrganizationOrder, ProjectAssetOrder, ProjectOrder
@@ -196,7 +197,7 @@ class Query:
         return Organization.objects.exclude(is_archived=True).all()
 
     @strawberry_django.offset_paginated(
-        OffsetPaginated[OrganizationType],
+        PublicOffsetPaginated[OrganizationType],
         order=OrganizationOrder,
         filters=OrganizationFilter,
     )
@@ -228,7 +229,7 @@ class Query:
         ).all()
 
     @strawberry_django.offset_paginated(
-        OffsetPaginated[ProjectType],
+        PublicOffsetPaginated[ProjectType],
         order=ProjectOrder,
         filters=ProjectFilter,
     )

@@ -1191,6 +1191,16 @@ type OrganizationTypeOffsetPaginated {
   totalCount: Int!
 }
 
+type OrganizationTypePublicOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """List of paginated results."""
+  results: [OrganizationType!]!
+
+  """Total count of existing results."""
+  totalCount: Int!
+}
+
 """Model representing the organization requesting the project."""
 input OrganizationUpdateInput {
   abbreviation: String
@@ -1978,6 +1988,16 @@ type ProjectTypeOffsetPaginated {
   totalCount: Int!
 }
 
+type ProjectTypePublicOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """List of paginated results."""
+  results: [ProjectType!]!
+
+  """Total count of existing results."""
+  totalCount: Int!
+}
+
 input ProjectTypeSpecificInput @oneOf {
   compare: CompareProjectPropertyInput
   completeness: CompletenessProjectPropertyInput
@@ -2096,9 +2116,9 @@ type Query {
   projectName(params: ProjectNameInput): String!
   projects(includeAll: Boolean! = false, filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated! @isAuthenticated
   publicOrganization(id: ID!): OrganizationType!
-  publicOrganizations(filters: OrganizationFilter, order: OrganizationOrder, pagination: OffsetPaginationInput): OrganizationTypeOffsetPaginated!
+  publicOrganizations(filters: OrganizationFilter, order: OrganizationOrder, pagination: OffsetPaginationInput): OrganizationTypePublicOffsetPaginated!
   publicProject(id: ID!): ProjectType!
-  publicProjects(filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated!
+  publicProjects(filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypePublicOffsetPaginated!
   testAoiObjects(projectId: ID!, assetId: ID!, ohsomeFilter: String!): TestValidateAoiObjectsResponse! @isAuthenticated
   testTaskingManagerProject(hotTmId: String!, ohsomeFilter: String!): TestValidateTaskingManagerProjectResponse! @isAuthenticated
   tileServers: RasterTileServersType! @isAuthenticated
