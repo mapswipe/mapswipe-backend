@@ -2702,6 +2702,7 @@ union UpdateTutorialPayload = OperationInfo | TutorialTypeMutationResponseType
 
 union UpdateTutorialStatusPayload = OperationInfo | TutorialTypeMutationResponseType
 
+"""Represents a file upload."""
 scalar Upload
 
 """
