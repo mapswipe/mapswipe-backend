@@ -8,7 +8,7 @@ from django.db import transaction
 from django.utils.translation import gettext
 from rest_framework import serializers
 
-from apps.common.models import AssetMimetypeEnum, CommonAsset, FirebasePushStatusEnum
+from apps.common.models import AssetMimetypeEnum, CommonAsset
 from apps.common.serializers import ArchivableResourceSerializer, CommonAssetSerializer, UserResourceSerializer
 from apps.contributor.models import ContributorTeam
 from apps.project.firebase.push import FirebaseOrganizationPush
@@ -547,7 +547,7 @@ class ProcessedProjectUpdateSerializer(UserResourceSerializer[Project]):
             Project.Status.WITHDRAWN,
             Project.Status.FINISHED,
         ]:
-            updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+            updated_project.request_firebase_push()
             transaction.on_commit(lambda: push_project_to_firebase.delay(updated_project.pk))
 
         return updated_project
@@ -849,7 +849,7 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
             Project.Status.WITHDRAWN,
             Project.Status.FINISHED,
         ]:
-            updated_project.update_firebase_push_status(FirebasePushStatusEnum.PENDING)
+            updated_project.request_firebase_push()
             transaction.on_commit(
                 lambda: chain(
                     push_project_to_firebase.si(updated_project.pk),
