@@ -185,7 +185,11 @@ def get_object_count_from_ohsome(area: str, ohsome_filter: PydanticLongText) -> 
     logger.info("Filter: %s", ohsome_filter)
 
     # fixme(frozenhelium): use httpx for proper timeout
-    response = requests.post(url, data=data, timeout=100)
+    try:
+        response = requests.post(url, data=data, timeout=100)
+    except requests.exceptions.Timeout as e:
+        logger.warning("ohsome element count request timed out")
+        raise ValidateApiCallError("OHSOME request timed out.") from e
     if response.status_code != 200:
         logger.warning(
             "ohsome element count request failed: check for errors in filter or geometries",
@@ -219,7 +223,11 @@ def ohsome(request: dict[str, Any], area: str, properties: str | None = None) ->
     logger.info("Target: %s", url)
     logger.info("Filter: %s", request["filter"])
     # FIXME(tnagorra): Need to check what the timeout should be
-    response = requests.post(url, data=data, timeout=100)
+    try:
+        response = requests.post(url, data=data, timeout=100)
+    except requests.exceptions.Timeout as e:
+        logger.warning("ohsome request timed out")
+        raise ValidateApiCallError("OHSOME request timed out.") from e
     if response.status_code != 200:
         logger.warning(
             "ohsome request failed: check for errors in filter or geometries",
