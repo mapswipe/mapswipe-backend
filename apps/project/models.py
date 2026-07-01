@@ -476,6 +476,14 @@ class Project(UserResource, FirebasePushResource):
         help_text=gettext_lazy("Stores the last progress checkpoint notified via Slack."),
     )
 
+    # FIREBASE PUSH VERSIONING
+    # Bumped atomically by every push trigger; the push task uses this to detect
+    # whether a newer request arrived while it was working (trailing-edge re-enqueue).
+    firebase_push_requested_version = models.PositiveIntegerField[int, int](default=0)
+    # Set to the requested_version snapshot taken at the START of a successful push.
+    # If pushed_version >= requested_version the project is already up-to-date in Firebase.
+    firebase_pushed_version = models.PositiveIntegerField[int, int](default=0)
+
     # Type hints
     requesting_organization_id: int
     tutorial_id: int | None
@@ -517,6 +525,12 @@ class Project(UserResource, FirebasePushResource):
         project_number: int,
     ) -> str:
         return f"{project_type.label} - {topic} - {region} ({project_number}) {requesting_organization_name}"
+
+    def request_firebase_push(self) -> None:
+        """Atomically increment requested version. Safe to call from concurrent transactions."""
+        Project.objects.filter(pk=self.pk).update(
+            firebase_push_requested_version=models.F("firebase_push_requested_version") + 1,
+        )
 
     # FIXME(tnagorra): rename this to generated_name
     def generate_name(self) -> str:

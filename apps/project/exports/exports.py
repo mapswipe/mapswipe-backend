@@ -6,7 +6,7 @@ from django.core.files import File
 from django.db import transaction
 from ulid import ULID
 
-from apps.common.models import AssetTypeEnum, FirebasePushStatusEnum
+from apps.common.models import AssetTypeEnum
 from apps.project.custom_options import get_fallback_custom_options_for_export
 from apps.project.exports.geojson import gzipped_csv_to_gzipped_geojson
 from apps.project.exports.utils.project_progress import calculate_project_progress
@@ -195,10 +195,10 @@ def _export_project_data(project: Project, tmp_directory: Path):
             )
 
         if project.progress != previous_progress:
+            project.request_firebase_push()
             transaction.on_commit(
                 lambda: push_project_to_firebase.delay(project_id=project.id, only_stats=True),
             )
-            project.update_firebase_push_status(FirebasePushStatusEnum.PENDING, False)
 
     project.save(
         update_fields=(
@@ -208,8 +208,6 @@ def _export_project_data(project: Project, tmp_directory: Path):
             "number_of_results",
             "number_of_results_for_progress",
             "last_contribution_date",
-            "firebase_push_status",
-            "firebase_last_pushed",
         ),
     )
 
