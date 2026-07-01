@@ -17,6 +17,10 @@ class ValidateApiCallError(Exception):
     pass
 
 
+class ValidateApiCallTimeoutError(ValidateApiCallError):
+    pass
+
+
 def remove_troublesome_chars(string: str | None):
     """Remove chars that cause trouble when pushed into postgres."""
     if type(string) is not str:
@@ -176,16 +180,22 @@ def remove_noise_and_add_user_info(json: dict[str, Any]) -> dict[str, Any]:
     return json
 
 
-# fixme(frozenhelium): merge this function with `ohsome` and also add appropriate messages to raised exceptions
-def get_object_count_from_ohsome(area: str, ohsome_filter: PydanticLongText) -> int | None:
+def get_object_count_from_ohsome(
+    area: str,
+    ohsome_filter: PydanticLongText,
+    timeout: int = Config.DEFAULT_EXTERNAL_API_TIMEOUT,
+) -> int | None:
     url = Config.OHSOME_API_LINK + "elements/count"
     data = {"bpolys": area, "filter": ohsome_filter}
 
     logger.info("Target: %s", url)
     logger.info("Filter: %s", ohsome_filter)
 
-    # fixme(frozenhelium): use httpx for proper timeout
-    response = requests.post(url, data=data, timeout=100)
+    try:
+        response = requests.post(url, data=data, timeout=timeout)
+    except requests.exceptions.Timeout as e:
+        logger.warning("ohsome element count request timed out")
+        raise ValidateApiCallTimeoutError("OHSOME request timed out. Please try again.") from e
     if response.status_code != 200:
         logger.warning(
             "ohsome element count request failed: check for errors in filter or geometries",
@@ -210,7 +220,12 @@ def get_object_count_from_ohsome(area: str, ohsome_filter: PydanticLongText) -> 
     return int(value)
 
 
-def ohsome(request: dict[str, Any], area: str, properties: str | None = None) -> dict[str, Any]:
+def ohsome(
+    request: dict[str, Any],
+    area: str,
+    properties: str | None = None,
+    timeout: int = Config.DEFAULT_EXTERNAL_API_TIMEOUT,
+) -> dict[str, Any]:
     """Request data from Ohsome API."""
     url = Config.OHSOME_API_LINK + request["endpoint"]
     data = {"bpolys": area, "filter": request["filter"]}
@@ -218,8 +233,11 @@ def ohsome(request: dict[str, Any], area: str, properties: str | None = None) ->
         data["properties"] = properties
     logger.info("Target: %s", url)
     logger.info("Filter: %s", request["filter"])
-    # FIXME(tnagorra): Need to check what the timeout should be
-    response = requests.post(url, data=data, timeout=100)
+    try:
+        response = requests.post(url, data=data, timeout=timeout)
+    except requests.exceptions.Timeout as e:
+        logger.warning("ohsome request timed out")
+        raise ValidateApiCallTimeoutError("OHSOME request timed out. Please try again.") from e
     if response.status_code != 200:
         logger.warning(
             "ohsome request failed: check for errors in filter or geometries",

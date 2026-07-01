@@ -30,6 +30,11 @@ class Config:
     COMMUNITY_DASHBOARD_DOMAIN = typing.cast("URLParseResult", settings.COMMUNITY_DASHBOARD_DOMAIN)
     WEBSITE_DOMAIN = typing.cast("URLParseResult", settings.WEBSITE_DOMAIN)
 
+    # NOTE: Gunicorn worker timeout (misc/prod/run_web.sh) is 40s, keep external API
+    # timeouts a few seconds below that so requests fail with a clear error instead
+    # of the gunicorn worker being killed mid-request.
+    DEFAULT_EXTERNAL_API_TIMEOUT = 38
+
     # NOTE: We get AOI for validate from HOT tasking manager
     HOT_TASKING_MANAGER_PROJECT_API_LINK = "https://tasking-manager-production-api.hotosm.org/api/v2/"
 
