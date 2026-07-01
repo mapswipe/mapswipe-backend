@@ -28,7 +28,12 @@ from main.bulk_managers import BulkCreateManager
 from main.config import Config
 from project_types.base import project as base_project
 from project_types.tile_map_service.base.project import create_json_dump
-from project_types.validate.api_calls import ValidateApiCallError, get_object_count_from_ohsome, ohsome
+from project_types.validate.api_calls import (
+    ValidateApiCallError,
+    ValidateApiCallTimeoutError,
+    get_object_count_from_ohsome,
+    ohsome,
+)
 from utils import fields as custom_fields
 from utils.asset_types.models import AoiGeometryAssetProperty
 from utils.common import Grouping, clean_up_none_keys, to_groups
@@ -157,9 +162,12 @@ class ValidateProject(
     def test_geojson_url_project(url: str):
         logger.info("Fetching object geojson from %s", url)
 
-        # FIXME(frozenhelium): use predefined timeout duration
-        # FIXME(tnagorra): handle timeout error
-        response = requests.get(url, timeout=500)
+        try:
+            response = requests.get(url, timeout=Config.DEFAULT_EXTERNAL_API_TIMEOUT)
+        except requests.exceptions.Timeout as e:
+            raise base_project.ValidationException(
+                f"Failed to fetch object geojson from {url}: request timed out",
+            ) from e
         if response.status_code != 200:
             raise base_project.ValidationException(
                 f"Failed to fetch object geojson from {url}",
@@ -207,6 +215,8 @@ class ValidateProject(
                 feature_collection.model_dump_json(),
                 ohsome_filter,
             )
+        except ValidateApiCallTimeoutError as e:
+            raise base_project.ValidationException(str(e)) from e
         except Exception as e:
             raise base_project.ValidationException("Failed to get object_count from ohsome") from e
 
@@ -223,7 +233,12 @@ class ValidateProject(
         hot_tm_url = f"{Config.HOT_TASKING_MANAGER_PROJECT_API_LINK}projects/{hot_tm_id}/queries/aoi/?as_file=false"
         logger.info("Fetching AOI geojson on HOT from %s", hot_tm_url)
 
-        aoi_result = requests.get(hot_tm_url, timeout=500)
+        try:
+            aoi_result = requests.get(hot_tm_url, timeout=Config.DEFAULT_EXTERNAL_API_TIMEOUT)
+        except requests.exceptions.Timeout as e:
+            raise base_project.ValidationException(
+                f"Failed to fetch AOI GeoJSON from HOT Tasking Manager for tm_id {hot_tm_id}: request timed out",
+            ) from e
         if aoi_result.status_code != 200:
             raise base_project.ValidationException(
                 f"Failed to fetch AOI GeoJSON from HOT Tasking Manager for tm_id {hot_tm_id}",
@@ -269,6 +284,8 @@ class ValidateProject(
                 feature_collection.model_dump_json(),
                 ohsome_filter,
             )
+        except ValidateApiCallTimeoutError as e:
+            raise base_project.ValidationException(str(e)) from e
         except Exception as e:
             raise base_project.ValidationException("Failed to get object_count from ohsome") from e
 
@@ -311,9 +328,13 @@ class ValidateProject(
                 feature_collection.model_dump_json(),
                 properties="tags, metadata",
             )
+        except ValidateApiCallTimeoutError as e:
+            raise base_project.ValidationException(str(e)) from e
         except ValidateApiCallError as e:
             # NOTE: Handles calls from OHSOME, OSMCHA and OSM
-            raise base_project.ValidationException("Failed to fetch data from OHSOME/OSMCHA/OSM") from e
+            raise base_project.ValidationException(
+                "Failed to fetch data from OHSOME/OSMCHA/OSM",
+            ) from e
         except requests.JSONDecodeError as e:
             # NOTE: Handles calls from OHSOME and OSMCHA
             # OSM responds in XML format
