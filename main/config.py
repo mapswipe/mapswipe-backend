@@ -116,6 +116,11 @@ class Config:
             return f"/v2/tasks/{project_id}/"
 
         @staticmethod
+        def project_group_users(project_id: str):
+            # Written by the `groupUsersCounter` cloud function; never cleaned up otherwise.
+            return f"/v2/groupsUsers/{project_id}/"
+
+        @staticmethod
         def tutorial(tutorial_id: str):
             return f"/v2/projects/{tutorial_id}"
 
