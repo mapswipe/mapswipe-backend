@@ -1,0 +1,20 @@
+app:
+  api:
+    ingress:
+      className: traefik
+      # Attach the mapswipe-body-size Middleware below to the api router. Traefik
+      # references CRD middlewares as `<namespace>-<name>@kubernetescrd`; the
+      # namespace is resolved via tpl (needs banjo-helm >= 0.4.1) so this stays
+      # namespace-agnostic and matches wherever the Middleware is created.
+      annotations:
+        traefik.ingress.kubernetes.io/router.middlewares: "{{ $.Release.Namespace }}-mapswipe-body-size@kubernetescrd"
+
+  extraManifests:
+    traefik-body-size-middleware:
+      apiVersion: traefik.io/v1alpha1
+      kind: Middleware
+      metadata:
+        name: mapswipe-body-size
+      spec:
+        buffering:
+          maxRequestBodyBytes: 10485760   # 10 MiB (replaces nginx proxy-body-size "10m")

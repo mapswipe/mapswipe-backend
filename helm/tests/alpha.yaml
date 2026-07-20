@@ -1,0 +1,23 @@
+# Snapshot dummy for the `alpha` matrix entry — supplies the image, ingress host
+# and the CICD-provided app secrets so the alpha manifests render standalone.
+# No className here: values/traefik.yaml sets it (layered after this in tests.yaml).
+app:
+  environment: ALPHA
+  image:
+    name: local.test/mapswipe-backend
+    tag: alpha.testtag
+  api:
+    ingress:
+      host: mapswipe-api.alpha.test.local
+  env:
+    APP_DOMAIN: "https://mapswipe-api.alpha.test.local"
+    MANAGER_DASHBOARD_DOMAIN: "https://managers.alpha.test.local"
+    COMMUNITY_DASHBOARD_DOMAIN: "https://community.alpha.test.local"
+    WEBSITE_DOMAIN: "https://mapswipe.alpha.test.local"
+    SESSION_COOKIE_DOMAIN: ".alpha.test.local"
+    CSRF_COOKIE_DOMAIN: ".alpha.test.local"
+    # Dummy bucket names so the manifests render standalone (real names are per-environment).
+    AWS_S3_MEDIA_BUCKET_NAME: "media-data-test"
+    AWS_S3_STATIC_BUCKET_NAME: "static-data-test"
+  secrets:
+    SECRET_KEY: dummy-secret-key

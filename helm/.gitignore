@@ -1,3 +1,7 @@
 charts/
 values-local.yaml
+values.local.yaml
 .helm-charts
+# kind test values are supplied externally at deploy time, never committed here
+values/kind-local.yaml
+kind-local.yaml

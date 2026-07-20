@@ -1,0 +1,8 @@
+app:
+  environment: ALPHA
+
+  # Per-environment values (API/dashboard domains, email, Sentry, FIREBASE_*) and ALL
+  # credentials — Postgres, S3/object-storage, SECRET_KEY, MAP_IMAGE_* / OSMCHA / MAPILLARY
+  # keys — are injected at deploy time by the platform (a private per-environment overlay),
+  # not committed here. The base chart stays credential-agnostic.
+  secrets: {}

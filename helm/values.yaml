@@ -1,91 +1,74 @@
 app:
   environment: PROD
-  # Global Image
-  appTypeEnvName: "APP_TYPE"
+  # settings.py reads APP_TYPE (also the Sentry app_type tag). Let banjo-helm set it
+  # per workload (web / worker / beat / hook) instead of hardcoding a role in shared env.
+  appTypeEnvName: APP_TYPE
+  # Global image
   image:
     name: SET-BY-CICD-IMAGE
     tag: SET-BY-CICD-TAG
     imagePullPolicy: IfNotPresent
 
-  ingress:
-    enabled: true
-    className: nginx
-    annotations:
-      nginx.ingress.kubernetes.io/proxy-body-size: "10m"
-
-  redis:
-    enabled: true
-    fullnameOverride: "mapswipe-redis"
-
-  postgresql:
-    enabled: true
-    fullnameOverride: "mapswipe-postgres"
-    auth:
-      database: "mapswipe"
-    primary:
-      persistence:
-        storageClass:
-        size: "2Gi"
-
-  minio:
-    enabled: true
-    fullnameOverride: mapswipe-minio
-    global:
-      defaultStorageClass:
-    apiIngress:
-      ingressClassName: nginx
-      annotations:
-        nginx.ingress.kubernetes.io/proxy-body-size: "10m"
-    auth:
-      rootUser: mapswipe
-      rootPassword:
-    persistence:
-      size: "1Gi"
-    defaultBuckets: static-data,media-data
-    provisioning:
-      extraCommands:
-        - "mc anonymous set download provisioning/media-data"
-        - "mc anonymous set download provisioning/static-data"
-
   api:
+    enabled: true
     containerPort: 80
-    command: ["misc/prod/run_web.sh"]
+    command: ["/code/misc/prod/run_web.sh"]
+    probes:
+      enabled: true    # chart defaults: liveness /healthz/live/, readiness+startup /healthz/ready/
+    ingress:
+      enabled: true
+      # NOTE: className left blank on purpose; body-size + ingress class are set in
+      # values/traefik.yaml. Set `host` per environment in the env overlay.
+      className:
+      host:
     resources:
       requests:
         cpu: "0.2"
+        memory: 0.5Gi
+      limits:
+        cpu: "2"
+        memory: 1Gi
 
   worker:
     enabled: true
-    beat:
-      command: ["celery", "-A", "main", "beat", "-l", "INFO"]
+    queueDefaults:
+      commandPrefix:
+        - "celery"
+        - "-A"
+        - "main"
+        - "worker"
+        - "-l"
+        - "INFO"
+      # banjo-celery-probe heartbeat wiring (writer via setup_worker_heartbeat,
+      # reader via banjo-celery-probe) on a RAM emptyDir.
+      extraEnv:
+        BANJO_CELERY_HEARTBEAT_FILE: /var/run/celery/worker_heartbeat
+      volumes:
+        celery-heartbeat: {emptyDir: {medium: Memory, sizeLimit: 1Mi}}
+      volumeMounts:
+        celery-heartbeat: {mountPath: /var/run/celery}
+      probes:
+        enabled: true
+        liveness:
+          exec: {command: [banjo-celery-probe]}
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 6
+        startup:
+          exec: {command: [banjo-celery-probe]}
+          periodSeconds: 5
+          failureThreshold: 30
       resources:
         requests:
           cpu: "0.1"
-          memory: 0.5Gi
-        limits:
-          cpu: "1"
           memory: 1Gi
-    flower:
-      enabled: false
-    queueDefaultResources:
-      requests:
-        cpu: "0.1"
-        memory: 1Gi
-      limits:
-        cpu: "4"
-        memory: 2Gi
-    queueCommandPrefix:
-      - "celery"
-      - "-A"
-      - "main"
-      - "worker"
-      - "-l"
-      - "INFO"
+        limits:
+          cpu: "4"
+          memory: 2Gi
     queues:
       # NOTE: Make sure keys are lowercase
       default:
         enabled: true
-        replicaCount: 1
         celeryArgs:
           - "-Q"
           - "default"
@@ -93,33 +76,71 @@ app:
           - "4"
           - "--max-tasks-per-child"
           - "10"
+    addons:
+      beat:
+        enabled: true
+        strategy: {type: Recreate}
+        # settings.py sets CELERY_BEAT_SCHEDULER = django_celery_beat DatabaseScheduler,
+        # so use HeartbeatDatabaseScheduler (DB-sourced schedules) and touch the beat
+        # heartbeat file each tick for banjo-celery-probe liveness.
+        command:
+          - "celery"
+          - "-A"
+          - "main"
+          - "beat"
+          - "-l"
+          - "INFO"
+          - "--scheduler=banjo_utils.celery_health.database.HeartbeatDatabaseScheduler"
+        extraEnv:
+          BANJO_CELERY_HEARTBEAT_FILE: /var/run/celery/beat_heartbeat
+        volumes:
+          celery-heartbeat: {emptyDir: {medium: Memory, sizeLimit: 1Mi}}
+        volumeMounts:
+          celery-heartbeat: {mountPath: /var/run/celery}
+        probes:
+          enabled: true
+          liveness:
+            # DatabaseScheduler polls every ~5s, so a tighter --max-age is fine
+            exec: {command: [banjo-celery-probe, --max-age, "60"]}
+            periodSeconds: 60
+            timeoutSeconds: 5
+            failureThreshold: 3
+        resources:
+          requests:
+            cpu: "0.1"
+            memory: 256Mi
+          limits:
+            cpu: "1"
+            memory: 512Mi
+      flower:
+        enabled: false
 
-  # NOTE: Check main/settings.py for all available options
+  hooks:
+    enabled: true
+    jobs:
+      # NOTE: Make sure keys are lowercase.
+      # db-migrate and collect-static inherit the chart defaults (manage.py migrate /
+      # collectstatic --noinput). wait-for-resources (Sync hook, early wave) gates the
+      # app on DB + cache + broker + S3 connectivity.
+      wait-for-resources:
+        command: ["./manage.py", "wait_for_resources", "--db", "--cache", "--celery-broker", "--minio"]
+
+  # NOTE: Check main/settings.py for all available options. Per-environment values
+  # (domains, S3 endpoint, and all secrets) are supplied by the env overlays + CICD.
   env:
     APP_RELEASE: "{{ $.Values.image.tag }}"
     APP_ENVIRONMENT: "{{ $.Values.environment }}"
-    # AWS
+    TIME_ZONE: "UTC"
+    DEBUG: "false"
+    # S3 storage. Non-S3 falls back to the ephemeral pod filesystem, so keep this enabled.
     AWS_S3_ENABLED: "true"
-    AWS_S3_ENDPOINT_URL: "https://{{ $.Values.minio.apiIngress.hostname }}/"
-    AWS_S3_STATIC_BUCKET_NAME: "static-data"
-    AWS_S3_MEDIA_BUCKET_NAME: "media-data"
-    # App Domain
-    SESSION_COOKIE_DOMAIN: "{{ required \".Values.env.SESSION_COOKIE_DOMAIN\" nil }}"
-    CSRF_COOKIE_DOMAIN: "{{ required \".Values.env.CSRF_COOKIE_DOMAIN\" nil }}"
+    # Bucket names are the deployer's choice — supplied per-environment (endpoint +
+    # credentials come from the platform too). Set these in the per-environment values.
+    # AWS_S3_MEDIA_BUCKET_NAME: "<media-bucket>"
+    # AWS_S3_STATIC_BUCKET_NAME: "<static-bucket>"
+    # Sentry
+    SENTRY_ENABLED: "false"
+    SENTRY_TRACES_SAMPLE_RATE: "0.2"
+    SENTRY_PROFILE_SAMPLE_RATE: "0.2"
 
-  # NOTE: Check main/settings.py for all available options
-  secrets:
-    SECRET_KEY: "{{ required \".Values.secrets.SECRET_KEY\" nil }}"
-    # Postgres
-    POSTGRES_DB: "{{ $.Values.postgresql.auth.database }}"
-    POSTGRES_USER: "postgres"
-    POSTGRES_PASSWORD: "{{ $.Values.postgresql.auth.postgresPassword }}"
-    POSTGRES_HOST: "{{ include \"postgresql.v1.primary.fullname\" $.Subcharts.postgresql }}"
-    POSTGRES_PORT: "{{ include \"postgresql.v1.service.port\" $.Subcharts.postgresql }}"
-    # Minio (S3)
-    AWS_S3_ACCESS_KEY_ID: "{{ required \".Values.minio.auth.rootUser\" $.Values.minio.auth.rootUser }}"
-    AWS_S3_SECRET_ACCESS_KEY: "{{ required \".Values.minio.auth.rootPassword\" $.Values.minio.auth.rootPassword }}"
-    AWS_S3_REGION_NAME: "us-east-1"
-    # Redis
-    CELERY_REDIS_URL: "redis://{{ printf \"%s-master\" (include \"common.names.fullname\" $.Subcharts.redis) }}:6379/0"
-    CACHE_REDIS_URL: "redis://{{ printf \"%s-master\" (include \"common.names.fullname\" $.Subcharts.redis) }}:6379/1"
+  # Redis (Dragonfly) broker + cache and the Dragonfly CR live in values/operators.yaml.
