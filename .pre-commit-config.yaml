@@ -7,7 +7,8 @@ exclude: |
       \.git|
       __pycache__|
       \.venv|
-      schema.graphql
+      schema.graphql|
+      helm/snapshots/
     )
 
 repos:

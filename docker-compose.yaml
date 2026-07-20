@@ -18,7 +18,7 @@ x-server: &base_server_setup
     DEBUG: ${DEBUG:-true}
     ENABLE_DEBUG_TOOLBAR: ${ENABLE_DEBUG_TOOLBAR:-true}
     APP_ENVIRONMENT: ${APP_ENVIRONMENT:-DEV}
-    SECRET_KEY: ${SECRET_KEY:?error}
+    SECRET_KEY: ${SECRET_KEY:-ci-insecure-secret-key-override-in-real-envs}
     ENABLE_STRAWBERRY_GRAPHIQL: ${ENABLE_STRAWBERRY_GRAPHIQL:-true}
     # Domain configs
     APP_DOMAIN: ${APP_DOMAIN:-http://localhost:8000}
