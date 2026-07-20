@@ -8,6 +8,7 @@ from urllib.parse import ParseResult
 from urllib.parse import urlparse as _urlparse
 
 import environ
+from banjo_utils.health import is_health_probe_path
 
 from main.logging import log_render_extra_context
 from main.sentry import SentryConfig
@@ -195,6 +196,7 @@ INSTALLED_APPS = [
     "django.contrib.gis",
     "django.contrib.postgres",
     # External
+    "banjo_utils",
     "strawberry_django",
     "corsheaders",
     "django_premailer",
@@ -221,6 +223,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # banjo_utils HealthProbeMiddleware serves pod-local /healthz/live/ and
+    # /healthz/ready/ (bypassing ALLOWED_HOSTS); keep it first.
+    "banjo_utils.health.HealthProbeMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -326,8 +331,11 @@ STATIC_URL = env("STATIC_URL")
 
 STORAGE_OVERWRITE_KEY = "default-overwrite"
 if env("AWS_S3_ENABLED"):
+    # Exposed at module level (not only inside AWS_S3_CONFIG_OPTIONS) so
+    # banjo_utils `wait_for_resources --minio` can read settings.AWS_S3_ENDPOINT_URL.
+    AWS_S3_ENDPOINT_URL = env("AWS_S3_ENDPOINT_URL")
     AWS_S3_CONFIG_OPTIONS = {
-        "endpoint_url": env("AWS_S3_ENDPOINT_URL"),
+        "endpoint_url": AWS_S3_ENDPOINT_URL,
         "access_key": env("AWS_S3_ACCESS_KEY_ID"),
         "secret_key": env("AWS_S3_SECRET_ACCESS_KEY"),
         "region_name": env("AWS_S3_REGION_NAME"),
@@ -451,6 +459,10 @@ if "alpha" in APP_ENVIRONMENT.lower():
     HEALTH_CHECK = {
         "DISK_USAGE_MAX": 90,
     }
+
+# banjo_utils pod-local k8s probe endpoints (served by HealthProbeMiddleware)
+BANJO_HEALTH_PROBE_LIVE_URL = "/healthz/live/"
+BANJO_HEALTH_PROBE_READY_URL = "/healthz/ready/"
 
 # Security Header configuration
 
@@ -588,6 +600,24 @@ FIREBASE_HELPER = FirebaseHelper(
 )
 
 
+def skip_health_probe_logs(record):
+    """Drop *successful* request-line log records for k8s health-probe paths (/healthz/*)."""
+    args = record.args
+    path = ""
+    status = ""
+    if isinstance(args, dict):  # gunicorn.access
+        path = args.get("U", "")
+        status = str(args.get("s", ""))
+    elif isinstance(args, (tuple, list)) and args:  # django.server request line
+        request_line = str(args[0]).strip('"').split(" ")
+        if len(request_line) >= 2:
+            path = request_line[1]
+        if len(args) >= 2:
+            status = str(args[1])
+    is_probe_ok = is_health_probe_path(path) and status.startswith("2")
+    return not is_probe_ok
+
+
 # TODO(thenav56): Handle file logs using gunicorn
 LOGGING = {
     "version": 1,
@@ -596,6 +626,10 @@ LOGGING = {
         "render_extra_context": {
             "()": "django.utils.log.CallbackFilter",
             "callback": log_render_extra_context,
+        },
+        "skip_health_probes": {
+            "()": "django.utils.log.CallbackFilter",
+            "callback": skip_health_probe_logs,
         },
     },
     "formatters": {
@@ -619,6 +653,19 @@ LOGGING = {
                 "propagate": False,
             }
             for app in ["apps", "main", "utils", "celery", "django"]
+        },
+        # Drop successful k8s health-probe request-line logs (fired every few seconds)
+        "django.server": {
+            "level": env("APP_LOG_LEVEL"),
+            "handlers": ["console"],
+            "filters": ["skip_health_probes"],
+            "propagate": False,
+        },
+        "gunicorn.access": {
+            "level": env("APP_LOG_LEVEL"),
+            "handlers": ["console"],
+            "filters": ["skip_health_probes"],
+            "propagate": False,
         },
     },
     "root": {

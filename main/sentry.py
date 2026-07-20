@@ -5,6 +5,7 @@ from enum import Enum
 
 import sentry_sdk
 from asgiref.sync import sync_to_async
+from banjo_utils.health import make_sentry_traces_sampler_with_health_probe_ignore
 from sentry_sdk import Scope, set_user
 
 # from sentry_sdk._types import Event, Hint
@@ -64,7 +65,9 @@ class SentryConfig:
             release=self.release,
             environment=self.environment,
             send_default_pii=self.send_default_pii,
-            traces_sample_rate=self.traces_sample_rate,
+            # Never sample k8s /healthz/* probe transactions (they hit the WSGI/ASGI
+            # layer outside Django middleware); defer everything else to the rate.
+            traces_sampler=make_sentry_traces_sampler_with_health_probe_ignore(self.traces_sample_rate),
             profiles_sample_rate=self.profiles_sample_rate,
             before_send=sentry_before_send,
             debug=self.debug,
