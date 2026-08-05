@@ -5,9 +5,8 @@ type: application
 version: 0.3.1-SET-BY-CICD  # managed by release.sh
 sources:
   - https://github.com/mapswipe/mapswipe-backend/
-
 dependencies:
-  - name: toggle-django-helm
+  - name: banjo-helm
     alias: app
-    version: 0.2.0
+    version: 0.4.1
     repository: oci://ghcr.io/toggle-corp

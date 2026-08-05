@@ -5,6 +5,7 @@ from logging.config import dictConfig
 from typing import TYPE_CHECKING
 
 import celery
+from banjo_utils.celery_health.worker import setup_worker_heartbeat
 from celery import signals
 from django.conf import settings
 
@@ -30,6 +31,7 @@ class Celery(celery.Celery):
 
 
 app = Celery("main")
+setup_worker_heartbeat(app)
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
 app.conf.task_default_queue = CeleryQueue.default.name

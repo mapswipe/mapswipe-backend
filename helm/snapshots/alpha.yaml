@@ -1,0 +1,567 @@
+---
+# Source: mapswipe-backend-helm/charts/app/templates/config/secret.yaml
+kind: Secret
+apiVersion: v1
+metadata:
+  name: release-name-app-secret
+  labels:
+    app: release-name-app
+    environment: ALPHA
+    release: release-name
+type: Opaque
+stringData:
+  # secrets
+  SECRET_KEY: "dummy-secret-key"
+
+---
+# Source: mapswipe-backend-helm/charts/app/templates/config/configmap.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: release-name-app-env-name
+  labels:
+    app: release-name-app
+    environment: ALPHA
+    release: release-name
+data:
+  # Configs
+  APP_DOMAIN: "https://mapswipe-api.alpha.test.local"
+  APP_ENVIRONMENT: "ALPHA"
+  APP_RELEASE: "alpha.testtag"
+  AWS_S3_ENABLED: "true"
+  AWS_S3_MEDIA_BUCKET_NAME: "media-data-test"
+  AWS_S3_STATIC_BUCKET_NAME: "static-data-test"
+  COMMUNITY_DASHBOARD_DOMAIN: "https://community.alpha.test.local"
+  CSRF_COOKIE_DOMAIN: ".alpha.test.local"
+  DEBUG: "false"
+  MANAGER_DASHBOARD_DOMAIN: "https://managers.alpha.test.local"
+  SENTRY_ENABLED: "false"
+  SENTRY_PROFILE_SAMPLE_RATE: "0.2"
+  SENTRY_TRACES_SAMPLE_RATE: "0.2"
+  SESSION_COOKIE_DOMAIN: ".alpha.test.local"
+  TIME_ZONE: "UTC"
+  WEBSITE_DOMAIN: "https://mapswipe.alpha.test.local"
+
+---
+# Source: mapswipe-backend-helm/charts/app/templates/api/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: release-name-app-api
+  labels:
+    app: release-name-app
+    component: api
+    environment: ALPHA
+    release: release-name
+spec:
+  type: ClusterIP
+  selector:
+    app: release-name-app
+    component: api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+# Source: mapswipe-backend-helm/charts/app/templates/api/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: release-name-app-api
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+    reloader.stakater.com/auto: "true"
+  labels:
+    app: release-name-app
+    component: api
+    environment: ALPHA
+    release: release-name
+spec:
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: release-name-app
+      component: api
+  template:
+    metadata:
+      annotations:
+        checksum/secret: deb01af9746a3429a0464230901a130e00f671c843a5f3da95911c7b91621b87
+        checksum/configmap: 16c1a6992135dd6b68d11a4afd240e03a9493d65c0a7751f2f0db9d17ccc9b87
+      labels:
+        app: release-name-app
+        component: api
+    spec:
+      terminationGracePeriodSeconds: 38
+      containers:
+        - name: api
+          image: "local.test/mapswipe-backend:alpha.testtag"
+          imagePullPolicy: IfNotPresent
+          command:
+            - /code/misc/prod/run_web.sh
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /healthz/live/
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 2
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /healthz/ready/
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /healthz/ready/
+              port: http
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: "2"
+              memory: 1Gi
+            requests:
+              cpu: "0.2"
+              memory: 0.5Gi
+          envFrom:
+            - secretRef:
+                name: release-name-app-secret
+            - configMapRef:
+                name: release-name-app-env-name
+          env:
+            - name: APP_TYPE
+              value: "web"
+            - name: CACHE_REDIS_URL
+              value: redis://mapswipe-dragonfly:6379/1
+            - name: CELERY_REDIS_URL
+              value: redis://mapswipe-dragonfly:6379/0
+            
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 8
+
+---
+# Source: mapswipe-backend-helm/charts/app/templates/worker-addons/deployment.yaml
+# Addon: beat
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: release-name-app-worker-beat
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+    reloader.stakater.com/auto: "true"
+  labels:
+    app: release-name-app
+    component: worker-addon
+    addon: beat
+    environment: ALPHA
+    release: release-name
+spec:
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: release-name-app
+      component: worker-addon
+      addon: beat
+  template:
+    metadata:
+      annotations:
+        checksum/secret: deb01af9746a3429a0464230901a130e00f671c843a5f3da95911c7b91621b87
+        checksum/configmap: 16c1a6992135dd6b68d11a4afd240e03a9493d65c0a7751f2f0db9d17ccc9b87
+      labels:
+        app: release-name-app
+        component: worker-addon
+        addon: beat
+    spec:
+      volumes:
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 1Mi
+          name: celery-heartbeat
+      containers:
+        - name: beat
+          image: "local.test/mapswipe-backend:alpha.testtag"
+          imagePullPolicy: IfNotPresent
+          command:
+            - celery
+            - -A
+            - main
+            - beat
+            - -l
+            - INFO
+            - --scheduler=banjo_utils.celery_health.database.HeartbeatDatabaseScheduler
+          livenessProbe:
+            exec:
+              command:
+              - banjo-celery-probe
+              - --max-age
+              - "60"
+            failureThreshold: 3
+            periodSeconds: 60
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+            requests:
+              cpu: "0.1"
+              memory: 256Mi
+          envFrom:
+            - secretRef:
+                name: release-name-app-secret
+            - configMapRef:
+                name: release-name-app-env-name
+          env:
+            - name: APP_TYPE
+              value: "worker"
+            - name: CACHE_REDIS_URL
+              value: redis://mapswipe-dragonfly:6379/1
+            - name: CELERY_REDIS_URL
+              value: redis://mapswipe-dragonfly:6379/0
+            
+            - name: BANJO_CELERY_HEARTBEAT_FILE
+              value: "/var/run/celery/beat_heartbeat"
+          volumeMounts:
+            - mountPath: /var/run/celery
+              name: celery-heartbeat
+
+---
+# Source: mapswipe-backend-helm/charts/app/templates/worker/deployment.yaml
+# Queue: default
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: release-name-app-worker-default
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+    reloader.stakater.com/auto: "true"
+  labels:
+    app: release-name-app
+    component: worker
+    queue: default
+    environment: ALPHA
+    release: release-name
+spec:
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: release-name-app
+      component: worker
+      queue: default
+  template:
+    metadata:
+      annotations:
+        checksum/secret: deb01af9746a3429a0464230901a130e00f671c843a5f3da95911c7b91621b87
+        checksum/configmap: 16c1a6992135dd6b68d11a4afd240e03a9493d65c0a7751f2f0db9d17ccc9b87
+      labels:
+        app: release-name-app
+        component: worker
+        queue: default
+    spec:
+      volumes:
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 1Mi
+          name: celery-heartbeat
+      containers:
+        - name: worker
+          command:
+            - celery
+            - -A
+            - main
+            - worker
+            - -l
+            - INFO
+            - -Q
+            - default
+            - --concurrency
+            - "4"
+            - --max-tasks-per-child
+            - "10"
+          image: "local.test/mapswipe-backend:alpha.testtag"
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+              - banjo-celery-probe
+            failureThreshold: 6
+            periodSeconds: 20
+            timeoutSeconds: 5
+          startupProbe:
+            exec:
+              command:
+              - banjo-celery-probe
+            failureThreshold: 30
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: "4"
+              memory: 2Gi
+            requests:
+              cpu: "0.1"
+              memory: 1Gi
+          envFrom:
+            - secretRef:
+                name: release-name-app-secret
+            - configMapRef:
+                name: release-name-app-env-name
+          env:
+            - name: APP_TYPE
+              value: "worker"
+            - name: CACHE_REDIS_URL
+              value: redis://mapswipe-dragonfly:6379/1
+            - name: CELERY_REDIS_URL
+              value: redis://mapswipe-dragonfly:6379/0
+            
+            - name: BANJO_CELERY_HEARTBEAT_FILE
+              value: "/var/run/celery/worker_heartbeat"
+          volumeMounts:
+            - mountPath: /var/run/celery
+              name: celery-heartbeat
+
+---
+# Source: mapswipe-backend-helm/charts/app/templates/hooks/job.yaml
+# Hook: collect-static
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: release-name-app-collect-static
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "20"
+  labels:
+    app: release-name-app
+    component: hook
+    hookName: collect-static
+    environment: ALPHA
+    release: release-name
+spec:
+  template:
+    metadata:
+      annotations:
+        checksum/secret: deb01af9746a3429a0464230901a130e00f671c843a5f3da95911c7b91621b87
+        checksum/configmap: 16c1a6992135dd6b68d11a4afd240e03a9493d65c0a7751f2f0db9d17ccc9b87
+      labels:
+        app: release-name-app
+        component: hook
+        hookName: collect-static
+    spec:
+      restartPolicy: "Never"
+      containers:
+        - name: collect-static
+          image: "local.test/mapswipe-backend:alpha.testtag"
+          imagePullPolicy: IfNotPresent
+          command: 
+            - ./manage.py
+            - collectstatic
+            - --noinput
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          envFrom:
+            - secretRef:
+                name: release-name-app-secret
+            - configMapRef:
+                name: release-name-app-env-name
+          env:
+            - name: APP_TYPE
+              value: "hook"
+            - name: CACHE_REDIS_URL
+              value: redis://mapswipe-dragonfly:6379/1
+            - name: CELERY_REDIS_URL
+              value: redis://mapswipe-dragonfly:6379/0
+---
+# Source: mapswipe-backend-helm/charts/app/templates/hooks/job.yaml
+# Hook: db-migrate
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: release-name-app-db-migrate-
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "20"
+  labels:
+    app: release-name-app
+    component: hook
+    hookName: db-migrate
+    environment: ALPHA
+    release: release-name
+spec:
+  activeDeadlineSeconds: 3600
+  ttlSecondsAfterFinished: 604800
+  template:
+    metadata:
+      annotations:
+        checksum/secret: deb01af9746a3429a0464230901a130e00f671c843a5f3da95911c7b91621b87
+        checksum/configmap: 16c1a6992135dd6b68d11a4afd240e03a9493d65c0a7751f2f0db9d17ccc9b87
+      labels:
+        app: release-name-app
+        component: hook
+        hookName: db-migrate
+    spec:
+      restartPolicy: "Never"
+      containers:
+        - name: db-migrate
+          image: "local.test/mapswipe-backend:alpha.testtag"
+          imagePullPolicy: IfNotPresent
+          command: 
+            - ./manage.py
+            - migrate
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          envFrom:
+            - secretRef:
+                name: release-name-app-secret
+            - configMapRef:
+                name: release-name-app-env-name
+          env:
+            - name: APP_TYPE
+              value: "hook"
+            - name: CACHE_REDIS_URL
+              value: redis://mapswipe-dragonfly:6379/1
+            - name: CELERY_REDIS_URL
+              value: redis://mapswipe-dragonfly:6379/0
+---
+# Source: mapswipe-backend-helm/charts/app/templates/hooks/job.yaml
+# Hook: wait-for-resources
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: release-name-app-wait-for-resources
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/sync-wave: "10"
+  labels:
+    app: release-name-app
+    component: hook
+    hookName: wait-for-resources
+    environment: ALPHA
+    release: release-name
+spec:
+  template:
+    metadata:
+      annotations:
+        checksum/secret: deb01af9746a3429a0464230901a130e00f671c843a5f3da95911c7b91621b87
+        checksum/configmap: 16c1a6992135dd6b68d11a4afd240e03a9493d65c0a7751f2f0db9d17ccc9b87
+      labels:
+        app: release-name-app
+        component: hook
+        hookName: wait-for-resources
+    spec:
+      restartPolicy: "Never"
+      containers:
+        - name: wait-for-resources
+          image: "local.test/mapswipe-backend:alpha.testtag"
+          imagePullPolicy: IfNotPresent
+          command: 
+            - ./manage.py
+            - wait_for_resources
+            - --db
+            - --cache
+            - --celery-broker
+            - --minio
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          envFrom:
+            - secretRef:
+                name: release-name-app-secret
+            - configMapRef:
+                name: release-name-app-env-name
+          env:
+            - name: APP_TYPE
+              value: "hook"
+            - name: CACHE_REDIS_URL
+              value: redis://mapswipe-dragonfly:6379/1
+            - name: CELERY_REDIS_URL
+              value: redis://mapswipe-dragonfly:6379/0
+            
+
+---
+# Source: mapswipe-backend-helm/charts/app/templates/api/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: release-name-app-api
+  labels:
+    app: release-name-app
+    component: api
+    environment: ALPHA
+    release: release-name
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+    traefik.ingress.kubernetes.io/router.middlewares: default-mapswipe-body-size@kubernetescrd
+spec:
+  ingressClassName: "traefik"
+  rules:
+    - host: "mapswipe-api.alpha.test.local"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: release-name-app-api
+                port:
+                  number: 80
+
+---
+# Source: mapswipe-backend-helm/charts/app/templates/extraManifests.yaml
+# Manifest: dragonflydb-cluster
+apiVersion: dragonflydb.io/v1alpha1
+kind: Dragonfly
+metadata:
+  labels:
+    app.kubernetes.io/name: dragonfly
+  name: mapswipe-dragonfly
+spec:
+  args:
+  - --dbfilename=mainSnapshot
+  replicas: 1
+  resources:
+    limits:
+      cpu: "1"
+      memory: 750Mi
+    requests:
+      cpu: "0.1"
+      memory: 500Mi
+  snapshot:
+    cron: '*/5 * * * *'
+    persistentVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+---
+# Source: mapswipe-backend-helm/charts/app/templates/extraManifests.yaml
+# Manifest: traefik-body-size-middleware
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: mapswipe-body-size
+spec:
+  buffering:
+    maxRequestBodyBytes: 10485760

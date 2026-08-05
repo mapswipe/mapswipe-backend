@@ -24,12 +24,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         # Build required packages
         gdal-bin build-essential gcc libc-dev libgdal-dev libproj-dev \
         libmagic1 \
+        # Required by uv to fetch the banjo-utils git dependency
+        git \
         # Helper packages
         procps \
     && uv lock --locked --offline \
         && uv sync --frozen --no-install-project --all-groups \
     # Clean-up
-    && apt-get remove -y build-essential gcc libc-dev libgdal-dev libproj-dev \
+    && apt-get remove -y build-essential gcc libc-dev libgdal-dev libproj-dev git \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 

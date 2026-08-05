@@ -1,0 +1,35 @@
+app:
+  # extraEnvVars as a DICT (name: {value|valueFrom}); explicit env wins over envFrom.
+  # settings.py: CELERY_RESULT_BACKEND == CELERY_BROKER_URL == CELERY_REDIS_URL,
+  # cache uses CACHE_REDIS_URL. Both point at the Dragonfly service below.
+  extraEnvVars:
+    CELERY_REDIS_URL: { value: "redis://mapswipe-dragonfly:6379/0" }
+    CACHE_REDIS_URL: { value: "redis://mapswipe-dragonfly:6379/1" }
+
+  extraManifests:
+    dragonflydb-cluster:
+      apiVersion: dragonflydb.io/v1alpha1
+      kind: Dragonfly
+      metadata:
+        labels:
+          app.kubernetes.io/name: dragonfly
+        name: mapswipe-dragonfly  # NOTE: this will be the service name
+      spec:
+        replicas: 1
+        args: ["--dbfilename=mainSnapshot"]  # NOTE: Only maintains 1 last snapshot
+        resources:
+          requests:
+            cpu: "0.1"
+            memory: 500Mi
+          limits:
+            cpu: "1"
+            memory: 750Mi
+        snapshot:
+          cron: "*/5 * * * *"
+          persistentVolumeClaimSpec:
+            # storageClassName:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 1Gi

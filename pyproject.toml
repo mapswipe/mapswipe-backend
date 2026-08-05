@@ -50,6 +50,7 @@ dependencies = [
     "vt2geojson>=0.2.1",
     "pandas~=2.3.1",
     "slack-sdk>=3.36.0",
+    "banjo-utils",
 ]
 
 [dependency-groups]
@@ -78,6 +79,7 @@ members = [
 ]
 [tool.uv.sources]
 pyfirebase_mapswipe = { workspace = true }
+banjo-utils = { git = "https://github.com/toggle-corp/banjo-utils", tag = "v0.2.0" }
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "main.settings"

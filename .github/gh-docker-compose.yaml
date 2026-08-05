@@ -6,7 +6,7 @@ services:
       CI: "true"
 
   test:
-    image: $DOCKER_IMAGE
+    image: $DOCKER_IMAGE_BACKEND
     build: !reset null
     env_file: !reset null
     environment:
