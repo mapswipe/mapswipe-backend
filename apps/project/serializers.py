@@ -178,9 +178,13 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             "additional_info_url",
             "description",
             "image",
+            # FIXME: This cannot be edited later.
             "verification_number",
+            # FIXME: This cannot be edited later.
             "group_size",
+            # FIXME: This cannot be edited later.
             "max_tasks_per_user",
+            # FIXME: This cannot be edited later.
             "project_type_specifics",
             "tutorial",
             "team",
