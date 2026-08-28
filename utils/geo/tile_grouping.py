@@ -63,9 +63,10 @@ def _get_horizontal_slice(
     extent: _GeoExtent,
     polygons: list[Polygon],
     zoom: int,
+    min_tile_y_multiplier: int,
 ) -> _HorizontalSliceInfo:
     """The function slices all input geometries vertically
-    using a height of max 3 tiles per geometry.
+    using a height of `min_tile_y_multiplier` tiles per geometry.
     The function iterates over all input geometries.
     For each geometry tile coordinates are calculated.
     Then this geometry is split into several geometries using the min
@@ -98,7 +99,7 @@ def _get_horizontal_slice(
         TileY = TileY_top
 
         # get rows
-        rows = math.ceil(TileHeight / 3)
+        rows = math.ceil(TileHeight / min_tile_y_multiplier)
 
         ############################################################
 
@@ -109,7 +110,7 @@ def _get_horizontal_slice(
             lon_left, lat_top = tile_functions.pixel_coords_zoom_to_lat_lon(PixelX, PixelY, zoom)
 
             PixelX = TileX_right * 256
-            PixelY = (TileY + 3) * 256
+            PixelY = (TileY + min_tile_y_multiplier) * 256
             lon_right, lat_bottom = tile_functions.pixel_coords_zoom_to_lat_lon(PixelX, PixelY, zoom)
 
             # Create Geometry
@@ -128,15 +129,15 @@ def _get_horizontal_slice(
             if sliced_poly:
                 if sliced_poly.geom_type.upper() == "POLYGON":
                     tile_y_top.append(TileY)
-                    tile_y_bottom.append(TileY + 3)
+                    tile_y_bottom.append(TileY + min_tile_y_multiplier)
                     slice_collection.append(sliced_poly)
                 elif sliced_poly.geom_type.upper() == "MULTIPOLYGON":
                     for geom_part in sliced_poly:
                         tile_y_top.append(TileY)
-                        tile_y_bottom.append(TileY + 3)
+                        tile_y_bottom.append(TileY + min_tile_y_multiplier)
                         slice_collection.append(geom_part)
 
-            TileY = TileY + 3
+            TileY = TileY + min_tile_y_multiplier
 
     return _HorizontalSliceInfo(
         tile_y_top=tile_y_top,
@@ -149,11 +150,12 @@ def _get_vertical_slice(  # noqa: D417
     slice_infos: _HorizontalSliceInfo,
     zoom: int,
     width_threshold: int = 40,
+    min_tile_x_multiplier: int = 2,
 ) -> dict[str, RawGroup]:
     """Slices the horizontal stripes vertically.
-    Each input stripe has a height of three tiles
-    and will be split into vertical parts.
-    The width of each part is defined by the width threshold set below.
+    Each input stripe will be split into vertical parts.
+    The width of each part is defined by the width threshold set below
+    and rounded up to a multiple of `min_tile_x_multiplier`.
 
     Parameters
     ----------
@@ -163,6 +165,10 @@ def _get_vertical_slice(  # noqa: D417
     width_threshold:  int
         the number of vertical tiles for a group,
         this defines how "long" groups are.
+    min_tile_x_multiplier: int
+        each group's tile width is forced to a multiple of this value
+        (default 2 keeps the historical "always 6 tasks per screen" layout
+        for find/completeness; set to 1 for one-tile-wide groups).
 
     Returns
     -------
@@ -224,17 +230,19 @@ def _get_vertical_slice(  # noqa: D417
         # and do equally for all slices
         step_size = math.ceil(TileWidth / cols)
 
-        # the step_size should be always and even number
-        # this will make sure that there will be always 6 tasks per screen
-        if step_size % 2 == 1:
-            step_size += 1
+        # the step_size should always be a multiple of min_tile_x_multiplier
+        # (default 2 keeps the historical "always 6 tasks per screen" layout)
+        remainder = step_size % min_tile_x_multiplier
+        if remainder != 0:
+            step_size += min_tile_x_multiplier - remainder
 
         for i in range(cols):
             # we need to make sure that geometries are not clipped at the edge
             if i == (cols - 1):
                 step_size = TileX_right - TileX + 1
-                if step_size % 2 == 1:
-                    step_size += 1
+                remainder = step_size % min_tile_x_multiplier
+                if remainder != 0:
+                    step_size += min_tile_x_multiplier - remainder
 
             # Calculate lat, lon of upper left corner of tile
             PixelX = TileX * 256
@@ -292,7 +300,12 @@ def _groups_intersect(group_a: RawGroup, group_b: RawGroup) -> bool:
     return (x_min <= x_maxB) and (x_minB <= x_max) and (y_min <= y_maxB) and (y_minB <= y_max)
 
 
-def _merge_groups(group_a: RawGroup, group_b: RawGroup, zoom: int) -> RawGroup:
+def _merge_groups(
+    group_a: RawGroup,
+    group_b: RawGroup,
+    zoom: int,
+    min_tile_x_multiplier: int,
+) -> RawGroup:
     """Merge two overlapping groups into a single group.
 
     This can result in groups that are "longer" than
@@ -312,9 +325,10 @@ def _merge_groups(group_a: RawGroup, group_b: RawGroup, zoom: int) -> RawGroup:
     new_x_min = min([x_min, x_minB])
     new_x_max = max([x_max, x_maxB])
 
-    # check if group_x_size is even and adjust new_x_max
-    if (new_x_max - new_x_min + 1) % 2 == 1:
-        new_x_max += 1
+    # ensure resulting tile width is a multiple of min_tile_x_multiplier
+    width_remainder = (new_x_max - new_x_min + 1) % min_tile_x_multiplier
+    if width_remainder != 0:
+        new_x_max += min_tile_x_multiplier - width_remainder
 
     # Calculate lat, lon of upper left corner of tile
     PixelX = int(new_x_min) * 256
@@ -352,6 +366,7 @@ def _merge_groups(group_a: RawGroup, group_b: RawGroup, zoom: int) -> RawGroup:
 def _adjust_overlapping_groups(
     groups: dict[str, RawGroup],
     zoom: int,
+    min_tile_x_multiplier: int,
 ) -> tuple[dict[str, RawGroup], int]:
     """Loop through groups dict and merge overlapping groups."""
     groups_without_overlap: dict[str, RawGroup] = {}
@@ -370,7 +385,12 @@ def _adjust_overlapping_groups(
 
             if _groups_intersect(groups[group_id], groups[group_id_b]):
                 overlap_count += 1
-                new_group = _merge_groups(groups[group_id], groups[group_id_b], zoom)
+                new_group = _merge_groups(
+                    groups[group_id],
+                    groups[group_id_b],
+                    zoom,
+                    min_tile_x_multiplier,
+                )
                 del groups[group_id_b]
                 groups_without_overlap[group_id] = new_group
 
@@ -384,7 +404,14 @@ def _adjust_overlapping_groups(
     return groups_without_overlap, overlaps_total
 
 
-def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, group_size: int) -> dict[str, RawGroup]:  # noqa: D417
+def extent_to_groups(  # noqa: D417
+    aoi_geometry: AoiGeometry,
+    zoom: int,
+    group_size: int,
+    *,
+    min_tile_x_multiplier: int = 2,
+    min_tile_y_multiplier: int = 3,
+) -> dict[str, RawGroup]:
     """The function to polygon geometries of a given input file
     into horizontal slices and then vertical slices.
 
@@ -395,6 +422,13 @@ def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, group_size: int) -> d
         or .geojson file containing the input geometries
     zoom : int
         the tile map service zoom level
+    min_tile_x_multiplier : int
+        each group's tile width is forced to a multiple of this value.
+        Defaults to 2 (the historical "always 6 tasks per screen" layout
+        for find/completeness); set to 1 for one-tile-wide groups (compare).
+    min_tile_y_multiplier : int
+        each group's tile height (the horizontal stripe height).
+        Defaults to 3 (find/completeness); set to 1 for one-tile-tall groups.
 
     Returns
     -------
@@ -408,13 +442,13 @@ def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, group_size: int) -> d
     polygons = aoi_geometry["polygons"]
 
     # get horizontal slices --> rows
-    horizontal_slice_infos = _get_horizontal_slice(extent, polygons, zoom)
+    horizontal_slice_infos = _get_horizontal_slice(extent, polygons, zoom, min_tile_y_multiplier)
 
     # then get vertical slices --> columns
-    raw_groups_dict = _get_vertical_slice(horizontal_slice_infos, zoom, group_size)
+    raw_groups_dict = _get_vertical_slice(horizontal_slice_infos, zoom, group_size, min_tile_x_multiplier)
 
     # finally remove overlapping groups
-    groups_dict, overlaps_total = _adjust_overlapping_groups(raw_groups_dict, zoom)
+    groups_dict, overlaps_total = _adjust_overlapping_groups(raw_groups_dict, zoom, min_tile_x_multiplier)
 
     # check if there are still overlaps
     c = 0
@@ -424,6 +458,10 @@ def extent_to_groups(aoi_geometry: AoiGeometry, zoom: int, group_size: int) -> d
         if c == 5:
             break
 
-        groups_dict, overlaps_total = _adjust_overlapping_groups(groups_dict.copy(), zoom)
+        groups_dict, overlaps_total = _adjust_overlapping_groups(
+            groups_dict.copy(),
+            zoom,
+            min_tile_x_multiplier,
+        )
 
     return groups_dict

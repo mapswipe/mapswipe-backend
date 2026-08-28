@@ -69,6 +69,13 @@ class TileMapServiceBaseProject[
     ],
     ABC,
 ):
+    # Each group's tile width/height is forced to a multiple of these values.
+    # Defaults match the historical 3-tile-tall x even-width "6 tasks per screen"
+    # layout used by find/completeness. Override on subclasses (e.g. compare)
+    # that want one tile per task.
+    min_tile_x_multiplier: int = 2
+    min_tile_y_multiplier: int = 3
+
     def __init__(self, project: Project):
         super().__init__(project)
 
@@ -177,6 +184,8 @@ class TileMapServiceBaseProject[
             resp,
             self.project_type_specifics.zoom_level,
             self.project.group_size,
+            min_tile_x_multiplier=self.min_tile_x_multiplier,
+            min_tile_y_multiplier=self.min_tile_y_multiplier,
         )
 
         for group_key, raw_group in raw_groups.items():
