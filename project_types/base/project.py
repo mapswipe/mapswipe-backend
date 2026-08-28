@@ -8,7 +8,7 @@ from celery.exceptions import SoftTimeLimitExceeded
 from django.contrib.gis.db.models import GeometryField
 from django.contrib.gis.db.models.functions import Area
 from django.core.files.base import ContentFile
-from django.db import models
+from django.db import models, transaction
 from django.db.models.expressions import Subquery
 from django.db.models.functions import Cast, Coalesce
 from firebase_admin.db import Reference as FbReference  # type: ignore[reportMissingTypeStubs]
@@ -513,12 +513,6 @@ class BaseProject[
             raise ValidationException(
                 f"Project cannot be pushed to firebase if project status is '{self.project.status_enum.label}'",
             )
-        if self.project.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
-            label = self.project.firebase_push_status_enum.label if self.project.firebase_push_status_enum else "None"
-            raise ValidationException(
-                f"Project cannot be pushed to firebase if firebase push status is '{label}'",
-            )
-
         self.project.update_firebase_push_status(FirebasePushStatusEnum.PROCESSING)
 
         project_ref = self.firebase_helper.ref(
@@ -548,6 +542,19 @@ class BaseProject[
             self.update_project_on_firebase(project_ref, valid_project, only_stats=only_stats)
 
     def push_project_on_firebase(self, *, only_stats: bool = False):
+        from apps.project.tasks import push_project_to_firebase  # noqa: PLC0415
+
+        # Snapshot at start, inside the Redis lock, so no other push is running.
+        # This is the version number this execution is responsible for satisfying.
+        requested_version = self.project.firebase_push_requested_version
+
+        if self.project.firebase_pushed_version >= requested_version:
+            logger.info(
+                "firebase already up-to-date, skipping push",
+                extra=log_extra({"project": self.project.pk}),
+            )
+            return
+
         try:
             self._push_project_on_firebase(only_stats=only_stats)
         except Exception as ex:
@@ -585,7 +592,6 @@ class BaseProject[
                     "status",
                     "status_message",
                     "firebase_push_status",
-                    "firebase_last_pushed",
                 ],
             )
         else:
@@ -601,6 +607,21 @@ class BaseProject[
                     "firebase_last_pushed",
                 ],
             )
+            # Record the version we satisfied — use the snapshot taken at START, not a
+            # re-read, so a concurrent bump can't mark version N+1 as pushed while we
+            # only wrote version-N data.
+            Project.objects.filter(pk=self.project.pk).update(
+                firebase_pushed_version=requested_version,
+            )
+            # Trailing-edge check: if a new request arrived while we were pushing,
+            # re-enqueue a full push so it is not silently dropped (heals the lock-drop
+            # path too). Always use only_stats=False — a full push is a superset of a
+            # stats push, and we cannot know what the new request intended.
+            self.project.refresh_from_db(fields=["firebase_push_requested_version"])
+            if self.project.firebase_push_requested_version > requested_version:
+                transaction.on_commit(
+                    lambda: push_project_to_firebase.delay(self.project.pk),
+                )
 
     # EXPORT
 
