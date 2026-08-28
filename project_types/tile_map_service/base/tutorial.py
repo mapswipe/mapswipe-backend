@@ -11,6 +11,20 @@ from .project import TileMapServiceProjectProperty
 logger = logging.getLogger(__name__)
 
 
+def synthetic_tile_position(index: int, screen: int) -> tuple[int, int]:
+    """Return the synthetic (taskX, taskY) for a tutorial tile.
+
+    Each screen shows 6 tiles arranged in a 2x3 column-major block: the first 3
+    cells fill the left column top-to-bottom, the next 3 fill the right column
+    top-to-bottom. `index` is the 0-based cell position within the screen (values
+    wrap every 6 via the modulo).
+    """
+    cell = index % 6
+    task_x = 100 + (2 * screen - 1) + (0 if cell < 3 else 1)
+    task_y = 131072 + (cell % 3)
+    return task_x, task_y
+
+
 class TileMapServiceTutorialTaskProperty(base_tutorial.BaseTutorialTaskProperty):
     tile_x: int
     tile_y: int
@@ -43,21 +57,9 @@ class TileMapServiceBaseTutorial[
     ) -> firebase_models.FbTileMapServiceTutorialTask:
         task_specifics = self.tutorial_task_property_class.model_validate(task.project_type_specifics)
 
-        i = index % 6
-
-        task_x = 100 + (2 * screen - 1)
-        if i < 3:
-            task_x += 0
-        else:
-            task_x += 1
-
-        task_y = 131072
-        if i in [0, 3]:
-            task_y += 0
-        elif i in [1, 4]:
-            task_y += 1
-        elif i in [2, 5]:
-            task_y += 2
+        # index is a 1-based global counter (see create_tasks_on_firebase);
+        # convert to a 0-based cell position for this screen.
+        task_x, task_y = synthetic_tile_position(index - 1, screen)
 
         return firebase_models.FbTileMapServiceTutorialTask(
             geometry="",
