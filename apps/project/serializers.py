@@ -406,7 +406,6 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
                     "centroid",
                     "aoi_geometry",
                     "aoi_geometry_input_asset",
-                    "total_area",
                 ],
             )
 
