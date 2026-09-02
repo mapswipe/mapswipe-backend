@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   _:
-    uses: toggle-corp/banjo-action/.github/workflows/pipeline.yml@v0.3.0
+    uses: toggle-corp/banjo-action/.github/workflows/pipeline.yml@v0.4.0
     permissions:
       contents: write
       packages: write
@@ -36,6 +36,7 @@ jobs:
       docker__codecov_upload: true
       # Job: Helm
       helm__chart_directory: "./helm"
+      helm__version: "v4.2.2"
       # -- Publish
       docker__push: true
       helm__push: true
