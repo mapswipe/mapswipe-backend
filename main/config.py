@@ -34,7 +34,8 @@ class Config:
     HOT_TASKING_MANAGER_PROJECT_API_LINK = "https://tasking-manager-production-api.hotosm.org/api/v2/"
 
     # NOTE: We get build footprints for validate from OHSOME
-    OHSOME_API_LINK = "https://api.ohsome.org/v1/"
+    OHSOME_API_LINK = typing.cast("str", settings.OHSOME_API_LINK)
+    OHSOME_API_KEY = typing.cast("str", settings.OHSOME_API_KEY)
     # NOTE: We get changeset information from OSMCha
     OSMCHA_API_LINK = "https://osmcha.org/api/v1/"
     OSMCHA_API_KEY = typing.cast("str", settings.OSMCHA_API_KEY)
