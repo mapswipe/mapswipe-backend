@@ -12,7 +12,7 @@ from django.db import models
 from django.db.models.expressions import Subquery
 from django.db.models.functions import Cast, Coalesce
 from firebase_admin.db import Reference as FbReference  # type: ignore[reportMissingTypeStubs]
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
@@ -455,24 +455,14 @@ class BaseProject[
             },
         )
 
-    def update_project_on_firebase(
-        self,
-        project_ref: FbReference,
-        fb_project: firebase_ext_models.FbProject,
-        *,
-        only_stats: bool = False,
-    ):
-        if only_stats:
-            project_ref.update(
-                value=firebase_utils.serialize(
-                    firebase_models.FbProjectUpdateStatsInput(
-                        contributorCount=self.project.number_of_contributor_users,
-                        progress=self.project.progress,
-                    ),
-                ),
-            )
-            return
-
+    def update_project_on_firebase(self, project_ref: FbReference):
+        # NOTE: Always write the complete FbProjectUpdateInput field set (never a subset,
+        # e.g. only progress/contributorCount) using update() (a Firebase RTDB merge, not a
+        # replace). This makes every push idempotent and order-independent: whichever push
+        # actually runs writes the same full, current state. update() is required here (not
+        # set()) because set() would wipe any child key not in the payload, deleting fields
+        # this backend never owns: resultCount (written by Firebase-side aggregation) and
+        # the create-only fields (created, createdBy, projectId, verificationNumber, ...).
         assert self.project.tutorial_id is not None, "Tutorial is required before project can be pushed to firebase"
         assert self.project.tutorial is not None, "Tutorial is required before project can be pushed to firebase"
 
@@ -502,7 +492,7 @@ class BaseProject[
             ),
         )
 
-    def _push_project_on_firebase(self, *, only_stats: bool = False):
+    def _push_project_on_firebase(self):
         if self.project.status_enum not in [
             Project.Status.READY_TO_PUBLISH,
             Project.Status.PUBLISHED,
@@ -513,11 +503,11 @@ class BaseProject[
             raise ValidationException(
                 f"Project cannot be pushed to firebase if project status is '{self.project.status_enum.label}'",
             )
-        if self.project.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
-            label = self.project.firebase_push_status_enum.label if self.project.firebase_push_status_enum else "None"
-            raise ValidationException(
-                f"Project cannot be pushed to firebase if firebase push status is '{label}'",
-            )
+        # NOTE: firebase_push_status is not used as a precondition here. It's purely a
+        # result indicator (PROCESSING/SUCCESS/FAILED). Concurrent pushes for the same
+        # project are serialized by the redis lock in tasks.push_project_to_firebase, and
+        # every push writes the complete current state, so it's safe for more than one
+        # push to be queued/in-flight at once: whichever runs last wins and is correct.
 
         self.project.update_firebase_push_status(FirebasePushStatusEnum.PROCESSING)
 
@@ -538,18 +528,11 @@ class BaseProject[
                     "Did not find project in firebase when updating a project",
                 )
 
-            class RelaxedModel(firebase_ext_models.FbProject):
-                model_config = ConfigDict(extra="ignore")
+            self.update_project_on_firebase(project_ref)
 
-            # NOTE: we want to ignore extra fields from firebase
-            valid_project = RelaxedModel.model_validate(obj=fb_project)
-            valid_project = firebase_ext_models.FbProject.model_validate(obj=valid_project)
-
-            self.update_project_on_firebase(project_ref, valid_project, only_stats=only_stats)
-
-    def push_project_on_firebase(self, *, only_stats: bool = False):
+    def push_project_on_firebase(self):
         try:
-            self._push_project_on_firebase(only_stats=only_stats)
+            self._push_project_on_firebase()
         except Exception as ex:
             if isinstance(ex, ValidationException):
                 logger.warning(
