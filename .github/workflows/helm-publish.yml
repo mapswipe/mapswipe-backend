@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   _:
-    uses: toggle-corp/banjo-action/.github/workflows/pipeline.yml@v0.3.0
+    uses: toggle-corp/banjo-action/.github/workflows/pipeline.yml@v0.4.0
     permissions:
       contents: write
       packages: write
@@ -37,6 +37,7 @@ jobs:
       # Job: Helm
       helm__chart_directory: "./helm"
       # -- Publish
+      helm__version: "v4.2.2"
       docker__push: true
       helm__push: true
       # Create a GitHub release (git-cliff changelog + helm/docker provenance) on tag pushes.
