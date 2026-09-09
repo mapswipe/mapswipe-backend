@@ -455,7 +455,7 @@ class BaseProject[
             },
         )
 
-    def update_project_on_firebase(self, project_ref: FbReference):
+    def update_project_on_firebase(self, project_ref: FbReference, fb_project: firebase_ext_models.FbProject):
         # NOTE: Always write the complete FbProjectUpdateInput field set (never a subset,
         # e.g. only progress/contributorCount) using update() (a Firebase RTDB merge, not a
         # replace). This makes every push idempotent and order-independent: whichever push
@@ -535,7 +535,7 @@ class BaseProject[
             valid_project = RelaxedModel.model_validate(obj=fb_project)
             valid_project = firebase_ext_models.FbProject.model_validate(obj=valid_project)
 
-            self.update_project_on_firebase(project_ref)
+            self.update_project_on_firebase(project_ref, valid_project)
 
     def push_project_on_firebase(self):
         try:
