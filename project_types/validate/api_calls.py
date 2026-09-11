@@ -15,14 +15,12 @@ from main.config import Config
 from main.logging import log_extra_response
 from utils.fields import PydanticLongText
 
-# NOTE: ohsome API v2 paths. v1 used elements/count and elements/geometry.
 OHSOME_STATS_COUNT_PATH = "stats/features/count.json"
 OHSOME_EXTRACTION_FEATURES_PATH = "extraction/features.parquet"
 
-# NOTE: v2 requires an explicit time; "latest" reproduces v1's implicit snapshot behaviour
+# NOTE: The API requires an explicit time. "latest" is the current snapshot.
 OHSOME_SNAPSHOT_TIME = "latest"
 
-# NOTE: Columns we consume from the v2 parquet extraction schema
 OHSOME_REQUIRED_COLUMNS = (
     "osm_type",
     "osm_id",
@@ -140,9 +138,8 @@ def query_osm(changeset_ids: list, changeset_results: dict):  # type: ignore[rep
 def add_changeset_info(feature_collection: dict[str, Any]) -> dict[str, Any]:
     """Add the changeset comment and editor to each feature.
 
-    Queries osmCHA first and falls back to the OSM API for changesets osmCHA does not
-    know about. Unlike v1, username and userid already come from the ohsome extraction,
-    so only the changeset tags are fetched here.
+    osmCHA does not know every changeset, so the OSM API covers the rest.
+    Only the comment and editor are fetched; the extraction already carries the user.
     """
     logger.info("starting changeset enrichment")
     batch_size = 100
@@ -193,7 +190,7 @@ def add_changeset_info(feature_collection: dict[str, Any]) -> dict[str, Any]:
 
 
 def _format_ohsome_timestamp(value: datetime.datetime | None) -> str | None:
-    """Format a parquet timestamp the way the v1 GeoJSON extraction did."""
+    """Format a timestamp for the task CSV export."""
     if value is None:
         return None
     return value.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -204,7 +201,7 @@ def _ohsome_post(path: str, payload: dict[str, Any]) -> requests.Response:
     url = Config.OHSOME_API_LINK + path
     headers = {
         **Config.DEFAULT_HEADERS,
-        # NOTE: v2 accepts the key bare or with a "Bearer " prefix
+        # NOTE: The API accepts the key bare or with a "Bearer " prefix
         "Authorization": Config.OHSOME_API_KEY,
     }
 
@@ -230,7 +227,10 @@ def _ohsome_post(path: str, payload: dict[str, Any]) -> requests.Response:
 
 
 def get_object_count_from_ohsome(aoi: dict[str, Any], ohsome_filter: PydanticLongText) -> int | None:
-    """Count objects matching the filter within the area of interest."""
+    """Count objects matching the filter within the area of interest.
+
+    `aoi` takes one Polygon or MultiPolygon. A Feature or FeatureCollection is rejected.
+    """
     response = _ohsome_post(
         OHSOME_STATS_COUNT_PATH,
         {
@@ -240,7 +240,7 @@ def get_object_count_from_ohsome(aoi: dict[str, Any], ohsome_filter: PydanticLon
         },
     )
 
-    # NOTE: v2 returns columnar results: {"result": {"timestamp": [...], "value": [...]}}
+    # NOTE: Results are columnar: {"result": {"timestamp": [...], "value": [...]}}
     result = response.json().get("result") or {}
     values = result.get("value") or []
     if not values:
@@ -252,8 +252,8 @@ def get_object_count_from_ohsome(aoi: dict[str, Any], ohsome_filter: PydanticLon
 def parquet_to_feature_collection(content: bytes) -> dict[str, Any]:
     """Convert an ohsome parquet extraction into a GeoJSON FeatureCollection.
 
-    Property names deliberately match what the v1 GeoJSON extraction produced, because
-    they are flattened into columns of the public task CSV export.
+    The property names become columns of the public task CSV export, so renaming one
+    changes that export.
     """
     table = pq.read_table(pa.BufferReader(content))
 
@@ -265,15 +265,15 @@ def parquet_to_feature_collection(content: bytes) -> dict[str, Any]:
     features: list[dict[str, Any]] = [
         {
             "type": "Feature",
-            # NOTE: geom is WKB, which GEOSGeometry reads directly
+            # NOTE: GEOSGeometry reads WKB from a memoryview. Plain bytes are read as text.
             "geometry": json.loads(GEOSGeometry(memoryview(row["geom"]), srid=4326).geojson),
-            # NOTE: Key order matches v1 so the exported CSV columns stay in the same order.
-            # comment/editor are filled in by add_changeset_info; None keys are dropped later
-            # by clean_up_none_keys, exactly as they were in v1.
+            # NOTE: These names become task CSV export columns. The order here is lost:
+            # the properties are stored as jsonb, which sorts keys by length then bytes.
+            # comment and editor stay None here; add_changeset_info fills them in.
             "properties": {
                 "changesetId": row["changeset_id"],
                 "lastEdit": _format_ohsome_timestamp(row["edit_timestamp"]),
-                # NOTE: v1 emitted a single "way/123" string; v2 splits type and id
+                # NOTE: The export column expects a single "way/123" string.
                 "osmId": f"{row['osm_type']}/{row['osm_id']}",
                 "version": row["version"],
                 "username": remove_troublesome_chars(row["user_name"]),
@@ -289,16 +289,17 @@ def parquet_to_feature_collection(content: bytes) -> dict[str, Any]:
 
 
 def get_objects_from_ohsome(aoi: dict[str, Any], ohsome_filter: PydanticLongText) -> dict[str, Any]:
-    """Extract objects matching the filter within the area of interest, with changeset info."""
+    """Extract objects matching the filter within the area of interest, with changeset info.
+
+    `aoi` has the same single-geometry restriction as `get_object_count_from_ohsome`.
+    """
     response = _ohsome_post(
         OHSOME_EXTRACTION_FEATURES_PATH,
         {
             "aoi": aoi,
             "filter": ohsome_filter,
             "time": OHSOME_SNAPSHOT_TIME,
-            # NOTE: v1 clipped by default. v2 does too for extraction, but it is undocumented
-            # and the /stats default is the opposite, so be explicit.
-            "clip": True,
+            "clip": False,
         },
     )
 

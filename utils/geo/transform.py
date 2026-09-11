@@ -105,12 +105,7 @@ def convert_json_dict_to_geometry_collection(geojson_dict: dict):  # type: ignor
 
 
 def convert_json_dict_to_aoi_geometry(geojson_dict: dict) -> dict:  # type: ignore[reportMissingTypeArgument]
-    """Merge a GeoJSON FeatureCollection into a single Polygon/MultiPolygon geometry.
-
-    The ohsome API v2 `aoi` parameter rejects Feature and FeatureCollection input: it
-    accepts only one Polygon or MultiPolygon geometry. Dissolving the features matches
-    what v1 did internally with a multi-feature `bpolys`.
-    """
+    """Merge a GeoJSON FeatureCollection into a single Polygon/MultiPolygon geometry."""
     _, geometry_collection = convert_json_dict_to_geometry_collection(geojson_dict)
 
     if len(geometry_collection) == 0:

@@ -23,6 +23,33 @@ from project_types.validate.api_calls import (
     remove_troublesome_chars,
 )
 
+# NOTE: Carries every column the API sends, so the tests also cover ignoring the rest.
+# https://docs.ohsome.org/ohsome-api/v2-rc/reference/data_model.html
+EXTRACTION_SCHEMA = pa.schema(
+    [
+        ("osm_type", pa.string()),
+        ("osm_id", pa.int64()),
+        ("edit_timestamp", pa.timestamp("us", tz="UTC")),
+        ("valid_to_timestamp", pa.timestamp("us", tz="UTC")),
+        ("version", pa.int32()),
+        ("minor_version", pa.int32()),
+        ("edits", pa.int32()),
+        ("user_id", pa.int32()),
+        ("user_name", pa.string()),
+        ("changeset_id", pa.int64()),
+        ("tags", pa.map_(pa.string(), pa.string())),
+        (
+            "bbox",
+            pa.struct(
+                [("xmin", pa.float64()), ("xmax", pa.float64()), ("ymin", pa.float64()), ("ymax", pa.float64())],
+            ),
+        ),
+        ("geom_type", pa.string()),
+        ("geom", pa.binary()),
+        ("clipped", pa.bool_()),
+    ],
+)
+
 
 class TestValidateProject(TestCase):
     @typing.override
@@ -159,7 +186,7 @@ class TestValidateProject(TestCase):
         }
         sample_object_count = 500
 
-        # NOTE: v2 returns a columnar result, not a list of objects
+        # NOTE: The result is columnar, not a list of objects.
         mock_response_data = {
             "apiVersion": "2.0.0rc2",
             "attribution": {
@@ -238,20 +265,8 @@ class TestValidateProject(TestCase):
                 },
             ]
 
-        schema = pa.schema(
-            [
-                ("osm_type", pa.string()),
-                ("osm_id", pa.int64()),
-                ("version", pa.int32()),
-                ("changeset_id", pa.int64()),
-                ("edit_timestamp", pa.timestamp("us", tz="UTC")),
-                ("user_id", pa.int32()),
-                ("user_name", pa.string()),
-                ("geom", pa.binary()),
-                ("geom_type", pa.string()),
-            ],
-        )
-        table = pa.Table.from_pylist(rows, schema=schema)
+        # NOTE: from_pylist nulls any column a row omits.
+        table = pa.Table.from_pylist(rows, schema=EXTRACTION_SCHEMA)
         buffer = io.BytesIO()
         pq.write_table(table, buffer)
         return buffer.getvalue()
@@ -265,8 +280,7 @@ class TestValidateProject(TestCase):
         feature = feature_collection["features"][0]
         assert feature["geometry"]["type"] == "Polygon"
 
-        # NOTE: Property names must stay identical to the v1 GeoJSON extraction,
-        # because they become columns of the public task CSV export.
+        # NOTE: These names become columns of the public task CSV export.
         assert feature["properties"] == {
             "changesetId": 49584905,
             "lastEdit": "2017-06-16T09:07:24Z",
@@ -277,7 +291,7 @@ class TestValidateProject(TestCase):
             "editor": None,
             "userid": 4204463,
         }
-        # NOTE: Column order in the CSV export follows this key order
+        # NOTE: jsonb storage, not this order, decides the real CSV column order.
         assert list(feature["properties"]) == [
             "changesetId",
             "lastEdit",
@@ -339,7 +353,7 @@ class TestValidateProject(TestCase):
             "aoi": sample_aoi,
             "filter": sample_filter,
             "time": "latest",
-            "clip": True,
+            "clip": False,
         }
         assert called_kwargs["headers"]["Authorization"] == Config.OHSOME_API_KEY
 
