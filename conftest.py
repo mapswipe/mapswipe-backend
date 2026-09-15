@@ -6,9 +6,13 @@ from django.http import QueryDict
 
 def scrub_auth_token(request):  # type: ignore[reportMissingParameterType]
     # NOTE: We want to redact sensitize information from "Authorization: Token XYZ"
+    # osmCHA sends "Token XYZ", ohsome v2 sends the bare key, so redact any value we see.
     authorization_header = request.headers.get("authorization")
-    if authorization_header and authorization_header.lower().startswith("token"):
-        request.headers["authorization"] = "Token DUMMY_TOKEN"
+    if authorization_header:
+        if authorization_header.lower().startswith("token"):
+            request.headers["authorization"] = "Token DUMMY_TOKEN"
+        else:
+            request.headers["authorization"] = "DUMMY_TOKEN"
 
     url = request.uri
     if "access_token" in url:

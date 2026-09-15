@@ -102,3 +102,17 @@ def convert_json_dict_to_geometry_collection(geojson_dict: dict):  # type: ignor
     geometry_collection.srid = 4326
 
     return filtered_features, geometry_collection
+
+
+def convert_json_dict_to_aoi_geometry(geojson_dict: dict) -> dict:  # type: ignore[reportMissingTypeArgument]
+    """Merge a GeoJSON FeatureCollection into a single Polygon/MultiPolygon geometry."""
+    _, geometry_collection = convert_json_dict_to_geometry_collection(geojson_dict)
+
+    if len(geometry_collection) == 0:
+        raise ValueError("AOI GeoJSON contains no polygon or multi-polygon geometry")
+
+    merged = geometry_collection.unary_union
+    if merged.geom_type not in ("Polygon", "MultiPolygon"):
+        raise ValueError(f"AOI must merge into a polygon, got {merged.geom_type}")
+
+    return json.loads(merged.geojson)
