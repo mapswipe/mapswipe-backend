@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.3.2](https://github.com/mapswipe/mapswipe-backend/compare/v0.3.1..v0.3.2) - 2026-09-16
+### Changes:
+
+#### 🚀  Features
+
+- *(banjo)* Migrate Helm chart to banjo-helm 0.4.1 - ([43dbe93](https://github.com/mapswipe/mapswipe-backend/commit/43dbe9309f2453257175148fd6dc779d5b7777be))
+- *(banjo)* Install git in the image for the uv git dependency - ([95ebcd7](https://github.com/mapswipe/mapswipe-backend/commit/95ebcd77ab26aef2406890a99bfb9ef1ce987102))
+- *(banjo)* Integrate banjo-utils (health probes, celery heartbeat, resource waits) - ([022ae6a](https://github.com/mapswipe/mapswipe-backend/commit/022ae6a546d0f3ea071e67e3093fa3b155828d4a))
+- *(graphql)* Upgrade strawberry-graphql-django 0.57 -> 0.86 - ([417fbaa](https://github.com/mapswipe/mapswipe-backend/commit/417fbaa548976410ed7679db917e7b0335eadb4b))
+- *(validate)* Integrate ohsome v2 api - ([5bd3f25](https://github.com/mapswipe/mapswipe-backend/commit/5bd3f25393f8c727134a4454579cc569028c89df))
+
+#### 🐛 Bug Fixes
+
+- *(helm)* Regenerate alpha snapshot for helm 4.2.4 output - ([7377ce5](https://github.com/mapswipe/mapswipe-backend/commit/7377ce57201c81d933430752f732d9cc26fc6912))
+- *(validate)* Request ohsome footprints unclipped - ([cf4cb23](https://github.com/mapswipe/mapswipe-backend/commit/cf4cb238ecb6c4df672049804844034d1b68ce00))
+- *(validate)* Timeout HOT/OHSOME requests error message - ([8c053fb](https://github.com/mapswipe/mapswipe-backend/commit/8c053fbf660abab59e54668c4111b3ac54a46ac7))
+
+#### 📚 Documentation
+
+- Add CONTRIBUTING.md - ([8dc23f9](https://github.com/mapswipe/mapswipe-backend/commit/8dc23f9c8988d6b79e4de75bf1234c5a4b930cfe))
+
+#### ⚙️ Miscellaneous Tasks
+
+- Pin helm to 4.3.0 - ([0f393a2](https://github.com/mapswipe/mapswipe-backend/commit/0f393a257d384680ba143e8f66ebc365081a577a))
+- Remove temp trigger on feature/banjo-stack - ([21bf939](https://github.com/mapswipe/mapswipe-backend/commit/21bf93992d8dc08ee6d0bbaf0f652d9917dc37d0))
+- Temporary publish trigger on the feature branch (drop before merge) - ([301fd16](https://github.com/mapswipe/mapswipe-backend/commit/301fd16477aeb30297db8ea0c1d8cb4c40bec3c9))
+- Adopt the banjo-action pipeline with Codecov upload and built-in release - ([cc207a8](https://github.com/mapswipe/mapswipe-backend/commit/cc207a89cac602654a676bc45624147bca2d0265))
+
+### 🍻 Pull Requests (5)
+- (#265) [Feat: upgrade strawberry-graphql-django 0.57 -> 0.86 and set PAGINATION MAX LIMIT](https://github.com/mapswipe/mapswipe-backend/pull/265)
+- (#268) [Fix: Timeout HOT/OHSOME requests message](https://github.com/mapswipe/mapswipe-backend/pull/268)
+- (#270) [Integrate banjo stack (banjo-utils / banjo-helm 0.4.1 / banjo-action)](https://github.com/mapswipe/mapswipe-backend/pull/270)
+- (#273) [Docs: add CONTRIBUTING.md](https://github.com/mapswipe/mapswipe-backend/pull/273)
+- (#279) [Validate: integrate ohsome v2 api](https://github.com/mapswipe/mapswipe-backend/pull/279)
+
+
 ## [0.3.1](https://github.com/mapswipe/mapswipe-backend/compare/v0.3.0..v0.3.1) - 2026-06-17
 ### Changes:
 
