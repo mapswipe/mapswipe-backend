@@ -114,6 +114,11 @@ env = environ.Env(
     MAP_IMAGE_ESRI_API_KEY=str,
     MAP_IMAGE_ESRI_BETA_API_KEY=str,
     OSMCHA_API_KEY=str,  # os.environ["OSMCHA_API_KEY"]
+    # Ohsome
+    # NOTE: v2 requires an API key on every request. Get one at https://account.heigit.org/signup
+    OHSOME_API_KEY=str,  # os.environ["OHSOME_API_KEY"]
+    # NOTE: The "-rc" is dropped once v2 is stable, so keep this overridable
+    OHSOME_API_LINK=(str, "https://api.heigit.org/ohsome-api/v2-rc/"),
     # Mapillary
     MAPILLARY_API_KEY=str,  # os.environ["MAPILLARY_API_KEY"]
     # MAP_IMAGE_DIGITAL_GLOBE_API_KEY=str,
@@ -576,6 +581,10 @@ MAP_IMAGE_ESRI_BETA_API_KEY = env("MAP_IMAGE_ESRI_BETA_API_KEY")
 # MAP_IMAGE_DIGITAL_GLOBE_API_KEY = env("MAP_IMAGE_DIGITAL_GLOBE_API_KEY")
 
 OSMCHA_API_KEY = env("OSMCHA_API_KEY")
+
+# Ohsome
+OHSOME_API_KEY = env("OHSOME_API_KEY")
+OHSOME_API_LINK = env("OHSOME_API_LINK")
 
 # Mapillary
 MAPILLARY_API_KEY = env("MAPILLARY_API_KEY")

@@ -1,14 +1,37 @@
+import datetime
+import json
 import logging
 from typing import Any
 from xml.etree import ElementTree as ET
 
+import pyarrow as pa  # type: ignore[reportMissingTypeStubs]
+import pyarrow.parquet as pq  # type: ignore[reportMissingTypeStubs]
 import requests
+from django.contrib.gis.geos import GEOSGeometry
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from main.config import Config
 from main.logging import log_extra_response
 from utils.fields import PydanticLongText
+
+OHSOME_STATS_COUNT_PATH = "stats/features/count.json"
+OHSOME_EXTRACTION_FEATURES_PATH = "extraction/features.parquet"
+
+# NOTE: The API requires an explicit time. "latest" is the current snapshot.
+OHSOME_SNAPSHOT_TIME = "latest"
+
+OHSOME_REQUIRED_COLUMNS = (
+    "osm_type",
+    "osm_id",
+    "version",
+    "changeset_id",
+    "edit_timestamp",
+    "user_id",
+    "user_name",
+    "geom",
+    "geom_type",
+)
 
 logger = logging.getLogger(__name__)
 
@@ -112,122 +135,86 @@ def query_osm(changeset_ids: list, changeset_results: dict):  # type: ignore[rep
     return changeset_results
 
 
-def remove_noise_and_add_user_info(json: dict[str, Any]) -> dict[str, Any]:
-    """Delete unwanted information from properties."""
-    logger.info("starting filtering and adding extra info")
+def add_changeset_info(feature_collection: dict[str, Any]) -> dict[str, Any]:
+    """Add the changeset comment and editor to each feature.
+
+    osmCHA does not know every changeset, so the OSM API covers the rest.
+    Only the comment and editor are fetched; the extraction already carries the user.
+    """
+    logger.info("starting changeset enrichment")
     batch_size = 100
 
-    # remove noise
-    changeset_results = {}
-
-    missing_rows = {
-        "@changesetId": 0,
-        "@lastEdit": 0,
-        "@osmId": 0,
-        "@version": 0,
+    changeset_results: dict[int, Any] = {
+        int(feature["properties"]["changesetId"]): None for feature in feature_collection["features"]
     }
 
-    for feature in json["features"]:
-        new_properties = {}
-        for attribute in missing_rows:
-            try:
-                new_properties[attribute.replace("@", "")] = feature["properties"][attribute]
-            except KeyError:
-                missing_rows[attribute] += 1
-        changeset_results[new_properties["changesetId"]] = None
-        feature["properties"] = new_properties
-
-    # add info
-    len_osm = len(changeset_results.keys())
-    batches = int(len(changeset_results.keys()) / batch_size) + 1
-    logger.info("%s changesets will be queried in roughly %s batches from osmCHA", len_osm, batches)
-
     chunk_list = chunks(list(changeset_results.keys()), batch_size)
-    for i, subset in enumerate(chunk_list):
-        changeset_results = query_osmcha(subset, changeset_results)
-        progress = round(100 * ((i + 1) / len(chunk_list)), 1)
-        logger.info("finished query %s/%s, %s", i + 1, len(chunk_list), progress)
-
-    missing_ids = [i for i, v in changeset_results.items() if v is None]
-    chunk_list = chunks(missing_ids, batch_size)
-    batches = int(len(missing_ids) / batch_size) + 1
     logger.info(
-        "%s changesets where missing from osmCHA and are now queried via osmAPI in %s batches",
-        len(missing_ids),
-        batches,
+        "%s changesets will be queried in %s batches from osmCHA",
+        len(changeset_results),
+        len(chunk_list),
     )
     for i, subset in enumerate(chunk_list):
-        changeset_results = query_osm(subset, changeset_results)
-        progress = round(100 * ((i + 1) / len(chunk_list)), 1)
-        logger.info("finished query %s/%s, %s", i + 1, len(chunk_list), progress)
+        changeset_results = query_osmcha(subset, changeset_results)
+        logger.info("finished query %s/%s", i + 1, len(chunk_list))
 
-    for feature in json["features"]:
-        changeset = changeset_results[int(feature["properties"]["changesetId"])]
-        for attribute_name in ["username", "comment", "editor", "userid"]:
-            if attribute_name == "userid":
-                feature["properties"][attribute_name] = int(changeset[attribute_name])
-            else:
-                feature["properties"][attribute_name] = changeset[attribute_name]
-
-    logger.info("finished filtering and adding extra info")
-    if any(x > 0 for x in missing_rows.values()):
-        logger.warning("features missing values:\n %s", missing_rows)
-
-    return json
-
-
-# fixme(frozenhelium): merge this function with `ohsome` and also add appropriate messages to raised exceptions
-def get_object_count_from_ohsome(area: str, ohsome_filter: PydanticLongText) -> int | None:
-    url = Config.OHSOME_API_LINK + "elements/count"
-    data = {"bpolys": area, "filter": ohsome_filter}
-
-    logger.info("Target: %s", url)
-    logger.info("Filter: %s", ohsome_filter)
-
-    # fixme(frozenhelium): use httpx for proper timeout
-    try:
-        response = requests.post(url, data=data, timeout=100)
-    except requests.exceptions.Timeout as e:
-        logger.warning("ohsome element count request timed out")
-        raise ValidateApiCallError("OHSOME request timed out.") from e
-    if response.status_code != 200:
-        logger.warning(
-            "ohsome element count request failed: check for errors in filter or geometries",
-            extra=log_extra_response(response=response),
+    missing_ids = [i for i, v in changeset_results.items() if v is None]
+    if missing_ids:
+        chunk_list = chunks(missing_ids, batch_size)
+        logger.info(
+            "%s changesets where missing from osmCHA and are now queried via osmAPI in %s batches",
+            len(missing_ids),
+            len(chunk_list),
         )
-        raise ValidateApiCallError
-    logger.info("Query successful.")
+        for i, subset in enumerate(chunk_list):
+            changeset_results = query_osm(subset, changeset_results)
+            logger.info("finished query %s/%s", i + 1, len(chunk_list))
 
-    response_json = response.json()
-    results = response_json.get("result", None)
-    if results is None:
-        return None
+    unresolved = 0
+    for feature in feature_collection["features"]:
+        changeset = changeset_results.get(int(feature["properties"]["changesetId"]))
+        if changeset is None:
+            # NOTE: Neither osmCHA nor the OSM API knew this changeset
+            unresolved += 1
+            feature["properties"]["comment"] = None
+            feature["properties"]["editor"] = None
+            continue
+        feature["properties"]["comment"] = changeset["comment"]
+        feature["properties"]["editor"] = changeset["editor"]
 
-    first_result = results[0]
-    if first_result is None:
-        return None
+    logger.info("finished changeset enrichment")
+    if unresolved:
+        logger.warning("%s features have no changeset info from osmCHA or osmAPI", unresolved)
 
-    value = first_result.get("value", None)
+    return feature_collection
+
+
+def _format_ohsome_timestamp(value: datetime.datetime | None) -> str | None:
+    """Format a timestamp for the task CSV export."""
     if value is None:
         return None
+    return value.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    return int(value)
 
+def _ohsome_post(path: str, payload: dict[str, Any]) -> requests.Response:
+    """POST a JSON body to the ohsome API and return the raw response."""
+    url = Config.OHSOME_API_LINK + path
+    headers = {
+        **Config.DEFAULT_HEADERS,
+        # NOTE: The API accepts the key bare or with a "Bearer " prefix
+        "Authorization": Config.OHSOME_API_KEY,
+    }
 
-def ohsome(request: dict[str, Any], area: str, properties: str | None = None) -> dict[str, Any]:
-    """Request data from Ohsome API."""
-    url = Config.OHSOME_API_LINK + request["endpoint"]
-    data = {"bpolys": area, "filter": request["filter"]}
-    if properties:
-        data["properties"] = properties
     logger.info("Target: %s", url)
-    logger.info("Filter: %s", request["filter"])
+    logger.info("Filter: %s", payload.get("filter"))
+
     # FIXME(tnagorra): Need to check what the timeout should be
     try:
-        response = requests.post(url, data=data, timeout=100)
+        response = requests.post(url, json=payload, headers=headers, timeout=100)
     except requests.exceptions.Timeout as e:
-        logger.warning("ohsome request timed out")
+        logger.warning("ohsome request timed out: %s", path)
         raise ValidateApiCallError("OHSOME request timed out.") from e
+
     if response.status_code != 200:
         logger.warning(
             "ohsome request failed: check for errors in filter or geometries",
@@ -236,9 +223,84 @@ def ohsome(request: dict[str, Any], area: str, properties: str | None = None) ->
         raise ValidateApiCallError
     logger.info("Query successful.")
 
-    response = response.json()
-
-    if properties:
-        return remove_noise_and_add_user_info(response)
-
     return response
+
+
+def get_object_count_from_ohsome(aoi: dict[str, Any], ohsome_filter: PydanticLongText) -> int | None:
+    """Count objects matching the filter within the area of interest.
+
+    `aoi` takes one Polygon or MultiPolygon. A Feature or FeatureCollection is rejected.
+    """
+    response = _ohsome_post(
+        OHSOME_STATS_COUNT_PATH,
+        {
+            "aoi": aoi,
+            "filter": ohsome_filter,
+            "time": OHSOME_SNAPSHOT_TIME,
+        },
+    )
+
+    # NOTE: Results are columnar: {"result": {"timestamp": [...], "value": [...]}}
+    result = response.json().get("result") or {}
+    values = result.get("value") or []
+    if not values:
+        return None
+
+    return int(values[0])
+
+
+def parquet_to_feature_collection(content: bytes) -> dict[str, Any]:
+    """Convert an ohsome parquet extraction into a GeoJSON FeatureCollection.
+
+    The property names become columns of the public task CSV export, so renaming one
+    changes that export.
+    """
+    table = pq.read_table(pa.BufferReader(content))
+
+    missing_columns = [column for column in OHSOME_REQUIRED_COLUMNS if column not in table.column_names]
+    if missing_columns:
+        logger.warning("ohsome parquet is missing expected columns: %s", missing_columns)
+        raise ValidateApiCallError(f"OHSOME response is missing expected columns: {missing_columns}")
+
+    features: list[dict[str, Any]] = [
+        {
+            "type": "Feature",
+            # NOTE: GEOSGeometry reads WKB from a memoryview. Plain bytes are read as text.
+            "geometry": json.loads(GEOSGeometry(memoryview(row["geom"]), srid=4326).geojson),
+            # NOTE: These names become task CSV export columns. The order here is lost:
+            # the properties are stored as jsonb, which sorts keys by length then bytes.
+            # comment and editor stay None here; add_changeset_info fills them in.
+            "properties": {
+                "changesetId": row["changeset_id"],
+                "lastEdit": _format_ohsome_timestamp(row["edit_timestamp"]),
+                # NOTE: The export column expects a single "way/123" string.
+                "osmId": f"{row['osm_type']}/{row['osm_id']}",
+                "version": row["version"],
+                "username": remove_troublesome_chars(row["user_name"]),
+                "comment": None,
+                "editor": None,
+                "userid": row["user_id"],
+            },
+        }
+        for row in table.select(OHSOME_REQUIRED_COLUMNS).to_pylist()
+    ]
+
+    return {"type": "FeatureCollection", "features": features}
+
+
+def get_objects_from_ohsome(aoi: dict[str, Any], ohsome_filter: PydanticLongText) -> dict[str, Any]:
+    """Extract objects matching the filter within the area of interest, with changeset info.
+
+    `aoi` has the same single-geometry restriction as `get_object_count_from_ohsome`.
+    """
+    response = _ohsome_post(
+        OHSOME_EXTRACTION_FEATURES_PATH,
+        {
+            "aoi": aoi,
+            "filter": ohsome_filter,
+            "time": OHSOME_SNAPSHOT_TIME,
+            "clip": False,
+        },
+    )
+
+    return add_changeset_info(parquet_to_feature_collection(response.content))

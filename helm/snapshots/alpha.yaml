@@ -384,6 +384,9 @@ spec:
               value: redis://mapswipe-dragonfly:6379/1
             - name: CELERY_REDIS_URL
               value: redis://mapswipe-dragonfly:6379/0
+            
+
+
 ---
 # Source: mapswipe-backend-helm/charts/app/templates/hooks/job.yaml
 # Hook: db-migrate
@@ -439,6 +442,9 @@ spec:
               value: redis://mapswipe-dragonfly:6379/1
             - name: CELERY_REDIS_URL
               value: redis://mapswipe-dragonfly:6379/0
+            
+
+
 ---
 # Source: mapswipe-backend-helm/charts/app/templates/hooks/job.yaml
 # Hook: wait-for-resources
@@ -555,6 +561,7 @@ spec:
       resources:
         requests:
           storage: 1Gi
+
 ---
 # Source: mapswipe-backend-helm/charts/app/templates/extraManifests.yaml
 # Manifest: traefik-body-size-middleware

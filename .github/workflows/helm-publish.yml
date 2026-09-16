@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   _:
-    uses: toggle-corp/banjo-action/.github/workflows/pipeline.yml@v0.3.0
+    uses: toggle-corp/banjo-action/.github/workflows/pipeline.yml@v0.4.0
     permissions:
       contents: write
       packages: write
@@ -36,6 +36,9 @@ jobs:
       docker__codecov_upload: true
       # Job: Helm
       helm__chart_directory: "./helm"
+      # NOTE: Pinned because a helm release can change rendered whitespace and
+      # invalidate helm/snapshots/. 4.2.4 did exactly that.
+      helm__version: "4.3.0"
       # -- Publish
       docker__push: true
       helm__push: true

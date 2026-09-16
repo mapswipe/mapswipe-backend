@@ -7,7 +7,6 @@ import requests
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
 from django.db import models
-from geojson_pydantic import FeatureCollection as PydanticFeatureCollection
 from pydantic import BaseModel, field_validator, model_validator
 from pyfirebase_mapswipe import models as firebase_models
 from ulid import ULID
@@ -28,7 +27,11 @@ from main.bulk_managers import BulkCreateManager
 from main.config import Config
 from project_types.base import project as base_project
 from project_types.tile_map_service.base.project import create_json_dump
-from project_types.validate.api_calls import ValidateApiCallError, get_object_count_from_ohsome, ohsome
+from project_types.validate.api_calls import (
+    ValidateApiCallError,
+    get_object_count_from_ohsome,
+    get_objects_from_ohsome,
+)
 from utils import fields as custom_fields
 from utils.asset_types.models import AoiGeometryAssetProperty
 from utils.common import Grouping, clean_up_none_keys, to_groups
@@ -37,6 +40,7 @@ from utils.geo.raster_tile_server.models import RasterTileServerConfig
 from utils.geo.transform import (
     AoiFeature,
     convert_feature_to_wkt,
+    convert_json_dict_to_aoi_geometry,
     convert_json_dict_to_features,
     convert_json_dict_to_geometry_collection,
     get_area_of_geometry,
@@ -205,11 +209,17 @@ class ValidateProject(
 
         with aoi_asset.file.open() as aoi_file:
             aoi_geojson = json.loads(aoi_file.read())
-        feature_collection = PydanticFeatureCollection.model_validate(aoi_geojson)
+
+        try:
+            aoi_geometry = convert_json_dict_to_aoi_geometry(aoi_geojson)
+        except Exception as e:
+            raise base_project.ValidationException(
+                "AOI GeoJSON should be a valid feature collection of polygon or multi-polygon",
+            ) from e
 
         try:
             object_count = get_object_count_from_ohsome(
-                feature_collection.model_dump_json(),
+                aoi_geometry,
                 ohsome_filter,
             )
         except ValidateApiCallError as e:
@@ -274,11 +284,16 @@ class ValidateProject(
         area_km2 = get_area_of_geometry(geometry_collection)
         ValidateProject._validate_geojson_aoi_area(area_km2)
 
-        feature_collection = PydanticFeatureCollection.model_validate(aoi_geojson)
+        try:
+            aoi_geometry = convert_json_dict_to_aoi_geometry(aoi_geojson)
+        except Exception as e:
+            raise base_project.ValidationException(
+                "AOI GeoJSON should be a valid feature collection of polygon or multi-polygon",
+            ) from e
 
         try:
             object_count = get_object_count_from_ohsome(
-                feature_collection.model_dump_json(),
+                aoi_geometry,
                 ohsome_filter,
             )
         except ValidateApiCallError as e:
@@ -306,24 +321,22 @@ class ValidateProject(
             project_id=self.project.pk,
         )
 
-    def _get_object_geometry_from_ohsome(self, geojson: dict[typing.Any, typing.Any]):
+    def _get_object_geometry_from_ohsome(
+        self,
+        geojson: dict[typing.Any, typing.Any],
+        ohsome_filter: custom_fields.PydanticLongText,
+    ):
         try:
-            feature_collection = PydanticFeatureCollection.model_validate(geojson)
+            aoi_geometry = convert_json_dict_to_aoi_geometry(geojson)
         except Exception as e:
             raise base_project.ValidationException(
                 "AOI GeoJSON should be a valid feature collection of polygon or multi-polygon",
             ) from e
 
-        ohsome_request = {
-            "endpoint": "elements/geometry",
-            "filter": self.project_type_specifics.object_source.ohsome_filter,
-        }
-
         try:
-            geojson_result = ohsome(
-                ohsome_request,
-                feature_collection.model_dump_json(),
-                properties="tags, metadata",
+            geojson_result = get_objects_from_ohsome(
+                aoi_geometry,
+                ohsome_filter,
             )
         except ValidateApiCallError as e:
             # NOTE: Handles calls from OHSOME, OSMCHA and OSM
@@ -368,7 +381,7 @@ class ValidateProject(
 
         # TODO(tnagorra): Store intermediate geometries?
 
-        return self._get_object_geometry_from_ohsome(aoi_geojson)
+        return self._get_object_geometry_from_ohsome(aoi_geojson, ohsome_filter)
 
     def _validate_object_geojson_url(self):
         url = self.project_type_specifics.object_source.object_geojson_url
@@ -451,7 +464,7 @@ class ValidateProject(
         self.project.centroid = geometry_center
         self.project.save(update_fields=["aoi_geometry", "total_area", "bbox", "centroid"])
 
-        return self._get_object_geometry_from_ohsome(aoi_geojson)
+        return self._get_object_geometry_from_ohsome(aoi_geojson, ohsome_filter)
 
     @typing.override
     def validate(self) -> list[AoiFeature]:
