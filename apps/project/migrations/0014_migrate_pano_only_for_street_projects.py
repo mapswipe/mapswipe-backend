@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 def migrate_is_pano_to_pano_only(apps, schema_editor):
     """
-    Migrate isPano field to panoOnly in mapillaryImageFilters
+    Migrate is_pano field to pano_only in mapillary_image_filters
     for all STREET-type projects to conform with updated schema.
     """
     Project = apps.get_model('project', 'Project')
@@ -23,22 +23,22 @@ def migrate_is_pano_to_pano_only(apps, schema_editor):
         if project.project_type_specifics is None:
             continue
 
-        if 'mapillaryImageFilters' in project.project_type_specifics:
-            filters = project.project_type_specifics['mapillaryImageFilters']
-            if isinstance(filters, dict) and 'isPano' in filters:
+        if 'mapillary_image_filters' in project.project_type_specifics:
+            filters = project.project_type_specifics['mapillary_image_filters']
+            if isinstance(filters, dict) and 'is_pano' in filters:
                 logger.info(
-                    f"Migrating isPano to panoOnly for project {project.id} ({project.name})"
+                    f"Migrating is_pano to pano_only for project {project.id} ({project.name})"
                 )
-                filters['panoOnly'] = filters.pop('isPano')
+                filters['pano_only'] = filters.pop('is_pano')
                 project.save(update_fields=['project_type_specifics'])
                 migrated_count += 1
 
-    logger.info(f"Field migration completed: {migrated_count} projects migrated isPano to panoOnly")
+    logger.info(f"Field migration completed: {migrated_count} projects migrated is_pano to pano_only")
 
 
 def reverse_pano_migration(apps, schema_editor):
     """
-    Revert panoOnly back to isPano for compatibility.
+    Revert pano_only back to is_pano for compatibility.
     """
     Project = apps.get_model('project', 'Project')
 
@@ -51,17 +51,17 @@ def reverse_pano_migration(apps, schema_editor):
         if project.project_type_specifics is None:
             continue
 
-        if 'mapillaryImageFilters' in project.project_type_specifics:
-            filters = project.project_type_specifics['mapillaryImageFilters']
-            if isinstance(filters, dict) and 'panoOnly' in filters:
+        if 'mapillary_image_filters' in project.project_type_specifics:
+            filters = project.project_type_specifics['mapillary_image_filters']
+            if isinstance(filters, dict) and 'pano_only' in filters:
                 logger.info(
-                    f"Reverting panoOnly to isPano for project {project.id} ({project.name})"
+                    f"Reverting pano_only to is_pano for project {project.id} ({project.name})"
                 )
-                filters['isPano'] = filters.pop('panoOnly')
+                filters['is_pano'] = filters.pop('pano_only')
                 project.save(update_fields=['project_type_specifics'])
                 reverted_count += 1
 
-    logger.info(f"Reverse migration completed: {reverted_count} projects reverted panoOnly to isPano")
+    logger.info(f"Reverse migration completed: {reverted_count} projects reverted pano_only to is_pano")
 
 
 class Migration(migrations.Migration):
