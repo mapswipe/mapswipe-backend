@@ -19,10 +19,7 @@ def migrate_sampling_threshold_to_meters(apps, schema_editor):
 
     migrated_count = 0
 
-    for project in Project._default_manager.all():
-        if project.project_type != 7:  # STREET type
-            continue
-
+    for project in Project._default_manager.filter(project_type=7):  # STREET type
         if project.project_type_specifics is None:
             continue
 
@@ -49,17 +46,12 @@ def migrate_sampling_threshold_to_meters(apps, schema_editor):
 def reverse_sampling_threshold_migration(apps, schema_editor):
     """
     Convert sampling_threshold back from meters (int) to kilometers (float).
-    Note: this is lossy beyond 1m (0.001km) precision, e.g. a value saved as
-    123m reverts to 0.123km even if the pre-migration value had finer precision.
     """
     Project = apps.get_model('project', 'Project')
 
     reverted_count = 0
 
-    for project in Project._default_manager.all():
-        if project.project_type != 7:  # STREET type
-            continue
-
+    for project in Project._default_manager.filter(project_type=7):  # STREET type
         if project.project_type_specifics is None:
             continue
 

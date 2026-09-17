@@ -5,10 +5,7 @@ from django.db import migrations
 def backfill_image_provider(apps, schema_editor):
     Project = apps.get_model('project', 'Project')
 
-    for project in Project._default_manager.all():
-        if project.project_type != 7:  # STREET type
-            continue
-
+    for project in Project._default_manager.filter(project_type=7):  # STREET type
         if project.project_type_specifics is None:
             project.project_type_specifics = {}
 

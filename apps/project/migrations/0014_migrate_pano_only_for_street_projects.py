@@ -16,10 +16,7 @@ def migrate_is_pano_to_pano_only(apps, schema_editor):
 
     migrated_count = 0
 
-    for project in Project._default_manager.all():
-        if project.project_type != 7:  # STREET type
-            continue
-
+    for project in Project._default_manager.filter(project_type=7):  # STREET type
         if project.project_type_specifics is None:
             continue
 
@@ -44,10 +41,7 @@ def reverse_pano_migration(apps, schema_editor):
 
     reverted_count = 0
 
-    for project in Project._default_manager.all():
-        if project.project_type != 7:  # STREET type
-            continue
-
+    for project in Project._default_manager.filter(project_type=7):  # STREET type
         if project.project_type_specifics is None:
             continue
 
