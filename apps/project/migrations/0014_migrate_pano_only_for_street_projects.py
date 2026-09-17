@@ -14,8 +14,7 @@ def migrate_is_pano_to_pano_only(apps, schema_editor):
     """
     Project = apps.get_model('project', 'Project')
 
-    migrated_count = 0
-
+    to_update = []
     for project in Project._default_manager.filter(project_type=7):  # STREET type
         if project.project_type_specifics is None:
             continue
@@ -24,13 +23,13 @@ def migrate_is_pano_to_pano_only(apps, schema_editor):
             filters = project.project_type_specifics['mapillary_image_filters']
             if isinstance(filters, dict) and 'is_pano' in filters:
                 logger.info(
-                    f"Migrating is_pano to pano_only for project {project.id} ({project.name})"
+                    f"Migrating is_pano to pano_only for project {project.id}"
                 )
                 filters['pano_only'] = filters.pop('is_pano')
-                project.save(update_fields=['project_type_specifics'])
-                migrated_count += 1
+                to_update.append(project)
 
-    logger.info(f"Field migration completed: {migrated_count} projects migrated is_pano to pano_only")
+    updated_count = Project._default_manager.bulk_update(to_update, ['project_type_specifics'])
+    logger.info(f"Field migration completed: {updated_count} projects migrated is_pano to pano_only")
 
 
 def reverse_pano_migration(apps, schema_editor):
@@ -39,8 +38,7 @@ def reverse_pano_migration(apps, schema_editor):
     """
     Project = apps.get_model('project', 'Project')
 
-    reverted_count = 0
-
+    to_update = []
     for project in Project._default_manager.filter(project_type=7):  # STREET type
         if project.project_type_specifics is None:
             continue
@@ -49,13 +47,13 @@ def reverse_pano_migration(apps, schema_editor):
             filters = project.project_type_specifics['mapillary_image_filters']
             if isinstance(filters, dict) and 'pano_only' in filters:
                 logger.info(
-                    f"Reverting pano_only to is_pano for project {project.id} ({project.name})"
+                    f"Reverting pano_only to is_pano for project {project.id}"
                 )
                 filters['is_pano'] = filters.pop('pano_only')
-                project.save(update_fields=['project_type_specifics'])
-                reverted_count += 1
+                to_update.append(project)
 
-    logger.info(f"Reverse migration completed: {reverted_count} projects reverted pano_only to is_pano")
+    updated_count = Project._default_manager.bulk_update(to_update, ['project_type_specifics'])
+    logger.info(f"Reverse migration completed: {updated_count} projects reverted pano_only to is_pano")
 
 
 class Migration(migrations.Migration):
