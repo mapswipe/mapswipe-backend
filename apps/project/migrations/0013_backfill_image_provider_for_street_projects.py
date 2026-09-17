@@ -11,7 +11,7 @@ def backfill_image_provider(apps, schema_editor):
 
         if 'image_provider' not in project.project_type_specifics:
             project.project_type_specifics['image_provider'] = {
-                'name': 'MAPILLARY'
+                'name': 'mapillary'
             }
         project.save(update_fields=['project_type_specifics'])
 
