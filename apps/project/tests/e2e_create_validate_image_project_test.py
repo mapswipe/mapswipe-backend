@@ -30,6 +30,14 @@ from main.tests import TestCase
 
 @contextmanager
 def create_override():
+    """E2E determinism mechanism: pin server-generated `firebase_id` to `client_id`.
+
+    The `client_id` comes from the hardcoded JSON5 fixtures, so forcing
+    `firebase_id == client_id` (and `tutorial_<client_id>` for tutorials) keeps the
+    committed expected files stable. Any ULID NOT pinned here (e.g. the AOI asset
+    `clientId`) stays intentionally random because nothing asserts against it.
+    """
+
     def pre_save_override(sender: typing.Any, instance: typing.Any, **kwargs):  # type: ignore[reportMissingParameterType]
         if sender == Tutorial:
             instance.firebase_id = f"tutorial_{instance.client_id}"
@@ -379,7 +387,7 @@ class TestValidateImageProjectE2E(TestCase):
                 coco_data = json5.load(f)
                 for image in iter(coco_data["images"]):
                     image_asset_data = {
-                        "clientId": str(ULID()),
+                        "clientId": str(ULID()),  # NOTE: random by design; not asserted against (see create_override)
                         "inputType": "OBJECT_IMAGE",
                         "project": project_id,
                         "assetTypeSpecifics": {

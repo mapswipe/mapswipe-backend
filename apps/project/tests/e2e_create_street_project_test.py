@@ -40,6 +40,14 @@ logging.getLogger("vcr").setLevel(logging.WARNING)
 
 @contextmanager
 def create_override():
+    """E2E determinism mechanism: pin server-generated `firebase_id` to `client_id`.
+
+    The `client_id` comes from the hardcoded JSON5 fixtures, so forcing
+    `firebase_id == client_id` (and `tutorial_<client_id>` for tutorials) keeps the
+    committed expected files stable. Any ULID NOT pinned here (e.g. the AOI asset
+    `clientId`) stays intentionally random because nothing asserts against it.
+    """
+
     def pre_save_override(sender: typing.Any, instance: typing.Any, **kwargs):  # type: ignore[reportMissingParameterType]
         if sender == Tutorial:
             instance.firebase_id = f"tutorial_{instance.client_id}"
@@ -392,7 +400,7 @@ class TestStreetProjectE2E(TestCase):
 
         # Create GeoJSON Asset for AOI Geometry
         aoi_asset_data = {
-            "clientId": str(ULID()),
+            "clientId": str(ULID()),  # NOTE: random by design; not asserted against (see create_override)
             "inputType": "AOI_GEOMETRY",
             "project": project_id,
         }

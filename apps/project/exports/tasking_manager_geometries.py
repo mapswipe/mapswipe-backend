@@ -72,7 +72,11 @@ def load_data(project: Project, gzipped_csv_file: Path) -> list[ProjectData]:
                     "task_x": task_x,
                     "task_y": task_y,
                     "task_z": task_z,
-                    # XXX: Assuming 0->No, 1->Yes, 2->Maybe, 3->Bad
+                    # NOTE: These values are defined canonically in
+                    # ./apps/project/custom_options.py
+                    # 0->No, 1->Yes, 2->Maybe, 3->Bad
+                    # As tasking manager geometries are created for find,
+                    # compare and completeness it's okay to hardcode these here
                     "no_count": _get_row_value(column_index_map, row, "0_count"),
                     "yes_count": _get_row_value(column_index_map, row, "1_count"),
                     "maybe_count": _get_row_value(column_index_map, row, "2_count"),
