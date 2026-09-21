@@ -341,11 +341,11 @@ class BaseTutorial[
             raise TutorialValidationException(
                 f"Tutorial cannot be pushed to firebase if tutorial status is '{self.tutorial.status_enum.label}'",
             )
-        if self.tutorial.firebase_push_status_enum != FirebasePushStatusEnum.PENDING:
-            label = self.tutorial.firebase_push_status_enum.label if self.tutorial.firebase_push_status_enum else "None"
-            raise TutorialValidationException(
-                f"Tutorial cannot be pushed to firebase if firebase push status is '{label}'",
-            )
+        # NOTE: firebase_push_status is not used as a precondition here. It's purely a
+        # result indicator (PROCESSING/SUCCESS/FAILED). Concurrent pushes for the same
+        # tutorial are serialized by the redis lock in tasks.push_tutorial_to_firebase, and
+        # every push writes the complete current state, so it's safe for more than one
+        # push to be queued/in-flight at once: whichever runs last wins and is correct.
 
         self.tutorial.update_firebase_push_status(FirebasePushStatusEnum.PROCESSING)
 

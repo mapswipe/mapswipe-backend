@@ -1,7 +1,7 @@
 import logging
 from typing import Literal, assert_never
 
-from celery import shared_task
+from celery import current_task, shared_task
 
 from apps.project.exports import overall_stats
 from apps.project.models import Project
@@ -31,15 +31,26 @@ def process_project_task(project_id: int):
 
 
 @shared_task
-def push_project_to_firebase(project_id: int, *, only_stats: bool = False):
+def push_project_to_firebase(project_id: int):
     with CeleryLock.redis_lock(CeleryLock.Key.PUSH_PROJECT_TO_FIREBASE.format(project_id)) as acquired:
         if not acquired:
-            logger.warning("Project(id: %s) push project to firebase already running", project_id)
-            return None
+            # NOTE: Another push for this project is currently running. Retry (capped
+            # backoff, up to 5 attempts) instead of dropping this push immediately: the
+            # lock is only ever held for the duration of one push, so a few retries
+            # should be enough. After 5 retries, current_task.retry() raises
+            # MaxRetriesExceededError instead of scheduling another one, surfacing a
+            # real task failure instead of retrying forever.
+            countdown = min(2**current_task.request.retries, 30)
+            logger.warning(
+                "Project(id: %s) push project to firebase already running, retrying in %ss",
+                project_id,
+                countdown,
+            )
+            raise current_task.retry(countdown=countdown, max_retries=5)
 
         project = Project.objects.get(pk=project_id)
         project_type_handler = get_project_type_handler(project.project_type_enum)(project)
-        project_type_handler.push_project_on_firebase(only_stats=only_stats)
+        project_type_handler.push_project_on_firebase()
         return True
 
 
