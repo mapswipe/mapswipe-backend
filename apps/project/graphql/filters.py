@@ -9,6 +9,7 @@ from apps.project.models import Organization, Project, ProjectAsset
 class ProjectFilter:
     id: strawberry.auto
     old_id: strawberry.auto
+    firebase_id: strawberry.auto
     project_number: strawberry.auto
     project_type: strawberry.auto
     requesting_organization_id: strawberry.auto
@@ -42,6 +43,7 @@ class ProjectAssetFilter:
 @strawberry_django.filters.filter(Organization, lookups=True)
 class OrganizationFilter:
     id: strawberry.auto
+    firebase_id: strawberry.auto
     is_archived: strawberry.auto
 
     name = unaccented_filter("name")

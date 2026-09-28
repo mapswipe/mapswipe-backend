@@ -129,6 +129,23 @@ class TestProjectFiltersAndOrders(TestCase):
         assert content["data"]["projects"]["totalCount"] == 1
         assert content["data"]["projects"]["results"][0]["id"] == self.gID(self.find_project.pk)
 
+    def test_filter_by_firebase_id(self):
+        self.force_login(self.user)
+        content = self._query(
+            filters={
+                "firebaseId": {"exact": self.find_project.firebase_id},
+            },
+        )
+        assert content["data"]["projects"]["totalCount"] == 1
+        assert content["data"]["projects"]["results"][0]["id"] == self.gID(self.find_project.pk)
+
+        content = self._query(
+            filters={
+                "firebaseId": {"inList": [self.find_project.firebase_id, self.compare_project.firebase_id]},
+            },
+        )
+        assert content["data"]["projects"]["totalCount"] == 2
+
     def test_filter_by_name(self):
         self.force_login(self.user)
         content = self._query(
@@ -234,3 +251,105 @@ class TestProjectFiltersAndOrders(TestCase):
                 self.compare_project.generate_name(),
             ],
         )
+
+
+class TestOrganizationFilters(TestCase):
+    class Query:
+        ORGANIZATIONS_WITH_FILTERS = """
+            query Organizations(
+                $pagination: OffsetPaginationInput,
+                $filters: OrganizationFilter,
+                $includeAll: Boolean
+            ) {
+              organizations(pagination: $pagination, filters: $filters, includeAll: $includeAll) {
+                totalCount
+                results {
+                  id
+                  name
+                  firebaseId
+                  isArchived
+                }
+              }
+            }
+        """
+
+    @typing.override
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user = UserFactory.create()
+        user_resource_kwargs = dict(
+            created_by=cls.user,
+            modified_by=cls.user,
+        )
+
+        cls.organization1 = OrganizationFactory.create(**user_resource_kwargs, name="Red Cross")
+        cls.organization2 = OrganizationFactory.create(**user_resource_kwargs, name="Red Crescent")
+        cls.organization3 = OrganizationFactory.create(**user_resource_kwargs, name="Blue Org", is_archived=True)
+
+    def _query(self, filters: dict[str, typing.Any] | None = None):
+        return self.query_check(
+            self.Query.ORGANIZATIONS_WITH_FILTERS,
+            variables={
+                "includeAll": True,
+                "pagination": {
+                    "limit": 10,
+                    "offset": 0,
+                },
+                "filters": filters or {},
+            },
+        )
+
+    def test_filter_by_id(self):
+        self.force_login(self.user)
+        content = self._query(
+            filters={
+                "id": {"exact": self.gID(self.organization1.pk)},
+            },
+        )
+        assert content["data"]["organizations"]["totalCount"] == 1
+        assert content["data"]["organizations"]["results"][0]["id"] == self.gID(self.organization1.pk)
+
+    def test_filter_by_firebase_id(self):
+        self.force_login(self.user)
+        content = self._query(
+            filters={
+                "firebaseId": {"exact": self.organization2.firebase_id},
+            },
+        )
+        assert content["data"]["organizations"]["totalCount"] == 1
+        assert content["data"]["organizations"]["results"][0]["id"] == self.gID(self.organization2.pk)
+
+        content = self._query(
+            filters={
+                "firebaseId": {"inList": [self.organization1.firebase_id, self.organization3.firebase_id]},
+            },
+        )
+        assert content["data"]["organizations"]["totalCount"] == 2
+
+    def test_filter_by_name(self):
+        self.force_login(self.user)
+        content = self._query(
+            filters={
+                "name": "red",
+            },
+        )
+        assert content["data"]["organizations"]["totalCount"] == 2
+
+        content = self._query(
+            filters={
+                "name": "Blue Org",
+            },
+        )
+        assert content["data"]["organizations"]["totalCount"] == 1
+        assert content["data"]["organizations"]["results"][0]["id"] == self.gID(self.organization3.pk)
+
+    def test_filter_by_is_archived(self):
+        self.force_login(self.user)
+        content = self._query(
+            filters={
+                "isArchived": {"exact": True},
+            },
+        )
+        assert content["data"]["organizations"]["totalCount"] == 1
+        assert content["data"]["organizations"]["results"][0]["id"] == self.gID(self.organization3.pk)

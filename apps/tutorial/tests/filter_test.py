@@ -106,6 +106,16 @@ class TestTutorialFilterQuery(TestCase):
         assert content["data"]["tutorials"]["results"][0]["id"] == self.gID(self.tutorial1.id)
         assert content["data"]["tutorials"]["results"][0]["projectId"] == self.gID(self.project1.id)
 
+    def test_filter_by_firebase_id(self):
+        self.force_login(self.user)
+        content = self._query(
+            filters={
+                "firebaseId": {"exact": self.tutorial2.firebase_id},
+            },
+        )
+        assert content["data"]["tutorials"]["totalCount"] == 1
+        assert content["data"]["tutorials"]["results"][0]["id"] == self.gID(self.tutorial2.id)
+
     def test_filter_by_name(self):
         self.force_login(self.user)
         content = self._query(
