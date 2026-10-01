@@ -9,6 +9,7 @@ from apps.tutorial.models import Tutorial, TutorialAsset
 @strawberry_django.filters.filter(Tutorial, lookups=True)
 class TutorialFilter:
     id: strawberry.auto
+    firebase_id: strawberry.auto
     status: strawberry.auto
     project: ProjectFilter | None
     created_by_id: strawberry.auto
