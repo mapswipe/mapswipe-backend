@@ -13,7 +13,8 @@ def migrate_sampling_threshold_to_meters(apps, schema_editor):
     (StreetMapillaryImageFilters.sampling_threshold: PydanticFloat) and is now a
     positive integer expressed in meters (StreetImageFilters.sampling_threshold:
     PydanticPositiveInt). Convert existing values from km to m so they conform to
-    the updated schema and unit.
+    the updated schema and unit. Values that are not positive in meters are
+    dropped, which disables sampling.
     """
     Project = apps.get_model('project', 'Project')
 
@@ -27,15 +28,23 @@ def migrate_sampling_threshold_to_meters(apps, schema_editor):
             continue
 
         sampling_threshold_km = filters.get('sampling_threshold')
-        if not isinstance(sampling_threshold_km, float):
+        # NOTE: bool is a subclass of int
+        if not isinstance(sampling_threshold_km, (int, float)) or isinstance(sampling_threshold_km, bool):
             continue
 
         sampling_threshold_m = round(sampling_threshold_km * 1000)
-        logger.info(
-            f"Converting sampling_threshold from {sampling_threshold_km} km to "
-            f"{sampling_threshold_m} m for project {project.id}"
-        )
-        filters['sampling_threshold'] = sampling_threshold_m
+        if sampling_threshold_m <= 0:
+            # NOTE: A missing sampling_threshold disables sampling
+            logger.info(
+                f"Dropping sampling_threshold {sampling_threshold_km} km for project {project.id}"
+            )
+            del filters['sampling_threshold']
+        else:
+            logger.info(
+                f"Converting sampling_threshold from {sampling_threshold_km} km to "
+                f"{sampling_threshold_m} m for project {project.id}"
+            )
+            filters['sampling_threshold'] = sampling_threshold_m
         to_update.append(project)
 
     updated_count = Project._default_manager.bulk_update(to_update, ['project_type_specifics'])

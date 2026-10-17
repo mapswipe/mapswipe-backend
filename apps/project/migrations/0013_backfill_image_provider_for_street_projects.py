@@ -11,8 +11,8 @@ def backfill_image_provider(apps, schema_editor):
 
     to_update = []
     for project in Project._default_manager.filter(project_type=7):  # STREET type
-        if project.project_type_specifics is None:
-            project.project_type_specifics = {}
+        if not isinstance(project.project_type_specifics, dict):
+            continue
 
         if 'image_provider' not in project.project_type_specifics:
             project.project_type_specifics['image_provider'] = {

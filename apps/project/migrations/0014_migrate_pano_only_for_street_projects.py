@@ -25,7 +25,8 @@ def migrate_is_pano_to_pano_only(apps, schema_editor):
                 logger.info(
                     f"Migrating is_pano to pano_only for project {project.id}"
                 )
-                filters['pano_only'] = filters.pop('is_pano')
+                is_pano = filters.pop('is_pano')
+                filters.setdefault('pano_only', is_pano)
                 to_update.append(project)
 
     updated_count = Project._default_manager.bulk_update(to_update, ['project_type_specifics'])
