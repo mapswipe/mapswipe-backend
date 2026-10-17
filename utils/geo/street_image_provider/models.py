@@ -1,7 +1,8 @@
-from typing import assert_never
+from typing import Self, assert_never
+from urllib.parse import urlsplit
 
 from django.db import models
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 from utils import fields as custom_fields
 
@@ -18,12 +19,23 @@ class StreetImageProvider(BaseModel):
 
     @field_validator("url", mode="after")
     @classmethod
-    def url_only_for_custom_panoramax(cls, v, info):
-        if v is not None and info.data.get("name") != StreetImageProviderNameEnum.PANORAMAX_CUSTOM:
+    def url_as_domain(cls, url: str | None) -> str | None:
+        # NOTE: The API paths are appended to the url, so only the domain is accepted
+        if url is None:
+            return url
+        parts = urlsplit(url)
+        if parts.path not in ("", "/") or parts.query or parts.fragment:
+            raise ValueError("url must be the domain of the Panoramax instance, without a path")
+        return f"{parts.scheme}://{parts.netloc}/"
+
+    @model_validator(mode="after")
+    def url_only_for_custom_panoramax(self) -> Self:
+        if self.name == StreetImageProviderNameEnum.PANORAMAX_CUSTOM:
+            if self.url is None:
+                raise ValueError("url field is required for PANORAMAX_CUSTOM provider")
+        elif self.url is not None:
             raise ValueError("url field is only allowed for PANORAMAX_CUSTOM provider")
-        if v is None and info.data.get("name") == StreetImageProviderNameEnum.PANORAMAX_CUSTOM:
-            raise ValueError("url field is required for PANORAMAX_CUSTOM provider")
-        return v
+        return self
 
     @property
     def tile_level(self) -> int:

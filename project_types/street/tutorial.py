@@ -82,8 +82,6 @@ class StreetTutorial(
             else None,
             imageProvider=firebase_models.FbObjImageProvider(
                 name=image_provider.name.value,
-                url=image_provider.url or None,
-            )
-            if image_provider
-            else None,
+                url=image_provider.url,
+            ),
         )

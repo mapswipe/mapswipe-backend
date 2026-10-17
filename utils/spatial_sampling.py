@@ -141,9 +141,9 @@ def spatial_sampling(
     sampled_sequence_df = pd.DataFrame()
 
     # loop through each sequence
-    for sequence in sorted_df["sequence_id"].unique():
-        sequence_df = sorted_df[sorted_df["sequence_id"] == sequence]
-
+    # NOTE: dropna=False keeps images without a sequence
+    for _, grouped_df in sorted_df.groupby("sequence_id", dropna=False, sort=False):
+        sequence_df = grouped_df.copy()
         if interval_length:
             sequence_df = filter_points(sequence_df, interval_length / 1000)
         if "is_pano" in sequence_df.columns:

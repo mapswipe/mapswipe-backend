@@ -1,4 +1,5 @@
 import json
+import traceback
 import typing
 import unittest
 from pathlib import Path
@@ -6,6 +7,8 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
+import requests
+from pydantic import ValidationError
 from shapely import wkt
 from shapely.geometry import GeometryCollection, MultiPolygon, Point, Polygon
 
@@ -225,6 +228,24 @@ class TestTileGroupingFunctions(unittest.TestCase):
         assert result["is_pano"].iloc[0]
 
     @patch("project_types.street.api_calls.get_street_image_data")
+    def test_download_and_process_tile_panoramax_timestamps_and_type(self, mock_get_street_image_data):
+        mock_get_street_image_data.return_value = pd.DataFrame(
+            [
+                {"geometry": wkt.loads("POINT (0 0)"), "id": "a", "ts": "2025-03-29 10:00:00+01"},
+                {"geometry": wkt.loads("POINT (0 0)"), "id": "b", "ts": "2025-03-31 10:00:00+02"},
+            ],
+        )
+        result = download_and_process_tile(
+            row={"x": 1, "y": 1, "z": 15},
+            polygon=wkt.loads("POLYGON ((-1 -1, -1 1, 1 1, 1 -1, -1 -1))"),
+            kwargs={},
+            provider=StreetImageProvider(name=StreetImageProviderNameEnum.PANORAMAX),
+        )
+        assert result is not None
+        assert list(result["captured_at"].astype(str)) == ["2025-03-29 09:00:00", "2025-03-31 08:00:00"]
+        assert not result["is_pano"].any()
+
+    @patch("project_types.street.api_calls.get_street_image_data")
     def test_download_and_process_tile_returns_none(self, mock_get_street_image_data):
         mock_get_street_image_data.return_value = pd.DataFrame()
 
@@ -248,6 +269,76 @@ class TestTileGroupingFunctions(unittest.TestCase):
 
         result = download_and_process_tile(row=self.row, polygon=self.test_polygon, kwargs={}, provider=self.provider)
         assert result is None
+
+    @patch("project_types.street.api_calls.get_street_image_data")
+    def test_download_and_process_tile_panoramax_custom_url(self, mock_get_street_image_data):  # type: ignore[reportMissingParameterType]
+        mock_get_street_image_data.return_value = pd.DataFrame()
+        cases = [
+            ("https://panoramax.example.com", "https://panoramax.example.com/api/map/14/1/1.mvt"),
+            ("https://panoramax.example.com/", "https://panoramax.example.com/api/map/14/1/1.mvt"),
+            ("https://panoramax.example.com:8443", "https://panoramax.example.com:8443/api/map/14/1/1.mvt"),
+        ]
+        for url, expected_tile_url in cases:
+            mock_get_street_image_data.reset_mock()
+            provider = StreetImageProvider(name=StreetImageProviderNameEnum.PANORAMAX_CUSTOM, url=url)
+
+            download_and_process_tile(row=self.row, polygon=self.test_polygon, kwargs={}, provider=provider)
+
+            mock_get_street_image_data.assert_called_once_with(expected_tile_url, 1, 1, 14, params={})
+
+    @patch.object(Config, "MAPILLARY_API_KEY", "secret-token")
+    @patch("project_types.street.api_calls.requests.get")
+    def test_download_and_process_tile_failure_does_not_log_access_token(self, mock_get):  # type: ignore[reportMissingParameterType]
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_response.url = f"{Config.MAPILLARY_API_LINK}14/1/1?access_token=secret-token"
+        mock_response.content = b""
+        mock_get.return_value = mock_response
+
+        with self.assertLogs("project_types.street.api_calls", level="WARNING") as logs:
+            download_and_process_tile(row=self.row, polygon=self.test_polygon, kwargs={}, provider=self.provider)
+
+        assert mock_get.call_args.kwargs["params"] == {"access_token": "secret-token"}
+        for record in logs.records:
+            assert "secret-token" not in record.getMessage()
+
+    @patch.object(Config, "MAPILLARY_API_KEY", "secret-token")
+    @patch("project_types.street.api_calls.requests.get")
+    def test_download_and_process_tile_request_errors(self, mock_get):  # type: ignore[reportMissingParameterType]
+        request_errors = [
+            requests.exceptions.ConnectionError("Max retries exceeded with url: /14/1/1?access_token=secret-token"),
+            requests.exceptions.ReadTimeout("Read timed out: /14/1/1?access_token=secret-token"),
+            requests.exceptions.InvalidURL("Invalid URL: /14/1/1?access_token=secret-token"),
+            requests.exceptions.TooManyRedirects("Exceeded redirects: /14/1/1?access_token=secret-token"),
+            requests.exceptions.ChunkedEncodingError("Connection broken: /14/1/1?access_token=secret-token"),
+        ]
+        for request_error in request_errors:
+            mock_get.reset_mock()
+            mock_get.side_effect = request_error
+            with pytest.raises(ValidationException) as context:
+                download_and_process_tile(row=self.row, polygon=self.test_polygon, kwargs={}, provider=self.provider)
+
+            mock_get.assert_called_once()
+            # NOTE: The formatted traceback is what `exc_info=True` writes to the logs
+            formatted_error = "".join(traceback.format_exception(context.value))
+            assert "/14/1/1" in formatted_error
+            assert "secret-token" not in formatted_error
+
+    @patch.object(Config, "MAPILLARY_API_KEY", "secret-token")
+    @patch("project_types.street.api_calls.requests.get")
+    def test_download_and_process_tile_invalid_vector_tile(self, mock_get):  # type: ignore[reportMissingParameterType]
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.content = b"<html><body>Not a vector tile</body></html>"
+        mock_get.return_value = mock_response
+
+        with pytest.raises(ValidationException, match="valid vector tile") as context:
+            download_and_process_tile(row=self.row, polygon=self.test_polygon, kwargs={}, provider=self.provider)
+
+        mock_get.assert_called_once()
+        formatted_error = "".join(traceback.format_exception(context.value))
+        assert "/14/1/1" in formatted_error
+        assert "secret-token" not in formatted_error
 
     @patch("project_types.street.api_calls.get_street_image_data")
     def test_download_and_process_tile_spatial_filtering(self, mock_get_street_image_data):  # type: ignore[reportMissingParameterType]
@@ -327,20 +418,37 @@ class TestTileGroupingFunctions(unittest.TestCase):
         assert filtered_df is not None
         assert len(filtered_df) == 3
 
+    def test_filter_pano_true_with_missing_values(self):
+        df = pd.DataFrame({"id": [1, 2, 3, 4], "is_pano": [True, None, False, float("nan")]})
+        filtered_df = filter_results(df, pano_only=True)
+        assert filtered_df is not None
+        assert filtered_df["id"].tolist() == [1]
+
     def test_filter_pano_false(self):
         filtered_df = filter_results(self.fixture_df, pano_only=False)
         assert filtered_df is not None
         assert len(filtered_df) == len(self.fixture_df)
 
     def test_filter_organization_id(self):
-        filtered_df = filter_results(self.fixture_df, organization_id=1)
+        filtered_df = filter_results(self.fixture_df, organization_id="1")
         assert filtered_df is not None
         assert len(filtered_df) == 1
 
     def test_filter_creator_id(self):
-        filtered_df = filter_results(self.fixture_df, creator_id=102506575322825)
+        filtered_df = filter_results(self.fixture_df, creator_id="102506575322825")
         assert filtered_df is not None
         assert len(filtered_df) == 3
+
+    def test_filter_ids_with_missing_values(self):
+        df = pd.DataFrame(
+            {
+                "creator_id": [102506575322825, None, "a1b2c3d4-0000-4000-8000-000000000000"],
+                "organization_id": [1, None, None],
+            },
+        )
+        assert len(filter_results(df, creator_id="102506575322825")) == 1  # type: ignore[reportArgumentType]
+        assert len(filter_results(df, creator_id="a1b2c3d4-0000-4000-8000-000000000000")) == 1  # type: ignore[reportArgumentType]
+        assert len(filter_results(df, organization_id="1")) == 1  # type: ignore[reportArgumentType]
 
     def test_filter_results_no_creator_id(self):
         df = pd.DataFrame(
@@ -351,7 +459,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
                 "captured_at": pd.to_datetime(["2026-02-24", "2026-02-25"]),
             },
         )
-        filtered_df = filter_results(df, creator_id=123)
+        filtered_df = filter_results(df, creator_id="123")
         assert filtered_df is None
 
     def test_filter_time_range(self):
@@ -392,10 +500,9 @@ class TestTileGroupingFunctions(unittest.TestCase):
     @patch("project_types.street.api_calls.coordinate_download")
     def test_get_image_metadata(self, mock_coordinate_download):  # type: ignore[reportMissingParameterType]
         mock_coordinate_download.return_value = self.fixture_df
-        result = get_image_metadata(aoi_geojson=self.fixture_data)
-        assert isinstance(result, dict)
-        assert "feature_ids" in result
-        assert "features" in result
+        result = get_image_metadata(aoi_geojson=self.fixture_data, provider=self.provider)
+        assert sorted(result["feature_ids"]) == sorted(self.fixture_df["id"].tolist())
+        assert len(result["features"]) == len(self.fixture_df)
 
     @patch("project_types.street.api_calls.coordinate_download")
     def test_get_image_metadata_empty_response(self, mock_coordinate_download):  # type: ignore[reportMissingParameterType]
@@ -404,15 +511,10 @@ class TestTileGroupingFunctions(unittest.TestCase):
         mock_coordinate_download.return_value = df
 
         with pytest.raises(ValidationException):
-            get_image_metadata(aoi_geojson=self.fixture_data)
+            get_image_metadata(aoi_geojson=self.fixture_data, provider=self.provider)
 
-    @patch("project_types.street.api_calls.filter_results")
     @patch("project_types.street.api_calls.coordinate_download")
-    def test_get_image_metadata_size_restriction(
-        self,
-        mock_coordinate_download,  # type: ignore[reportMissingParameterType]
-        mock_filter_results,  # type: ignore[reportMissingParameterType]
-    ):
+    def test_get_image_metadata_size_restriction(self, mock_coordinate_download):  # type: ignore[reportMissingParameterType]
         mock_df = pd.DataFrame(
             {
                 "id": range(1, 100002),
@@ -422,8 +524,8 @@ class TestTileGroupingFunctions(unittest.TestCase):
             },
         )
         mock_coordinate_download.return_value = mock_df
-        with pytest.raises(ValidationException):
-            get_image_metadata(aoi_geojson=self.fixture_data)
+        with pytest.raises(ValidationException, match="Too many Images"):
+            get_image_metadata(aoi_geojson=self.fixture_data, provider=self.provider)
 
     @patch("project_types.street.api_calls.coordinate_download")
     def test_get_image_metadata_drop_duplicates(self, mock_coordinate_download):  # type: ignore[reportMissingParameterType]
@@ -436,8 +538,41 @@ class TestTileGroupingFunctions(unittest.TestCase):
             },
         )
         mock_coordinate_download.return_value = test_df
-        return_dict = get_image_metadata(aoi_geojson=self.fixture_data)
+        result = get_image_metadata(aoi_geojson=self.fixture_data, provider=self.provider)
 
-        return_df = pd.DataFrame(return_dict)
+        assert sorted(result["feature_ids"]) == [1, 2, 3, 4, 5]
+        assert sorted(result["features"]) == ["a", "b", "c", "d", "e"]
 
-        assert len(return_df) != len(test_df)
+
+class TestStreetImageProvider(unittest.TestCase):
+    def test_panoramax_custom_requires_url(self):
+        for data in [
+            {"name": StreetImageProviderNameEnum.PANORAMAX_CUSTOM},
+            {"name": StreetImageProviderNameEnum.PANORAMAX_CUSTOM, "url": None},
+        ]:
+            with pytest.raises(ValidationError, match="url field is required"):
+                StreetImageProvider.model_validate(data)
+
+        provider = StreetImageProvider(
+            name=StreetImageProviderNameEnum.PANORAMAX_CUSTOM,
+            url="https://panoramax.example.com",
+        )
+        assert provider.url == "https://panoramax.example.com/"
+
+    def test_panoramax_custom_url_must_be_a_domain(self):
+        for url in [
+            "https://example.com/panoramax",
+            "https://panoramax.example.com/api",
+            "https://panoramax.example.com/api/",
+            "https://panoramax.example.com/?a=1",
+            "https://panoramax.example.com/#a",
+        ]:
+            with pytest.raises(ValidationError, match="url must be the domain"):
+                StreetImageProvider(name=StreetImageProviderNameEnum.PANORAMAX_CUSTOM, url=url)
+
+    def test_url_not_allowed_for_other_providers(self):
+        for name in [StreetImageProviderNameEnum.MAPILLARY, StreetImageProviderNameEnum.PANORAMAX]:
+            with pytest.raises(ValidationError, match="url field is only allowed"):
+                StreetImageProvider(name=name, url="https://panoramax.example.com")
+
+            assert StreetImageProvider(name=name).url is None
