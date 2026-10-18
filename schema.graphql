@@ -37,7 +37,7 @@ type AppEnumCollection {
   ProjectStatusEnum: [AppEnumCollectionProjectStatusEnum!]!
   ProjectTypeEnum: [AppEnumCollectionProjectTypeEnum!]!
   RasterTileServerNameEnum: [AppEnumCollectionRasterTileServerNameEnum!]!
-  StreetImageProviderNameEnum: [AppEnumCollectionStreetImageProviderNameEnum!]!
+  StreetImageProviderEnum: [AppEnumCollectionStreetImageProviderEnum!]!
   SubGridSizeEnum: [AppEnumCollectionSubGridSizeEnum!]!
   TutorialAssetInputTypeEnum: [AppEnumCollectionTutorialAssetInputTypeEnum!]!
   TutorialInformationPageBlockTypeEnum: [AppEnumCollectionTutorialInformationPageBlockTypeEnum!]!
@@ -122,8 +122,8 @@ type AppEnumCollectionRasterTileServerNameEnum {
   label: String!
 }
 
-type AppEnumCollectionStreetImageProviderNameEnum {
-  key: StreetImageProviderNameEnum!
+type AppEnumCollectionStreetImageProviderEnum {
+  key: StreetImageProviderEnum!
   label: String!
 }
 
@@ -2199,7 +2199,13 @@ input StrFilterLookup {
   startsWith: String
 }
 
-type StreetImageFilters {
+enum StreetImageProviderEnum {
+  MAPILLARY
+  PANORAMAX
+  PANORAMAX_CUSTOM
+}
+
+type StreetMapillaryConfig {
   creatorId: String
   endTime: String
   organizationId: String
@@ -2209,7 +2215,7 @@ type StreetImageFilters {
   startTime: String
 }
 
-input StreetImageFiltersInput {
+input StreetMapillaryConfigInput {
   creatorId: String = null
   endTime: String = null
   organizationId: String = null
@@ -2219,36 +2225,62 @@ input StreetImageFiltersInput {
   startTime: String = null
 }
 
-type StreetImageProvider {
-  name: StreetImageProviderNameEnum!
-  url: String
+type StreetPanoramaxConfig {
+  creatorId: String
+  endTime: String
+  panoOnly: Boolean
+  randomizeOrder: Boolean!
+  samplingThreshold: Int
+  startTime: String
 }
 
-input StreetImageProviderInput {
-  name: StreetImageProviderNameEnum!
-  url: String = null
+input StreetPanoramaxConfigInput {
+  creatorId: String = null
+  endTime: String = null
+  panoOnly: Boolean = null
+  randomizeOrder: Boolean! = false
+  samplingThreshold: Int = null
+  startTime: String = null
 }
 
-enum StreetImageProviderNameEnum {
-  MAPILLARY
-  PANORAMAX
-  PANORAMAX_CUSTOM
+type StreetPanoramaxCustomConfig {
+  creatorId: String
+  endTime: String
+  panoOnly: Boolean
+  randomizeOrder: Boolean!
+  samplingThreshold: Int
+  startTime: String
+  url: String!
+}
+
+input StreetPanoramaxCustomConfigInput {
+  creatorId: String = null
+  endTime: String = null
+  panoOnly: Boolean = null
+  randomizeOrder: Boolean! = false
+  samplingThreshold: Int = null
+  startTime: String = null
+  url: String!
 }
 
 input StreetProjectPropertyInput {
   """Numeric value as string"""
   aoiGeometry: String!
   customOptions: [CustomOptionInput!] = null
-  imageProvider: StreetImageProviderInput!
-  mapillaryImageFilters: StreetImageFiltersInput!
+  mapillary: StreetMapillaryConfigInput = null
+  panoramax: StreetPanoramaxConfigInput = null
+  panoramaxCustom: StreetPanoramaxCustomConfigInput = null
+  provider: StreetImageProviderEnum!
 }
 
 type StreetProjectPropertyType {
   """Numeric value as string"""
   aoiGeometry: String!
   customOptions: [ProjectCustomOption!]
-  imageProvider: StreetImageProvider!
-  mapillaryImageFilters: StreetImageFilters!
+  mapillary: StreetMapillaryConfig
+  panoramax: StreetPanoramaxConfig
+  panoramaxCustom: StreetPanoramaxCustomConfig
+  provider: StreetImageProviderEnum!
 }
 
 input StreetTutorialTaskPropertyInput {

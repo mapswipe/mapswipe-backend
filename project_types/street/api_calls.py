@@ -24,7 +24,7 @@ from main.config import Config
 from main.logging import log_extra_response
 from project_types.base.project import ValidationException
 from utils.common import Grouping
-from utils.geo.street_image_provider.models import StreetImageProvider, StreetImageProviderNameEnum
+from utils.geo.street_image_provider.models import StreetImageProviderEnum, StreetImageProviderNormConfig
 from utils.spatial_sampling import spatial_sampling
 
 logger = logging.getLogger(__name__)
@@ -109,7 +109,7 @@ def coordinate_download(
     *,
     polygon: ShapelyBaseGeometry,
     level: int,
-    provider: StreetImageProvider,
+    provider: StreetImageProviderNormConfig,
     kwargs: dict[str, Any],
 ) -> pd.DataFrame:
     tiles = create_tiles(
@@ -122,7 +122,7 @@ def coordinate_download(
     logger.info(
         "Images will be queried in roughly %s requests from %s",
         len(tiles.index),
-        provider.name.value,
+        provider["name"].value,
     )
 
     downloaded_metadata: list[pd.DataFrame] = []
@@ -154,7 +154,7 @@ def download_and_process_tile(
     *,
     row: dict[Hashable, Any] | pd.Series,
     polygon: ShapelyBaseGeometry,
-    provider: StreetImageProvider,
+    provider: StreetImageProviderNormConfig,
     kwargs: dict[str, Any],
     attempt_limit: int = 3,
 ) -> pd.DataFrame | None:
@@ -163,14 +163,14 @@ def download_and_process_tile(
     y = row["y"]
 
     params: dict[str, str] = {}
-    if provider.name == StreetImageProviderNameEnum.MAPILLARY:
-        url = urljoin(Config.MAPILLARY_API_LINK, f"{z}/{x}/{y}")
+    if provider["name"] == StreetImageProviderEnum.MAPILLARY:
+        url = urljoin(provider["url"], f"{z}/{x}/{y}")
         # NOTE: Keeping the access token out of `url` keeps it out of user-facing messages and logs
         params = {"access_token": Config.MAPILLARY_API_KEY}
-    elif provider.name in (StreetImageProviderNameEnum.PANORAMAX, StreetImageProviderNameEnum.PANORAMAX_CUSTOM):
-        url = urljoin(provider.url or Config.PANORAMAX_API_LINK, f"api/map/{z}/{x}/{y}.mvt")
+    elif provider["name"] in (StreetImageProviderEnum.PANORAMAX, StreetImageProviderEnum.PANORAMAX_CUSTOM):
+        url = urljoin(provider["url"], f"api/map/{z}/{x}/{y}.mvt")
     else:
-        assert_never(provider.name)
+        assert_never(provider["name"])
 
     for _ in range(attempt_limit):
         try:
@@ -178,7 +178,7 @@ def download_and_process_tile(
 
             if data.isna().all() is False or data.empty is False:
                 data = data[data["geometry"].apply(lambda point: point.within(polygon))]
-                if provider.name in (StreetImageProviderNameEnum.PANORAMAX, StreetImageProviderNameEnum.PANORAMAX_CUSTOM):
+                if provider["name"] in (StreetImageProviderEnum.PANORAMAX, StreetImageProviderEnum.PANORAMAX_CUSTOM):
                     data = data.rename(
                         columns={
                             "account_id": "creator_id",
@@ -196,7 +196,7 @@ def download_and_process_tile(
                             errors="coerce",
                             utc=True,
                         ).dt.tz_localize(None)
-                if provider.name == StreetImageProviderNameEnum.MAPILLARY and "captured_at" in data.columns:
+                if provider["name"] == StreetImageProviderEnum.MAPILLARY and "captured_at" in data.columns:
                     data["captured_at"] = pd.to_datetime(data["captured_at"], unit="ms")
                 target_columns = [
                     "id",
@@ -235,7 +235,7 @@ def download_and_process_tile(
         except StreetException:
             logger.warning(
                 "Error while fetching %s data for tile %s/%s/%s",
-                provider.name.value,
+                provider["name"].value,
                 z,
                 x,
                 y,
@@ -336,7 +336,7 @@ def get_image_metadata(
     end_time: str | None = None,
     randomize_order: bool = False,
     sampling_threshold: int | None = None,
-    provider: StreetImageProvider,
+    provider: StreetImageProviderNormConfig,
 ) -> Grouping[StreetFeature]:
     kwargs = {
         "pano_only": pano_only,
@@ -349,7 +349,7 @@ def get_image_metadata(
 
     downloaded_metadata = coordinate_download(
         polygon=aoi_polygon,
-        level=provider.tile_level,
+        level=provider["tile_level"],
         provider=provider,
         kwargs=kwargs,
     )

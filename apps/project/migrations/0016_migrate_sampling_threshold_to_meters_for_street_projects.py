@@ -11,8 +11,8 @@ def migrate_sampling_threshold_to_meters(apps, schema_editor):
     """
     sampling_threshold used to be a float expressed in kilometers
     (StreetMapillaryImageFilters.sampling_threshold: PydanticFloat) and is now a
-    positive integer expressed in meters (StreetImageFilters.sampling_threshold:
-    PydanticPositiveInt). Convert existing values from km to m so they conform to
+    strict non-negative integer expressed in meters (StreetMapillaryConfig.sampling_threshold:
+    PydanticStrictNonNegativeInt). Convert existing values from km to m so they conform to
     the updated schema and unit. Values that are not positive in meters are
     dropped, which disables sampling.
     """
@@ -20,10 +20,10 @@ def migrate_sampling_threshold_to_meters(apps, schema_editor):
 
     to_update = []
     for project in Project._default_manager.filter(project_type=7):  # STREET type
-        if project.project_type_specifics is None:
+        if not isinstance(project.project_type_specifics, dict):
             continue
 
-        filters = project.project_type_specifics.get('mapillary_image_filters')
+        filters = project.project_type_specifics.get('mapillary')
         if not isinstance(filters, dict):
             continue
 
@@ -59,10 +59,10 @@ def reverse_sampling_threshold_migration(apps, schema_editor):
 
     to_update = []
     for project in Project._default_manager.filter(project_type=7):  # STREET type
-        if project.project_type_specifics is None:
+        if not isinstance(project.project_type_specifics, dict):
             continue
 
-        filters = project.project_type_specifics.get('mapillary_image_filters')
+        filters = project.project_type_specifics.get('mapillary')
         if not isinstance(filters, dict):
             continue
 

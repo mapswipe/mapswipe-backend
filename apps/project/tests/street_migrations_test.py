@@ -9,9 +9,9 @@ from apps.project.models import Project, ProjectTypeEnum
 from apps.user.factories import UserFactory
 from main.tests import TestCase
 
-backfill_image_provider = importlib.import_module(
+backfill_provider = importlib.import_module(
     "apps.project.migrations.0013_backfill_image_provider_for_street_projects",
-).backfill_image_provider
+).backfill_provider
 migrate_is_pano_to_pano_only = importlib.import_module(
     "apps.project.migrations.0014_migrate_pano_only_for_street_projects",
 ).migrate_is_pano_to_pano_only
@@ -50,7 +50,8 @@ class TestStreetMigrations(TestCase):
         cases: list[tuple[typing.Any, typing.Any]],
     ):
         projects = [(self.create_project(before), after) for before, after in cases]
-        non_street_specifics = {"mapillary_image_filters": {"is_pano": True, "sampling_threshold": 0.5}}
+        non_street_filters = {"is_pano": True, "sampling_threshold": 0.5}
+        non_street_specifics = {"mapillary_image_filters": non_street_filters, "mapillary": non_street_filters}
         non_street_project = self.create_project(copy.deepcopy(non_street_specifics), project_type=ProjectTypeEnum.FIND)
 
         migration(apps, None)
@@ -61,12 +62,16 @@ class TestStreetMigrations(TestCase):
         non_street_project.refresh_from_db()
         assert non_street_project.project_type_specifics == non_street_specifics
 
-    def test_backfill_image_provider(self):
+    def test_backfill_provider(self):
         self.assert_migration(
-            backfill_image_provider,
+            backfill_provider,
             [
-                ({"aoi_geometry": "1"}, {"aoi_geometry": "1", "image_provider": {"name": "mapillary"}}),
-                ({"image_provider": {"name": "panoramax"}}, {"image_provider": {"name": "panoramax"}}),
+                ({"aoi_geometry": "1"}, {"aoi_geometry": "1", "provider": "mapillary"}),
+                (
+                    {"aoi_geometry": "1", "mapillary_image_filters": {"is_pano": True, "organization_id": "42"}},
+                    {"aoi_geometry": "1", "provider": "mapillary", "mapillary": {"is_pano": True, "organization_id": "42"}},
+                ),
+                ({"provider": "panoramax", "panoramax": {}}, {"provider": "panoramax", "panoramax": {}}),
                 (None, None),
             ],
         )
@@ -75,10 +80,10 @@ class TestStreetMigrations(TestCase):
         self.assert_migration(
             migrate_is_pano_to_pano_only,
             [
-                ({"mapillary_image_filters": {"is_pano": True}}, {"mapillary_image_filters": {"pano_only": True}}),
+                ({"mapillary": {"is_pano": True}}, {"mapillary": {"pano_only": True}}),
                 (
-                    {"mapillary_image_filters": {"is_pano": False, "pano_only": True}},
-                    {"mapillary_image_filters": {"pano_only": True}},
+                    {"mapillary": {"is_pano": False, "pano_only": True}},
+                    {"mapillary": {"pano_only": True}},
                 ),
             ],
         )
@@ -92,14 +97,50 @@ class TestStreetMigrations(TestCase):
             (0.0, {}),
             (-0.1, {}),
             (None, {"sampling_threshold": None}),
+            (True, {"sampling_threshold": True}),
         ]
         self.assert_migration(
             migrate_sampling_threshold_to_meters,
             [
                 (
-                    {"mapillary_image_filters": {"sampling_threshold": sampling_threshold_km}},
-                    {"mapillary_image_filters": expected_filters},
+                    {"mapillary": {"sampling_threshold": sampling_threshold_km}},
+                    {"mapillary": expected_filters},
                 )
                 for sampling_threshold_km, expected_filters in cases
+            ],
+        )
+
+    def test_migrate_develop_street_project(self):
+        def migrate(*args: typing.Any):
+            backfill_provider(*args)
+            migrate_is_pano_to_pano_only(*args)
+            migrate_sampling_threshold_to_meters(*args)
+
+        self.assert_migration(
+            migrate,
+            [
+                (
+                    {
+                        "aoi_geometry": "1",
+                        "custom_options": [],
+                        "mapillary_image_filters": {
+                            "is_pano": True,
+                            "organization_id": "42",
+                            "randomize_order": False,
+                            "sampling_threshold": 0.1,
+                        },
+                    },
+                    {
+                        "provider": "mapillary",
+                        "aoi_geometry": "1",
+                        "custom_options": [],
+                        "mapillary": {
+                            "pano_only": True,
+                            "organization_id": "42",
+                            "randomize_order": False,
+                            "sampling_threshold": 100,
+                        },
+                    },
+                ),
             ],
         )

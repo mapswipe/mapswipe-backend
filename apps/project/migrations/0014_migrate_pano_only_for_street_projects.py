@@ -9,18 +9,18 @@ logger = logging.getLogger(__name__)
 
 def migrate_is_pano_to_pano_only(apps, schema_editor):
     """
-    Migrate is_pano field to pano_only in mapillary_image_filters
+    Migrate is_pano field to pano_only in the mapillary config
     for all STREET-type projects to conform with updated schema.
     """
     Project = apps.get_model('project', 'Project')
 
     to_update = []
     for project in Project._default_manager.filter(project_type=7):  # STREET type
-        if project.project_type_specifics is None:
+        if not isinstance(project.project_type_specifics, dict):
             continue
 
-        if 'mapillary_image_filters' in project.project_type_specifics:
-            filters = project.project_type_specifics['mapillary_image_filters']
+        if 'mapillary' in project.project_type_specifics:
+            filters = project.project_type_specifics['mapillary']
             if isinstance(filters, dict) and 'is_pano' in filters:
                 logger.info(
                     f"Migrating is_pano to pano_only for project {project.id}"
@@ -41,11 +41,11 @@ def reverse_pano_migration(apps, schema_editor):
 
     to_update = []
     for project in Project._default_manager.filter(project_type=7):  # STREET type
-        if project.project_type_specifics is None:
+        if not isinstance(project.project_type_specifics, dict):
             continue
 
-        if 'mapillary_image_filters' in project.project_type_specifics:
-            filters = project.project_type_specifics['mapillary_image_filters']
+        if 'mapillary' in project.project_type_specifics:
+            filters = project.project_type_specifics['mapillary']
             if isinstance(filters, dict) and 'pano_only' in filters:
                 logger.info(
                     f"Reverting pano_only to is_pano for project {project.id}"

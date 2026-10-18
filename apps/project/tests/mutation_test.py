@@ -30,6 +30,7 @@ from project_types.tile_map_service.compare import project as compare_project
 from project_types.tile_map_service.locate import project as locate_project
 from project_types.tile_map_service.locate.project import SubGridSizeEnum
 from utils.geo.raster_tile_server.config import RasterTileServerNameEnum
+from utils.geo.street_image_provider.models import StreetImageProviderEnum
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -1700,7 +1701,8 @@ class TestProjectTypeMutation(TestCase):
                             },
                         ],
                     },
-                    "mapillaryImageFilters": {
+                    "provider": self.genum(StreetImageProviderEnum.MAPILLARY),
+                    "mapillary": {
                         "panoOnly": True,
                         "creatorId": None,
                         "organizationId": None,
@@ -1708,9 +1710,6 @@ class TestProjectTypeMutation(TestCase):
                         "endTime": None,
                         "randomizeOrder": False,
                         "samplingThreshold": None,
-                    },
-                    "imageProvider": {
-                        "name": "MAPILLARY",
                     },
                 },
             },

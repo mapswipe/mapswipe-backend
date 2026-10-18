@@ -83,6 +83,14 @@ PydanticPositiveInt = typing.Annotated[
         description="Positive integer value",
     ),
 ]
+PydanticStrictNonNegativeInt = typing.Annotated[
+    int,
+    Field(
+        strict=True,
+        ge=0,
+        description="Non-negative integer value",
+    ),
+]
 
 PydanticHexColor = typing.Annotated[
     str,

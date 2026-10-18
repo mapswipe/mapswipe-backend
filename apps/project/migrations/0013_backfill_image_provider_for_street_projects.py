@@ -6,25 +6,48 @@ from django.db import migrations
 
 logger = logging.getLogger(__name__)
 
-def backfill_image_provider(apps, schema_editor):
+def backfill_provider(apps, schema_editor):
+    """
+    Street projects created before Panoramax support use Mapillary, and their
+    filters move from mapillary_image_filters to the provider specific mapillary config.
+    """
     Project = apps.get_model('project', 'Project')
 
     to_update = []
     for project in Project._default_manager.filter(project_type=7):  # STREET type
-        if not isinstance(project.project_type_specifics, dict):
+        specifics = project.project_type_specifics
+        if not isinstance(specifics, dict):
             continue
 
-        if 'image_provider' not in project.project_type_specifics:
-            project.project_type_specifics['image_provider'] = {
-                'name': 'mapillary'
-            }
-            to_update.append(project)
+        specifics.setdefault('provider', 'mapillary')
+        if 'mapillary_image_filters' in specifics:
+            specifics['mapillary'] = specifics.pop('mapillary_image_filters')
+        to_update.append(project)
 
     updated_count = Project._default_manager.bulk_update(to_update, ['project_type_specifics'])
-    logger.info(f"Field migration completed: {updated_count} projects backfilled image_provider")
+    logger.info(f"Field migration completed: {updated_count} projects backfilled provider")
+
 
 def reverse_backfill(apps, schema_editor):
-    pass
+    Project = apps.get_model('project', 'Project')
+
+    to_update = []
+    for project in Project._default_manager.filter(project_type=7):  # STREET type
+        specifics = project.project_type_specifics
+        if not isinstance(specifics, dict):
+            continue
+
+        # NOTE: Lossy, the Panoramax configs have no equivalent before this migration
+        specifics.pop('provider', None)
+        specifics.pop('panoramax', None)
+        specifics.pop('panoramax_custom', None)
+        if 'mapillary' in specifics:
+            specifics['mapillary_image_filters'] = specifics.pop('mapillary')
+        to_update.append(project)
+
+    updated_count = Project._default_manager.bulk_update(to_update, ['project_type_specifics'])
+    logger.info(f"Reverse migration completed: {updated_count} projects reverted provider")
+
 
 class Migration(migrations.Migration):
 
@@ -33,5 +56,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(backfill_image_provider, reverse_backfill),
+        migrations.RunPython(backfill_provider, reverse_backfill),
     ]

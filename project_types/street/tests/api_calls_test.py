@@ -1,4 +1,5 @@
 import json
+import re
 import traceback
 import typing
 import unittest
@@ -23,10 +24,18 @@ from project_types.street.api_calls import (
     geojson_to_polygon,
     get_image_metadata,
 )
-from utils.geo.street_image_provider.models import StreetImageProvider, StreetImageProviderNameEnum
+from utils.geo.street_image_provider.models import (
+    StreetImageProviderConfig,
+    StreetImageProviderEnum,
+    StreetImageProviderNormConfig,
+)
 
 if typing.TYPE_CHECKING:
     from collections.abc import Hashable
+
+
+def get_provider_config(provider: StreetImageProviderEnum, **config: typing.Any) -> StreetImageProviderNormConfig:
+    return StreetImageProviderConfig.model_validate({"provider": provider, provider.value: config}).get_config()
 
 
 class TestTileGroupingFunctions(unittest.TestCase):
@@ -35,7 +44,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
     empty_polygon: Polygon  # type: ignore[reportUninitializedInstanceVariable]
     empty_geometry: GeometryCollection  # type: ignore[reportUninitializedInstanceVariable]
     row: pd.Series  # type: ignore[reportUninitializedInstanceVariable]
-    provider: StreetImageProvider  # type: ignore[reportUninitializedInstanceVariable]
+    provider: StreetImageProviderNormConfig  # type: ignore[reportUninitializedInstanceVariable]
 
     @typing.override
     @classmethod
@@ -56,9 +65,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
         self.empty_polygon = Polygon()
         self.empty_geometry = GeometryCollection()
         self.row = pd.Series({"x": 1, "y": 1, "z": self.level})
-        self.provider = StreetImageProvider(
-            name=StreetImageProviderNameEnum.MAPILLARY,
-        )
+        self.provider = get_provider_config(StreetImageProviderEnum.MAPILLARY)
 
     def test_create_tiles_with_valid_polygon(self):
         tiles = create_tiles(polygon=self.test_polygon, level=self.level)
@@ -207,10 +214,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
         row: dict[Hashable, typing.Any] = {"x": 1, "y": 1, "z": 14}
         polygon = wkt.loads("POLYGON ((-1 -1, -1 1, 1 1, 1 -1, -1 -1))")
 
-        provider = StreetImageProvider(
-            name=StreetImageProviderNameEnum.PANORAMAX,
-            url=None,
-        )
+        provider = get_provider_config(StreetImageProviderEnum.PANORAMAX)
 
         result = download_and_process_tile(
             row=row,
@@ -239,7 +243,7 @@ class TestTileGroupingFunctions(unittest.TestCase):
             row={"x": 1, "y": 1, "z": 15},
             polygon=wkt.loads("POLYGON ((-1 -1, -1 1, 1 1, 1 -1, -1 -1))"),
             kwargs={},
-            provider=StreetImageProvider(name=StreetImageProviderNameEnum.PANORAMAX),
+            provider=get_provider_config(StreetImageProviderEnum.PANORAMAX),
         )
         assert result is not None
         assert list(result["captured_at"].astype(str)) == ["2025-03-29 09:00:00", "2025-03-31 08:00:00"]
@@ -277,10 +281,13 @@ class TestTileGroupingFunctions(unittest.TestCase):
             ("https://panoramax.example.com", "https://panoramax.example.com/api/map/14/1/1.mvt"),
             ("https://panoramax.example.com/", "https://panoramax.example.com/api/map/14/1/1.mvt"),
             ("https://panoramax.example.com:8443", "https://panoramax.example.com:8443/api/map/14/1/1.mvt"),
+            ("https://panoramax.example.com:8443/", "https://panoramax.example.com:8443/api/map/14/1/1.mvt"),
+            ("http://localhost:8080", "http://localhost:8080/api/map/14/1/1.mvt"),
+            ("http://192.168.1.2", "http://192.168.1.2/api/map/14/1/1.mvt"),
         ]
         for url, expected_tile_url in cases:
             mock_get_street_image_data.reset_mock()
-            provider = StreetImageProvider(name=StreetImageProviderNameEnum.PANORAMAX_CUSTOM, url=url)
+            provider = get_provider_config(StreetImageProviderEnum.PANORAMAX_CUSTOM, url=url)
 
             download_and_process_tile(row=self.row, polygon=self.test_polygon, kwargs={}, provider=provider)
 
@@ -544,35 +551,134 @@ class TestTileGroupingFunctions(unittest.TestCase):
         assert sorted(result["features"]) == ["a", "b", "c", "d", "e"]
 
 
-class TestStreetImageProvider(unittest.TestCase):
+class TestStreetImageProviderConfig(unittest.TestCase):
+    def test_provider_config_is_required(self):
+        for provider in StreetImageProviderEnum:
+            for data in [{"provider": provider}, {"provider": provider, provider.value: None}]:
+                with pytest.raises(ValidationError, match=f"{provider.value} config is required"):
+                    StreetImageProviderConfig.model_validate(data)
+
+    def test_other_provider_configs_are_rejected(self):
+        configs = {
+            StreetImageProviderEnum.MAPILLARY: {},
+            StreetImageProviderEnum.PANORAMAX: {},
+            StreetImageProviderEnum.PANORAMAX_CUSTOM: {"url": "https://panoramax.example.com"},
+        }
+        for provider in StreetImageProviderEnum:
+            for other_provider in StreetImageProviderEnum:
+                if other_provider == provider:
+                    continue
+                data = {
+                    "provider": provider,
+                    provider.value: configs[provider],
+                    other_provider.value: configs[other_provider],
+                }
+                with pytest.raises(ValidationError, match=f"{other_provider.value} config is only allowed"):
+                    StreetImageProviderConfig.model_validate(data)
+
+    def test_get_config(self):
+        cases = [
+            (StreetImageProviderEnum.MAPILLARY, {}, Config.MAPILLARY_API_LINK, 14),
+            (StreetImageProviderEnum.PANORAMAX, {}, Config.PANORAMAX_API_LINK, 15),
+            (
+                StreetImageProviderEnum.PANORAMAX_CUSTOM,
+                {"url": "https://panoramax.example.com"},
+                "https://panoramax.example.com",
+                15,
+            ),
+        ]
+        for provider, config, expected_url, expected_tile_level in cases:
+            assert get_provider_config(provider, **config) == {
+                "name": provider,
+                "url": expected_url,
+                "tile_level": expected_tile_level,
+            }
+
+    def test_get_filters(self):
+        filters = {
+            "pano_only": True,
+            "creator_id": "7",
+            "start_time": "2024-01-01",
+            "end_time": "2024-12-31",
+            "randomize_order": True,
+            "sampling_threshold": 100,
+        }
+        cases = [
+            (StreetImageProviderEnum.MAPILLARY, {"organization_id": "42"}, "42"),
+            (StreetImageProviderEnum.PANORAMAX, {}, None),
+            (StreetImageProviderEnum.PANORAMAX_CUSTOM, {"url": "https://panoramax.example.com"}, None),
+        ]
+        for provider, config, expected_organization_id in cases:
+            provider_config = StreetImageProviderConfig.model_validate(
+                {"provider": provider, provider.value: {**filters, **config}},
+            )
+            assert provider_config.get_filters() == {**filters, "organization_id": expected_organization_id}
+
+    def test_organization_id_only_for_mapillary(self):
+        for provider, config in [
+            (StreetImageProviderEnum.PANORAMAX, {}),
+            (StreetImageProviderEnum.PANORAMAX_CUSTOM, {"url": "https://panoramax.example.com"}),
+        ]:
+            provider_config = StreetImageProviderConfig.model_validate(
+                {"provider": provider, provider.value: {**config, "organization_id": "42"}},
+            )
+            assert provider_config.get_filters()["organization_id"] is None
+
+    def test_sampling_threshold_must_be_a_non_negative_integer(self):
+        for sampling_threshold in [0, 100]:
+            provider_config = StreetImageProviderConfig.model_validate(
+                {"provider": "mapillary", "mapillary": {"sampling_threshold": sampling_threshold}},
+            )
+            assert provider_config.get_filters()["sampling_threshold"] == sampling_threshold
+        for sampling_threshold in [True, False, -1, 100.0]:
+            with pytest.raises(ValidationError, match="sampling_threshold"):
+                StreetImageProviderConfig.model_validate(
+                    {"provider": "mapillary", "mapillary": {"sampling_threshold": sampling_threshold}},
+                )
+
     def test_panoramax_custom_requires_url(self):
-        for data in [
-            {"name": StreetImageProviderNameEnum.PANORAMAX_CUSTOM},
-            {"name": StreetImageProviderNameEnum.PANORAMAX_CUSTOM, "url": None},
-        ]:
-            with pytest.raises(ValidationError, match="url field is required"):
-                StreetImageProvider.model_validate(data)
+        for config in [{}, {"url": None}]:
+            with pytest.raises(ValidationError, match="url"):
+                get_provider_config(StreetImageProviderEnum.PANORAMAX_CUSTOM, **config)
 
-        provider = StreetImageProvider(
-            name=StreetImageProviderNameEnum.PANORAMAX_CUSTOM,
-            url="https://panoramax.example.com",
-        )
-        assert provider.url == "https://panoramax.example.com/"
-
-    def test_panoramax_custom_url_must_be_a_domain(self):
+    def test_panoramax_custom_url_is_kept_as_entered(self):
         for url in [
-            "https://example.com/panoramax",
-            "https://panoramax.example.com/api",
-            "https://panoramax.example.com/api/",
-            "https://panoramax.example.com/?a=1",
-            "https://panoramax.example.com/#a",
+            "https://panoramax.example.com",
+            "https://panoramax.example.com/",
+            "http://localhost:8080",
+            "https://panoramax.example.com:8443",
+            "https://panoramax.example.com:8443/",
+            "http://192.168.1.2",
         ]:
-            with pytest.raises(ValidationError, match="url must be the domain"):
-                StreetImageProvider(name=StreetImageProviderNameEnum.PANORAMAX_CUSTOM, url=url)
+            assert get_provider_config(StreetImageProviderEnum.PANORAMAX_CUSTOM, url=url)["url"] == url
 
-    def test_url_not_allowed_for_other_providers(self):
-        for name in [StreetImageProviderNameEnum.MAPILLARY, StreetImageProviderNameEnum.PANORAMAX]:
-            with pytest.raises(ValidationError, match="url field is only allowed"):
-                StreetImageProvider(name=name, url="https://panoramax.example.com")
+    def test_panoramax_custom_url_must_be_scheme_and_host(self):
+        for url, message in [
+            (" https://p.org", "url must not have leading or trailing whitespace"),
+            ("https://p.org ", "url must not have leading or trailing whitespace"),
+            ("\thttps://p.org", "url must not have leading or trailing whitespace"),
+            ("https://p.org\n", "url must not have leading or trailing whitespace"),
+            ("p.org", "url must start with http:// or https://"),
+            ("ftp://p.org", "url must start with http:// or https://"),
+            ("https://p.org/?", "url must not have a path, query or fragment"),
+            ("https://p.org#", "url must not have a path, query or fragment"),
+            ("https://p.org/?a=1", "url must not have a path, query or fragment"),
+            ("https://p.org/#a", "url must not have a path, query or fragment"),
+            ("https://p.org/a", "url must not have a path, query or fragment"),
+            ("https://p.org/a/..", "url must not have a path, query or fragment"),
+            ("https://p.org/api", "url must not have a path, query or fragment"),
+            ("https://p.org//", "url must not have a path, query or fragment"),
+            ("https://u:secret@p.org", "url must not have credentials"),
+            ("https://p..org", "url must have a valid hostname or IPv4 address and an optional port"),
+            ("https://256.1.1.1", "url must have a valid hostname or IPv4 address and an optional port"),
+            ("https://p.org:0", "url must have a valid hostname or IPv4 address and an optional port"),
+            ("https://p.org:65536", "url must have a valid hostname or IPv4 address and an optional port"),
+            ("https://[::1]", "url must have a valid hostname or IPv4 address and an optional port"),
+        ]:
+            with pytest.raises(ValidationError, match=re.escape(message)):
+                get_provider_config(StreetImageProviderEnum.PANORAMAX_CUSTOM, url=url)
 
-            assert StreetImageProvider(name=name).url is None
+    def test_panoramax_custom_url_must_not_be_too_long(self):
+        url = f"https://{'a' * 1000}.example.com"
+        with pytest.raises(ValidationError, match="String should have at most 1000 characters"):
+            get_provider_config(StreetImageProviderEnum.PANORAMAX_CUSTOM, url=url)
