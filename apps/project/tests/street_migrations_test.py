@@ -8,6 +8,7 @@ from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import Project, ProjectTypeEnum
 from apps.user.factories import UserFactory
 from main.tests import TestCase
+from project_types.street.project import StreetProjectProperty
 
 backfill_provider = importlib.import_module(
     "apps.project.migrations.0013_backfill_image_provider_for_street_projects",
@@ -18,6 +19,15 @@ migrate_is_pano_to_pano_only = importlib.import_module(
 migrate_sampling_threshold_to_meters = importlib.import_module(
     "apps.project.migrations.0016_migrate_sampling_threshold_to_meters_for_street_projects",
 ).migrate_sampling_threshold_to_meters
+
+
+def with_types(value: typing.Any) -> typing.Any:
+    # NOTE: `==` treats 100 and 100.0 (and 1 and True) as equal
+    if isinstance(value, dict):
+        return {key: with_types(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [with_types(item) for item in value]
+    return (type(value), value)
 
 
 class TestStreetMigrations(TestCase):
@@ -48,7 +58,7 @@ class TestStreetMigrations(TestCase):
         self,
         migration: typing.Callable[..., None],
         cases: list[tuple[typing.Any, typing.Any]],
-    ):
+    ) -> list[Project]:
         projects = [(self.create_project(before), after) for before, after in cases]
         non_street_filters = {"is_pano": True, "sampling_threshold": 0.5}
         non_street_specifics = {"mapillary_image_filters": non_street_filters, "mapillary": non_street_filters}
@@ -58,9 +68,10 @@ class TestStreetMigrations(TestCase):
 
         for project, expected in projects:
             project.refresh_from_db()
-            assert project.project_type_specifics == expected, (project.pk, expected)
+            assert with_types(project.project_type_specifics) == with_types(expected), (project.pk, expected)
         non_street_project.refresh_from_db()
-        assert non_street_project.project_type_specifics == non_street_specifics
+        assert with_types(non_street_project.project_type_specifics) == with_types(non_street_specifics)
+        return [project for project, _ in projects]
 
     def test_backfill_provider(self):
         self.assert_migration(
@@ -116,7 +127,7 @@ class TestStreetMigrations(TestCase):
             migrate_is_pano_to_pano_only(*args)
             migrate_sampling_threshold_to_meters(*args)
 
-        self.assert_migration(
+        [project] = self.assert_migration(
             migrate,
             [
                 (
@@ -144,3 +155,4 @@ class TestStreetMigrations(TestCase):
                 ),
             ],
         )
+        StreetProjectProperty.model_validate(project.project_type_specifics)

@@ -33,30 +33,6 @@ def migrate_is_pano_to_pano_only(apps, schema_editor):
     logger.info(f"Field migration completed: {updated_count} projects migrated is_pano to pano_only")
 
 
-def reverse_pano_migration(apps, schema_editor):
-    """
-    Revert pano_only back to is_pano for compatibility.
-    """
-    Project = apps.get_model('project', 'Project')
-
-    to_update = []
-    for project in Project._default_manager.filter(project_type=7):  # STREET type
-        if not isinstance(project.project_type_specifics, dict):
-            continue
-
-        if 'mapillary' in project.project_type_specifics:
-            filters = project.project_type_specifics['mapillary']
-            if isinstance(filters, dict) and 'pano_only' in filters:
-                logger.info(
-                    f"Reverting pano_only to is_pano for project {project.id}"
-                )
-                filters['is_pano'] = filters.pop('pano_only')
-                to_update.append(project)
-
-    updated_count = Project._default_manager.bulk_update(to_update, ['project_type_specifics'])
-    logger.info(f"Reverse migration completed: {updated_count} projects reverted pano_only to is_pano")
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -64,5 +40,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_is_pano_to_pano_only, reverse_pano_migration),
+        migrations.RunPython(migrate_is_pano_to_pano_only),
     ]

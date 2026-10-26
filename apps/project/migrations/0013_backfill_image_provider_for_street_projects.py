@@ -28,27 +28,6 @@ def backfill_provider(apps, schema_editor):
     logger.info(f"Field migration completed: {updated_count} projects backfilled provider")
 
 
-def reverse_backfill(apps, schema_editor):
-    Project = apps.get_model('project', 'Project')
-
-    to_update = []
-    for project in Project._default_manager.filter(project_type=7):  # STREET type
-        specifics = project.project_type_specifics
-        if not isinstance(specifics, dict):
-            continue
-
-        # NOTE: Lossy, the Panoramax configs have no equivalent before this migration
-        specifics.pop('provider', None)
-        specifics.pop('panoramax', None)
-        specifics.pop('panoramax_custom', None)
-        if 'mapillary' in specifics:
-            specifics['mapillary_image_filters'] = specifics.pop('mapillary')
-        to_update.append(project)
-
-    updated_count = Project._default_manager.bulk_update(to_update, ['project_type_specifics'])
-    logger.info(f"Reverse migration completed: {updated_count} projects reverted provider")
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -56,5 +35,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(backfill_provider, reverse_backfill),
+        migrations.RunPython(backfill_provider),
     ]

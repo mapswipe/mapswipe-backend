@@ -51,37 +51,6 @@ def migrate_sampling_threshold_to_meters(apps, schema_editor):
     logger.info(f"Field migration completed: {updated_count} projects migrated sampling_threshold from km to m")
 
 
-def reverse_sampling_threshold_migration(apps, schema_editor):
-    """
-    Convert sampling_threshold back from meters (int) to kilometers (float).
-    """
-    Project = apps.get_model('project', 'Project')
-
-    to_update = []
-    for project in Project._default_manager.filter(project_type=7):  # STREET type
-        if not isinstance(project.project_type_specifics, dict):
-            continue
-
-        filters = project.project_type_specifics.get('mapillary')
-        if not isinstance(filters, dict):
-            continue
-
-        sampling_threshold_m = filters.get('sampling_threshold')
-        if not isinstance(sampling_threshold_m, int) or isinstance(sampling_threshold_m, bool):
-            continue
-
-        sampling_threshold_km = sampling_threshold_m / 1000
-        logger.info(
-            f"Reverting sampling_threshold from {sampling_threshold_m} m to "
-            f"{sampling_threshold_km} km for project {project.id}"
-        )
-        filters['sampling_threshold'] = sampling_threshold_km
-        to_update.append(project)
-
-    updated_count = Project._default_manager.bulk_update(to_update, ['project_type_specifics'])
-    logger.info(f"Reverse migration completed: {updated_count} projects reverted sampling_threshold from m to km")
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -89,5 +58,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_sampling_threshold_to_meters, reverse_sampling_threshold_migration),
+        migrations.RunPython(migrate_sampling_threshold_to_meters),
     ]
