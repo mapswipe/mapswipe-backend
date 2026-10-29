@@ -2852,12 +2852,14 @@ enum ValidateObjectSourceTypeEnum {
 input ValidateProjectPropertyInput {
   customOptions: [CustomOptionInput!] = null
   objectSource: ValidateObjectSourceConfigInput!
+  preEventTileServerProperty: ProjectRasterTileServerConfigInput = null
   tileServerProperty: ProjectRasterTileServerConfigInput!
 }
 
 type ValidateProjectPropertyType {
   customOptions: [ProjectCustomOption!]
   objectSource: ValidateObjectSourceConfig!
+  preEventTileServerProperty: ProjectRasterTileServerConfig
   tileServerProperty: ProjectRasterTileServerConfig!
 }
 

@@ -119,6 +119,21 @@ class TestProjectQuery(TestCase):
                         }
                       }
                     }
+                    ... on ValidateProjectPropertyType {
+                      objectSource {
+                        sourceType
+                        taskingManagerProjectId
+                        aoiGeometry
+                        ohsomeFilter
+                        objectGeojsonUrl
+                      }
+                      tileServerProperty {
+                        ...RasterTileServerPropertyFields
+                      }
+                      preEventTileServerProperty {
+                        ...RasterTileServerPropertyFields
+                      }
+                    }
                   }
                 }
               }
@@ -294,6 +309,77 @@ class TestProjectQuery(TestCase):
                     },
                 },
             ),
+            ProjectFactory.create(
+                **cls.user_resource_kwargs,
+                topic="Test Topic 5",
+                region="Test Region 5",
+                project_number=1,
+                requesting_organization=cls.organization,
+                project_type=ProjectTypeEnum.VALIDATE,
+                project_type_specifics={
+                    "object_source": {
+                        "source_type": "TASKING_MANAGER",
+                        "tasking_manager_project_id": "1234",
+                        "aoi_geometry": None,
+                        "ohsome_filter": "building=*",
+                        "object_geojson_url": None,
+                    },
+                    "tile_server_property": {
+                        "name": "BING",
+                        "custom": None,
+                        "bing": {
+                            "credits": "My Map",
+                        },
+                        "mapbox": None,
+                        "maxar_standard": None,
+                        "maxar_premium": None,
+                        "esri": None,
+                        "esri_beta": None,
+                    },
+                    "pre_event_tile_server_property": {
+                        "name": "ESRI",
+                        "custom": None,
+                        "bing": None,
+                        "mapbox": None,
+                        "maxar_standard": None,
+                        "maxar_premium": None,
+                        "esri": {
+                            "credits": "My Pre-event Map",
+                        },
+                        "esri_beta": None,
+                    },
+                },
+            ),
+            # NOTE: Existing validate projects do not have pre_event_tile_server_property
+            ProjectFactory.create(
+                **cls.user_resource_kwargs,
+                topic="Test Topic 6",
+                region="Test Region 6",
+                project_number=1,
+                requesting_organization=cls.organization,
+                project_type=ProjectTypeEnum.VALIDATE,
+                project_type_specifics={
+                    "object_source": {
+                        "source_type": "TASKING_MANAGER",
+                        "tasking_manager_project_id": "1234",
+                        "aoi_geometry": None,
+                        "ohsome_filter": "building=*",
+                        "object_geojson_url": None,
+                    },
+                    "tile_server_property": {
+                        "name": "BING",
+                        "custom": None,
+                        "bing": {
+                            "credits": "My Map",
+                        },
+                        "mapbox": None,
+                        "maxar_standard": None,
+                        "maxar_premium": None,
+                        "esri": None,
+                        "esri_beta": None,
+                    },
+                },
+            ),
         ]
 
     def test_projects(self):
@@ -322,7 +408,7 @@ class TestProjectQuery(TestCase):
             **self.g_pagination(
                 offset=0,
                 limit=10,
-                total_count=4,
+                total_count=6,
                 results=[
                     dict(
                         name=f"{project.project_type_enum.label} - {project.topic} - {project.region} ({project.project_number}) {project.requesting_organization.name}",  # noqa: E501
@@ -331,7 +417,17 @@ class TestProjectQuery(TestCase):
                         projectNumber=project.project_number,
                         id=self.gID(project.pk),
                         projectType=self.genum(project.project_type_enum),
-                        projectTypeSpecifics=format_object_keys(project.project_type_specifics, to_camel_case),
+                        projectTypeSpecifics=format_object_keys(
+                            {
+                                **(
+                                    {"pre_event_tile_server_property": None}
+                                    if project.project_type == ProjectTypeEnum.VALIDATE
+                                    else {}
+                                ),
+                                **project.project_type_specifics,
+                            },
+                            to_camel_case,
+                        ),
                     )
                     for project in self.projects
                 ],

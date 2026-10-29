@@ -100,7 +100,9 @@ class ValidateObjectSourceConfig(BaseModel):
 
 
 class ValidateProjectProperty(base_project.BaseProjectProperty):
+    # NOTE: tile_server_property is the post-event imagery
     tile_server_property: RasterTileServerConfig
+    pre_event_tile_server_property: RasterTileServerConfig | None = None
     object_source: ValidateObjectSourceConfig
     custom_options: list[CustomOption] | None = None
 
