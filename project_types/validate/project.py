@@ -49,6 +49,12 @@ from utils.geo.transform import (
 
 logger = logging.getLogger(__name__)
 
+# NOTE: Older apps only read tileServer, so projects with pre-event imagery point it to this image
+# FIXME(sandeshit): Placeholder until the Validate fallback image is added to mapswipe-assets
+VALIDATE_FALLBACK_RASTER_LAYER = (
+    "https://raw.githubusercontent.com/mapswipe/mapswipe-assets/refs/heads/main/images/validate-update-app-message.png"
+)
+
 
 class ValidateObjectSourceTypeEnum(models.TextChoices):
     AOI_GEOJSON_FILE = "AOI_GEOJSON_FILE", "AOI GeoJson File"
@@ -105,6 +111,46 @@ class ValidateProjectProperty(base_project.BaseProjectProperty):
     pre_event_tile_server_property: RasterTileServerConfig | None = None
     object_source: ValidateObjectSourceConfig
     custom_options: list[CustomOption] | None = None
+
+
+class ValidateFirebaseTileServers(typing.NamedTuple):
+    tile_server: firebase_models.FbObjRasterTileServer
+    pre_event_tile_server: firebase_models.FbObjRasterTileServer | firebase_models.TypesyncUndefined
+    post_event_tile_server: firebase_models.FbObjRasterTileServer | firebase_models.TypesyncUndefined
+
+
+def get_raster_tile_server_for_firebase(tsp: RasterTileServerConfig) -> firebase_models.FbObjRasterTileServer:
+    return firebase_models.FbObjRasterTileServer(
+        name=tsp.name.to_firebase(),
+        credits=tsp.get_config()["credits"],
+        url=tsp.get_config()["raw_url"],
+        apiKey=tsp.get_config()["api_key"],
+        wmtsLayerName=None,
+    )
+
+
+def get_tile_servers_for_firebase(project_property: ValidateProjectProperty) -> ValidateFirebaseTileServers:
+    """Map the imagery layers of a Validate project to the tile servers written to firebase."""
+    post_event_tile_server = get_raster_tile_server_for_firebase(project_property.tile_server_property)
+
+    if project_property.pre_event_tile_server_property is None:
+        return ValidateFirebaseTileServers(
+            tile_server=post_event_tile_server,
+            pre_event_tile_server=firebase_models.UNDEFINED,
+            post_event_tile_server=firebase_models.UNDEFINED,
+        )
+
+    return ValidateFirebaseTileServers(
+        tile_server=firebase_models.FbObjRasterTileServer(
+            name=firebase_models.FbEnumRasterTileServerName.CUSTOM,
+            credits="n/a",
+            url=VALIDATE_FALLBACK_RASTER_LAYER,
+            apiKey="",
+            wmtsLayerName=None,
+        ),
+        pre_event_tile_server=get_raster_tile_server_for_firebase(project_property.pre_event_tile_server_property),
+        post_event_tile_server=post_event_tile_server,
+    )
 
 
 class ValidateProjectTaskGroupProperty(base_project.BaseProjectTaskGroupProperty): ...
@@ -614,7 +660,7 @@ class ValidateProject(
 
     @typing.override
     def get_project_specifics_for_firebase(self):
-        tsp = self.project_type_specifics.tile_server_property
+        tile_servers = get_tile_servers_for_firebase(self.project_type_specifics)
         custom_opts = self.project_type_specifics.custom_options
         obj_source = self.project_type_specifics.object_source
         return firebase_models.FbProjectValidateCreateOnlyInput(
@@ -642,11 +688,7 @@ class ValidateProject(
             filter=obj_source.ohsome_filter,
             inputType=obj_source.source_type.to_firebase(),
             TMId=str(obj_source.tasking_manager_project_id) if obj_source.tasking_manager_project_id else None,
-            tileServer=firebase_models.FbObjRasterTileServer(
-                name=tsp.name.to_firebase(),
-                credits=tsp.get_config()["credits"],
-                url=tsp.get_config()["raw_url"],
-                apiKey=tsp.get_config()["api_key"],
-                wmtsLayerName=None,
-            ),
+            tileServer=tile_servers.tile_server,
+            preEventTileServer=tile_servers.pre_event_tile_server,
+            postEventTileServer=tile_servers.post_event_tile_server,
         )

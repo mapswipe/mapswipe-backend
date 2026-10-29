@@ -11,7 +11,7 @@ from project_types.base import tutorial as base_tutorial
 from project_types.base.tutorial import BaseTutorialTaskProperty
 from utils.geo.transform import convert_json_str_to_wkt
 
-from .project import ValidateProjectProperty
+from .project import ValidateProjectProperty, get_tile_servers_for_firebase
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class ValidateTutorial(
 
     @typing.override
     def get_tutorial_specifics_for_firebase(self):
-        tsp = self.project_type_specifics.tile_server_property
+        tile_servers = get_tile_servers_for_firebase(self.project_type_specifics)
         custom_opts = self.project_type_specifics.custom_options
 
         projectType = ProjectTypeEnum.VALIDATE.value
@@ -75,13 +75,9 @@ class ValidateTutorial(
             # FIXME(tnagorra): Check if this is always 18, app is calculating zoomLevel using geometry
             zoomLevel=18,
             projectType=projectType,
-            tileServer=firebase_models.FbObjRasterTileServer(
-                name=tsp.name.to_firebase(),
-                credits=tsp.get_config()["credits"],
-                url=tsp.get_config()["raw_url"],
-                apiKey=tsp.get_config()["api_key"],
-                wmtsLayerName=None,
-            ),
+            tileServer=tile_servers.tile_server,
+            preEventTileServer=tile_servers.pre_event_tile_server,
+            postEventTileServer=tile_servers.post_event_tile_server,
             customOptions=[
                 firebase_models.FbObjCustomOption(
                     title=opt.title,
