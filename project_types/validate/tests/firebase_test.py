@@ -127,6 +127,64 @@ class TestValidateFirebaseTileServers(TestCase):
             assert payload["hasPreImagery"] is False
             assert payload["tileServer"] == POST_EVENT_TILE_SERVER
 
+    def test_zoom_range_of_named_server(self):
+        project = self._create_project(
+            tile_server_property={"name": "BING", "bing": {"credits": "Bing credits"}},
+            has_pre_imagery=True,
+            pre_event_tile_server_property={"name": "ESRI", "esri": {"credits": "ESRI credits"}},
+        )
+
+        for payload in self._get_tile_servers(project):
+            assert payload["postEventTileServer"]["minZoom"] == 1
+            assert payload["postEventTileServer"]["maxZoom"] == 21
+            assert payload["preEventTileServer"]["minZoom"] == 0
+            assert payload["preEventTileServer"]["maxZoom"] == 21
+            # NOTE: No server defines a zoom range for the fallback image
+            assert "minZoom" not in payload["tileServer"]
+            assert "maxZoom" not in payload["tileServer"]
+
+    def test_zoom_range_of_custom_server(self):
+        project = self._create_project(
+            tile_server_property={
+                "name": "CUSTOM",
+                "custom": {
+                    "credits": "Post-event credits",
+                    "url": "https://post-event.example.com/{z}/{x}/{y}.png",
+                    "min_zoom": 2,
+                    "max_zoom": 18,
+                },
+            },
+            has_pre_imagery=True,
+            pre_event_tile_server_property={
+                "name": "CUSTOM",
+                "custom": {
+                    "credits": "Pre-event credits",
+                    "url": "https://pre-event.example.com/{z}/{x}/{y}.png",
+                    "max_zoom": 17,
+                },
+            },
+        )
+
+        for payload in self._get_tile_servers(project):
+            assert payload["postEventTileServer"] == {**POST_EVENT_TILE_SERVER, "minZoom": 2, "maxZoom": 18}
+            assert payload["preEventTileServer"] == {**PRE_EVENT_TILE_SERVER, "maxZoom": 17}
+
+    def test_zoom_range_of_post_event_only(self):
+        project = self._create_project(
+            tile_server_property={
+                "name": "CUSTOM",
+                "custom": {
+                    "credits": "Post-event credits",
+                    "url": "https://post-event.example.com/{z}/{x}/{y}.png",
+                    "min_zoom": 2,
+                    "max_zoom": 18,
+                },
+            },
+        )
+
+        for payload in self._get_tile_servers(project):
+            assert payload["tileServer"] == {**POST_EVENT_TILE_SERVER, "minZoom": 2, "maxZoom": 18}
+
 
 class TestValidateProjectProperty(TestCase):
     PROJECT_PROPERTY: typing.ClassVar[dict[str, typing.Any]] = {

@@ -133,12 +133,16 @@ class ValidateFirebaseTileServers(typing.NamedTuple):
 
 
 def get_raster_tile_server_for_firebase(tsp: RasterTileServerConfig) -> firebase_models.FbObjRasterTileServer:
+    config = tsp.get_config()
     return firebase_models.FbObjRasterTileServer(
         name=tsp.name.to_firebase(),
-        credits=tsp.get_config()["credits"],
-        url=tsp.get_config()["raw_url"],
-        apiKey=tsp.get_config()["api_key"],
+        credits=config["credits"],
+        url=config["raw_url"],
+        apiKey=config["api_key"],
         wmtsLayerName=None,
+        # NOTE: Only written where the server defines it
+        minZoom=firebase_models.UNDEFINED if config["min_zoom"] is None else config["min_zoom"],
+        maxZoom=firebase_models.UNDEFINED if config["max_zoom"] is None else config["max_zoom"],
     )
 
 
