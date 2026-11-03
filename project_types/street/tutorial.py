@@ -79,4 +79,5 @@ class StreetTutorial(
             ]
             if custom_opts is not None
             else None,
+            imageProvider=self.project_type_specifics.get_firebase_image_provider(),
         )

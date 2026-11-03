@@ -36,29 +36,18 @@ class TestDistanceCalculations(unittest.TestCase):
         assert np.isclose(distance, expected_distance, atol=50)
 
     def test_filter_points(self):
-        data = {
-            "geometry": [
-                "POINT (-74.006 40.7128)",
-                "POINT (-75.006 41.7128)",
-                "POINT (-76.006 42.7128)",
-                "POINT (-77.006 43.7128)",
-            ],
-        }
-        df = pd.DataFrame(data)
-
-        df["geometry"] = df["geometry"].apply(wkt.loads)  # type: ignore[reportArgumentType]
-
-        df["long"] = df["geometry"].apply(
-            lambda geom: geom.x if geom.geom_type == "Point" else None,
+        # NOTE: 0.01 degree of longitude on the equator is about 1.11 km; the path goes out and back
+        df = pd.DataFrame(
+            {
+                "id": ["a", "b", "c", "d", "e"],
+                "long": [0.0, 0.01, 0.02, 0.01, 0.0],
+                "lat": [0.0] * 5,
+            },
         )
-        df["lat"] = df["geometry"].apply(
-            lambda geom: geom.y if geom.geom_type == "Point" else None,
-        )
-        threshold_distance = 100
-        filtered_df = filter_points(df, threshold_distance)
+        threshold_distance_km = 2
+        filtered_df = filter_points(df, threshold_distance_km)
 
-        assert isinstance(filtered_df, pd.DataFrame)
-        assert len(filtered_df) <= len(df)
+        assert filtered_df["id"].tolist() == ["a", "c", "e"]
 
     def test_spatial_sampling_ordering(self):
         data = {
@@ -74,13 +63,23 @@ class TestDistanceCalculations(unittest.TestCase):
         df = pd.DataFrame(data)
         df["geometry"] = df["geometry"].apply(wkt.loads)  # type: ignore[reportArgumentType]
 
-        interval_length = 0.1
+        interval_length = 100
         filtered_gdf = spatial_sampling(df=df, interval_length=interval_length)
 
         assert filtered_gdf["captured_at"].is_monotonic_decreasing
 
+    def test_spatial_sampling_keeps_images_without_sequence(self):
+        df = pd.DataFrame(
+            {
+                "geometry": [Point(0, 0), Point(1, 1), Point(2, 2)],
+                "captured_at": [1, 2, 3],
+                "sequence_id": ["1", None, None],
+            },
+        )
+        assert len(spatial_sampling(df=df, interval_length=None)) == 3
+
     def test_spatial_sampling_with_sequence(self):
-        threshold_distance = 0.01
+        threshold_distance = 10
         filtered_df = spatial_sampling(df=self.fixture_df, interval_length=threshold_distance)
         assert isinstance(filtered_df, pd.DataFrame)
         assert len(filtered_df) < len(self.fixture_df)
@@ -90,6 +89,6 @@ class TestDistanceCalculations(unittest.TestCase):
             geom1 = filtered_df.loc[i, "geometry"]
             geom2 = filtered_df.loc[i + 1, "geometry"]
 
-            distance = geom1.distance(geom2)  # type: ignore[reportAttributeAccessIssue]
+            distance_m = distance_on_sphere([geom1.x, geom1.y], [geom2.x, geom2.y]) * 1000  # type: ignore[reportAttributeAccessIssue]
 
-            assert distance < threshold_distance
+            assert distance_m >= threshold_distance

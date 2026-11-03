@@ -5,7 +5,6 @@ import typing
 
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
-from pydantic import BaseModel
 from pyfirebase_mapswipe import models as firebase_models
 from shapely import wkt
 from ulid import ULID
@@ -26,24 +25,14 @@ from utils import fields as custom_fields
 from utils.asset_types.models import AoiGeometryAssetProperty
 from utils.common import Grouping, create_json_dump
 from utils.custom_options.models import CustomOption
+from utils.geo.street_image_provider.models import StreetImageProviderConfig, StreetImageProviderEnum
 
 logger = logging.getLogger(__name__)
 
 
-class StreetMapillaryImageFilters(BaseModel):
-    is_pano: custom_fields.PydanticBool | None = None
-    creator_id: custom_fields.PydanticLongText | None = None
-    organization_id: custom_fields.PydanticLongText | None = None
-    start_time: custom_fields.PydanticDate | None = None
-    end_time: custom_fields.PydanticDate | None = None
-    randomize_order: custom_fields.PydanticBool = False
-    sampling_threshold: custom_fields.PydanticFloat | None = None
-
-
-class StreetProjectProperty(base_project.BaseProjectProperty):
+class StreetProjectProperty(base_project.BaseProjectProperty, StreetImageProviderConfig):
     aoi_geometry: custom_fields.PydanticId
     custom_options: list[CustomOption] | None = None
-    mapillary_image_filters: StreetMapillaryImageFilters
 
 
 class StreetTaskGroupProperty(base_project.BaseProjectTaskGroupProperty): ...
@@ -98,17 +87,10 @@ class StreetProject(
         with aoi_asset.file.open() as aoi_file:
             aoi_geojson = json.loads(aoi_file.read())
 
-        mapillary_image_filters = self.project_type_specifics.mapillary_image_filters
-
         return get_image_metadata(
             aoi_geojson=aoi_geojson,
-            is_pano=mapillary_image_filters.is_pano,
-            creator_id=mapillary_image_filters.creator_id,
-            organization_id=mapillary_image_filters.organization_id,
-            start_time=mapillary_image_filters.start_time,
-            end_time=mapillary_image_filters.end_time,
-            randomize_order=mapillary_image_filters.randomize_order,
-            sampling_threshold=mapillary_image_filters.sampling_threshold,
+            **self.project_type_specifics.get_filters(),
+            provider=self.project_type_specifics.get_config(),
         )
 
     @typing.override
@@ -231,9 +213,12 @@ class StreetProject(
     @typing.override
     def get_task_specifics_for_firebase(self, task: ProjectTask):
         assert task.geometry is not None, "Task geometry must not be None"
+        task_id: int | str = task.firebase_id
+        if self.project_type_specifics.provider == StreetImageProviderEnum.MAPILLARY:
+            task_id = int(task.firebase_id)
+
         return firebase_models.FbMappingTaskStreetCreateOnlyInput(
-            # XXX: converting this to int for backwards compatibility
-            taskId=int(task.firebase_id),
+            taskId=task_id,
             groupId=task.task_group.firebase_id,
         )
 
@@ -270,4 +255,5 @@ class StreetProject(
             ]
             if custom_opts is not None
             else None,
+            imageProvider=self.project_type_specifics.get_firebase_image_provider(),
         )

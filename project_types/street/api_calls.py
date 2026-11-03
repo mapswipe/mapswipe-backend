@@ -1,9 +1,7 @@
 import logging
 from collections.abc import Hashable
-from concurrent.futures import ProcessPoolExecutor
-from functools import partial
-from typing import Any
-from warnings import deprecated
+from typing import Any, assert_never
+from urllib.parse import urljoin
 
 import mercantile  # type: ignore[reportMissingTypeStubs]
 import pandas as pd
@@ -12,6 +10,7 @@ from geojson_pydantic import Feature as PydanticFeature
 from geojson_pydantic import FeatureCollection as PydanticFeatureCollection
 from geojson_pydantic.geometries import MultiPolygon as PydanticMultiPolygon
 from geojson_pydantic.geometries import Polygon as PydanticPolygon
+from google.protobuf.message import DecodeError as ProtobufDecodeError
 from pydantic import ValidationError
 from shapely import MultiPolygon as ShapelyMultiPolygon
 from shapely import Point as ShapelyPoint
@@ -25,6 +24,7 @@ from main.config import Config
 from main.logging import log_extra_response
 from project_types.base.project import ValidationException
 from utils.common import Grouping
+from utils.geo.street_image_provider.models import StreetImageProviderEnum, StreetImageProviderNormConfig
 from utils.spatial_sampling import spatial_sampling
 
 logger = logging.getLogger(__name__)
@@ -109,6 +109,7 @@ def coordinate_download(
     *,
     polygon: ShapelyBaseGeometry,
     level: int,
+    provider: StreetImageProviderNormConfig,
     kwargs: dict[str, Any],
 ) -> pd.DataFrame:
     tiles = create_tiles(
@@ -118,13 +119,18 @@ def coordinate_download(
     if tiles.empty:
         return pd.DataFrame()
 
-    logger.info("Images will be queried in roughly %s requests from mapillary", len(tiles.index))
+    logger.info(
+        "Images will be queried in roughly %s requests from %s",
+        len(tiles.index),
+        provider["name"].value,
+    )
 
     downloaded_metadata: list[pd.DataFrame] = []
     for i, row in enumerate(tiles.to_dict(orient="records")):
         df = download_and_process_tile(
             row=row,
             polygon=polygon,
+            provider=provider,
             kwargs=kwargs,
         )
         if df is not None and not df.empty:
@@ -144,30 +150,11 @@ def coordinate_download(
     return pd.DataFrame()
 
 
-@deprecated("This function is deprecated and will be removed in future versions.")
-def parallelized_processing(
-    data: list[pd.DataFrame],
-    kwargs: dict[str, Any],
-    polygon: ShapelyBaseGeometry,
-    tiles: pd.DataFrame,
-    workers: int,
-):
-    process_tile_with_args = partial(download_and_process_tile, polygon=polygon, kwargs=kwargs)
-
-    with ProcessPoolExecutor(max_workers=workers) as executor:
-        tile_dicts = tiles.to_dict(orient="records")
-        futures = list(executor.map(process_tile_with_args, tile_dicts))
-
-        for df in futures:
-            if df is not None and not df.empty:
-                data.append(df)
-    return data
-
-
 def download_and_process_tile(
     *,
     row: dict[Hashable, Any] | pd.Series,
     polygon: ShapelyBaseGeometry,
+    provider: StreetImageProviderNormConfig,
     kwargs: dict[str, Any],
     attempt_limit: int = 3,
 ) -> pd.DataFrame | None:
@@ -175,21 +162,49 @@ def download_and_process_tile(
     x = row["x"]
     y = row["y"]
 
-    url = f"{Config.MAPILLARY_API_LINK}{z}/{x}/{y}?access_token={Config.MAPILLARY_API_KEY}"
+    params: dict[str, str] = {}
+    if provider["name"] == StreetImageProviderEnum.MAPILLARY:
+        url = urljoin(provider["url"], f"{z}/{x}/{y}")
+        # NOTE: Keeping the access token out of `url` keeps it out of user-facing messages and logs
+        params = {"access_token": Config.MAPILLARY_API_KEY}
+    elif provider["name"] in (StreetImageProviderEnum.PANORAMAX, StreetImageProviderEnum.PANORAMAX_CUSTOM):
+        url = urljoin(provider["url"], f"api/map/{z}/{x}/{y}.mvt")
+    else:
+        assert_never(provider["name"])
 
     for _ in range(attempt_limit):
         try:
-            data = get_mapillary_data(url, x, y, z)
+            data = get_street_image_data(url, x, y, z, params=params)
 
             if data.isna().all() is False or data.empty is False:
                 data = data[data["geometry"].apply(lambda point: point.within(polygon))]
+                if provider["name"] in (StreetImageProviderEnum.PANORAMAX, StreetImageProviderEnum.PANORAMAX_CUSTOM):
+                    data = data.rename(
+                        columns={
+                            "account_id": "creator_id",
+                            "ts": "captured_at",
+                            "type": "is_pano",
+                            "first_sequence": "sequence_id",
+                        },
+                    )
+                    # NOTE: Custom Panoramax instances may omit the picture type
+                    data["is_pano"] = data["is_pano"].eq("equirectangular") if "is_pano" in data.columns else False
+                    if "captured_at" in data.columns:
+                        data["captured_at"] = pd.to_datetime(
+                            data["captured_at"],
+                            format="mixed",
+                            errors="coerce",
+                            utc=True,
+                        ).dt.tz_localize(None)
+                if provider["name"] == StreetImageProviderEnum.MAPILLARY and "captured_at" in data.columns:
+                    data["captured_at"] = pd.to_datetime(data["captured_at"], unit="ms")
                 target_columns = [
                     "id",
                     "geometry",
                     "captured_at",
                     "is_pano",
                     "compass_angle",
-                    "sequence",
+                    "sequence_id",
                     "organization_id",
                 ]
                 for col in target_columns:
@@ -200,9 +215,27 @@ def download_and_process_tile(
                 return data
 
             return None
+        # NOTE: requests errors include the full request URL with params, hence `from None`
+        except requests.exceptions.ConnectionError:
+            raise ValidationException(
+                f"Could not connect to the image provider API. Please check that the URL is correct and accessible: '{url}'",
+            ) from None
+        except requests.exceptions.Timeout:
+            raise ValidationException(
+                f"The image provider API did not respond in time. Please try again later: '{url}'",
+            ) from None
+        except requests.exceptions.RequestException:
+            raise ValidationException(
+                f"The request to the image provider API failed. Please check that the URL is correct: '{url}'",
+            ) from None
+        except ProtobufDecodeError:
+            raise ValidationException(
+                f"The image provider API did not return a valid vector tile. Please check that the URL is correct: '{url}'",
+            ) from None
         except StreetException:
             logger.warning(
-                "Error while fetching Mapillary data for tile %s/%s/%s",
+                "Error while fetching %s data for tile %s/%s/%s",
+                provider["name"].value,
                 z,
                 x,
                 y,
@@ -210,16 +243,18 @@ def download_and_process_tile(
     return None
 
 
-def get_mapillary_data(
+def get_street_image_data(
     url: str,
     x: int,
     y: int,
     z: int,
+    params: dict[str, str],
 ) -> pd.DataFrame:
-    response = requests.get(url, timeout=100)
+    response = requests.get(url, params=params, timeout=100)
     if response.status_code != 200:
         logger.warning(
-            "Mapillary API request failed",
+            "API request at %s failed",
+            url,
             extra=log_extra_response(response=response),
         )
         raise StreetException
@@ -242,38 +277,43 @@ def get_mapillary_data(
     return pd.DataFrame(data)
 
 
+def ids_as_str(series: pd.Series) -> pd.Series:
+    # NOTE: Mapillary ids are ints, which pandas turns into floats when some rows lack them
+    return series.map(lambda v: None if pd.isna(v) else str(int(v)) if isinstance(v, float) else str(v))
+
+
 def filter_results(
     results_df: pd.DataFrame,
-    creator_id: int | None = None,
-    is_pano: bool | None = None,
-    organization_id: int | None = None,
+    creator_id: str | None = None,
+    pano_only: bool | None = None,
+    organization_id: str | None = None,
     start_time: str | None = None,
     end_time: str | None = None,
 ):
     df = results_df.copy()
     if creator_id is not None:
         if df["creator_id"].isna().all():
-            logger.info("No Mapillary Feature in the AoI has a 'creator_id' value.")
+            logger.info("No feature in the AoI has a 'creator_id' value.")
             return None
-        df = df[df["creator_id"] == creator_id]
+        df = df[ids_as_str(df["creator_id"]) == creator_id]
 
-    if is_pano is not None:
+    if pano_only is True:
         if df["is_pano"].isna().all():
-            logger.info("No Mapillary Feature in the AoI has a 'is_pano' value.")
+            logger.info("No feature in the AoI has a 'is_pano' value.")
             return None
-        df = df[df["is_pano"] == is_pano]
+        df = df[df["is_pano"].eq(True)]
 
     if organization_id is not None:
         if df["organization_id"].isna().all():
             logger.info(
-                "No Mapillary Feature in the AoI has an 'organization_id' value.",
+                "No feature in the AoI has an 'organization_id' value.",
             )
             return None
-        df = df[df["organization_id"] == organization_id]
+        df = df[ids_as_str(df["organization_id"]) == organization_id]
 
     if start_time is not None:
         if df["captured_at"].isna().all():
-            logger.info("No Mapillary Feature in the AoI has a 'captured_at' value.")
+            logger.info("No feature in the AoI has a 'captured_at' value.")
             return None
         df = filter_by_timerange(df, start_time, end_time)
 
@@ -281,7 +321,6 @@ def filter_results(
 
 
 def filter_by_timerange(df: pd.DataFrame, start_time: str, end_time: str | None = None) -> pd.DataFrame:
-    df["captured_at"] = pd.to_datetime(df["captured_at"], unit="ms")
     converted_start_time = pd.to_datetime(start_time).tz_localize(None)
     converted_end_time = pd.to_datetime(end_time).tz_localize(None) if end_time else pd.Timestamp.now().tz_localize(None)
     return df[(df["captured_at"] >= converted_start_time) & (df["captured_at"] <= converted_end_time)]
@@ -290,37 +329,39 @@ def filter_by_timerange(df: pd.DataFrame, start_time: str, end_time: str | None 
 def get_image_metadata(
     *,
     aoi_geojson: dict[str, Any],
-    level: int = 14,
-    is_pano: bool | None = None,
+    pano_only: bool | None = None,
     creator_id: str | None = None,
     organization_id: str | None = None,
     start_time: str | None = None,
     end_time: str | None = None,
     randomize_order: bool = False,
-    sampling_threshold: float | None = None,
+    sampling_threshold: int | None = None,
+    provider: StreetImageProviderNormConfig,
 ) -> Grouping[StreetFeature]:
     kwargs = {
-        "is_pano": is_pano,
+        "pano_only": pano_only,
         "creator_id": creator_id,
         "organization_id": organization_id,
         "start_time": start_time,
         "end_time": end_time,
     }
     aoi_polygon = geojson_to_polygon(aoi_geojson)
+
     downloaded_metadata = coordinate_download(
         polygon=aoi_polygon,
-        level=level,
+        level=provider["tile_level"],
+        provider=provider,
         kwargs=kwargs,
     )
     if downloaded_metadata.empty or downloaded_metadata.isna().all() is True:
         raise ValidationException(
-            "No Mapillary features found in the area of interest with the provided filters.",
+            "No features found in the area of interest with the provided filters.",
         )
-    if sampling_threshold is not None:
-        downloaded_metadata = spatial_sampling(
-            df=downloaded_metadata,
-            interval_length=sampling_threshold,
-        )
+
+    downloaded_metadata = spatial_sampling(
+        df=downloaded_metadata,
+        interval_length=sampling_threshold,
+    )
 
     if randomize_order is True:
         downloaded_metadata = downloaded_metadata.sample(frac=1).reset_index(drop=True)
