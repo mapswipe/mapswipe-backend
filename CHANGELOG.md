@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.4.0](https://github.com/mapswipe/mapswipe-backend/compare/v0.3.2..v0.4.0) - 2026-11-03
+### Changes:
+
+#### 🚀  Features
+
+- *(street)* Add Panoramax as a street image provider - ([64e1a3a](https://github.com/mapswipe/mapswipe-backend/commit/64e1a3afa0c2d5afb0d8610aabffeced39d36565))
+
+#### 🐛 Bug Fixes
+
+- *(project)* Make the street data migrations irreversible - ([99794f5](https://github.com/mapswipe/mapswipe-backend/commit/99794f5f8b4a29a455e664ddda02498769443e79))
+- *(project)* Handle legacy shapes in street data migrations - ([e23d88f](https://github.com/mapswipe/mapswipe-backend/commit/e23d88fdf5a8f5e3df54b7c2da5aa78416b197af))
+- *(street)* Harden image fetching and filtering - ([ba5d824](https://github.com/mapswipe/mapswipe-backend/commit/ba5d82404c40cf3320f81df6ebf112ae1c32458b))
+
+#### 🚜 Refactor
+
+- *(street)* Model street project specifics as a discriminated union - ([49e23dd](https://github.com/mapswipe/mapswipe-backend/commit/49e23dd842ac1b4ecc943b2b54339baaf73b9551))
+
+#### 🧪 Testing
+
+- *(street)* Add Panoramax street project e2e tests - ([e833a2f](https://github.com/mapswipe/mapswipe-backend/commit/e833a2f95a171c7f2803a6d17c525682cdf91fce))
+
+### 🍻 Pull Requests (1)
+- (#236) [Feature/panoramax](https://github.com/mapswipe/mapswipe-backend/pull/236)
+
+### :tada: New Contributors (1)
+
+- [@ofr1tz](https://github.com/ofr1tz) made their first contribution
+
 ## [0.3.2](https://github.com/mapswipe/mapswipe-backend/compare/v0.3.1..v0.3.2) - 2026-09-16
 ### Changes:
 
