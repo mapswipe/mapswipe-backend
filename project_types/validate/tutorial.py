@@ -75,6 +75,7 @@ class ValidateTutorial(
             # FIXME(tnagorra): Check if this is always 18, app is calculating zoomLevel using geometry
             zoomLevel=18,
             projectType=projectType,
+            hasPreImagery=self.project_type_specifics.has_pre_imagery,
             tileServer=tile_servers.tile_server,
             preEventTileServer=tile_servers.pre_event_tile_server,
             postEventTileServer=tile_servers.post_event_tile_server,

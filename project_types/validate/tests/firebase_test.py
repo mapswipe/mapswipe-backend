@@ -52,7 +52,7 @@ FALLBACK_TILE_SERVER = {
     "wmtsLayerName": None,
 }
 
-TILE_SERVER_KEYS = ("tileServer", "preEventTileServer", "postEventTileServer")
+TILE_SERVER_KEYS = ("hasPreImagery", "tileServer", "preEventTileServer", "postEventTileServer")
 
 
 class TestValidateFirebaseTileServers(TestCase):
@@ -98,8 +98,9 @@ class TestValidateFirebaseTileServers(TestCase):
         project = self._create_project()
 
         for payload in self._get_tile_servers(project):
-            # NOTE: Same payload as before pre-event imagery was supported
-            assert list(payload.keys()) == ["tileServer"]
+            # NOTE: Same tile server as before pre-event imagery was supported
+            assert list(payload.keys()) == ["hasPreImagery", "tileServer"]
+            assert payload["hasPreImagery"] is False
             assert payload["tileServer"] == POST_EVENT_TILE_SERVER
 
     def test_pre_and_post_event(self):
@@ -109,6 +110,7 @@ class TestValidateFirebaseTileServers(TestCase):
         )
 
         for payload in self._get_tile_servers(project):
+            assert payload["hasPreImagery"] is True
             assert payload["tileServer"] == FALLBACK_TILE_SERVER
             assert payload["postEventTileServer"] == POST_EVENT_TILE_SERVER
             assert payload["preEventTileServer"] == PRE_EVENT_TILE_SERVER
@@ -121,7 +123,8 @@ class TestValidateFirebaseTileServers(TestCase):
         )
 
         for payload in self._get_tile_servers(project):
-            assert list(payload.keys()) == ["tileServer"]
+            assert list(payload.keys()) == ["hasPreImagery", "tileServer"]
+            assert payload["hasPreImagery"] is False
             assert payload["tileServer"] == POST_EVENT_TILE_SERVER
 
 
