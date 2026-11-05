@@ -1,7 +1,9 @@
 import logging
 import shutil
+import typing
 from pathlib import Path
 
+from django.conf import settings
 from django.core.files import File
 from django.db import transaction
 from ulid import ULID
@@ -15,6 +17,7 @@ from apps.project.tasks import push_project_to_firebase, send_slack_message_for_
 from apps.user.models import User
 from main.config import Config
 from main.logging import log_extra
+from main.sentry import SentryTag, capture_grouped_error
 from project_types.store import get_project_type_handler
 from project_types.tile_map_service.compare.project import CompareProjectProperty
 from project_types.tile_map_service.completeness.project import CompletenessProjectProperty
@@ -30,6 +33,8 @@ from .project_tasks import generate_project_tasks
 from .tasking_manager_geometries import generate_tasking_manager_geometries
 
 logger = logging.getLogger(__name__)
+
+SHORT_TERM_EXPORT_DEMOTED_FINGERPRINT = "short-term-export-demoted"
 
 
 def _export_project_data(project: Project, tmp_directory: Path):
@@ -213,6 +218,17 @@ def _export_project_data(project: Project, tmp_directory: Path):
         ),
     )
 
+    short_term_storage_enabled = settings.SHORT_TERM_STORAGE_ENABLED
+    promoted_export_types = set[int]()
+    if short_term_storage_enabled:
+        promoted_export_types.update(
+            ProjectAsset.objects.filter(
+                project=project,
+                type=AssetTypeEnum.EXPORT,
+                file__isnull=False,
+            ).values_list("export_type", flat=True),
+        )
+
     for export_type, file in [
         (ProjectAssetExportTypeEnum.AGGREGATED_RESULTS, tmp_mapping_results_aggregate_by_task_csv),
         (ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY, tmp_mapping_results_aggregate_by_task_geojson),
@@ -235,6 +251,16 @@ def _export_project_data(project: Project, tmp_directory: Path):
             django_file_size = django_file.size
             fp.seek(0)
 
+            is_demoted = short_term_storage_enabled and export_type in promoted_export_types
+            file_values: dict[str, typing.Any]
+            if short_term_storage_enabled:
+                file_values = dict(short_term_file=django_file)
+                if is_demoted:
+                    # The long-term object is kept: promotion writes to the same name again
+                    file_values.update(file=None, promoted_at=None)
+            else:
+                file_values = dict(file=django_file)
+
             project_asset, _ = ProjectAsset.objects.update_or_create(
                 project=project,
                 type=AssetTypeEnum.EXPORT,
@@ -244,19 +270,34 @@ def _export_project_data(project: Project, tmp_directory: Path):
                     created_by=bot_user,
                     modified_by=bot_user,
                     mimetype=ProjectAssetExportTypeEnum.get_mimetype(export_type),
-                    file=django_file,
                     file_size=django_file_size,
+                    **file_values,
                 ),
                 # the following values are used for update
                 defaults=dict(
                     mimetype=ProjectAssetExportTypeEnum.get_mimetype(export_type),
                     modified_by=bot_user,
-                    file=django_file,
                     file_size=django_file_size,
+                    **file_values,
                 ),
             )
 
-            logger.info("Saved export file %s to %s", project_asset.type_enum.label, project_asset.file)
+            logger.info("Saved export file %s to %s", project_asset.type_enum.label, project_asset.current_file)
+            if is_demoted:
+                _report_demoted_export_asset(project, export_type)
+
+
+def _report_demoted_export_asset(project: Project, export_type: ProjectAssetExportTypeEnum):
+    logger.warning(
+        "Export asset is already promoted to the long-term storage: moving it back to the short-term storage",
+        extra=log_extra(dict(project=project.id, export_type=export_type.name)),
+    )
+    capture_grouped_error(
+        "Export written for an asset already promoted to the long-term storage",
+        fingerprint=[SHORT_TERM_EXPORT_DEMOTED_FINGERPRINT],
+        tags={SentryTag.Tag.PROJECT: project.id},
+        extra=dict(project_id=project.id, export_type=export_type.name),
+    )
 
 
 def export_project_data(project: Project):

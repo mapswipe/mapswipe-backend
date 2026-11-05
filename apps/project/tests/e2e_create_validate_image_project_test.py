@@ -646,7 +646,7 @@ class TestValidateImageProjectE2E(TestCase):
             },
         )
         actual_groups = read_csv(
-            groups_project_asset.file,
+            groups_project_asset.current_file,
             compressed=True,
             ignore_columns={
                 "total_area",  # NOTE: previously empty, now real value
@@ -673,7 +673,7 @@ class TestValidateImageProjectE2E(TestCase):
             },
         )
         actual_tasks = read_csv(
-            tasks_project_asset.file,
+            tasks_project_asset.current_file,
             compressed=True,
             sort_column=operator.itemgetter("task_id"),
             ignore_columns={
@@ -701,7 +701,7 @@ class TestValidateImageProjectE2E(TestCase):
             },
         )
         actual_results = read_csv(
-            results_project_asset.file,
+            results_project_asset.current_file,
             sort_column=operator.itemgetter("task_id"),
             ignore_columns={
                 "",  # NOTE: dataframe index
@@ -726,7 +726,7 @@ class TestValidateImageProjectE2E(TestCase):
             Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["aggregated_results"]),
         )
         actual_aggregated_results = read_csv(
-            aggregated_results_project_asset.file,
+            aggregated_results_project_asset.current_file,
             compressed=True,
             ignore_columns={
                 "project_internal_id",  # NOTE: added for referencing
@@ -756,7 +756,7 @@ class TestValidateImageProjectE2E(TestCase):
             },
         )
         actual_aggregated_results_with_geometry = read_json(
-            aggregated_results_with_geometry_project_asset.file,
+            aggregated_results_with_geometry_project_asset.current_file,
             compressed=True,
             ignore_fields={
                 "name",  # NOTE: Previously "tmp", now "tmp" + random_str
@@ -781,7 +781,7 @@ class TestValidateImageProjectE2E(TestCase):
             Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["history"]),
         )
         actual_history = read_csv(
-            history_project_asset.file,
+            history_project_asset.current_file,
         )
         assert expected_history == actual_history, "Difference found for history export file."
 
@@ -797,7 +797,7 @@ class TestValidateImageProjectE2E(TestCase):
             Path(Config.BASE_DIR, test_data["expected_project_exports_data"]["users"]),
         )
         actual_users = read_csv(
-            users_project_asset.file,
+            users_project_asset.current_file,
             compressed=True,
         )
         assert expected_users == actual_users, "Difference found for users export file."

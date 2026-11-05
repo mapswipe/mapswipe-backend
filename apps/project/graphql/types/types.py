@@ -22,6 +22,7 @@ from project_types.tile_map_service.locate import project as locate_project
 from project_types.validate import project as validate_project
 from project_types.validate_image import project as validate_image_project
 from utils.asset_types.models import AoiGeometryAssetProperty, ObjectImageAssetProperty
+from utils.graphql.types import MapswipeDjangoFileType
 
 from .asset_types import AoiGeometryAssetPropertyType, ObjectImageAssetPropertyType
 
@@ -62,11 +63,14 @@ class OrganizationType(UserResourceTypeMixin, ArchivableResourceTypeMixin, Fireb
 @strawberry_django.type(ProjectAsset)
 class ProjectAssetType(UserResourceTypeMixin, CommonAssetTypeMixin):
     id: strawberry.ID
-    file: strawberry.auto
     export_type: strawberry.auto
     input_type: strawberry.auto
     external_url: strawberry.auto
     project_id: strawberry.ID
+
+    @strawberry_django.field(only=["file", "short_term_file"], description="The file associated with the asset")
+    async def file(self, project_asset: strawberry.Parent[ProjectAsset]) -> MapswipeDjangoFileType | None:
+        return typing.cast("MapswipeDjangoFileType", project_asset.current_file or None)
 
     @strawberry_django.field(only=["asset_type_specifics", "input_type"])
     async def asset_type_specifics(

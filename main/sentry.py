@@ -123,3 +123,20 @@ class SentryTag:
     def set_tags(kwargs: dict[Tag, int | str]):
         for key, value in kwargs.items():
             sentry_sdk.set_tag(key.value, value)
+
+
+def capture_grouped_error(
+    message: str,
+    *,
+    fingerprint: list[str],
+    tags: dict[SentryTag.Tag, int | str] | None = None,
+    extra: dict[str, typing.Any] | None = None,
+):
+    """Send an error event to Sentry. Events with the same fingerprint are grouped into one issue."""
+    with sentry_sdk.new_scope() as scope:
+        scope.fingerprint = fingerprint
+        for key, value in (tags or {}).items():
+            scope.set_tag(key.value, value)
+        for key, value in (extra or {}).items():
+            scope.set_extra(key, value)
+        sentry_sdk.capture_message(message, level="error")

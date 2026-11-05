@@ -1,5 +1,6 @@
 # pyright: reportUninitializedInstanceVariable=false
 import datetime
+import logging
 import typing
 from warnings import deprecated
 
@@ -8,6 +9,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.db import models
 from django.db.models import Case, CharField, ExpressionWrapper, Q, When
 from django.db.models.expressions import Value
+from django.db.models.fields.files import FieldFile
 from django.db.models.functions import Concat, Lower
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
@@ -23,8 +25,10 @@ from apps.common.models import (
 )
 from apps.contributor.models import ContributorTeam
 from main.db import Model
-from main.fields import OverwritableFileField
+from main.fields import OverwritableFileField, ShortTermFileField
 from utils.fields import validate_percentage
+
+logger = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
     from apps.tutorial.models import Tutorial  # noqa: F401
@@ -612,6 +616,19 @@ class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibl
         blank=True,
         max_length=255,
     )
+    # Used by EXPORT assets while the project is active. Copied to `file` (long-term) when the project ends
+    short_term_file = ShortTermFileField(
+        upload_to=UploadHelper.project_asset,
+        help_text=gettext_lazy("The file associated with the asset, in the short-term storage"),
+        null=True,
+        blank=True,
+        max_length=255,
+    )
+    promoted_at = models.DateTimeField[datetime.datetime | None, datetime.datetime | None](
+        null=True,
+        blank=True,
+        help_text=gettext_lazy("When short_term_file was copied to file"),
+    )
 
     # This depends on the input_type
     asset_type_specifics = models.JSONField(default=dict)
@@ -619,6 +636,21 @@ class ProjectAsset(UserResource, CommonAsset):  # type: ignore[reportIncompatibl
     @property
     def input_type_enum(self):
         return ProjectAssetInputTypeEnum(self.input_type)
+
+    @property
+    def current_file(self) -> FieldFile:
+        """Return the long-term file if set, else the short-term file (empty if its storage is not defined)."""
+        if self.file:
+            return self.file
+        short_term_field = typing.cast("ShortTermFileField", self.short_term_file.field)
+        if self.short_term_file and not short_term_field.has_storage():
+            logger.warning(
+                "ProjectAsset(id: %s) short_term_file is set but STORAGES[%r] is not defined",
+                self.pk,
+                short_term_field.storage_key,
+            )
+            return self.file
+        return self.short_term_file
 
     # Type hints
     project_id: int

@@ -118,3 +118,4 @@ class ProjectAssetAdmin(DjangoQLSearchMixin, UserResourceAdmin, admin.ModelAdmin
     )
     list_select_related = True
     autocomplete_fields = ("project",)
+    readonly_fields = ("short_term_file", "promoted_at")
