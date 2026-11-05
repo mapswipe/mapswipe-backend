@@ -118,8 +118,45 @@ class CustomOptionDefaults:
         },
     ]
 
+    # NOTE: Unlike the options above, which are user-definable per project, the
+    # FIND, COMPARE and COMPLETENESS project types have no `custom_options`.
+    # Users cannot define their own; these fixed defaults are the only options these
+    # project types can use.
+    FIND_COMPARE_COMPLETENESS: list[CustomOption] = [
+        {
+            "title": "Yes",
+            "icon": IconEnum.CHECKMARK_OUTLINE,
+            "value": 1,
+            "description": "",
+            "icon_color": "#388E3C",
+        },
+        {
+            "title": "No",
+            "icon": IconEnum.CLOSE_OUTLINE,
+            "value": 0,
+            "description": "",
+            "icon_color": "#D32F2F",
+        },
+        {
+            "title": "Maybe",
+            "icon": IconEnum.REMOVE_OUTLINE,
+            "value": 2,
+            "description": "",
+            "icon_color": "#616161",
+        },
+        {
+            "title": "Bad Imagery",
+            "icon": IconEnum.ALERT_OUTLINE,
+            "value": 3,
+            "description": "",
+            "icon_color": "#ff9800",
+        },
+    ]
+
 
 def get_custom_options(project_type: ProjectTypeEnum) -> list[CustomOption]:
+    # User-definable: these defaults are only a starting point and can be overridden
+    # per project
     if project_type == ProjectTypeEnum.VALIDATE:
         return CustomOptionDefaults.VALIDATE
     if project_type == ProjectTypeEnum.VALIDATE_IMAGE:
@@ -128,29 +165,12 @@ def get_custom_options(project_type: ProjectTypeEnum) -> list[CustomOption]:
         return CustomOptionDefaults.STREET
     if project_type == ProjectTypeEnum.LOCATE:
         return CustomOptionDefaults.LOCATE
-    return []
-
-
-def get_fallback_custom_options_for_export(project_type: ProjectTypeEnum) -> list[int]:
-    # FIXME: Should we throw error for validate, validate image and street instead?
-    if project_type == ProjectTypeEnum.VALIDATE:
-        return [item["value"] for item in CustomOptionDefaults.VALIDATE]
-    if project_type == ProjectTypeEnum.VALIDATE_IMAGE:
-        return [item["value"] for item in CustomOptionDefaults.VALIDATE_IMAGE]
-    if project_type == ProjectTypeEnum.STREET:
-        return [item["value"] for item in CustomOptionDefaults.STREET]
-    if project_type == ProjectTypeEnum.LOCATE:
-        return [item["value"] for item in CustomOptionDefaults.LOCATE]
-
+    # Fixed: these cannot be defined by the user,
+    # so these are the only options they can use.
     if (
         project_type == ProjectTypeEnum.FIND
         or project_type == ProjectTypeEnum.COMPARE
         or project_type == ProjectTypeEnum.COMPLETENESS
     ):
-        return [
-            0,  # No
-            1,  # Yes
-            2,  # Maybe
-            3,  # Bad Imagery
-        ]
+        return CustomOptionDefaults.FIND_COMPARE_COMPLETENESS
     typing.assert_never(project_type)

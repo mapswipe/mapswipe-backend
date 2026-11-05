@@ -6,7 +6,7 @@ import pandas as pd
 from apps.project.models import Project, ProjectTypeEnum
 from utils.geo.tile_functions import tile_coords_and_zoom_to_quad_key
 
-CustomOptionType = list[dict[str, typing.Any]]  # TODO: fix typing
+CustomOptionType = typing.Sequence[typing.Mapping[str, typing.Any]]
 
 # TODO: use this https://strictly-typed-pandas.readthedocs.io/en/latest/#?
 
