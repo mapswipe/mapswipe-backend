@@ -1,8 +1,10 @@
+import dataclasses
 import logging
 from typing import Literal, assert_never
 
 from celery import shared_task
 
+from apps.project import short_term_storage
 from apps.project.exports import overall_stats
 from apps.project.models import Project
 from apps.project.slack_messages import (
@@ -76,6 +78,11 @@ def regenerate_global_project_assets():
 
         overall_stats.generate()
         return True
+
+
+@shared_task
+def promote_and_cleanup_short_term_storage():
+    return dataclasses.asdict(short_term_storage.promote_and_cleanup())
 
 
 @shared_task

@@ -134,6 +134,16 @@ SCHEDULES: dict[str, CronJob] = {
             max_runtime=2,
         ),
     ),
+    "short_term_storage_weekly": CronJob(
+        task="apps.project.tasks.promote_and_cleanup_short_term_storage",
+        schedule=TimeConstants.EVERY_WEEK,
+        options=CronJobOption(expire_seconds=TimeConstants.SECONDS_IN_A_DAY),
+        sentry_config=CronJobSentryConfig(
+            failure_issue_threshold=1,
+            checkin_margin=30,
+            max_runtime=30,
+        ),
+    ),
     "update_community_dashboard_aggregated_data": CronJob(
         task="apps.community_dashboard.tasks.update_aggregated_data",
         schedule=TimeConstants.EVERY_DAY,
