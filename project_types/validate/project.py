@@ -140,7 +140,7 @@ def get_raster_tile_server_for_firebase(tsp: RasterTileServerConfig) -> firebase
         url=config["raw_url"],
         apiKey=config["api_key"],
         wmtsLayerName=None,
-        # NOTE: Only written where the server defines it
+        # NOTE: Only written where saved on the layer
         minZoom=firebase_models.UNDEFINED if config["min_zoom"] is None else config["min_zoom"],
         maxZoom=firebase_models.UNDEFINED if config["max_zoom"] is None else config["max_zoom"],
     )

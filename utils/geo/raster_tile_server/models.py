@@ -25,7 +25,7 @@ class RasterTileServerCustomConfig(RasterTileServerZoomRange):
     credits: custom_fields.PydanticLongText
 
 
-class RasterTileServerCommonConfig(BaseModel):
+class RasterTileServerCommonConfig(RasterTileServerZoomRange):
     credits: custom_fields.PydanticLongText
 
 
@@ -52,7 +52,26 @@ class RasterTileServerConfig(BaseModel):
                 "max_zoom": self.custom.max_zoom,
                 "disabled": False,
             }
-        return RasterConfig.get_config(self.name)
+        match self.name:
+            case RasterTileServerNameEnum.BING:
+                preset = self.bing
+            case RasterTileServerNameEnum.MAPBOX:
+                preset = self.mapbox
+            case RasterTileServerNameEnum.MAXAR_STANDARD:
+                preset = self.maxar_standard
+            case RasterTileServerNameEnum.MAXAR_PREMIUM:
+                preset = self.maxar_premium
+            case RasterTileServerNameEnum.ESRI:
+                preset = self.esri
+            case RasterTileServerNameEnum.ESRI_BETA:
+                preset = self.esri_beta
+        assert preset is not None
+        return {
+            **RasterConfig.get_config(self.name),
+            # NOTE: The zoom range of RasterConfig only prefills the form
+            "min_zoom": preset.min_zoom,
+            "max_zoom": preset.max_zoom,
+        }
 
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
         url = self.get_config()["url"]

@@ -1698,6 +1698,8 @@ input ProjectProgressStatusEnumFilterLookup {
 
 type ProjectRasterTileServerCommonConfig {
   credits: String!
+  maxZoom: Int
+  minZoom: Int
 }
 
 type ProjectRasterTileServerConfig {
@@ -2117,6 +2119,8 @@ type Query {
 
 input RasterTileServerCommonConfigInput {
   credits: String!
+  maxZoom: Int = null
+  minZoom: Int = null
 }
 
 input RasterTileServerCustomConfigInput {

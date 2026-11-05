@@ -10,8 +10,15 @@ from project_types.tile_map_service.compare.project import CompareProject
 from project_types.tile_map_service.find.project import FindProject
 from project_types.tile_map_service.locate.project import LocateProject
 
-# NOTE: Both servers define a zoom range, which must still not be written
-NAMED_TILE_SERVER_PROPERTY = {"name": "BING", "bing": {"credits": "Bing credits"}}
+# NOTE: Both servers have a saved zoom range, which must still not be written
+NAMED_TILE_SERVER_PROPERTY = {
+    "name": "BING",
+    "bing": {
+        "credits": "Bing credits",
+        "min_zoom": 1,
+        "max_zoom": 19,
+    },
+}
 CUSTOM_TILE_SERVER_PROPERTY = {
     "name": "CUSTOM",
     "custom": {

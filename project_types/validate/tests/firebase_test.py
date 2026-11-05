@@ -129,19 +129,32 @@ class TestValidateFirebaseTileServers(TestCase):
 
     def test_zoom_range_of_named_server(self):
         project = self._create_project(
+            tile_server_property={"name": "BING", "bing": {"credits": "Bing credits", "min_zoom": 1, "max_zoom": 19}},
+            has_pre_imagery=True,
+            pre_event_tile_server_property={"name": "ESRI", "esri": {"credits": "ESRI credits", "max_zoom": 17}},
+        )
+
+        for payload in self._get_tile_servers(project):
+            assert payload["postEventTileServer"]["minZoom"] == 1
+            assert payload["postEventTileServer"]["maxZoom"] == 19
+            assert "minZoom" not in payload["preEventTileServer"]
+            assert payload["preEventTileServer"]["maxZoom"] == 17
+            # NOTE: No server defines a zoom range for the fallback image
+            assert "minZoom" not in payload["tileServer"]
+            assert "maxZoom" not in payload["tileServer"]
+
+    def test_named_server_without_zoom_range(self):
+        # NOTE: The default zoom range of a named server is not written
+        project = self._create_project(
             tile_server_property={"name": "BING", "bing": {"credits": "Bing credits"}},
             has_pre_imagery=True,
             pre_event_tile_server_property={"name": "ESRI", "esri": {"credits": "ESRI credits"}},
         )
 
         for payload in self._get_tile_servers(project):
-            assert payload["postEventTileServer"]["minZoom"] == 1
-            assert payload["postEventTileServer"]["maxZoom"] == 21
-            assert payload["preEventTileServer"]["minZoom"] == 0
-            assert payload["preEventTileServer"]["maxZoom"] == 21
-            # NOTE: No server defines a zoom range for the fallback image
-            assert "minZoom" not in payload["tileServer"]
-            assert "maxZoom" not in payload["tileServer"]
+            for key in ["tileServer", "preEventTileServer", "postEventTileServer"]:
+                assert "minZoom" not in payload[key]
+                assert "maxZoom" not in payload[key]
 
     def test_zoom_range_of_custom_server(self):
         project = self._create_project(
