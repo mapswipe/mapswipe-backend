@@ -28,17 +28,21 @@ data:
   APP_DOMAIN: "https://mapswipe-api.alpha.test.local"
   APP_ENVIRONMENT: "ALPHA"
   APP_RELEASE: "alpha.testtag"
-  AWS_S3_ENABLED: "true"
-  AWS_S3_MEDIA_BUCKET_NAME: "media-data-test"
-  AWS_S3_STATIC_BUCKET_NAME: "static-data-test"
   COMMUNITY_DASHBOARD_DOMAIN: "https://community.alpha.test.local"
   CSRF_COOKIE_DOMAIN: ".alpha.test.local"
   DEBUG: "false"
   MANAGER_DASHBOARD_DOMAIN: "https://managers.alpha.test.local"
+  MEDIA_STORAGE_BACKEND: "s3"
+  MEDIA_STORAGE_S3_BUCKET_NAME: "media-data-test"
   SENTRY_ENABLED: "false"
   SENTRY_PROFILE_SAMPLE_RATE: "0.2"
   SENTRY_TRACES_SAMPLE_RATE: "0.2"
   SESSION_COOKIE_DOMAIN: ".alpha.test.local"
+  SHORT_TERM_STORAGE_BACKEND: "s3"
+  SHORT_TERM_STORAGE_ENABLED: "true"
+  SHORT_TERM_STORAGE_S3_BUCKET_NAME: "short-term-data-test"
+  STATIC_STORAGE_BACKEND: "s3"
+  STATIC_STORAGE_S3_BUCKET_NAME: "static-data-test"
   TIME_ZONE: "UTC"
   WEBSITE_DOMAIN: "https://mapswipe.alpha.test.local"
 
@@ -87,7 +91,7 @@ spec:
     metadata:
       annotations:
         checksum/secret: deb01af9746a3429a0464230901a130e00f671c843a5f3da95911c7b91621b87
-        checksum/configmap: 16c1a6992135dd6b68d11a4afd240e03a9493d65c0a7751f2f0db9d17ccc9b87
+        checksum/configmap: 837edafad73b03903a57fc1608e3b0630f6319162da78774d8e54fa8bee56d03
       labels:
         app: release-name-app
         component: api
@@ -177,7 +181,7 @@ spec:
     metadata:
       annotations:
         checksum/secret: deb01af9746a3429a0464230901a130e00f671c843a5f3da95911c7b91621b87
-        checksum/configmap: 16c1a6992135dd6b68d11a4afd240e03a9493d65c0a7751f2f0db9d17ccc9b87
+        checksum/configmap: 837edafad73b03903a57fc1608e3b0630f6319162da78774d8e54fa8bee56d03
       labels:
         app: release-name-app
         component: worker-addon
@@ -262,7 +266,7 @@ spec:
     metadata:
       annotations:
         checksum/secret: deb01af9746a3429a0464230901a130e00f671c843a5f3da95911c7b91621b87
-        checksum/configmap: 16c1a6992135dd6b68d11a4afd240e03a9493d65c0a7751f2f0db9d17ccc9b87
+        checksum/configmap: 837edafad73b03903a57fc1608e3b0630f6319162da78774d8e54fa8bee56d03
       labels:
         app: release-name-app
         component: worker
@@ -351,7 +355,7 @@ spec:
     metadata:
       annotations:
         checksum/secret: deb01af9746a3429a0464230901a130e00f671c843a5f3da95911c7b91621b87
-        checksum/configmap: 16c1a6992135dd6b68d11a4afd240e03a9493d65c0a7751f2f0db9d17ccc9b87
+        checksum/configmap: 837edafad73b03903a57fc1608e3b0630f6319162da78774d8e54fa8bee56d03
       labels:
         app: release-name-app
         component: hook
@@ -410,7 +414,7 @@ spec:
     metadata:
       annotations:
         checksum/secret: deb01af9746a3429a0464230901a130e00f671c843a5f3da95911c7b91621b87
-        checksum/configmap: 16c1a6992135dd6b68d11a4afd240e03a9493d65c0a7751f2f0db9d17ccc9b87
+        checksum/configmap: 837edafad73b03903a57fc1608e3b0630f6319162da78774d8e54fa8bee56d03
       labels:
         app: release-name-app
         component: hook
@@ -467,7 +471,7 @@ spec:
     metadata:
       annotations:
         checksum/secret: deb01af9746a3429a0464230901a130e00f671c843a5f3da95911c7b91621b87
-        checksum/configmap: 16c1a6992135dd6b68d11a4afd240e03a9493d65c0a7751f2f0db9d17ccc9b87
+        checksum/configmap: 837edafad73b03903a57fc1608e3b0630f6319162da78774d8e54fa8bee56d03
       labels:
         app: release-name-app
         component: hook

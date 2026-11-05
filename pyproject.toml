@@ -19,7 +19,7 @@ dependencies = [
     "django-environ",
     "django-premailer",
     "django-redis",
-    "django-storages[s3]",
+    "django-storages[s3,google]",
     "djangoql", # Admin panel query search
     "djangorestframework",
     "django-admin-autocomplete-filter",

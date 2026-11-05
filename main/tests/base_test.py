@@ -10,6 +10,13 @@ from django.test import TestCase as BaseTestCase
 from django.test import override_settings
 
 from main.config import Config
+from main.storage_config import (
+    DEFAULT_STORAGE_KEY,
+    FILESYSTEM_BACKEND,
+    SHORT_TERM_STORAGE_KEY,
+    STATICFILES_STORAGE_KEY,
+    STORAGE_OVERWRITE_KEY,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -28,13 +35,26 @@ TEST_CACHES = {
 }
 
 FILE_SYSTEM_TEST_STORAGES_CONFIGS = dict(
-    AWS_S3_ENABLED=False,
     STORAGES={
-        "default": {
-            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        DEFAULT_STORAGE_KEY: {
+            "BACKEND": FILESYSTEM_BACKEND,
         },
-        "staticfiles": {
+        STORAGE_OVERWRITE_KEY: {
+            "BACKEND": FILESYSTEM_BACKEND,
+            "OPTIONS": {
+                "allow_overwrite": True,
+            },
+        },
+        STATICFILES_STORAGE_KEY: {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+        SHORT_TERM_STORAGE_KEY: {
+            "BACKEND": FILESYSTEM_BACKEND,
+            "OPTIONS": {
+                "location": "rest-short-term-temp",
+                "base_url": "/short-term/",
+                "allow_overwrite": True,
+            },
         },
     },
 )

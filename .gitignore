@@ -8,6 +8,7 @@ tmp/
 
 media
 rest-media-temp
+rest-short-term-temp
 postgres-data
 redis-data
 .data/*

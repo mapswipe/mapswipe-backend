@@ -553,6 +553,9 @@ wheels = [
 ]
 
 [package.optional-dependencies]
+google = [
+    { name = "google-cloud-storage" },
+]
 s3 = [
     { name = "boto3" },
 ]
@@ -780,8 +783,8 @@ wheels = [
 
 [package.optional-dependencies]
 grpc = [
-    { name = "grpcio" },
-    { name = "grpcio-status" },
+    { name = "grpcio", marker = "platform_python_implementation != 'PyPy'" },
+    { name = "grpcio-status", marker = "platform_python_implementation != 'PyPy'" },
 ]
 
 [[package]]
@@ -845,11 +848,11 @@ name = "google-cloud-firestore"
 version = "2.21.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "google-api-core", extra = ["grpc"] },
-    { name = "google-auth" },
-    { name = "google-cloud-core" },
-    { name = "proto-plus" },
-    { name = "protobuf" },
+    { name = "google-api-core", extra = ["grpc"], marker = "platform_python_implementation != 'PyPy'" },
+    { name = "google-auth", marker = "platform_python_implementation != 'PyPy'" },
+    { name = "google-cloud-core", marker = "platform_python_implementation != 'PyPy'" },
+    { name = "proto-plus", marker = "platform_python_implementation != 'PyPy'" },
+    { name = "protobuf", marker = "platform_python_implementation != 'PyPy'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/80/9d/027b9bf61a44422bcdcb00a2acc59152065b1cffa1fc89da62277730973e/google_cloud_firestore-2.21.0.tar.gz", hash = "sha256:0c37faa8506297f827eefc38feb155247a6dcb9a541289631015d125f1b003f8", size = 528159, upload-time = "2025-06-03T19:28:27.195Z" }
 wheels = [
@@ -953,9 +956,9 @@ name = "grpcio-status"
 version = "1.74.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "googleapis-common-protos" },
-    { name = "grpcio" },
-    { name = "protobuf" },
+    { name = "googleapis-common-protos", marker = "platform_python_implementation != 'PyPy'" },
+    { name = "grpcio", marker = "platform_python_implementation != 'PyPy'" },
+    { name = "protobuf", marker = "platform_python_implementation != 'PyPy'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/93/22/238c5f01e6837df54494deb08d5c772bc3f5bf5fb80a15dce254892d1a81/grpcio_status-1.74.0.tar.gz", hash = "sha256:c58c1b24aa454e30f1fc6a7e0dbbc194c54a408143971a94b5f4e40bb5831432", size = 13662, upload-time = "2025-07-24T19:01:56.874Z" }
 wheels = [
@@ -1267,7 +1270,7 @@ dependencies = [
     { name = "django-health-check" },
     { name = "django-premailer" },
     { name = "django-redis" },
-    { name = "django-storages", extra = ["s3"] },
+    { name = "django-storages", extra = ["google", "s3"] },
     { name = "djangoql" },
     { name = "djangorestframework" },
     { name = "drf-spectacular" },
@@ -1332,7 +1335,7 @@ requires-dist = [
     { name = "django-health-check" },
     { name = "django-premailer" },
     { name = "django-redis" },
-    { name = "django-storages", extras = ["s3"] },
+    { name = "django-storages", extras = ["s3", "google"] },
     { name = "djangoql" },
     { name = "djangorestframework" },
     { name = "drf-spectacular" },
@@ -2533,9 +2536,9 @@ resolution-markers = [
     "platform_python_implementation == 'PyPy'",
 ]
 dependencies = [
-    { name = "pyyaml" },
-    { name = "wrapt" },
-    { name = "yarl" },
+    { name = "pyyaml", marker = "platform_python_implementation == 'PyPy'" },
+    { name = "wrapt", marker = "platform_python_implementation == 'PyPy'" },
+    { name = "yarl", marker = "platform_python_implementation == 'PyPy'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a5/ea/a166a3cce4ac5958ba9bbd9768acdb1ba38ae17ff7986da09fa5b9dbc633/vcrpy-5.1.0.tar.gz", hash = "sha256:bbf1532f2618a04f11bce2a99af3a9647a32c880957293ff91e0a5f187b6b3d2", size = 84576, upload-time = "2023-07-31T03:19:32.231Z" }
 wheels = [
@@ -2550,10 +2553,10 @@ resolution-markers = [
     "platform_python_implementation != 'PyPy'",
 ]
 dependencies = [
-    { name = "pyyaml" },
-    { name = "urllib3" },
-    { name = "wrapt" },
-    { name = "yarl" },
+    { name = "pyyaml", marker = "platform_python_implementation != 'PyPy'" },
+    { name = "urllib3", marker = "platform_python_implementation != 'PyPy'" },
+    { name = "wrapt", marker = "platform_python_implementation != 'PyPy'" },
+    { name = "yarl", marker = "platform_python_implementation != 'PyPy'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/25/d3/856e06184d4572aada1dd559ddec3bedc46df1f2edc5ab2c91121a2cccdb/vcrpy-7.0.0.tar.gz", hash = "sha256:176391ad0425edde1680c5b20738ea3dc7fb942520a48d2993448050986b3a50", size = 85502, upload-time = "2024-12-31T00:07:57.894Z" }
 wheels = [

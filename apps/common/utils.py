@@ -7,6 +7,7 @@ from django.core.files.storage import FileSystemStorage
 from django.db.models.fields import files
 
 from main.config import Config
+from main.storage_backends import FileSystemStorage as DomainFileSystemStorage
 from utils.common import is_file_empty
 
 
@@ -21,9 +22,14 @@ def get_absolute_uri(file: files.FieldFile) -> str: ...
 def get_absolute_uri(file: files.FieldFile | None) -> str | None:
     if is_file_empty(file):
         return None
-    if isinstance(file.storage, FileSystemStorage):
+    storage = file.storage
+    if isinstance(storage, FileSystemStorage):
         # FIXME(tnagorra): We should change the url method in storage
-        return f"{Config.MEDIA_STORAGE_DOMAIN.geturl()}{file.url}"
+        if isinstance(storage, DomainFileSystemStorage) and storage.domain:
+            domain = storage.domain
+        else:
+            domain = Config.MEDIA_STORAGE_DOMAIN.geturl()
+        return f"{domain}/{file.url.lstrip('/')}"
     return file.url
 
 

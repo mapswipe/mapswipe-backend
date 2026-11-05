@@ -17,7 +17,8 @@ app:
     SESSION_COOKIE_DOMAIN: ".alpha.test.local"
     CSRF_COOKIE_DOMAIN: ".alpha.test.local"
     # Dummy bucket names so the manifests render standalone (real names are per-environment).
-    AWS_S3_MEDIA_BUCKET_NAME: "media-data-test"
-    AWS_S3_STATIC_BUCKET_NAME: "static-data-test"
+    MEDIA_STORAGE_S3_BUCKET_NAME: "media-data-test"
+    STATIC_STORAGE_S3_BUCKET_NAME: "static-data-test"
+    SHORT_TERM_STORAGE_S3_BUCKET_NAME: "short-term-data-test"
   secrets:
     SECRET_KEY: dummy-secret-key

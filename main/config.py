@@ -24,6 +24,7 @@ class Config:
 
     # Misc
     STORAGE_OVERWRITE_KEY = typing.cast("str", settings.STORAGE_OVERWRITE_KEY)
+    SHORT_TERM_STORAGE_KEY = typing.cast("str", settings.SHORT_TERM_STORAGE_KEY)
 
     # Client domains
     MANAGER_DASHBOARD_DOMAIN = typing.cast("URLParseResult", settings.MANAGER_DASHBOARD_DOMAIN)

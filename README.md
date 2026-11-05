@@ -15,7 +15,7 @@ cd mapswipe-backend
 > [!IMPORTANT]
 > NOTE: Overwrite/set variables using .env
 >
-> Available options are defined in ./docker-compose.yaml:10 (environment) and ./main/settings.py:16 (env = environ.Env)
+> Available options are defined in ./docker-compose.yaml:10 (environment), ./main/settings.py:16 (env = environ.Env) and ./main/storage_config.py (storage)
 
 **Pull and build images**
 ```bash

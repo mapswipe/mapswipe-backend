@@ -27,6 +27,8 @@ x-server: &base_server_setup
     WEBSITE_DOMAIN: ${WEBSITE_DOMAIN:-http://localhost:3200}
     SESSION_COOKIE_DOMAIN: ${SESSION_COOKIE_DOMAIN:-localhost}
     CSRF_COOKIE_DOMAIN: ${CSRF_COOKIE_DOMAIN:-localhost}
+    # Storage (Filesystem by default, see main/storage_config.py)
+    SHORT_TERM_STORAGE_ENABLED: ${SHORT_TERM_STORAGE_ENABLED:-false}
     # Postgres
     POSTGRES_DB: ${POSTGRES_DB:-mapswipe}
     POSTGRES_USER: ${POSTGRES_USER:-postgres}

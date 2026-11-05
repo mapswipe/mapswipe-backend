@@ -121,7 +121,7 @@ app:
       # NOTE: Make sure keys are lowercase.
       # db-migrate and collect-static inherit the chart defaults (manage.py migrate /
       # collectstatic --noinput). wait-for-resources (Sync hook, early wave) gates the
-      # app on DB + cache + broker + S3 connectivity.
+      # app on DB + cache + broker + S3 connectivity (first *_S3_ENDPOINT_URL).
       wait-for-resources:
         command: ["./manage.py", "wait_for_resources", "--db", "--cache", "--celery-broker", "--minio"]
 
@@ -132,12 +132,19 @@ app:
     APP_ENVIRONMENT: "{{ $.Values.environment }}"
     TIME_ZONE: "UTC"
     DEBUG: "false"
-    # S3 storage. Non-S3 falls back to the ephemeral pod filesystem, so keep this enabled.
-    AWS_S3_ENABLED: "true"
-    # Bucket names are the deployer's choice — supplied per-environment (endpoint +
-    # credentials come from the platform too). Set these in the per-environment values.
-    # AWS_S3_MEDIA_BUCKET_NAME: "<media-bucket>"
-    # AWS_S3_STATIC_BUCKET_NAME: "<static-bucket>"
+    # Storage (see main/storage_config.py). The filesystem backend uses the ephemeral
+    # pod filesystem, so use object storage (s3 or gcs). Bucket names, endpoints and
+    # credentials (<PREFIX>_S3_* / <PREFIX>_GCS_*) are supplied per-environment.
+    MEDIA_STORAGE_BACKEND: "s3"
+    # MEDIA_STORAGE_S3_BUCKET_NAME: "<media-bucket>"
+    STATIC_STORAGE_BACKEND: "s3"
+    # STATIC_STORAGE_S3_BUCKET_NAME: "<static-bucket>"
+    # Short-term storage for exports of active projects. Must not resolve to the media
+    # bucket + location. Set SHORT_TERM_STORAGE_ENABLED to "false" to write exports to media;
+    # keep the backend config while short-term files exist, so they still resolve.
+    SHORT_TERM_STORAGE_ENABLED: "true"
+    SHORT_TERM_STORAGE_BACKEND: "s3"
+    # SHORT_TERM_STORAGE_S3_BUCKET_NAME: "<short-term-bucket>"
     # Sentry
     SENTRY_ENABLED: "false"
     SENTRY_TRACES_SAMPLE_RATE: "0.2"

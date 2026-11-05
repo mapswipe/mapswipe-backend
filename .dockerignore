@@ -159,6 +159,7 @@ deploy/eb/
 .mypy_cache/
 
 rest-media-temp/
+rest-short-term-temp/
 
 # firebase
 /firebase

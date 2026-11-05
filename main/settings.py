@@ -10,6 +10,7 @@ from urllib.parse import urlparse as _urlparse
 import environ
 from banjo_utils.health import is_health_probe_path
 
+from main import storage_config
 from main.logging import log_render_extra_context
 from main.sentry import SentryConfig
 from utils.firebase import FirebaseHelper
@@ -46,7 +47,6 @@ env = environ.Env(
     ENABLE_STRAWBERRY_GRAPHIQL=(bool, False),
     # Domain configs
     APP_DOMAIN=str,  # Eg: https://api.example.org
-    MEDIA_STORAGE_DOMAIN=(str, None),
     MANAGER_DASHBOARD_DOMAIN=str,  # Eg: https://managers.mapswipe.org
     COMMUNITY_DASHBOARD_DOMAIN=str,  # Eg: https://community.mapswipe.org
     WEBSITE_DOMAIN=str,  # Eg: https://mapswipe.org
@@ -70,21 +70,10 @@ env = environ.Env(
     EXISTING_SYSTEM_POSTGRES_PASSWORD=str,
     EXISTING_SYSTEM_POSTGRES_HOST=str,
     EXISTING_SYSTEM_POSTGRES_PORT=(int, 5432),
-    # Storage
-    MEDIA_URL=(str, "media/"),
-    STATIC_URL=(str, "static/"),
+    # Storage (MEDIA_STORAGE_*, STATIC_STORAGE_*, SHORT_TERM_STORAGE_*): See main/storage_config.py
+    SHORT_TERM_STORAGE_PROMOTION_COOLDOWN_DAYS=(int, 7),
+    SHORT_TERM_STORAGE_TTL_DAYS=(int, 7),
     TEMP_DIR=(str, "/tmp/"),  # noqa: S108
-    # -- S3 storage
-    AWS_S3_ENABLED=(bool, False),
-    AWS_S3_ENDPOINT_URL=(str, None),
-    AWS_S3_ACCESS_KEY_ID=str,
-    AWS_S3_SECRET_ACCESS_KEY=str,
-    AWS_S3_REGION_NAME=str,
-    AWS_S3_MEDIA_BUCKET_NAME=str,
-    AWS_S3_STATIC_BUCKET_NAME=str,
-    # -- Filesystem (default) XXX: Don't use in production?
-    MEDIA_ROOT=(str, BASE_DIR / ".data/media"),
-    STATIC_ROOT=(str, BASE_DIR / ".data/static"),
     INTERNAL_ROOT=(str, BASE_DIR / ".data/internal"),
     # Email
     EMAIL_HOST=str,
@@ -154,7 +143,6 @@ GIT_HELPER = GitHelper(BASE_DIR)
 
 APP_LOG_LEVEL = env("APP_LOG_LEVEL")
 APP_DOMAIN = urlparse(env("APP_DOMAIN"))
-MEDIA_STORAGE_DOMAIN = urlparse(env("MEDIA_STORAGE_DOMAIN")) or APP_DOMAIN
 MANAGER_DASHBOARD_DOMAIN = urlparse(env("MANAGER_DASHBOARD_DOMAIN"))
 COMMUNITY_DASHBOARD_DOMAIN = urlparse(env("COMMUNITY_DASHBOARD_DOMAIN"))
 WEBSITE_DOMAIN = urlparse(env("WEBSITE_DOMAIN"))
@@ -331,77 +319,28 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 TEMP_DIR = Path(env("TEMP_DIR"))
-MEDIA_URL = env("MEDIA_URL")
-STATIC_URL = env("STATIC_URL")
-
-STORAGE_OVERWRITE_KEY = "default-overwrite"
-if env("AWS_S3_ENABLED"):
-    # Exposed at module level (not only inside AWS_S3_CONFIG_OPTIONS) so
-    # banjo_utils `wait_for_resources --minio` can read settings.AWS_S3_ENDPOINT_URL.
-    AWS_S3_ENDPOINT_URL = env("AWS_S3_ENDPOINT_URL")
-    AWS_S3_CONFIG_OPTIONS = {
-        "endpoint_url": AWS_S3_ENDPOINT_URL,
-        "access_key": env("AWS_S3_ACCESS_KEY_ID"),
-        "secret_key": env("AWS_S3_SECRET_ACCESS_KEY"),
-        "region_name": env("AWS_S3_REGION_NAME"),
-    }
-
-    STORAGES = {
-        "default": {
-            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-            "OPTIONS": {
-                **AWS_S3_CONFIG_OPTIONS,
-                "bucket_name": env("AWS_S3_MEDIA_BUCKET_NAME"),
-                "location": "media/",
-                "querystring_auth": False,
-                "file_overwrite": False,
-            },
-        },
-        "staticfiles": {
-            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-            "OPTIONS": {
-                **AWS_S3_CONFIG_OPTIONS,
-                "bucket_name": env("AWS_S3_STATIC_BUCKET_NAME"),
-                "querystring_auth": False,
-                "location": "static/",
-                "file_overwrite": True,
-            },
-        },
-    }
-
-    STORAGES[STORAGE_OVERWRITE_KEY] = {
-        **STORAGES["default"],
-        "OPTIONS": {
-            **STORAGES["default"]["OPTIONS"],
-            "file_overwrite": True,
-        },
-    }
-
-else:
-    # Filesystem
-    MEDIA_ROOT = env("MEDIA_ROOT")
-    STATIC_ROOT = env("STATIC_ROOT")
-
-    # Django's default https://docs.djangoproject.com/en/5.2/ref/settings/#storages
-    STORAGES = {
-        "default": {
-            "BACKEND": "django.core.files.storage.FileSystemStorage",
-        },
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    }
-
-    STORAGES[STORAGE_OVERWRITE_KEY] = {
-        **STORAGES["default"],
-        "OPTIONS": {
-            "allow_overwrite": True,
-        },
-    }
+STORAGE_SETTINGS = storage_config.build_storage_settings(
+    os.environ,
+    base_dir=BASE_DIR,
+    default_domain=APP_DOMAIN.geturl(),
+)
+STORAGES = STORAGE_SETTINGS.storages
+STORAGE_OVERWRITE_KEY = storage_config.STORAGE_OVERWRITE_KEY
+SHORT_TERM_STORAGE_KEY = storage_config.SHORT_TERM_STORAGE_KEY
+SHORT_TERM_STORAGE_ENABLED = STORAGE_SETTINGS.short_term_enabled
+# Exports of ended projects are promoted to the long-term storage once they are unchanged for this many days
+SHORT_TERM_STORAGE_PROMOTION_COOLDOWN_DAYS = env("SHORT_TERM_STORAGE_PROMOTION_COOLDOWN_DAYS")
+# Promoted exports are deleted from the short-term storage this many days after promotion
+SHORT_TERM_STORAGE_TTL_DAYS = env("SHORT_TERM_STORAGE_TTL_DAYS")
+MEDIA_ROOT = STORAGE_SETTINGS.media_root
+MEDIA_URL = STORAGE_SETTINGS.media_url
+MEDIA_STORAGE_DOMAIN = urlparse(STORAGE_SETTINGS.media_domain)
+STATIC_ROOT = STORAGE_SETTINGS.static_root
+STATIC_URL = STORAGE_SETTINGS.static_url
+# Read by banjo_utils `wait_for_resources --minio`
+AWS_S3_ENDPOINT_URL = storage_config.get_s3_endpoint_url(STORAGES)
 
 INTERNAL_ROOT = env("INTERNAL_ROOT")
-
-assert STORAGE_OVERWRITE_KEY in STORAGES, f"{STORAGE_OVERWRITE_KEY} should be defined in STORAGES"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

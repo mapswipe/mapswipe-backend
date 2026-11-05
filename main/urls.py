@@ -12,6 +12,7 @@ from drf_spectacular.views import (
 from health_check.views import MainView as HealthCheckView  # type: ignore[reportMissingTypeStubs]
 
 from apps.common.views import FirebaseAuthView, HealthCheckCustomView
+from main import storage_config
 from main.graphql.schema import CustomAsyncGraphQLView
 from main.graphql.schema import schema as graphql_schema
 
@@ -61,6 +62,12 @@ if settings.DEBUG:
     # Static and media file URLs
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    short_term_storage = settings.STORAGES.get(settings.SHORT_TERM_STORAGE_KEY)
+    if short_term_storage and short_term_storage["BACKEND"] == storage_config.FILESYSTEM_BACKEND:
+        urlpatterns += static(
+            short_term_storage["OPTIONS"]["base_url"],
+            document_root=short_term_storage["OPTIONS"]["location"],
+        )
 
 if settings.ENABLE_DEBUG_TOOLBAR:
     urlpatterns += debug_toolbar_urls()
