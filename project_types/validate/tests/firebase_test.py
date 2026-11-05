@@ -1,5 +1,7 @@
 import typing
 
+import pydantic
+import pytest
 from pyfirebase_mapswipe import utils as firebase_utils
 
 from apps.project.factories import OrganizationFactory, ProjectFactory
@@ -7,7 +9,7 @@ from apps.project.models import Project, ProjectTypeEnum
 from apps.tutorial.factories import TutorialFactory
 from apps.user.factories import UserFactory
 from main.tests import TestCase
-from project_types.validate.project import VALIDATE_FALLBACK_RASTER_LAYER, ValidateProject
+from project_types.validate.project import VALIDATE_FALLBACK_RASTER_LAYER, ValidateProject, ValidateProjectProperty
 from project_types.validate.tutorial import ValidateTutorial
 
 POST_EVENT_TILE_SERVER_PROPERTY = {
@@ -101,9 +103,64 @@ class TestValidateFirebaseTileServers(TestCase):
             assert payload["tileServer"] == POST_EVENT_TILE_SERVER
 
     def test_pre_and_post_event(self):
-        project = self._create_project(pre_event_tile_server_property=PRE_EVENT_TILE_SERVER_PROPERTY)
+        project = self._create_project(
+            has_pre_imagery=True,
+            pre_event_tile_server_property=PRE_EVENT_TILE_SERVER_PROPERTY,
+        )
 
         for payload in self._get_tile_servers(project):
             assert payload["tileServer"] == FALLBACK_TILE_SERVER
             assert payload["postEventTileServer"] == POST_EVENT_TILE_SERVER
             assert payload["preEventTileServer"] == PRE_EVENT_TILE_SERVER
+
+    def test_pre_event_imagery_set_without_has_pre_imagery(self):
+        # NOTE: Stale pre-event imagery left by the form is ignored when has_pre_imagery is False
+        project = self._create_project(
+            has_pre_imagery=False,
+            pre_event_tile_server_property=PRE_EVENT_TILE_SERVER_PROPERTY,
+        )
+
+        for payload in self._get_tile_servers(project):
+            assert list(payload.keys()) == ["tileServer"]
+            assert payload["tileServer"] == POST_EVENT_TILE_SERVER
+
+
+class TestValidateProjectProperty(TestCase):
+    PROJECT_PROPERTY: typing.ClassVar[dict[str, typing.Any]] = {
+        "object_source": {
+            "source_type": "TASKING_MANAGER",
+            "tasking_manager_project_id": "1234",
+            "ohsome_filter": "building=*",
+        },
+        "tile_server_property": POST_EVENT_TILE_SERVER_PROPERTY,
+    }
+
+    def test_has_pre_imagery_defaults_to_false(self):
+        # NOTE: Existing validate projects do not have has_pre_imagery
+        project_property = ValidateProjectProperty.model_validate(self.PROJECT_PROPERTY)
+        assert project_property.has_pre_imagery is False
+        assert project_property.pre_event_tile_server_property is None
+
+    def test_has_pre_imagery_requires_pre_event_imagery(self):
+        with pytest.raises(pydantic.ValidationError, match="Pre-event imagery is required"):
+            ValidateProjectProperty.model_validate({**self.PROJECT_PROPERTY, "has_pre_imagery": True})
+
+    def test_pre_event_imagery_dropped_without_has_pre_imagery(self):
+        project_property = ValidateProjectProperty.model_validate(
+            {
+                **self.PROJECT_PROPERTY,
+                "has_pre_imagery": False,
+                "pre_event_tile_server_property": PRE_EVENT_TILE_SERVER_PROPERTY,
+            },
+        )
+        assert project_property.pre_event_tile_server_property is None
+
+    def test_has_pre_imagery_with_pre_event_imagery(self):
+        project_property = ValidateProjectProperty.model_validate(
+            {
+                **self.PROJECT_PROPERTY,
+                "has_pre_imagery": True,
+                "pre_event_tile_server_property": PRE_EVENT_TILE_SERVER_PROPERTY,
+            },
+        )
+        assert project_property.pre_event_tile_server_property is not None

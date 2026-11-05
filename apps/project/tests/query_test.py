@@ -130,6 +130,7 @@ class TestProjectQuery(TestCase):
                       tileServerProperty {
                         ...RasterTileServerPropertyFields
                       }
+                      hasPreImagery
                       preEventTileServerProperty {
                         ...RasterTileServerPropertyFields
                       }
@@ -336,6 +337,7 @@ class TestProjectQuery(TestCase):
                         "esri": None,
                         "esri_beta": None,
                     },
+                    "has_pre_imagery": True,
                     "pre_event_tile_server_property": {
                         "name": "ESRI",
                         "custom": None,
@@ -350,7 +352,7 @@ class TestProjectQuery(TestCase):
                     },
                 },
             ),
-            # NOTE: Existing validate projects do not have pre_event_tile_server_property
+            # NOTE: Existing validate projects do not have has_pre_imagery and pre_event_tile_server_property
             ProjectFactory.create(
                 **cls.user_resource_kwargs,
                 topic="Test Topic 6",
@@ -420,7 +422,7 @@ class TestProjectQuery(TestCase):
                         projectTypeSpecifics=format_object_keys(
                             {
                                 **(
-                                    {"pre_event_tile_server_property": None}
+                                    {"has_pre_imagery": False, "pre_event_tile_server_property": None}
                                     if project.project_type == ProjectTypeEnum.VALIDATE
                                     else {}
                                 ),

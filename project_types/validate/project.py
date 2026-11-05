@@ -108,9 +108,22 @@ class ValidateObjectSourceConfig(BaseModel):
 class ValidateProjectProperty(base_project.BaseProjectProperty):
     # NOTE: tile_server_property is the post-event imagery
     tile_server_property: RasterTileServerConfig
+    # NOTE: Explicit flag so that presence of pre_event_tile_server_property is not used to decide pre-event imagery
+    # NOTE: Defaults to False as existing validate projects do not have this field
+    has_pre_imagery: bool = False
     pre_event_tile_server_property: RasterTileServerConfig | None = None
     object_source: ValidateObjectSourceConfig
     custom_options: list[CustomOption] | None = None
+
+    @model_validator(mode="after")
+    def check_pre_event_imagery(self) -> typing.Self:
+        if self.has_pre_imagery:
+            if self.pre_event_tile_server_property is None:
+                raise ValueError("Pre-event imagery is required when the project has pre-event imagery")
+        else:
+            # NOTE: The form cannot clear the pre-event imagery once it is set, so we drop it here
+            self.pre_event_tile_server_property = None
+        return self
 
 
 class ValidateFirebaseTileServers(typing.NamedTuple):
@@ -133,12 +146,15 @@ def get_tile_servers_for_firebase(project_property: ValidateProjectProperty) -> 
     """Map the imagery layers of a Validate project to the tile servers written to firebase."""
     post_event_tile_server = get_raster_tile_server_for_firebase(project_property.tile_server_property)
 
-    if project_property.pre_event_tile_server_property is None:
+    if not project_property.has_pre_imagery:
         return ValidateFirebaseTileServers(
             tile_server=post_event_tile_server,
             pre_event_tile_server=firebase_models.UNDEFINED,
             post_event_tile_server=firebase_models.UNDEFINED,
         )
+
+    # NOTE: Guaranteed by ValidateProjectProperty.check_pre_event_imagery
+    assert project_property.pre_event_tile_server_property is not None
 
     return ValidateFirebaseTileServers(
         tile_server=firebase_models.FbObjRasterTileServer(
