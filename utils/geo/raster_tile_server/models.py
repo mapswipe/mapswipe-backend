@@ -8,11 +8,21 @@ from utils.geo.tile_functions import tile_coords_and_zoom_to_quad_key
 from .config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNormConfig
 
 
-class RasterTileServerCustomConfig(BaseModel):
+class RasterTileServerZoomRange(BaseModel):
+    # NOTE: No upper bound as drone imagery can go beyond zoom 22
+    min_zoom: custom_fields.PydanticStrictNonNegativeInt | None = None
+    max_zoom: custom_fields.PydanticStrictNonNegativeInt | None = None
+
+    @model_validator(mode="after")
+    def check_zoom_range(self) -> typing.Self:
+        if self.min_zoom is not None and self.max_zoom is not None and self.min_zoom > self.max_zoom:
+            raise ValueError("min zoom must not be greater than max zoom")
+        return self
+
+
+class RasterTileServerCustomConfig(RasterTileServerZoomRange):
     url: custom_fields.PydanticRasterTileServerUrl
     credits: custom_fields.PydanticLongText
-    min_zoom: int | None = None
-    max_zoom: int | None = None
 
 
 class RasterTileServerCommonConfig(BaseModel):
