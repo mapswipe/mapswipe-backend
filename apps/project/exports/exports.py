@@ -200,19 +200,6 @@ def _export_project_data(project: Project, tmp_directory: Path):
             )
             project.update_firebase_push_status(FirebasePushStatusEnum.PENDING, False)
 
-    project.save(
-        update_fields=(
-            "progress",
-            "progress_status",
-            "number_of_contributor_users",
-            "number_of_results",
-            "number_of_results_for_progress",
-            "last_contribution_date",
-            "firebase_push_status",
-            "firebase_last_pushed",
-        ),
-    )
-
     for export_type, file in [
         (ProjectAssetExportTypeEnum.AGGREGATED_RESULTS, tmp_mapping_results_aggregate_by_task_csv),
         (ProjectAssetExportTypeEnum.AGGREGATED_RESULTS_WITH_GEOMETRY, tmp_mapping_results_aggregate_by_task_geojson),
@@ -257,6 +244,21 @@ def _export_project_data(project: Project, tmp_directory: Path):
             )
 
             logger.info("Saved export file %s to %s", project_asset.type_enum.label, project_asset.file)
+
+    # NOTE: Persisting the project stats  after the export assets have been written.
+    # it only updates once the exports are in place.
+    project.save(
+        update_fields=(
+            "progress",
+            "progress_status",
+            "number_of_contributor_users",
+            "number_of_results",
+            "number_of_results_for_progress",
+            "last_contribution_date",
+            "firebase_push_status",
+            "firebase_last_pushed",
+        ),
+    )
 
 
 def export_project_data(project: Project):
