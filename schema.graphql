@@ -1698,6 +1698,8 @@ input ProjectProgressStatusEnumFilterLookup {
 
 type ProjectRasterTileServerCommonConfig {
   credits: String!
+  maxZoom: Int
+  minZoom: Int
 }
 
 type ProjectRasterTileServerConfig {
@@ -2117,6 +2119,8 @@ type Query {
 
 input RasterTileServerCommonConfigInput {
   credits: String!
+  maxZoom: Int = null
+  minZoom: Int = null
 }
 
 input RasterTileServerCustomConfigInput {
@@ -2907,13 +2911,17 @@ enum ValidateObjectSourceTypeEnum {
 
 input ValidateProjectPropertyInput {
   customOptions: [CustomOptionInput!] = null
+  hasPreImagery: Boolean! = false
   objectSource: ValidateObjectSourceConfigInput!
+  preEventTileServerProperty: ProjectRasterTileServerConfigInput = null
   tileServerProperty: ProjectRasterTileServerConfigInput!
 }
 
 type ValidateProjectPropertyType {
   customOptions: [ProjectCustomOption!]
+  hasPreImagery: Boolean!
   objectSource: ValidateObjectSourceConfig!
+  preEventTileServerProperty: ProjectRasterTileServerConfig
   tileServerProperty: ProjectRasterTileServerConfig!
 }
 

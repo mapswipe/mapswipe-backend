@@ -42,8 +42,7 @@ class RasterTileServerType:
     type: RasterTileServerNameEnum
     label: str
     url: str
-    # FIXME(tnagorra): We can implement min_zoom and max_zoom
-    # after we update rendering of tiles in the app from images to maplibre
+    # NOTE: Defaults that prefill the zoom range of a layer in the dashboard
     min_zoom: int | None
     max_zoom: int | None
     credits: str
