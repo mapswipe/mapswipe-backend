@@ -2,11 +2,14 @@
 import datetime
 import typing
 
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy
 from django_choices_field import IntegerChoicesField
 from django_stubs_ext.db.models import TypedModelMeta
+from django_stubs_ext.db.models.manager import RelatedManager
 from ulid import ULID
 
 from main.db import Model
@@ -385,3 +388,145 @@ class Announcement(UserResource, FirebasePushResource):  # type: ignore[reportIn
     @typing.override
     def __str__(self):
         return self.text
+
+
+# -- App info (mobile app version check)
+APP_VERSION_VALIDATOR = RegexValidator(
+    # NOTE: minor and patch are limited to 3 digits to generate the version code
+    regex=r"^\d+\.\d{1,3}\.\d{1,3}$",
+    message=gettext_lazy("Enter a version like 3.0.10"),
+)
+
+
+def get_app_version_code(version: str) -> int:
+    """Return a sortable number for the version. Eg: 3.0.10 -> 3000010."""
+    major, minor, patch = (int(part) for part in version.split("."))
+    return major * 1_000_000 + minor * 1_000 + patch
+
+
+class AppPlatformEnum(models.IntegerChoices):
+    """Enum representing the mobile app platforms."""
+
+    IOS = 1, "ios"
+    ANDROID = 2, "android"
+
+
+class AppInfo(UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
+    """Version information of the mobile app for a platform.
+
+    There is one row per platform, created by the migration. It is pushed to firebase at /v2/appInfo/{platform}.
+    """
+
+    # NOTE: The rows are created by the migration without a user, so these are optional
+    created_by = models.ForeignKey["User | None", "User | None"](
+        "user.User",
+        related_name="%(class)s_created",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
+    modified_by = models.ForeignKey["User | None", "User | None"](
+        "user.User",
+        related_name="%(class)s_modified",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
+    created_by_id: int | None  # type: ignore[reportIncompatibleVariableOverride]
+    modified_by_id: int | None  # type: ignore[reportIncompatibleVariableOverride]
+
+    platform: int = IntegerChoicesField(choices_enum=AppPlatformEnum, unique=True)  # type: ignore[reportAssignmentType]
+    latest_version_id: int | None
+    latest_version = models.ForeignKey["AppRelease | None", "AppRelease | None"](
+        "AppRelease",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text=gettext_lazy(
+            "Set this once the release is available on the store. Only releases up to this version are published.",
+        ),
+    )
+    min_supported_version = models.CharField[str, str](
+        max_length=20,
+        default="0.0.0",
+        validators=[APP_VERSION_VALIDATOR],
+        help_text=gettext_lazy("Installed versions below this are forced to update."),
+    )
+
+    releases: RelatedManager["AppRelease"]
+
+    @typing.override
+    def __str__(self):
+        return str(self.platform_enum.label)
+
+    @typing.override
+    def clean(self):
+        super().clean()
+        latest_version = self.latest_version
+        if latest_version is None:
+            return
+        if latest_version.app_info_id != self.pk:
+            raise ValidationError({"latest_version": gettext_lazy("Select a release of this platform.")})
+        try:
+            APP_VERSION_VALIDATOR(self.min_supported_version)
+        except ValidationError:
+            # NOTE: The field validation shows this error
+            return
+        if get_app_version_code(self.min_supported_version) > latest_version.version_code:
+            raise ValidationError(
+                {"min_supported_version": gettext_lazy("Cannot be greater than the latest version.")},
+            )
+
+    @property
+    def platform_enum(self):
+        return AppPlatformEnum(self.platform)
+
+    def get_published_releases(self) -> list["AppRelease"]:
+        """Return releases up to the latest version, sorted by version."""
+        latest_version = self.latest_version
+        if latest_version is None:
+            return []
+        return sorted(
+            (release for release in self.releases.all() if release.version_code <= latest_version.version_code),
+            key=lambda release: release.version_code,
+        )
+
+
+class AppRelease(Model):
+    """Release notes of a single app version on a platform."""
+
+    app_info_id: int
+    app_info = models.ForeignKey[AppInfo, AppInfo](
+        AppInfo,
+        on_delete=models.CASCADE,
+        related_name="releases",
+    )
+    version = models.CharField[str, str](max_length=20, validators=[APP_VERSION_VALIDATOR])
+    updates = models.TextField[str, str](
+        blank=True,
+        help_text=gettext_lazy("What's new in this version (markdown)."),
+    )
+    incompatible_changes = models.TextField[str, str](
+        blank=True,
+        help_text=gettext_lazy("What won't work on older versions after this release (markdown)."),
+    )
+
+    class Meta(TypedModelMeta):  # type: ignore[reportIncompatibleVariableOverride]
+        unique_together = (
+            "app_info",
+            "version",
+        )
+
+    @typing.override
+    def __str__(self):
+        return self.version
+
+    @property
+    def version_code(self) -> int:
+        return get_app_version_code(self.version)
+
+    @property
+    def firebase_key(self) -> str:
+        # NOTE: Firebase keys cannot contain "."
+        return self.version.replace(".", "_")
