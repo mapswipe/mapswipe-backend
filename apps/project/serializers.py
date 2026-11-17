@@ -16,7 +16,14 @@ from apps.tutorial.models import Tutorial
 from project_types.store import get_project_property, get_project_type_handler
 from utils.asset_types.models import AoiGeometryAssetProperty, ObjectImageAssetProperty
 from utils.common import clean_up_none_keys
-from utils.geo.transform import convert_json_dict_to_geometry_collection, get_area_of_geometry, get_polygon_of_extent
+from utils.geo.transform import (
+    InvalidAoiGeometryError,
+    convert_json_dict_to_geometry_collection,
+    get_area_of_geometry,
+    get_invalid_aoi_geometry_message,
+    get_polygon_of_extent,
+    validate_aoi_geometries,
+)
 from utils.graphql.drf import handle_pydantic_validation_error
 
 from .models import (
@@ -600,6 +607,15 @@ class ProjectAssetSerializer(CommonAssetSerializer, UserResourceSerializer[Proje
             raise serializers.ValidationError(
                 {
                     "file": "Invalid feature collection",
+                },
+            ) from e
+
+        try:
+            validate_aoi_geometries(geometry_collection)
+        except InvalidAoiGeometryError as e:
+            raise serializers.ValidationError(
+                {
+                    "file": get_invalid_aoi_geometry_message(e),
                 },
             ) from e
 
