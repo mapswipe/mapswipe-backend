@@ -31,6 +31,7 @@ from utils.asset_types.models import AoiGeometryAssetProperty
 from utils.common import clean_up_none_keys, create_json_dump
 from utils.geo import tile_functions, tile_grouping
 from utils.geo.raster_tile_server.models import RasterTileServerConfig
+from utils.geo.transform import InvalidAoiGeometryError, get_invalid_aoi_geometry_message, validate_aoi_geometries
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +226,14 @@ class TileMapServiceBaseProject[
                 temp_file.write(aoi_file.read())
             temp_file.flush()
 
-            return tile_grouping.get_geometry_from_file(temp_file.name)
+            aoi_geometry = tile_grouping.get_geometry_from_file(temp_file.name)
+
+        try:
+            validate_aoi_geometries(aoi_geometry["polygons"])
+        except InvalidAoiGeometryError as e:
+            raise base_project.ValidationException(get_invalid_aoi_geometry_message(e)) from e
+
+        return aoi_geometry
 
     # FIREBASE
 

@@ -1,11 +1,41 @@
 import typing
 
+import pytest
+from django.contrib.gis.geos import MultiPolygon, Polygon
+
 from main.tests import TestCase
 from utils.geo.tile_functions import (
     lat_long_zoom_to_pixel_coords,
     pixel_coords_zoom_to_lat_lon,
     tile_coords_and_zoom_to_quad_key,
 )
+from utils.geo.transform import (
+    InvalidAoiGeometryError,
+    validate_aoi_geometries,
+)
+
+
+class TestValidateAoiGeometries(TestCase):
+    def test_valid_geometries(self):
+        square = Polygon(((0, 0), (0, 1), (1, 1), (1, 0), (0, 0)), srid=4326)
+        # NOTE: Geometries of different features are allowed to overlap
+        overlapping_square = Polygon(((0.5, 0.5), (0.5, 2), (2, 2), (2, 0.5), (0.5, 0.5)), srid=4326)
+        validate_aoi_geometries([square, overlapping_square])
+
+    def test_multipolygon_with_overlapping_parts(self):
+        geometry = MultiPolygon(
+            Polygon(((0, 0), (0, 1), (1, 1), (1, 0), (0, 0))),
+            Polygon(((0.5, 0.5), (0.5, 2), (2, 2), (2, 0.5), (0.5, 0.5))),
+            srid=4326,
+        )
+        with pytest.raises(InvalidAoiGeometryError, match="Self-intersection"):
+            validate_aoi_geometries([geometry])
+
+    def test_self_intersecting_polygon(self):
+        # Bow-tie: the ring crosses itself
+        geometry = Polygon(((0, 0), (1, 1), (1, 0), (0, 1), (0, 0)), srid=4326)
+        with pytest.raises(InvalidAoiGeometryError, match="Self-intersection"):
+            validate_aoi_geometries([geometry])
 
 
 class TestGeoUtils(TestCase):
