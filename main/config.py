@@ -177,6 +177,10 @@ class Config:
         def announcement():
             return "/v2/announcement"
 
+        @staticmethod
+        def app_info(platform: str):
+            return f"/v2/appInfo/{platform}"
+
 
 Config.InternalDir.INTERNAL_ROOT.mkdir(parents=True, exist_ok=True)
 

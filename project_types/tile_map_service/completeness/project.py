@@ -4,6 +4,7 @@ from django.db import models
 from pydantic import BaseModel, field_validator, model_validator
 from pyfirebase_mapswipe import models as firebase_models
 
+from apps.common.models import AppFeatureEnum
 from apps.project.models import Project, ProjectTypeEnum
 from project_types.tile_map_service.base import project as base_project
 from utils import fields as custom_fields
@@ -134,6 +135,12 @@ class CompletenessProject(
         return True
 
     # FIREBASE
+
+    @typing.override
+    def get_required_features(self):
+        if self.project_type_specifics.overlay_tile_server_property.type == OverlayLayerTypeEnum.VECTOR_TILE:
+            return [AppFeatureEnum.PROJECT_COMPLETENESS_VECTOR_LAYER]
+        return []
 
     @typing.override
     def get_project_specifics_for_firebase(self):
