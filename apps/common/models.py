@@ -2,6 +2,7 @@
 import datetime
 import typing
 
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
@@ -411,6 +412,30 @@ class AppPlatformEnum(models.IntegerChoices):
     ANDROID = 2, "android"
 
 
+class AppFeatureEnum(models.TextChoices):
+    """Features a client (mobile or web app) needs to support to use a resource. Eg: a project.
+
+    Resources declare the features they require (`requiredFeatures` in firebase).
+    Clients compare them with the features they support and ask the user to update when any is missing.
+    See docs/app-features.md to add a new feature.
+
+    Note:
+    - Value is same as the name, as it is stored in firebase and used by the clients as is.
+    - Prefix with the area. Eg: PROJECT_, TUTORIAL_, MAPPING_
+    - Never remove or rename a feature as it is already used by released apps. Only add new ones.
+
+    """
+
+    PROJECT_COMPLETENESS_VECTOR_LAYER = (
+        "PROJECT_COMPLETENESS_VECTOR_LAYER",
+        "Completeness project with vector overlay layer",
+    )
+    PROJECT_VALIDATE_PRE_EVENT_IMAGERY = (
+        "PROJECT_VALIDATE_PRE_EVENT_IMAGERY",
+        "Validate project with pre and post event imagery",
+    )
+
+
 class AppInfo(UserResource, FirebasePushResource):  # type: ignore[reportIncompatibleVariableOverride]
     """Version information of the mobile app for a platform.
 
@@ -510,6 +535,15 @@ class AppRelease(Model):
     incompatible_changes = models.TextField[str, str](
         blank=True,
         help_text=gettext_lazy("What won't work on older versions after this release (markdown)."),
+    )
+    supported_features = ArrayField(
+        models.CharField[str, str](max_length=100, choices=AppFeatureEnum.choices),
+        default=list,
+        blank=True,
+        help_text=gettext_lazy(
+            "Features supported by this version. Leave empty to use the features bundled in the app."
+            " When selected, it overrides the features bundled in the app.",
+        ),
     )
 
     class Meta(TypedModelMeta):  # type: ignore[reportIncompatibleVariableOverride]

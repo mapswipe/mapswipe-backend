@@ -3,6 +3,7 @@ import typing
 from pyfirebase_mapswipe import extended_models as firebase_ext_models
 from pyfirebase_mapswipe import models as firebase_models
 
+from apps.common.models import AppFeatureEnum
 from apps.project.models import ProjectTypeEnum
 from apps.tutorial.models import Tutorial, TutorialTask
 from project_types.tile_map_service.base import tutorial as tile_map_service_tutorial
@@ -57,6 +58,12 @@ class CompletenessTutorial(
             if tsp_overlay.type == OverlayLayerTypeEnum.RASTER_TILE and tsp_overlay.raster
             else FALLBACK_RASTER_LAYER,
         )
+
+    @typing.override
+    def get_required_features(self):
+        if self.project_type_specifics.overlay_tile_server_property.type == OverlayLayerTypeEnum.VECTOR_TILE:
+            return [AppFeatureEnum.PROJECT_COMPLETENESS_VECTOR_LAYER]
+        return []
 
     @typing.override
     def get_tutorial_specifics_for_firebase(self):

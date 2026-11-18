@@ -18,7 +18,7 @@ from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
 from ulid import ULID
 
-from apps.common.models import FirebasePushStatusEnum
+from apps.common.models import AppFeatureEnum, FirebasePushStatusEnum
 from apps.common.utils import get_absolute_uri
 from apps.project.models import (
     Project,
@@ -303,6 +303,10 @@ class BaseProject[
     @abstractmethod
     def get_project_specifics_for_firebase(self) -> BaseModel: ...
 
+    def get_required_features(self) -> list[AppFeatureEnum]:
+        """Features a client must support to open this. Override when the configuration needs a new feature."""
+        return []
+
     def _save_tasks_as_json(self, grouped_tasks: dict[str, list[dict[str, typing.Any]]]) -> None:
         """Generates a JSON file with all tasks and save it as a project asset.
         Using this for debugging purpose of compressed tasks.
@@ -444,6 +448,7 @@ class BaseProject[
             language="en-us",
             tutorialId=self.project.tutorial.firebase_id,
             verificationNumber=self.project.verification_number,
+            requiredFeatures=[feature.value for feature in self.get_required_features()],
         )
 
         project_specific_data = self.get_project_specifics_for_firebase()
@@ -498,6 +503,8 @@ class BaseProject[
                     progress=self.project.progress,
                     # FIXME(tnagorra): Need to check how we get this?
                     language="en-us",
+                    # NOTE: An empty list removes the key from firebase
+                    requiredFeatures=[feature.value for feature in self.get_required_features()],
                 ),
             ),
         )

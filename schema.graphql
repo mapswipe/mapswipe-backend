@@ -22,6 +22,7 @@ type AoiGeometryAssetPropertyType {
 union AoiGeometryAssetPropertyTypeObjectImageAssetPropertyType = AoiGeometryAssetPropertyType | ObjectImageAssetPropertyType
 
 type AppEnumCollection {
+  AppFeatureEnum: [AppEnumCollectionAppFeatureEnum!]!
   AssetMimetypeEnum: [AppEnumCollectionAssetMimetypeEnum!]!
   AssetTypeEnum: [AppEnumCollectionAssetTypeEnum!]!
   ContributorUserGroupMembershipLogActionEnum: [AppEnumCollectionContributorUserGroupMembershipLogActionEnum!]!
@@ -45,6 +46,11 @@ type AppEnumCollection {
   ValidateImageSourceTypeEnum: [AppEnumCollectionValidateImageSourceTypeEnum!]!
   ValidateObjectSourceTypeEnum: [AppEnumCollectionValidateObjectSourceTypeEnum!]!
   VectorTileServerNameEnum: [AppEnumCollectionVectorTileServerNameEnum!]!
+}
+
+type AppEnumCollectionAppFeatureEnum {
+  key: AppFeatureEnum!
+  label: String!
 }
 
 type AppEnumCollectionAssetMimetypeEnum {
@@ -160,6 +166,11 @@ type AppEnumCollectionValidateObjectSourceTypeEnum {
 type AppEnumCollectionVectorTileServerNameEnum {
   key: VectorTileServerNameEnum!
   label: String!
+}
+
+enum AppFeatureEnum {
+  PROJECT_COMPLETENESS_VECTOR_LAYER
+  PROJECT_VALIDATE_PRE_EVENT_IMAGERY
 }
 
 scalar AreaSqKm

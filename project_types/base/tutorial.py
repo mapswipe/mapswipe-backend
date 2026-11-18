@@ -11,7 +11,7 @@ from pyfirebase_mapswipe import models as firebase_models
 from pyfirebase_mapswipe import utils as firebase_utils
 from ulid import ULID
 
-from apps.common.models import FirebasePushStatusEnum, IconEnum
+from apps.common.models import AppFeatureEnum, FirebasePushStatusEnum, IconEnum
 from apps.common.utils import get_absolute_uri
 from apps.tutorial.models import (
     Tutorial,
@@ -82,6 +82,10 @@ class BaseTutorial[
 
     @abstractmethod
     def get_tutorial_specifics_for_firebase(self) -> BaseModel: ...
+
+    def get_required_features(self) -> list[AppFeatureEnum]:
+        """Features a client must support to open this. Override when the configuration needs a new feature."""
+        return []
 
     def _save_tasks_as_json(self, grouped_tasks: typing.Any) -> None:
         """Generates a JSON file with all tasks and save it as a tutorial asset.
@@ -220,6 +224,7 @@ class BaseTutorial[
             projectTopicKey=self.tutorial.name.lower().strip(),
             status="tutorial",
             tutorialDraftId="",
+            requiredFeatures=[feature.value for feature in self.get_required_features()],
             screens=[
                 firebase_models.FbScreen(
                     hint=firebase_models.FbScreenBlock(
@@ -301,6 +306,7 @@ class BaseTutorial[
             projectTopicKey=self.tutorial.name.lower().strip(),
             status="tutorial",
             tutorialDraftId="",
+            requiredFeatures=[feature.value for feature in self.get_required_features()],
             screens=[
                 firebase_models.FbScreen(
                     hint=firebase_models.FbScreenBlock(

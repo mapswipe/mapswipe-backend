@@ -1,5 +1,6 @@
 import typing
 
+from django import forms
 from django.contrib import admin
 from django.db import models
 from django.http import HttpRequest
@@ -8,7 +9,7 @@ from djangoql.admin import DjangoQLSearchMixin  # type: ignore[reportMissingType
 from ulid import ULID
 
 from apps.common.firebase.push import FirebaseAnnouncementPush, FirebaseAppInfoPush
-from apps.common.models import Announcement, AppInfo, AppRelease, GlobalExportAsset, UserResource
+from apps.common.models import Announcement, AppFeatureEnum, AppInfo, AppRelease, GlobalExportAsset, UserResource
 
 DjangoModel = typing.TypeVar("DjangoModel", bound=models.Model)
 
@@ -208,8 +209,22 @@ class AnnouncementAdmin(DjangoQLSearchMixin, FirebaseResourceAdmin, UserResource
             FirebaseAnnouncementPush(obj).trigger(delete=True)
 
 
+class AppReleaseForm(forms.ModelForm[AppRelease]):
+    supported_features = forms.MultipleChoiceField(
+        choices=AppFeatureEnum.choices,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        help_text=AppRelease.supported_features.field.help_text,
+    )
+
+    class Meta:
+        model = AppRelease
+        fields = ("version", "updates", "incompatible_changes", "supported_features")
+
+
 class AppReleaseInline(admin.StackedInline[AppRelease, AppInfo]):
     model = AppRelease
+    form = AppReleaseForm
     extra = 0
 
 

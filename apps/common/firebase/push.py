@@ -68,6 +68,7 @@ class FirebaseAppInfoPush(FirebasePush[AppInfo, firebase_models.FbAppInfo]):
                     versionCode=release.version_code,
                     updates=release.updates or firebase_models.UNDEFINED,
                     incompatibleChanges=release.incompatible_changes or firebase_models.UNDEFINED,
+                    supportedFeatures=release.supported_features or firebase_models.UNDEFINED,
                 )
                 for release in releases
             }
