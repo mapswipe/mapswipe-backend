@@ -117,8 +117,7 @@ env = environ.Env(
     # Ohsome
     # NOTE: v2 requires an API key on every request. Get one at https://account.heigit.org/signup
     OHSOME_API_KEY=str,  # os.environ["OHSOME_API_KEY"]
-    # NOTE: The "-rc" is dropped once v2 is stable, so keep this overridable
-    OHSOME_API_LINK=(str, "https://api.heigit.org/ohsome-api/v2-rc/"),
+    OHSOME_API_LINK=(str, "https://api.heigit.org/ohsome-api/v2/"),
     # Mapillary
     MAPILLARY_API_KEY=str,  # os.environ["MAPILLARY_API_KEY"]
     # MAP_IMAGE_DIGITAL_GLOBE_API_KEY=str,
