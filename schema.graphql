@@ -1014,6 +1014,9 @@ type Mutation {
   deleteTutorial: DeleteTutorialPayload! @isAuthenticated
   login(username: String!, password: String!): UserMeType!
   logout: Boolean!
+  testAoiObjects(projectId: ID!, assetId: ID!, ohsomeFilter: String!): TestAoiObjectsPayload! @isAuthenticated
+  testObjectGeojsonUrl(projectId: ID!, objectGeojsonUrl: String!): TestObjectGeojsonUrlPayload! @isAuthenticated
+  testTaskingManagerProject(projectId: ID!, hotTmId: String!, ohsomeFilter: String!): TestTaskingManagerProjectPayload! @isAuthenticated
   updateContributorUserGroup(data: ContributorUserGroupUpdateInput!, pk: ID!): UpdateContributorUserGroupPayload! @isAuthenticated
   updateOrganization(data: OrganizationUpdateInput!, pk: ID!): UpdateOrganizationPayload! @isAuthenticated
   updateProcessedProject(data: ProcessedProjectUpdateInput!, pk: ID!): UpdateProcessedProjectPayload! @isAuthenticated
@@ -1843,6 +1846,11 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   """Last recent contribution date"""
   lastContributionDate: Date
 
+  """
+  Inputs and result of the last passed object source test. Only set for Validate projects.
+  """
+  lastPassedObjectSourceTest: ValidateObjectSourceTestRecordType
+
   """What should the users look for (e.g. buildings, cars, trees)"""
   lookFor: String
 
@@ -2107,8 +2115,6 @@ type Query {
   publicOrganizations(filters: OrganizationFilter, order: OrganizationOrder, pagination: OffsetPaginationInput): OrganizationTypeOffsetPaginated!
   publicProject(id: ID!): ProjectType!
   publicProjects(filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated!
-  testAoiObjects(projectId: ID!, assetId: ID!, ohsomeFilter: String!): TestValidateAoiObjectsResponse! @isAuthenticated
-  testTaskingManagerProject(hotTmId: String!, ohsomeFilter: String!): TestValidateTaskingManagerProjectResponse! @isAuthenticated
   tileServers: RasterTileServersType! @isAuthenticated
   tutorial(id: ID!): TutorialType! @isAuthenticated
   tutorialAsset(id: ID!): TutorialAssetType! @isAuthenticated
@@ -2303,7 +2309,14 @@ enum SubGridSizeEnum {
   SIZE_8X8
 }
 
+union TestAoiObjectsPayload = OperationInfo | TestValidateAoiObjectsResponse
+
+union TestObjectGeojsonUrlPayload = OperationInfo | TestValidateObjectGeojsonUrlResponse
+
+union TestTaskingManagerProjectPayload = OperationInfo | TestValidateTaskingManagerProjectResponse
+
 type TestValidateAoiObjectsResponse {
+  aoiGeometryAsset: ProjectAssetType
   assetId: ID
   error: String
   objectCount: Int
@@ -2312,12 +2325,23 @@ type TestValidateAoiObjectsResponse {
   projectId: ID
 }
 
+type TestValidateObjectGeojsonUrlResponse {
+  aoiGeometryAsset: ProjectAssetType
+  error: String
+  objectCount: Int
+  objectGeojsonUrl: String
+  ok: Boolean!
+  projectId: ID
+}
+
 type TestValidateTaskingManagerProjectResponse {
+  aoiGeometryAsset: ProjectAssetType
   error: String
   hotTmId: String
   objectCount: Int
   ohsomeFilter: String
   ok: Boolean!
+  projectId: ID
 }
 
 """Model representing assets for a tutorial."""
@@ -2901,6 +2925,14 @@ input ValidateObjectSourceConfigInput {
   ohsomeFilter: String = null
   sourceType: ValidateObjectSourceTypeEnum!
   taskingManagerProjectId: String = null
+}
+
+type ValidateObjectSourceTestRecordType {
+  """Numeric value as string"""
+  aoiGeometryAsset: String!
+  inputs: ValidateObjectSourceConfig!
+  objectCount: Int!
+  testedAt: DateTime!
 }
 
 enum ValidateObjectSourceTypeEnum {

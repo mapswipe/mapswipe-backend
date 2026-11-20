@@ -51,6 +51,24 @@ def create_override():
 
 class TestValidateProjectE2E(TestCase):
     class Mutation:
+        TEST_AOI_OBJECTS = """
+        mutation TestAoiObjects($assetId: ID!, $projectId: ID!, $ohsomeFilter: String!) {
+            testAoiObjects(assetId: $assetId, projectId: $projectId, ohsomeFilter: $ohsomeFilter) {
+                ... on TestValidateAoiObjectsResponse {
+                    ok
+                    error
+                    objectCount
+                    assetId
+                    projectId
+                    ohsomeFilter
+                    aoiGeometryAsset {
+                        id
+                    }
+                }
+            }
+        }
+        """
+
         CREATE_PROJECT = """
         mutation CreateProject($data: ProjectCreateInput!) {
           createProject(data: $data) {
@@ -294,32 +312,6 @@ class TestValidateProjectE2E(TestCase):
             }
         """
 
-    class Query:
-        TEST_AOI_OBJECTS = """
-        query TestAoiObjects($assetId: ID!, $projectId: ID!, $ohsomeFilter: String!) {
-            testAoiObjects(assetId: $assetId, projectId: $projectId, ohsomeFilter: $ohsomeFilter) {
-                ok
-                error
-                objectCount
-                assetId
-                projectId
-                ohsomeFilter
-            }
-        }
-        """
-
-        TEST_TASKING_MANAGER_PROJECT = """
-        query TestTaskingManagerProject($hotTmId: String!, $ohsomeFilter: String!) {
-            testTaskingManagerProject(hotTmId: $hotTmId, ohsomeFilter: $ohsomeFilter) {
-                ok
-                error
-                objectCount
-                hotTmId
-                ohsomeFilter
-            }
-        }
-        """
-
     @pytest.mark.vcr("assets/tests/projects/validate/cassette")
     def test_validate_project_e2e(self):
         # TODO(susilnem): Add more test with filters
@@ -427,11 +419,12 @@ class TestValidateProjectE2E(TestCase):
         # Test AOI objects
         ohsomeFilter = "building=* and geometry:polygon"
         test_aoi_objects_content = self.query_check(
-            self.Query.TEST_AOI_OBJECTS,
+            self.Mutation.TEST_AOI_OBJECTS,
             variables={"assetId": aoi_id, "projectId": project_id, "ohsomeFilter": ohsomeFilter},
         )
         test_aoi_objects_response = test_aoi_objects_content["data"]["testAoiObjects"]
-        assert test_aoi_objects_response["ok"]
+        assert test_aoi_objects_response["ok"], test_aoi_objects_response["error"]
+        assert test_aoi_objects_response["aoiGeometryAsset"]["id"] == aoi_id
 
         # Update project
         update_project_data = test_data["update_project"]
