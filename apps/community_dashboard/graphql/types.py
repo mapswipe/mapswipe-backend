@@ -126,6 +126,25 @@ class AggregateHelper:
             async for task_date, swipe_count in qs_
         ]
 
+    @staticmethod
+    async def get_contributors_by_date(qs: QuerySet) -> list["ContributorCountStatType"]:
+        qs_ = (
+            qs.order_by("timestamp_date")
+            .values("timestamp_date")
+            .annotate(total_contributors=models.Count("user_id", distinct=True))
+            .values_list(
+                "timestamp_date",
+                "total_contributors",
+            )
+        )
+        return [
+            ContributorCountStatType(
+                task_date=task_date,
+                total_contributors=total_contributors,
+            )
+            async for task_date, total_contributors in qs_
+        ]
+
     # XXX: qs_cte type is wrong
     @staticmethod
     async def get_swipe_by_project_geo(qs_cte: QuerySet) -> list["MapContributionStatsType"]:
@@ -236,6 +255,12 @@ class ContributorSwipeStatType:
 class ContributorTimeStatType:
     date: datetime.date
     total_swipe_time: int = strawberry.field(description="total swipe time (seconds)")
+
+
+@strawberry.type
+class ContributorCountStatType:
+    task_date: datetime.date
+    total_contributors: int = strawberry.field(description="number of distinct contributors active on the date")
 
 
 @strawberry.type
@@ -423,6 +448,10 @@ class ContributorUserGroupFilteredStats(ContributorUserUserGroupBaseFilterStatsQ
             )
         self.qs_ = AggregatedUserGroupStatData.objects.filter(**filters)
         self.qs_cte_ = AggregatedUserGroupStatData.cte_objects.filter(**filters)
+
+    @strawberry.field(description="Number of distinct contributors active per day")
+    async def contributors_by_date(self) -> list[ContributorCountStatType]:
+        return await AggregateHelper.get_contributors_by_date(self.qs)
 
 
 @strawberry.type
