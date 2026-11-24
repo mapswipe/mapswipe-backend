@@ -14,6 +14,7 @@ from apps.contributor.models import ContributorTeam
 from apps.project.firebase.push import FirebaseOrganizationPush
 from apps.tutorial.models import Tutorial
 from project_types.store import get_project_property, get_project_type_handler
+from project_types.validate.project import ValidateProject
 from utils.asset_types.models import AoiGeometryAssetProperty, ObjectImageAssetProperty
 from utils.common import clean_up_none_keys
 from utils.geo.transform import convert_json_dict_to_geometry_collection, get_area_of_geometry, get_polygon_of_extent
@@ -805,6 +806,18 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
                     % (new_status.label),
                 },
             )
+
+        if (
+            new_status == Project.Status.READY_TO_PROCESS
+            and self.instance.project_type_enum == ProjectTypeEnum.VALIDATE
+            and (object_source_test_error := ValidateProject(self.instance).get_object_source_test_error())
+        ):
+            raise serializers.ValidationError(
+                {
+                    "project_type_specifics": object_source_test_error,
+                },
+            )
+
         if new_status == Project.Status.READY_TO_PUBLISH and not self.instance.tutorial:
             raise serializers.ValidationError(
                 {
