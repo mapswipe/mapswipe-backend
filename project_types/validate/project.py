@@ -72,6 +72,14 @@ class ValidateObjectSourceTypeEnum(models.TextChoices):
                 return firebase_models.FbEnumValidateInputType.TMID
 
 
+# NOTE: Tasking Manager and Object GeoJSON URL projects are processed with the AOI stored by their test.
+# An uploaded AOI file is fixed and processing checks it again, so it does not need a passed test.
+REQUIRED_OBJECT_SOURCE_TESTS: dict[ValidateObjectSourceTypeEnum, str] = {
+    ValidateObjectSourceTypeEnum.TASKING_MANAGER: "testTaskingManagerProject",
+    ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL: "testObjectGeojsonUrl",
+}
+
+
 class ValidateObjectSourceConfig(BaseModel):
     source_type: ValidateObjectSourceTypeEnum
     tasking_manager_project_id: custom_fields.PydanticId | None = None
@@ -411,6 +419,22 @@ class ValidateProject(
             return None
         return ValidateObjectSourceTestRecord.model_validate(self.project.last_passed_object_source_test)
 
+    def get_object_source_test_error(self) -> str | None:
+        """Return why the current object source inputs cannot be processed, or None when they can."""
+        object_source = self.project_type_specifics.object_source
+        test_name = REQUIRED_OBJECT_SOURCE_TESTS.get(object_source.source_type)
+        if test_name is None:
+            return None
+        last_passed_test = self.get_last_passed_test()
+        if last_passed_test is None:
+            return f"The object source has not passed a test. Run {test_name} before processing the project."
+        if last_passed_test.inputs != object_source.get_test_inputs():
+            return (
+                f"The object source has changed since its last passed test. Run {test_name} again"
+                " before processing the project."
+            )
+        return None
+
     @typing.override
     def get_aoi_geometry_asset(self) -> ProjectAsset | None:
         object_source = self.project_type_specifics.object_source
@@ -499,42 +523,56 @@ class ValidateProject(
 
         return self._get_object_geometry_from_ohsome(aoi_geojson, ohsome_filter)
 
+    def _get_tested_aoi(self) -> tuple[dict[str, typing.Any], GEOSGeometry]:
+        """Return the AOI stored by the last passed object source test, as GeoJSON and as a geometry."""
+        aoi_asset = self.get_aoi_geometry_asset()
+        if aoi_asset is None:
+            raise base_project.ValidationException(
+                self.get_object_source_test_error() or "AOI Geometry stored by the object source test is missing",
+            )
+
+        with aoi_asset.file.open() as aoi_file:
+            aoi_geojson = json.loads(aoi_file.read())
+
+        try:
+            _, geometry_collection = convert_json_dict_to_geometry_collection(aoi_geojson)
+        except Exception as e:
+            raise base_project.ValidationException(
+                "AOI Geometry stored by the object source test should be a feature collection of polygon",
+            ) from e
+
+        return aoi_geojson, geometry_collection.unary_union
+
+    def _save_project_area(self, geometry: GEOSGeometry, total_area: float | None = None):
+        bbox = get_polygon_of_extent(geometry.extent)
+        centroid = geometry.centroid
+        area_km2 = get_area_of_geometry(geometry) if total_area is None else total_area
+
+        proj_aoi_geometry = self.project.aoi_geometry or Geometry()
+        proj_aoi_geometry.bbox = bbox
+        proj_aoi_geometry.centroid = centroid
+        proj_aoi_geometry.geometry = geometry
+        proj_aoi_geometry.total_area = area_km2
+        proj_aoi_geometry.save()
+
+        self.project.aoi_geometry = proj_aoi_geometry
+        self.project.total_area = area_km2
+        self.project.bbox = bbox
+        self.project.centroid = centroid
+        self.project.save(update_fields=["aoi_geometry", "total_area", "bbox", "centroid"])
+
     def _validate_object_geojson_url(self):
         url = self.project_type_specifics.object_source.object_geojson_url
         if url is None:
             raise base_project.ValidationException("Object Geojson URL is missing")
 
+        # NOTE: The project area is the convex hull stored by the test, so the area processed is the area previewed
+        _, aoi_geometry = self._get_tested_aoi()
+
         _, features, geometry_collection = ValidateProject.test_geojson_url_project(url)
 
-        # TODO(tnagorra): Also store intermediate geometries?
-        # TODO(tnagorra): Also create a input geometry?
-        hull = geometry_collection.convex_hull
-        hull_extent = hull.extent
-        hull_bbox = get_polygon_of_extent(hull_extent)
-        hull_center = hull.centroid
-        area_km2 = get_area_of_geometry(geometry_collection)
-
-        proj_aoi_geometry = self.project.aoi_geometry
-        if not proj_aoi_geometry:
-            aoi_geometry = Geometry(
-                bbox=hull_bbox,
-                centroid=hull_center,
-                geometry=hull,
-                total_area=area_km2,
-            )
-            aoi_geometry.save()
-            self.project.aoi_geometry = aoi_geometry
-        else:
-            proj_aoi_geometry.bbox = hull_bbox
-            proj_aoi_geometry.centroid = hull_center
-            proj_aoi_geometry.geometry = hull
-            proj_aoi_geometry.total_area = area_km2
-            proj_aoi_geometry.save()
-
-        self.project.total_area = area_km2
-        self.project.bbox = hull_bbox
-        self.project.centroid = hull_center
-        self.project.save(update_fields=["aoi_geometry", "total_area", "bbox", "centroid"])
+        # NOTE: The total area stays the area of the objects, as before, so that the exported area does not change
+        self._save_project_area(aoi_geometry, total_area=get_area_of_geometry(geometry_collection))
 
         return features
 
@@ -548,37 +586,11 @@ class ValidateProject(
         if ohsome_filter is None:
             raise base_project.ValidationException("OHSOME filter is missing")
 
-        _, aoi_geojson, aoi_result = ValidateProject.test_tasking_manager_project(hot_tm_id, ohsome_filter)
+        # NOTE: The project area is the AOI stored by the test, so the area processed is the area previewed
+        aoi_geojson, aoi_geometry = self._get_tested_aoi()
+        ValidateProject._validate_geojson_aoi_area(get_area_of_geometry(aoi_geometry))
 
-        # TODO(tnagorra): Also create a input geometry?
-        # TODO(tnagorra): Also store intermediate geometries?
-        geometry = GEOSGeometry(aoi_result.text, srid=4326)
-        geometry_extent = geometry.extent
-        geometry_bbox = get_polygon_of_extent(geometry_extent)
-        geometry_center = geometry.centroid
-        area_km2 = get_area_of_geometry(geometry)
-
-        proj_aoi_geometry = self.project.aoi_geometry
-        if not proj_aoi_geometry:
-            aoi_geometry = Geometry(
-                bbox=geometry_bbox,
-                centroid=geometry_center,
-                geometry=geometry,
-                total_area=area_km2,
-            )
-            aoi_geometry.save()
-            self.project.aoi_geometry = aoi_geometry
-        else:
-            proj_aoi_geometry.bbox = geometry_bbox
-            proj_aoi_geometry.centroid = geometry_center
-            proj_aoi_geometry.geometry = geometry
-            proj_aoi_geometry.total_area = area_km2
-            proj_aoi_geometry.save()
-
-        self.project.total_area = area_km2
-        self.project.bbox = geometry_bbox
-        self.project.centroid = geometry_center
-        self.project.save(update_fields=["aoi_geometry", "total_area", "bbox", "centroid"])
+        self._save_project_area(aoi_geometry)
 
         return self._get_object_geometry_from_ohsome(aoi_geojson, ohsome_filter)
 
