@@ -1,9 +1,18 @@
+import logging
+import typing
+
 import strawberry
 import strawberry_django
+from asgiref.sync import sync_to_async
 from django.utils.translation import gettext
 from strawberry_django.permissions import IsAuthenticated
 
 from apps.common.models import AssetTypeEnum
+from apps.project.graphql.types.project_types.validate import (
+    TestValidateObjectGeojsonUrlResponse,
+    TestValidateTaskingManagerProjectResponse,
+    ValidateTestObjectSourceResponse,
+)
 from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum
 from apps.project.serializers import (
     OrganizationSerializer,
@@ -14,6 +23,9 @@ from apps.project.serializers import (
     ProjectUpdateSerializer,
 )
 from main.graphql.context import Info
+from project_types.base.project import ValidationException
+from project_types.validate import object_source_checks
+from utils import fields
 from utils.graphql.mutations import ModelMutation
 from utils.graphql.types import CustomErrorType, MutationResponseType
 
@@ -27,6 +39,29 @@ from .inputs.inputs import (
     ProjectUpdateInput,
 )
 from .types.types import OrganizationType, ProjectAssetsDeleteType, ProjectAssetType, ProjectType
+
+logger = logging.getLogger(__name__)
+
+
+@sync_to_async
+def _run_object_source_test[TestResponse: ValidateTestObjectSourceResponse](
+    info: Info,
+    response: TestResponse,
+    run_test: typing.Callable[..., object_source_checks.ObjectSourceTestResult],
+    **kwargs: typing.Any,
+) -> TestResponse:
+    try:
+        project = object_source_checks.get_testable_project(response.project_id or "")
+        result = run_test(project, info.context.request.user, **kwargs)
+    except ValidationException as e:
+        return response.generate_error(str(e))
+    except Exception:
+        logger.error("Object source test failed unexpectedly", exc_info=True)
+        return response.generate_error()
+
+    response.object_count = result.object_count
+    response.aoi_geometry_asset = result.aoi_geometry_asset  # type: ignore[reportAttributeAccessIssue]
+    return response
 
 
 @strawberry.type
@@ -92,6 +127,42 @@ class Mutation:
     ) -> MutationResponseType[ProjectType]:
         project = await Project.objects.aget(pk=pk)
         return await ModelMutation(ProjectStatusUpdateSerializer).handle_update_mutation(data, info, project)
+
+    # NOTE: These object source tests are mutations because each test stores the AOI as a project asset.
+    # testAoiObjects stays a query, as the uploaded AOI file is already a project asset.
+    @strawberry_django.mutation(extensions=[IsAuthenticated()])
+    async def test_tasking_manager_project(
+        self,
+        info: Info,
+        project_id: strawberry.ID,
+        hot_tm_id: fields.PydanticId,
+        ohsome_filter: str,
+    ) -> TestValidateTaskingManagerProjectResponse:
+        return await _run_object_source_test(
+            info,
+            TestValidateTaskingManagerProjectResponse(
+                project_id=project_id,
+                hot_tm_id=hot_tm_id,
+                ohsome_filter=ohsome_filter,
+            ),
+            object_source_checks.run_tasking_manager_test,
+            hot_tm_id=hot_tm_id,
+            ohsome_filter=ohsome_filter,
+        )
+
+    @strawberry_django.mutation(extensions=[IsAuthenticated()])
+    async def test_object_geojson_url(
+        self,
+        info: Info,
+        project_id: strawberry.ID,
+        object_geojson_url: str,
+    ) -> TestValidateObjectGeojsonUrlResponse:
+        return await _run_object_source_test(
+            info,
+            TestValidateObjectGeojsonUrlResponse(project_id=project_id, object_geojson_url=object_geojson_url),
+            object_source_checks.run_object_geojson_url_test,
+            url=object_geojson_url,
+        )
 
     # FIXME: Add a check that only OBJECT_IMAGE can be deleted
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
