@@ -9,14 +9,10 @@ from strawberry_django.permissions import IsAuthenticated
 
 from apps.project.custom_options import get_custom_options
 from apps.project.graphql.inputs.inputs import ProjectNameInput
-from apps.project.graphql.types.project_types.validate import (
-    TestValidateAoiObjectsResponse,
-    TestValidateTaskingManagerProjectResponse,
-)
+from apps.project.graphql.types.project_types.validate import TestValidateAoiObjectsResponse
 from apps.project.models import Organization, Project, ProjectAsset, ProjectAssetInputTypeEnum, ProjectTypeEnum
 from project_types.base.project import ValidationException
 from project_types.validate.project import ValidateProject
-from utils import fields
 from utils.geo.raster_tile_server.config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNameEnumWithoutCustom
 from utils.geo.vector_tile_server.config import VectorConfig, VectorTileServerNameEnum, VectorTileServerNameEnumWithoutCustom
 
@@ -90,6 +86,8 @@ class Query:
             for item in custom_options
         ]
 
+    # NOTE: Unlike the other object source tests, this stays a query because the uploaded AOI file
+    # is already a project asset and an AOI GeoJSON file project needs no passed test to be processed.
     @strawberry.field(extensions=[IsAuthenticated()])
     def test_aoi_objects(
         self,
@@ -121,31 +119,6 @@ class Query:
             )
 
             response.object_count = object_count
-            return response
-        except ValidationException as e:
-            return response.generate_error(str(e))
-        except Exception as e:
-            raise GraphQLError(str(e)) from e
-
-    @strawberry.field(extensions=[IsAuthenticated()])
-    def test_tasking_manager_project(
-        self,
-        hot_tm_id: fields.PydanticId,
-        ohsome_filter: str,
-    ) -> TestValidateTaskingManagerProjectResponse:
-        response = TestValidateTaskingManagerProjectResponse(
-            hot_tm_id=hot_tm_id,
-            ohsome_filter=ohsome_filter,
-        )
-
-        try:
-            object_count, _, _ = ValidateProject.test_tasking_manager_project(
-                hot_tm_id,
-                ohsome_filter,
-            )
-
-            response.object_count = object_count
-
             return response
         except ValidationException as e:
             return response.generate_error(str(e))

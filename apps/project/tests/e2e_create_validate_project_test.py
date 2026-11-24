@@ -308,18 +308,6 @@ class TestValidateProjectE2E(TestCase):
         }
         """
 
-        TEST_TASKING_MANAGER_PROJECT = """
-        query TestTaskingManagerProject($hotTmId: String!, $ohsomeFilter: String!) {
-            testTaskingManagerProject(hotTmId: $hotTmId, ohsomeFilter: $ohsomeFilter) {
-                ok
-                error
-                objectCount
-                hotTmId
-                ohsomeFilter
-            }
-        }
-        """
-
     @pytest.mark.vcr("assets/tests/projects/validate/cassette")
     def test_validate_project_e2e(self):
         # TODO(susilnem): Add more test with filters
@@ -431,7 +419,7 @@ class TestValidateProjectE2E(TestCase):
             variables={"assetId": aoi_id, "projectId": project_id, "ohsomeFilter": ohsomeFilter},
         )
         test_aoi_objects_response = test_aoi_objects_content["data"]["testAoiObjects"]
-        assert test_aoi_objects_response["ok"]
+        assert test_aoi_objects_response["ok"], test_aoi_objects_response["error"]
 
         # Update project
         update_project_data = test_data["update_project"]

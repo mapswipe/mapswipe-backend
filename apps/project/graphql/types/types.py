@@ -35,7 +35,7 @@ from .project_types.completeness import CompletenessProjectPropertyType
 from .project_types.find import FindProjectPropertyType
 from .project_types.locate import LocateProjectPropertyType
 from .project_types.street import StreetProjectPropertyType
-from .project_types.validate import ValidateProjectPropertyType
+from .project_types.validate import ValidateObjectSourceTestRecordType, ValidateProjectPropertyType
 from .project_types.validate_image import ValidateImageProjectPropertyType
 
 
@@ -209,6 +209,22 @@ class ProjectType(UserResourceTypeMixin, ProjectExportAssetTypeMixin, FirebasePu
     @strawberry_django.field(only=["firebase_id"])
     def website_url(self, project: strawberry.Parent[Project]) -> str:
         return Config.WebsiteKeys.project(project.firebase_id)
+
+    @strawberry_django.field(
+        only=["last_passed_object_source_test", "project_type"],
+        description="Inputs and result of the last passed object source test. Only set for Validate projects.",
+    )
+    def last_passed_object_source_test(
+        self,
+        project: strawberry.Parent[Project],
+    ) -> ValidateObjectSourceTestRecordType | None:
+        data = project.last_passed_object_source_test
+        if project.project_type_enum != Project.Type.VALIDATE or not data:
+            return None
+        return typing.cast(
+            "ValidateObjectSourceTestRecordType",
+            validate_project.ValidateObjectSourceTestRecord.model_validate(data),
+        )
 
     @strawberry_django.field(only=["project_type_specifics", "project_type"])
     async def project_type_specifics(

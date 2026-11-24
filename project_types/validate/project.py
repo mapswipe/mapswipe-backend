@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import typing
@@ -103,6 +104,36 @@ class ValidateObjectSourceConfig(BaseModel):
                 if self.ohsome_filter is None:
                     raise ValueError("OHSOME filter is required")
                 return self
+
+    def get_test_inputs(self) -> "ValidateObjectSourceConfig":
+        """Return only the fields the object source test of this source type depends on."""
+        match self.source_type:
+            case ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
+                return ValidateObjectSourceConfig(
+                    source_type=self.source_type,
+                    aoi_geometry=self.aoi_geometry,
+                    ohsome_filter=self.ohsome_filter,
+                )
+            case ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL:
+                return ValidateObjectSourceConfig(
+                    source_type=self.source_type,
+                    object_geojson_url=self.object_geojson_url,
+                )
+            case ValidateObjectSourceTypeEnum.TASKING_MANAGER:
+                return ValidateObjectSourceConfig(
+                    source_type=self.source_type,
+                    tasking_manager_project_id=self.tasking_manager_project_id,
+                    ohsome_filter=self.ohsome_filter,
+                )
+
+
+class ValidateObjectSourceTestRecord(BaseModel):
+    """Stored in Project.last_passed_object_source_test."""
+
+    inputs: ValidateObjectSourceConfig
+    aoi_geometry_asset: custom_fields.PydanticId
+    object_count: int
+    tested_at: datetime.datetime
 
 
 class ValidateProjectProperty(base_project.BaseProjectProperty):
@@ -375,15 +406,35 @@ class ValidateProject(
             aoi_result,
         )
 
+    def get_last_passed_test(self) -> ValidateObjectSourceTestRecord | None:
+        if not self.project.last_passed_object_source_test:
+            return None
+        return ValidateObjectSourceTestRecord.model_validate(self.project.last_passed_object_source_test)
+
     @typing.override
     def get_aoi_geometry_asset(self) -> ProjectAsset | None:
-        if self.project_type_specifics.object_source.source_type != ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
-            return None
-        if not self.project_type_specifics.object_source.aoi_geometry:
+        object_source = self.project_type_specifics.object_source
+        if object_source.source_type != ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
+            # NOTE: Tasking Manager and Object GeoJSON URL sources get their AOI asset from the
+            # object source test. Use it only while the inputs still match those of the test.
+            last_passed_test = self.get_last_passed_test()
+            if last_passed_test is None or last_passed_test.inputs != object_source.get_test_inputs():
+                return None
+            return (
+                ProjectAsset.usable_objects()
+                .filter(
+                    id=int(last_passed_test.aoi_geometry_asset),
+                    type=ProjectAsset.Type.INPUT,
+                    input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
+                    project_id=self.project.pk,
+                )
+                .first()
+            )
+        if not object_source.aoi_geometry:
             return None
 
         return ProjectAsset.usable_objects().get(
-            id=int(self.project_type_specifics.object_source.aoi_geometry),
+            id=int(object_source.aoi_geometry),
             type=ProjectAsset.Type.INPUT,
             input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
             project_id=self.project.pk,
