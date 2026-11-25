@@ -98,6 +98,78 @@ def _validate_project_name(
         )
 
 
+def _has_pre_imagery(project_type_specifics: dict[str, typing.Any] | None) -> bool:
+    # NOTE: Validate projects saved before pre-event imagery do not have has_pre_imagery
+    return bool((project_type_specifics or {}).get("has_pre_imagery", False))
+
+
+def _validate_tutorial_pre_imagery(
+    project: Project,
+    tutorial: Tutorial | None,
+    project_type_specifics: dict[str, typing.Any] | None,
+):
+    """Refuse a Validate project and tutorial where only one has pre-event imagery.
+
+    A tutorial uses the imagery of the project it was created for.
+    """
+    if project.project_type_enum != ProjectTypeEnum.VALIDATE or tutorial is None:
+        return
+
+    # NOTE: A tutorial created for this project always uses its imagery
+    if tutorial.project_id == project.pk:
+        return
+
+    has_pre_imagery = _has_pre_imagery(project_type_specifics)
+    if has_pre_imagery == _has_pre_imagery(tutorial.project.project_type_specifics):
+        return
+
+    if has_pre_imagery:
+        message = gettext(
+            "The project has pre-event imagery, but tutorial '%s' was created for a project without pre-event imagery.",
+        )
+    else:
+        message = gettext(
+            "The project has no pre-event imagery, but tutorial '%s' was created for a project with pre-event imagery.",
+        )
+    raise serializers.ValidationError({"tutorial": message % tutorial.name})
+
+
+def _validate_pre_imagery_of_tutorial_users(project: Project, project_type_specifics: dict[str, typing.Any]):
+    """Refuse a change of pre-event imagery that the projects using a tutorial of this project disagree with."""
+    if project.project_type_enum != ProjectTypeEnum.VALIDATE:
+        return
+
+    has_pre_imagery = _has_pre_imagery(project_type_specifics)
+    if has_pre_imagery == _has_pre_imagery(project.project_type_specifics):
+        return
+
+    mismatched_projects: list[str] = []
+    for other_project in (
+        Project.objects.filter(tutorial__project=project)
+        .exclude(pk=project.pk)
+        .select_related("requesting_organization", "tutorial")
+    ):
+        if _has_pre_imagery(other_project.project_type_specifics) == has_pre_imagery:
+            continue
+        assert other_project.tutorial is not None
+        mismatched_projects.append(f"{other_project.generate_name()} (tutorial '{other_project.tutorial.name}')")
+
+    if not mismatched_projects:
+        return
+
+    if has_pre_imagery:
+        message = gettext(
+            "Cannot add pre-event imagery, because these projects without pre-event imagery use a tutorial"
+            " created for this project: %s",
+        )
+    else:
+        message = gettext(
+            "Cannot remove pre-event imagery, because these projects with pre-event imagery use a tutorial"
+            " created for this project: %s",
+        )
+    raise serializers.ValidationError({"project_type_specifics": message % ", ".join(mismatched_projects)})
+
+
 # NOTE: Make sure this matches with the strawberry Input ./graphql/inputs.py
 class ProjectCreateSerializer(UserResourceSerializer[Project]):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
@@ -323,6 +395,11 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         _validate_project_name(attrs, self.instance)
         self._validate_project_instruction(attrs)
         self._validate_project_type_specifics(attrs)
+
+        project_type_specifics = attrs.get("project_type_specifics", self.instance.project_type_specifics)
+        tutorial = attrs.get("tutorial", self.instance.tutorial)
+        _validate_tutorial_pre_imagery(self.instance, tutorial, project_type_specifics)
+        _validate_pre_imagery_of_tutorial_users(self.instance, project_type_specifics)
         return super().validate(attrs)
 
     @typing.override
@@ -530,6 +607,8 @@ class ProcessedProjectUpdateSerializer(UserResourceSerializer[Project]):
 
         _validate_project_name(attrs, self.instance)
         self._validate_project_instruction(attrs)
+        if "tutorial" in attrs:
+            _validate_tutorial_pre_imagery(self.instance, attrs["tutorial"], self.instance.project_type_specifics)
         return super().validate(attrs)
 
     @typing.override
@@ -809,6 +888,14 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
                 {
                     "tutorial": gettext("Tutorial is required before publishing a project."),
                 },
+            )
+
+        if new_status == Project.Status.READY_TO_PUBLISH:
+            # NOTE: The tutorial is checked when it is attached, this guards against changes made outside the mutations
+            _validate_tutorial_pre_imagery(
+                self.instance,
+                self.instance.tutorial,
+                self.instance.project_type_specifics,
             )
         return attrs
 
