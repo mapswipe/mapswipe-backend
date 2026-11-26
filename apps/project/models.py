@@ -361,12 +361,6 @@ class Project(UserResource, FirebasePushResource):
         null=True,
         on_delete=models.SET_NULL,
     )
-    # NOTE: Only used by Validate projects. See ValidateObjectSourceTestRecord.
-    last_passed_object_source_test = models.JSONField(
-        blank=True,
-        null=True,
-        help_text=gettext_lazy("Inputs and result of the last object source test that passed"),
-    )
     project_type_specific_output_asset = models.ForeignKey["ProjectAsset | None", "ProjectAsset | None"](
         "project.ProjectAsset",
         related_name="+",

@@ -1845,11 +1845,6 @@ type ProjectType implements UserResourceTypeMixin & ProjectExportAssetTypeMixin 
   """Last recent contribution date"""
   lastContributionDate: Date
 
-  """
-  Inputs and result of the last passed object source test. Only set for Validate projects.
-  """
-  lastPassedObjectSourceTest: ValidateObjectSourceTestRecordType
-
   """What should the users look for (e.g. buildings, cars, trees)"""
   lookFor: String
 
@@ -2922,14 +2917,6 @@ input ValidateObjectSourceConfigInput {
   ohsomeFilter: String = null
   sourceType: ValidateObjectSourceTypeEnum!
   taskingManagerProjectId: String = null
-}
-
-type ValidateObjectSourceTestRecordType {
-  """Numeric value as string"""
-  aoiGeometryAsset: String!
-  inputs: ValidateObjectSourceConfig!
-  objectCount: Int!
-  testedAt: DateTime!
 }
 
 enum ValidateObjectSourceTypeEnum {

@@ -86,8 +86,8 @@ class Query:
             for item in custom_options
         ]
 
-    # NOTE: Unlike the other object source tests, this stays a query because the uploaded AOI file
-    # is already a project asset and an AOI GeoJSON file project needs no passed test to be processed.
+    # NOTE: testAoiObjects is a query (not a mutation like other test usecases) because the uploaded AOI file
+    # is already a project asset and we don't need to create a temporary project asset.
     @strawberry.field(extensions=[IsAuthenticated()])
     def test_aoi_objects(
         self,

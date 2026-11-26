@@ -21,10 +21,6 @@ class ValidateObjectSourceConfig: ...
 class ValidateProjectPropertyType: ...
 
 
-@strawberry.experimental.pydantic.type(model=validate_project.ValidateObjectSourceTestRecord, all_fields=True)
-class ValidateObjectSourceTestRecordType: ...
-
-
 DEFAULT_TEST_RESPONSE_ERROR_MESSAGE: str = "Something unexpected has occurred. Please contact an admin to fix this issue."
 
 
@@ -43,7 +39,7 @@ class ValidateTestAoiResponse:
 
 @strawberry.type
 class ValidateTestObjectSourceResponse(ValidateTestAoiResponse):
-    """Response of an object source test that stores the AOI as a project asset."""
+    """Response of an object source test that stores the AOI as a temporary project asset."""
 
     project_id: strawberry.ID | None = None
     aoi_geometry_asset: typing.Annotated["ProjectAssetType", strawberry.lazy("apps.project.graphql.types.types")] | None = (

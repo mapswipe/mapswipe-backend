@@ -1,7 +1,8 @@
 """Object source tests of Tasking Manager and Object GeoJSON URL Validate projects.
 
-Each test checks the inputs of one object source type, stores the AOI it covers as the project's
-AOI geometry asset, and records its inputs on the project as the last passed test.
+Each test checks the inputs of one object source type and stores the AOI it covers as an AOI geometry
+asset of the project, marked as deleted. The test does not change the project: the dashboard sends the
+asset in object_source.aoi_geometry when the project is saved, which attaches it and clears the mark.
 
 AOI GeoJSON file projects are tested with the testAoiObjects query instead, which stores nothing,
 as the uploaded AOI file is already a project asset.
@@ -14,8 +15,6 @@ import typing
 import pydantic
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.files.base import ContentFile
-from django.db import transaction
-from django.utils import timezone
 from ulid import ULID
 
 from apps.common.models import AssetMimetypeEnum, AssetTypeEnum
@@ -25,7 +24,6 @@ from project_types.base.project import ValidationException
 from project_types.tile_map_service.base.project import create_json_dump
 from project_types.validate.project import (
     ValidateObjectSourceConfig,
-    ValidateObjectSourceTestRecord,
     ValidateObjectSourceTypeEnum,
     ValidateProject,
 )
@@ -45,7 +43,7 @@ class ObjectSourceTestResult:
     aoi_geometry_asset: ProjectAsset
 
 
-def get_testable_project(project_id: int | str) -> Project:
+def get_testable_project(project_id: int) -> Project:
     project = Project.objects.filter(pk=project_id).first()
     if project is None:
         raise ValidationException("Project does not exist")
@@ -87,54 +85,10 @@ def _create_aoi_geometry_asset(
         file=file,
         file_size=file.size,
         asset_type_specifics=asset_type_specifics.model_dump(mode="json"),
+        # NOTE: Marked as deleted means no saved project uses this asset yet. Saving the project clears it.
+        marked_as_deleted=True,
         created_by=user,
         modified_by=user,
-    )
-
-
-def _record_passed_test(
-    project: Project,
-    user: User,
-    inputs: ValidateObjectSourceConfig,
-    aoi_geometry_asset: ProjectAsset,
-    object_count: int,
-) -> ObjectSourceTestResult:
-    previous_test = (
-        ValidateObjectSourceTestRecord.model_validate(project.last_passed_object_source_test)
-        if project.last_passed_object_source_test
-        else None
-    )
-
-    # NOTE: The asset created by the earlier test is not used anymore.
-    if previous_test is not None and int(previous_test.aoi_geometry_asset) != aoi_geometry_asset.pk:
-        ProjectAsset.objects.filter(
-            pk=int(previous_test.aoi_geometry_asset),
-            project=project,
-            type=AssetTypeEnum.INPUT,
-            input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
-        ).update(marked_as_deleted=True)
-
-    record = ValidateObjectSourceTestRecord(
-        inputs=inputs.get_test_inputs(),
-        aoi_geometry_asset=str(aoi_geometry_asset.pk),
-        object_count=object_count,
-        tested_at=timezone.now(),
-    )
-    project.last_passed_object_source_test = record.model_dump(mode="json", exclude_none=True)
-    project.aoi_geometry_input_asset = aoi_geometry_asset
-    project.modified_by = user
-    project.save(
-        update_fields=(
-            "last_passed_object_source_test",
-            "aoi_geometry_input_asset",
-            "modified_by",
-            "modified_at",
-        ),
-    )
-
-    return ObjectSourceTestResult(
-        object_count=object_count,
-        aoi_geometry_asset=aoi_geometry_asset,
     )
 
 
@@ -144,7 +98,7 @@ def run_tasking_manager_test(
     hot_tm_id: custom_fields.PydanticId,
     ohsome_filter: str,
 ) -> ObjectSourceTestResult:
-    inputs = _build_inputs(
+    _build_inputs(
         source_type=ValidateObjectSourceTypeEnum.TASKING_MANAGER,
         tasking_manager_project_id=hot_tm_id,
         ohsome_filter=ohsome_filter,
@@ -153,15 +107,14 @@ def run_tasking_manager_test(
     # NOTE: The test already made sure that this is a valid feature collection
     _, geometry_collection = convert_json_dict_to_geometry_collection(aoi_geojson)
 
-    with transaction.atomic():
-        aoi_asset = _create_aoi_geometry_asset(
-            project,
-            user,
-            aoi_geojson,
-            geometry_collection,
-            f"tasking_manager_{hot_tm_id}_aoi.geojson",
-        )
-        return _record_passed_test(project, user, inputs, aoi_asset, object_count)
+    aoi_asset = _create_aoi_geometry_asset(
+        project,
+        user,
+        aoi_geojson,
+        geometry_collection,
+        f"tasking_manager_{hot_tm_id}_aoi.geojson",
+    )
+    return ObjectSourceTestResult(object_count=object_count, aoi_geometry_asset=aoi_asset)
 
 
 def run_object_geojson_url_test(
@@ -173,11 +126,14 @@ def run_object_geojson_url_test(
         source_type=ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL,
         object_geojson_url=url,
     )
+    # NOTE: The validated URL is the URL as given, without surrounding whitespace
     assert inputs.object_geojson_url is not None
     url = inputs.object_geojson_url
     object_count, _, geometry_collection = ValidateProject.test_geojson_url_project(url)
 
     hull = geometry_collection.convex_hull
+    # NOTE: The hull is the project area, so it has the same limit as the AOI of the other source types
+    ValidateProject.validate_geojson_aoi_area(get_area_of_geometry(hull))
     aoi_geojson = {
         "type": "FeatureCollection",
         "metadata": {
@@ -194,12 +150,11 @@ def run_object_geojson_url_test(
         ],
     }
 
-    with transaction.atomic():
-        aoi_asset = _create_aoi_geometry_asset(
-            project,
-            user,
-            aoi_geojson,
-            hull,
-            "object_geojson_url_aoi.geojson",
-        )
-        return _record_passed_test(project, user, inputs, aoi_asset, object_count)
+    aoi_asset = _create_aoi_geometry_asset(
+        project,
+        user,
+        aoi_geojson,
+        hull,
+        "object_geojson_url_aoi.geojson",
+    )
+    return ObjectSourceTestResult(object_count=object_count, aoi_geometry_asset=aoi_asset)

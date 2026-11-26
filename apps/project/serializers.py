@@ -14,7 +14,6 @@ from apps.contributor.models import ContributorTeam
 from apps.project.firebase.push import FirebaseOrganizationPush
 from apps.tutorial.models import Tutorial
 from project_types.store import get_project_property, get_project_type_handler
-from project_types.validate.project import ValidateProject
 from utils.asset_types.models import AoiGeometryAssetProperty, ObjectImageAssetProperty
 from utils.common import clean_up_none_keys
 from utils.geo.transform import convert_json_dict_to_geometry_collection, get_area_of_geometry, get_polygon_of_extent
@@ -415,7 +414,8 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         if proj.project_type_specifics:
             project_handler = get_project_type_handler(proj.project_type_enum)(proj)
 
-            aoi_geom_asset = project_handler.get_aoi_geometry_asset()
+            # NOTE: Includes the AOI stored by an object source test, which is marked as deleted until a save uses it
+            aoi_geom_asset = project_handler.get_aoi_geometry_asset(include_marked_as_deleted=True)
 
             proj.aoi_geometry_input_asset = aoi_geom_asset
 
@@ -424,6 +424,11 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             centroid = None
 
             if aoi_geom_asset:
+                # NOTE: An AOI stored by an object source test stays marked as deleted until a save uses it
+                if aoi_geom_asset.marked_as_deleted:
+                    aoi_geom_asset.marked_as_deleted = False
+                    aoi_geom_asset.save(update_fields=["marked_as_deleted"])
+
                 asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_geom_asset.asset_type_specifics)
 
                 lng, lat = asset_specific_data.center
@@ -882,17 +887,6 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
                 {
                     "project_type_specifics": gettext("project_type_specifics is required when project status is %s")
                     % (new_status.label),
-                },
-            )
-
-        if (
-            new_status == Project.Status.READY_TO_PROCESS
-            and self.instance.project_type_enum == ProjectTypeEnum.VALIDATE
-            and (object_source_test_error := ValidateProject(self.instance).get_object_source_test_error())
-        ):
-            raise serializers.ValidationError(
-                {
-                    "project_type_specifics": object_source_test_error,
                 },
             )
 

@@ -22,6 +22,7 @@ from apps.project.serializers import (
     ProjectStatusUpdateSerializer,
     ProjectUpdateSerializer,
 )
+from apps.user.models import User
 from main.graphql.context import Info
 from project_types.base.project import ValidationException
 from project_types.validate import object_source_checks
@@ -43,16 +44,25 @@ from .types.types import OrganizationType, ProjectAssetsDeleteType, ProjectAsset
 logger = logging.getLogger(__name__)
 
 
+type ObjectSourceTestRunner = typing.Callable[[Project, User], object_source_checks.ObjectSourceTestResult]
+
+
 @sync_to_async
 def _run_object_source_test[TestResponse: ValidateTestObjectSourceResponse](
     info: Info,
     response: TestResponse,
-    run_test: typing.Callable[..., object_source_checks.ObjectSourceTestResult],
-    **kwargs: typing.Any,
+    run_test: ObjectSourceTestRunner,
 ) -> TestResponse:
     try:
-        project = object_source_checks.get_testable_project(response.project_id or "")
-        result = run_test(project, info.context.request.user, **kwargs)
+        project_id = int(response.project_id)  # type: ignore[reportArgumentType]
+    except (TypeError, ValueError):
+        return response.generate_error("Project does not exist")
+
+    try:
+        project = object_source_checks.get_testable_project(project_id)
+        # NOTE: The test mutations require an authenticated user
+        user = typing.cast("User", info.context.request.user)
+        result = run_test(project, user)
     except ValidationException as e:
         return response.generate_error(str(e))
     except Exception:
@@ -60,7 +70,7 @@ def _run_object_source_test[TestResponse: ValidateTestObjectSourceResponse](
         return response.generate_error()
 
     response.object_count = result.object_count
-    response.aoi_geometry_asset = result.aoi_geometry_asset  # type: ignore[reportAttributeAccessIssue]
+    response.aoi_geometry_asset = typing.cast("ProjectAssetType", result.aoi_geometry_asset)
     return response
 
 
@@ -128,8 +138,10 @@ class Mutation:
         project = await Project.objects.aget(pk=pk)
         return await ModelMutation(ProjectStatusUpdateSerializer).handle_update_mutation(data, info, project)
 
-    # NOTE: These object source tests are mutations because each test stores the AOI as a project asset.
-    # testAoiObjects stays a query, as the uploaded AOI file is already a project asset.
+    # NOTE: testTaskingManagerProject and testObjectGeojsonUrl are mutations because each test creates a temporary
+    # project asset for the AOI. They do not change the project.
+    # testAoiObjects is a query (not a mutation like other test usecases) because the uploaded AOI file
+    # is already a project asset and we don't need to create a temporary project asset.
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
     async def test_tasking_manager_project(
         self,
@@ -145,9 +157,12 @@ class Mutation:
                 hot_tm_id=hot_tm_id,
                 ohsome_filter=ohsome_filter,
             ),
-            object_source_checks.run_tasking_manager_test,
-            hot_tm_id=hot_tm_id,
-            ohsome_filter=ohsome_filter,
+            lambda project, user: object_source_checks.run_tasking_manager_test(
+                project,
+                user,
+                hot_tm_id=hot_tm_id,
+                ohsome_filter=ohsome_filter,
+            ),
         )
 
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
@@ -160,8 +175,11 @@ class Mutation:
         return await _run_object_source_test(
             info,
             TestValidateObjectGeojsonUrlResponse(project_id=project_id, object_geojson_url=object_geojson_url),
-            object_source_checks.run_object_geojson_url_test,
-            url=object_geojson_url,
+            lambda project, user: object_source_checks.run_object_geojson_url_test(
+                project,
+                user,
+                url=object_geojson_url,
+            ),
         )
 
     # FIXME: Add a check that only OBJECT_IMAGE can be deleted
