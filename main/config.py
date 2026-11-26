@@ -33,14 +33,9 @@ class Config:
     # NOTE: We get AOI for validate from HOT tasking manager
     HOT_TASKING_MANAGER_PROJECT_API_LINK = "https://tasking-manager-production-api.hotosm.org/api/v2/"
 
-    # NOTE: We get build footprints for validate from OHSOME
+    # NOTE: We get build footprints and their changeset tags for validate from OHSOME
     OHSOME_API_LINK = typing.cast("str", settings.OHSOME_API_LINK)
     OHSOME_API_KEY = typing.cast("str", settings.OHSOME_API_KEY)
-    # NOTE: We get changeset information from OSMCha
-    OSMCHA_API_LINK = "https://osmcha.org/api/v1/"
-    OSMCHA_API_KEY = typing.cast("str", settings.OSMCHA_API_KEY)
-    # NOTE: We get changeset information if missing from OSMCha
-    OSM_API_LINK = "https://www.openstreetmap.org/api/0.6/"
 
     # NOTE: We get mapillary data from mapillary
     MAPILLARY_API_LINK = "https://tiles.mapillary.com/maps/vtp/mly1_computed_public/2/"

@@ -11,15 +11,16 @@ from django.contrib.gis.geos import GEOSGeometry
 from main.config import Config
 from main.tests import TestCase
 from project_types.validate.api_calls import (
+    OHSOME_EXTRACTION_CONTRIBUTIONS_PATH,
     OHSOME_EXTRACTION_FEATURES_PATH,
     OHSOME_STATS_COUNT_PATH,
     ValidateApiCallError,
-    add_changeset_info,
+    add_changeset_tags,
+    get_changeset_pages,
     get_object_count_from_ohsome,
     get_objects_from_ohsome,
+    parquet_to_changeset_tags,
     parquet_to_feature_collection,
-    query_osm,
-    query_osmcha,
     remove_troublesome_chars,
 )
 
@@ -50,6 +51,17 @@ EXTRACTION_SCHEMA = pa.schema(
     ],
 )
 
+# NOTE: The contributions extraction carries the features extraction columns and the
+# contribution and changeset columns.
+# https://docs.ohsome.org/ohsome-api/v2/reference/data_model.html
+CONTRIBUTIONS_SCHEMA = pa.schema(
+    [
+        *EXTRACTION_SCHEMA,
+        ("contribution_type", pa.string()),
+        ("changeset_tags", pa.map_(pa.string(), pa.string())),
+    ],
+)
+
 
 class TestValidateProject(TestCase):
     @typing.override
@@ -69,113 +81,6 @@ class TestValidateProject(TestCase):
         for input_str, expected in data:
             result = remove_troublesome_chars(input_str)
             assert result == expected
-
-    @patch("project_types.validate.api_calls.retry_get")
-    def test_query_osmcha(self, mock_retry_get):  # type: ignore[reportMissingParameterType]
-        changeset_ids = [12345, 67890]
-        changeset_results = {}
-
-        # Fake API JSON response
-        mock_response_data = {
-            "features": [
-                {
-                    "id": "12345",
-                    "properties": {
-                        "user": "Sita Devi",
-                        "uid": 1001,
-                        "comment": "Looks good!",
-                        "editor": "Ram",
-                    },
-                },
-                {
-                    "id": "67890",
-                    "properties": {
-                        "user": "Hari",
-                        "uid": 1002,
-                        "comment": "It's not a bridge",
-                        "editor": "Shyam 'Bahadur'",
-                    },
-                },
-            ],
-        }
-
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = mock_response_data
-        mock_retry_get.return_value = mock_response
-
-        query_osmcha(changeset_ids, changeset_results)
-
-        assert changeset_results == {
-            12345: {
-                "username": "Sita Devi",
-                "userid": 1001,
-                "comment": "Looks good!",
-                "editor": "Ram",
-            },
-            67890: {
-                "username": "Hari",
-                "userid": 1002,
-                "comment": "Its not a bridge",
-                "editor": "Shyam Bahadur",
-            },
-        }
-
-        # Check request is made for osmcha
-        mock_retry_get.assert_called_once()
-        called_url = mock_retry_get.call_args[0][0]
-        assert called_url.startswith(Config.OSMCHA_API_LINK)
-        assert "changesets/?ids=12345,67890" in called_url
-
-        # check for other status code to raise error
-        mock_response.status_code = 403
-        with pytest.raises(ValidateApiCallError):
-            query_osmcha(changeset_ids, changeset_results)
-
-    @patch("project_types.validate.api_calls.retry_get")
-    def test_query_osm(self, mock_retry_get):  # type: ignore[reportMissingParameterType]
-        changeset_ids = [12345, 67890]
-        changeset_results = {}
-
-        xml_response = """
-        <osm>
-            <changeset id="12345" user='Sita "Devi"' uid="1001">
-                <tag k="comment" v="Looks good!"/>
-                <tag k="created_by" v="Ram"/>
-            </changeset>
-            <changeset id="67890" user="Hari" uid="1002">
-                <tag k="comment" v="It's not a bridge"/>
-                <tag k="created_by" v="Shyam Bahadur"/>
-            </changeset>
-        </osm>
-        """
-
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.content = xml_response.encode("utf-8")
-        mock_retry_get.return_value = mock_response
-
-        result = query_osm(changeset_ids, changeset_results)
-
-        assert result == {
-            12345: {
-                "username": "Sita Devi",
-                "userid": "1001",
-                "comment": "Looks good!",
-                "editor": "Ram",
-            },
-            67890: {
-                "username": "Hari",
-                "userid": "1002",
-                "comment": "Its not a bridge",
-                "editor": "Shyam Bahadur",
-            },
-        }
-
-        # check for other status code to raise error
-        mock_response.status_code = 500
-        with pytest.raises(ValidateApiCallError):
-            query_osm([12345], {})
 
     @patch("requests.post")
     def test_get_object_count_from_ohsome(self, mock_post):  # type: ignore[reportMissingParameterType]
@@ -332,8 +237,8 @@ class TestValidateProject(TestCase):
         assert properties["osmId"] == "relation/42"
 
     @patch("requests.post")
-    @patch("project_types.validate.api_calls.add_changeset_info")
-    def test_get_objects_from_ohsome(self, mock_add_changeset_info, mock_post):  # type: ignore[reportMissingParameterType]
+    @patch("project_types.validate.api_calls.add_changeset_tags")
+    def test_get_objects_from_ohsome(self, mock_add_changeset_tags, mock_post):  # type: ignore[reportMissingParameterType]
         sample_filter = "building=* and geometry:polygon"
         sample_aoi = {"type": "Polygon", "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]}
 
@@ -341,7 +246,7 @@ class TestValidateProject(TestCase):
         mock_response.status_code = 200
         mock_response.content = self.build_ohsome_parquet()
         mock_post.return_value = mock_response
-        mock_add_changeset_info.side_effect = lambda feature_collection: feature_collection
+        mock_add_changeset_tags.side_effect = lambda _aoi, _filter, feature_collection: feature_collection
 
         result = get_objects_from_ohsome(sample_aoi, sample_filter)
 
@@ -357,7 +262,9 @@ class TestValidateProject(TestCase):
         }
         assert called_kwargs["headers"]["Authorization"] == Config.OHSOME_API_KEY
 
-        mock_add_changeset_info.assert_called_once()
+        # NOTE: The contributions are requested with the same aoi and filter
+        mock_add_changeset_tags.assert_called_once()
+        assert mock_add_changeset_tags.call_args[0][:2] == (sample_aoi, sample_filter)
         assert len(result["features"]) == 1
 
         for status_code in [400, 401, 403, 404, 422, 500]:
@@ -366,77 +273,209 @@ class TestValidateProject(TestCase):
                 get_objects_from_ohsome(sample_aoi, sample_filter)
 
     @staticmethod
-    def build_feature_collection(*changeset_ids: int) -> dict[str, typing.Any]:
+    def build_contributions_parquet(rows: list[dict[str, typing.Any]]) -> bytes:
+        """Build a parquet payload matching the ohsome v2 contributions extraction schema."""
+        table = pa.Table.from_pylist(rows, schema=CONTRIBUTIONS_SCHEMA)
+        buffer = io.BytesIO()
+        pq.write_table(table, buffer)
+        return buffer.getvalue()
+
+    @staticmethod
+    def build_contribution(
+        osm_id: int,
+        changeset_id: int,
+        changeset_tags: dict[str, str] | None,
+        **kwargs: typing.Any,
+    ) -> dict[str, typing.Any]:
         return {
+            "osm_type": "way",
+            "osm_id": osm_id,
+            "changeset_id": changeset_id,
+            # NOTE: from_pylist takes a map value as a list of (key, value) pairs
+            "changeset_tags": None if changeset_tags is None else list(changeset_tags.items()),
+            "contribution_type": "CREATION",
+            **kwargs,
+        }
+
+    @staticmethod
+    def build_feature(osm_id: int, changeset_id: int, last_edit: str | None) -> dict[str, typing.Any]:
+        return {
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [0, 0]},
+            "properties": {
+                "changesetId": changeset_id,
+                "lastEdit": last_edit,
+                "osmId": f"way/{osm_id}",
+                "version": 1,
+                "username": "Sita",
+                "comment": None,
+                "editor": None,
+                "userid": 1001,
+            },
+        }
+
+    def test_parquet_to_changeset_tags(self):
+        content = self.build_contributions_parquet(
+            [
+                self.build_contribution(1, 100, {"comment": "Add buildings", "created_by": "iD 2.20"}),
+                self.build_contribution(2, 200, {"source": "Bing"}),
+                self.build_contribution(3, 300, None),
+            ],
+        )
+
+        assert parquet_to_changeset_tags(content) == {
+            ("way/1", 100): {"comment": "Add buildings", "created_by": "iD 2.20"},
+            ("way/2", 200): {"source": "Bing"},
+            ("way/3", 300): {},
+        }
+
+    def test_parquet_to_changeset_tags_missing_column(self):
+        """A schema change upstream must fail loudly, not leave every comment and editor empty."""
+        content = self.build_contributions_parquet([self.build_contribution(1, 100, {"comment": "Add buildings"})])
+        table = pq.read_table(pa.BufferReader(content))
+        buffer = io.BytesIO()
+        pq.write_table(table.drop_columns(["changeset_tags"]), buffer)
+
+        with pytest.raises(ValidateApiCallError):
+            parquet_to_changeset_tags(buffer.getvalue())
+
+    def test_get_changeset_pages(self):
+        feature_collection = {
             "type": "FeatureCollection",
             "features": [
-                {
-                    "type": "Feature",
-                    "geometry": {"type": "Point", "coordinates": [0, 0]},
-                    "properties": {
-                        "osmId": f"way/{changeset_id}",
-                        "version": 1,
-                        "changesetId": changeset_id,
-                        "lastEdit": "2020-01-01T00:00:00Z",
-                        "username": "Sita",
-                        "userid": 1001,
-                    },
-                }
-                for changeset_id in changeset_ids
+                self.build_feature(1, 300, "2021-01-01T00:00:00Z"),
+                self.build_feature(2, 100, "2019-05-05T10:00:00Z"),
+                # NOTE: The oldest edit of a changeset orders it
+                self.build_feature(3, 300, "2018-01-01T00:00:00Z"),
+                self.build_feature(4, 200, "2020-01-01T00:00:00Z"),
+                self.build_feature(5, 400, "2022-01-01T00:00:00Z"),
             ],
         }
 
-    @patch("project_types.validate.api_calls.query_osm")
-    @patch("project_types.validate.api_calls.query_osmcha")
-    def test_add_changeset_info(self, mock_query_osmcha, mock_query_osm):  # type: ignore[reportMissingParameterType]
-        feature_collection = self.build_feature_collection(12345, 12346)
+        assert get_changeset_pages(feature_collection) == [("2018-01-01T00:00:00Z", [300, 100, 200, 400])]
 
-        # osmCHA resolves the first changeset only
-        mock_query_osmcha.return_value = {
-            12345: {"username": "Sita", "userid": 1001, "comment": "Looks good!", "editor": "iD"},
-            12346: None,
+        with patch("project_types.validate.api_calls.OHSOME_CHANGESET_PAGE_SIZE", 2):
+            assert get_changeset_pages(feature_collection) == [
+                ("2018-01-01T00:00:00Z", [300, 100]),
+                ("2020-01-01T00:00:00Z", [200, 400]),
+            ]
+
+        assert get_changeset_pages({"type": "FeatureCollection", "features": []}) == []
+
+    def test_get_changeset_pages_without_last_edit(self):
+        feature_collection = {
+            "type": "FeatureCollection",
+            "features": [
+                self.build_feature(1, 100, "2019-05-05T10:00:00Z"),
+                self.build_feature(2, 200, None),
+            ],
         }
-        # the OSM API fallback resolves the second
-        mock_query_osm.return_value = {
-            12345: {"username": "Sita", "userid": 1001, "comment": "Looks good!", "editor": "iD"},
-            12346: {"username": "Kiran", "userid": 1002, "comment": "Fixed roof", "editor": "JOSM"},
+
+        assert get_changeset_pages(feature_collection) == [("earliest", [200, 100])]
+
+    @patch("requests.post")
+    def test_add_changeset_tags(self, mock_post):  # type: ignore[reportMissingParameterType]
+        sample_filter = "building=* and geometry:polygon"
+        sample_aoi = {"type": "Polygon", "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]}
+        feature_collection = {
+            "type": "FeatureCollection",
+            "features": [
+                self.build_feature(1, 100, "2019-05-05T10:00:00Z"),
+                self.build_feature(2, 200, "2020-01-01T00:00:00Z"),
+                self.build_feature(3, 300, "2018-01-01T00:00:00Z"),
+                self.build_feature(4, 400, "2021-01-01T00:00:00Z"),
+            ],
         }
 
-        result = add_changeset_info(feature_collection)
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.content = self.build_contributions_parquet(
+            [
+                self.build_contribution(1, 100, {"comment": 'It\'s a "school"', "created_by": "JOSM/1.5"}),
+                # NOTE: An older contribution of the same object, in another changeset
+                self.build_contribution(1, 50, {"comment": "Old", "created_by": "Potlatch"}),
+                self.build_contribution(2, 200, {"source": "Bing"}),
+                # NOTE: Another object of changeset 300; the feature's own contribution is missing
+                self.build_contribution(99, 300, {"comment": "Other object", "created_by": "iD"}),
+            ],
+        )
+        mock_post.return_value = mock_response
 
-        mock_query_osmcha.assert_called()
-        assert set(mock_query_osmcha.call_args[0][0]) == {12345, 12346}
-        # only the changeset osmCHA could not resolve is retried against the OSM API
-        mock_query_osm.assert_called_once()
-        assert set(mock_query_osm.call_args[0][0]) == {12346}
+        result = add_changeset_tags(sample_aoi, sample_filter, feature_collection)
 
-        first, second = result["features"]
-        assert (first["properties"]["comment"], first["properties"]["editor"]) == ("Looks good!", "iD")
-        assert (second["properties"]["comment"], second["properties"]["editor"]) == ("Fixed roof", "JOSM")
+        mock_post.assert_called_once()
+        assert mock_post.call_args[0][0] == Config.OHSOME_API_LINK + OHSOME_EXTRACTION_CONTRIBUTIONS_PATH
+        called_kwargs = mock_post.call_args[1]
+        assert called_kwargs["json"] == {
+            "aoi": sample_aoi,
+            "filter": "(building=* and geometry:polygon) and changeset:(300,100,200,400)",
+            "time": {"start": "2018-01-01T00:00:00Z", "end": "latest"},
+        }
+        assert called_kwargs["headers"]["Authorization"] == Config.OHSOME_API_KEY
 
-        # username/userid come from the ohsome extraction and must not be overwritten
-        assert first["properties"]["username"] == "Sita"
-        assert first["properties"]["userid"] == 1001
+        assert [(feature["properties"]["comment"], feature["properties"]["editor"]) for feature in result["features"]] == [
+            ("Its a school", "JOSM/1.5"),
+            # NOTE: The changeset has no comment or created_by tag
+            (None, None),
+            # NOTE: Joined on osmId and changesetId, not changesetId alone
+            (None, None),
+            # NOTE: No contribution returned
+            (None, None),
+        ]
 
-    @patch("project_types.validate.api_calls.query_osm")
-    @patch("project_types.validate.api_calls.query_osmcha")
-    def test_add_changeset_info_unresolved(self, mock_query_osmcha, mock_query_osm):  # type: ignore[reportMissingParameterType]
-        """A changeset neither source knows about must not raise."""
-        feature_collection = self.build_feature_collection(999)
-        mock_query_osmcha.return_value = {999: None}
-        mock_query_osm.return_value = {999: None}
+        # NOTE: The other columns come from the features extraction and are kept
+        assert result["features"][0]["properties"]["username"] == "Sita"
+        assert result["features"][0]["properties"]["userid"] == 1001
 
-        result = add_changeset_info(feature_collection)
+    @patch("requests.post")
+    def test_add_changeset_tags_in_pages(self, mock_post):  # type: ignore[reportMissingParameterType]
+        feature_collection = {
+            "type": "FeatureCollection",
+            "features": [
+                self.build_feature(1, 100, "2019-01-01T00:00:00Z"),
+                self.build_feature(2, 200, "2020-01-01T00:00:00Z"),
+                self.build_feature(3, 300, "2021-01-01T00:00:00Z"),
+            ],
+        }
 
-        properties = result["features"][0]["properties"]
-        assert properties["comment"] is None
-        assert properties["editor"] is None
+        def respond(*_args: typing.Any, **kwargs: typing.Any) -> MagicMock:
+            changeset_ids = kwargs["json"]["filter"].split("changeset:(")[1].rstrip(")").split(",")
+            response = MagicMock()
+            response.status_code = 200
+            response.content = self.build_contributions_parquet(
+                [
+                    self.build_contribution(int(changeset_id) // 100, int(changeset_id), {"comment": changeset_id})
+                    for changeset_id in changeset_ids
+                ],
+            )
+            return response
 
-    @patch("project_types.validate.api_calls.query_osm")
-    @patch("project_types.validate.api_calls.query_osmcha")
-    def test_add_changeset_info_no_features(self, mock_query_osmcha, mock_query_osm):  # type: ignore[reportMissingParameterType]
-        result = add_changeset_info(self.build_feature_collection())
+        mock_post.side_effect = respond
+
+        with patch("project_types.validate.api_calls.OHSOME_CHANGESET_PAGE_SIZE", 2):
+            result = add_changeset_tags({"type": "Polygon", "coordinates": []}, "building=*", feature_collection)
+
+        assert [call[1]["json"]["time"]["start"] for call in mock_post.call_args_list] == [
+            "2019-01-01T00:00:00Z",
+            "2021-01-01T00:00:00Z",
+        ]
+        assert [feature["properties"]["comment"] for feature in result["features"]] == ["100", "200", "300"]
+
+    @patch("requests.post")
+    def test_add_changeset_tags_no_features(self, mock_post):  # type: ignore[reportMissingParameterType]
+        result = add_changeset_tags({"type": "Polygon", "coordinates": []}, "building=*", {"features": []})
 
         assert result["features"] == []
-        mock_query_osmcha.assert_not_called()
-        mock_query_osm.assert_not_called()
+        mock_post.assert_not_called()
+
+    @patch("requests.post")
+    def test_add_changeset_tags_errors(self, mock_post):  # type: ignore[reportMissingParameterType]
+        feature_collection = {"features": [self.build_feature(1, 100, "2019-01-01T00:00:00Z")]}
+        mock_response = MagicMock()
+        mock_response.json.return_value = {}
+        mock_post.return_value = mock_response
+
+        for status_code in [400, 401, 403, 404, 413, 422, 429, 500, 504]:
+            mock_response.status_code = status_code
+            with pytest.raises(ValidateApiCallError):
+                add_changeset_tags({"type": "Polygon", "coordinates": []}, "building=*", feature_collection)

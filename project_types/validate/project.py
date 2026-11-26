@@ -407,15 +407,12 @@ class ValidateProject(
                 ohsome_filter,
             )
         except ValidateApiCallError as e:
-            # NOTE: Handles calls from OHSOME, OSMCHA and OSM
             raise base_project.ValidationException(
-                str(e) or "Failed to fetch data from OHSOME/OSMCHA/OSM",
+                str(e) or "Failed to fetch data from OHSOME",
             ) from e
         except requests.JSONDecodeError as e:
-            # NOTE: Handles calls from OHSOME and OSMCHA
-            # OSM responds in XML format
             raise base_project.ValidationException(
-                "OHSOME/OSMCHA did not respond with a valid JSON",
+                "OHSOME did not respond with a valid JSON",
             ) from e
 
         try:

@@ -2,14 +2,11 @@ import datetime
 import json
 import logging
 from typing import Any
-from xml.etree import ElementTree as ET
 
 import pyarrow as pa  # type: ignore[reportMissingTypeStubs]
 import pyarrow.parquet as pq  # type: ignore[reportMissingTypeStubs]
 import requests
 from django.contrib.gis.geos import GEOSGeometry
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
 from main.config import Config
 from main.logging import log_extra_response
@@ -17,6 +14,7 @@ from utils.fields import PydanticLongText
 
 OHSOME_STATS_COUNT_PATH = "stats/features/count.json"
 OHSOME_EXTRACTION_FEATURES_PATH = "extraction/features.parquet"
+OHSOME_EXTRACTION_CONTRIBUTIONS_PATH = "extraction/contributions.parquet"
 
 # NOTE: The API requires an explicit time. "latest" is the current snapshot.
 OHSOME_SNAPSHOT_TIME = "latest"
@@ -32,6 +30,17 @@ OHSOME_REQUIRED_COLUMNS = (
     "geom",
     "geom_type",
 )
+
+OHSOME_CONTRIBUTIONS_REQUIRED_COLUMNS = (
+    "osm_type",
+    "osm_id",
+    "changeset_id",
+    "changeset_tags",
+)
+
+# NOTE: Changesets per contributions request. The filter grows with the page, so keep it
+# well below the 413 limit.
+OHSOME_CHANGESET_PAGE_SIZE = 10_000
 
 logger = logging.getLogger(__name__)
 
@@ -50,17 +59,6 @@ def remove_troublesome_chars(string: str | None):
     return string
 
 
-def retry_get(url: str, retries: int | None = 3, timeout: int | None = 10, to_osmcha: bool = False):
-    """Retry a query for a variable amount of tries."""
-    retry = Retry(total=retries)
-    with requests.Session() as session:
-        session.mount("https://", HTTPAdapter(max_retries=retry))
-        if to_osmcha:
-            headers = {"Authorization": f"Token {Config.OSMCHA_API_KEY}"}
-            return session.get(url, timeout=timeout, headers=headers)
-        return session.get(url, timeout=timeout, headers=Config.DEFAULT_HEADERS)
-
-
 # FIXME(rup): Not used anywhere
 def geojsonToFeatureCollection(geojson: dict) -> dict:  # type: ignore[reportMissingTypeArgument]
     """Take a GeoJson and wrap it in a FeatureCollection."""
@@ -75,118 +73,6 @@ def geojsonToFeatureCollection(geojson: dict) -> dict:  # type: ignore[reportMis
 def chunks[T](arr: list[T], n_objects: int) -> list[list[T]]:
     """Return a list of list with n_objects in each sublist."""
     return [arr[i * n_objects : (i + 1) * n_objects] for i in range((len(arr) + n_objects - 1) // n_objects)]
-
-
-def query_osmcha(changeset_ids: list, changeset_results: dict[int, Any]):  # type: ignore[reportMissingTypeArgument]
-    """Get data from changesetId."""
-    id_string = ",".join(map(str, changeset_ids))
-
-    url = Config.OSMCHA_API_LINK + f"changesets/?ids={id_string}"
-    response = retry_get(url, to_osmcha=True)
-    if response.status_code != 200:
-        logger.warning(
-            "osmcha request failed",
-            extra=log_extra_response(response=response),
-        )
-        raise ValidateApiCallError
-    response = response.json()
-    for feature in response["features"]:
-        changeset_results[int(feature["id"])] = {
-            "username": remove_troublesome_chars(feature["properties"]["user"]),
-            "userid": feature["properties"]["uid"],
-            "comment": remove_troublesome_chars(feature["properties"]["comment"]),
-            "editor": remove_troublesome_chars(feature["properties"]["editor"]),
-        }
-
-    return changeset_results
-
-
-def query_osm(changeset_ids: list, changeset_results: dict):  # type: ignore[reportMissingTypeArgument]
-    """Get data from changesetId."""
-    id_string = ",".join(map(str, changeset_ids))
-
-    url = Config.OSM_API_LINK + f"changesets?changesets={id_string}"
-    response = retry_get(url)
-    if response.status_code != 200:
-        logger.warning(
-            "osm request failed",
-            extra=log_extra_response(response=response),
-        )
-        raise ValidateApiCallError
-    tree = ET.fromstring(response.content)  # noqa: S314
-
-    for changeset in tree.iter("changeset"):
-        changeset_id = changeset.attrib["id"]
-        username = remove_troublesome_chars(changeset.attrib["user"])
-        userid = changeset.attrib["uid"]
-        comment = created_by = None
-        for tag in changeset.iter("tag"):
-            if tag.attrib["k"] == "comment":
-                comment = tag.attrib["v"]
-            if tag.attrib["k"] == "created_by":
-                created_by = tag.attrib["v"]
-
-        changeset_results[int(changeset_id)] = {
-            "username": remove_troublesome_chars(username),
-            "userid": userid,
-            "comment": remove_troublesome_chars(comment),
-            "editor": remove_troublesome_chars(created_by),
-        }
-    return changeset_results
-
-
-def add_changeset_info(feature_collection: dict[str, Any]) -> dict[str, Any]:
-    """Add the changeset comment and editor to each feature.
-
-    osmCHA does not know every changeset, so the OSM API covers the rest.
-    Only the comment and editor are fetched; the extraction already carries the user.
-    """
-    logger.info("starting changeset enrichment")
-    batch_size = 100
-
-    changeset_results: dict[int, Any] = {
-        int(feature["properties"]["changesetId"]): None for feature in feature_collection["features"]
-    }
-
-    chunk_list = chunks(list(changeset_results.keys()), batch_size)
-    logger.info(
-        "%s changesets will be queried in %s batches from osmCHA",
-        len(changeset_results),
-        len(chunk_list),
-    )
-    for i, subset in enumerate(chunk_list):
-        changeset_results = query_osmcha(subset, changeset_results)
-        logger.info("finished query %s/%s", i + 1, len(chunk_list))
-
-    missing_ids = [i for i, v in changeset_results.items() if v is None]
-    if missing_ids:
-        chunk_list = chunks(missing_ids, batch_size)
-        logger.info(
-            "%s changesets where missing from osmCHA and are now queried via osmAPI in %s batches",
-            len(missing_ids),
-            len(chunk_list),
-        )
-        for i, subset in enumerate(chunk_list):
-            changeset_results = query_osm(subset, changeset_results)
-            logger.info("finished query %s/%s", i + 1, len(chunk_list))
-
-    unresolved = 0
-    for feature in feature_collection["features"]:
-        changeset = changeset_results.get(int(feature["properties"]["changesetId"]))
-        if changeset is None:
-            # NOTE: Neither osmCHA nor the OSM API knew this changeset
-            unresolved += 1
-            feature["properties"]["comment"] = None
-            feature["properties"]["editor"] = None
-            continue
-        feature["properties"]["comment"] = changeset["comment"]
-        feature["properties"]["editor"] = changeset["editor"]
-
-    logger.info("finished changeset enrichment")
-    if unresolved:
-        logger.warning("%s features have no changeset info from osmCHA or osmAPI", unresolved)
-
-    return feature_collection
 
 
 def _format_ohsome_timestamp(value: datetime.datetime | None) -> str | None:
@@ -206,7 +92,8 @@ def _ohsome_post(path: str, payload: dict[str, Any]) -> requests.Response:
     }
 
     logger.info("Target: %s", url)
-    logger.info("Filter: %s", payload.get("filter"))
+    # NOTE: A contributions filter lists up to OHSOME_CHANGESET_PAGE_SIZE changesets
+    logger.info("Filter: %.500s", payload.get("filter"))
 
     # FIXME(tnagorra): Need to check what the timeout should be
     try:
@@ -269,7 +156,7 @@ def parquet_to_feature_collection(content: bytes) -> dict[str, Any]:
             "geometry": json.loads(GEOSGeometry(memoryview(row["geom"]), srid=4326).geojson),
             # NOTE: These names become task CSV export columns. The order here is lost:
             # the properties are stored as jsonb, which sorts keys by length then bytes.
-            # comment and editor stay None here; add_changeset_info fills them in.
+            # comment and editor stay None here; add_changeset_tags fills them in.
             "properties": {
                 "changesetId": row["changeset_id"],
                 "lastEdit": _format_ohsome_timestamp(row["edit_timestamp"]),
@@ -288,6 +175,103 @@ def parquet_to_feature_collection(content: bytes) -> dict[str, Any]:
     return {"type": "FeatureCollection", "features": features}
 
 
+type ChangesetTagsKey = tuple[str, int]
+
+
+def parquet_to_changeset_tags(content: bytes) -> dict[ChangesetTagsKey, dict[str, str | None]]:
+    """Read the changeset tags of an ohsome contributions extraction.
+
+    Keyed by osmId ("way/123") and changesetId, the properties a feature of the features
+    extraction carries. Every contribution of a changeset has the same changeset tags, so
+    which of an object's contributions in a changeset is kept does not matter.
+    """
+    table = pq.read_table(pa.BufferReader(content))
+
+    missing_columns = [column for column in OHSOME_CONTRIBUTIONS_REQUIRED_COLUMNS if column not in table.column_names]
+    if missing_columns:
+        logger.warning("ohsome contributions parquet is missing expected columns: %s", missing_columns)
+        raise ValidateApiCallError(f"OHSOME response is missing expected columns: {missing_columns}")
+
+    return {
+        (f"{row['osm_type']}/{row['osm_id']}", row["changeset_id"]): (
+            # NOTE: pyarrow reads a map column as a list of (key, value) pairs
+            dict(row["changeset_tags"] or [])
+        )
+        for row in table.select(OHSOME_CONTRIBUTIONS_REQUIRED_COLUMNS).to_pylist()
+    }
+
+
+def get_changeset_pages(feature_collection: dict[str, Any]) -> list[tuple[str, list[int]]]:
+    """Split the changesets of the features into pages for the contributions extraction.
+
+    Each page is a start time and up to OHSOME_CHANGESET_PAGE_SIZE changeset ids. The
+    changesets are ordered by their oldest edit, so each page starts at the oldest
+    edit_timestamp in it and requests no older history than it needs.
+    """
+    # NOTE: An empty string sorts before every timestamp and is requested as "earliest"
+    oldest_edit: dict[int, str] = {}
+    for feature in feature_collection["features"]:
+        changeset_id = int(feature["properties"]["changesetId"])
+        # NOTE: lastEdit is "%Y-%m-%dT%H:%M:%SZ", so it sorts as text, and is truncated to the
+        # second, so it is never later than the edit it comes from
+        last_edit = feature["properties"]["lastEdit"] or ""
+        oldest_edit[changeset_id] = min(oldest_edit.get(changeset_id, last_edit), last_edit)
+
+    changeset_ids = sorted(oldest_edit, key=lambda changeset_id: (oldest_edit[changeset_id], changeset_id))
+    return [
+        (oldest_edit[paged_changeset_ids[0]] or "earliest", paged_changeset_ids)
+        for paged_changeset_ids in chunks(changeset_ids, OHSOME_CHANGESET_PAGE_SIZE)
+    ]
+
+
+def add_changeset_tags(
+    aoi: dict[str, Any],
+    ohsome_filter: PydanticLongText,
+    feature_collection: dict[str, Any],
+) -> dict[str, Any]:
+    """Fill the comment and editor of each feature from the tags of its changeset.
+
+    The features extraction has no changeset tags. The contributions extraction has them, so
+    the contributions with the same aoi and filter, limited to the changesets of the features,
+    are joined to the features on osmId and changesetId.
+    """
+    pages = get_changeset_pages(feature_collection)
+    logger.info(
+        "%s changesets will be queried from ohsome in %s pages",
+        sum(len(changeset_ids) for _, changeset_ids in pages),
+        len(pages),
+    )
+
+    changeset_tags: dict[ChangesetTagsKey, dict[str, str | None]] = {}
+    for i, (start_datetime, changeset_ids) in enumerate(pages):
+        response = _ohsome_post(
+            OHSOME_EXTRACTION_CONTRIBUTIONS_PATH,
+            {
+                "aoi": aoi,
+                "filter": f"({ohsome_filter}) and changeset:({','.join(map(str, changeset_ids))})",
+                "time": {"start": start_datetime, "end": "latest"},
+            },
+        )
+        changeset_tags.update(parquet_to_changeset_tags(response.content))
+        logger.info("finished page %s/%s", i + 1, len(pages))
+
+    unresolved = 0
+    for feature in feature_collection["features"]:
+        properties = feature["properties"]
+        tags = changeset_tags.get((properties["osmId"], int(properties["changesetId"])))
+        if tags is None:
+            # NOTE: comment and editor stay None
+            unresolved += 1
+            continue
+        properties["comment"] = remove_troublesome_chars(tags.get("comment"))
+        properties["editor"] = remove_troublesome_chars(tags.get("created_by"))
+
+    if unresolved:
+        logger.warning("%s features have no contribution in the ohsome contributions extraction", unresolved)
+
+    return feature_collection
+
+
 def get_objects_from_ohsome(aoi: dict[str, Any], ohsome_filter: PydanticLongText) -> dict[str, Any]:
     """Extract objects matching the filter within the area of interest, with changeset info.
 
@@ -303,4 +287,4 @@ def get_objects_from_ohsome(aoi: dict[str, Any], ohsome_filter: PydanticLongText
         },
     )
 
-    return add_changeset_info(parquet_to_feature_collection(response.content))
+    return add_changeset_tags(aoi, ohsome_filter, parquet_to_feature_collection(response.content))
