@@ -1,3 +1,4 @@
+import json
 import typing
 from io import BytesIO
 from pathlib import Path
@@ -13,6 +14,7 @@ from apps.project.factories import OrganizationFactory, ProjectFactory
 from apps.project.models import (
     Organization,
     Project,
+    ProjectAsset,
     ProjectAssetInputTypeEnum,
     ProjectStatusEnum,
     ProjectTask,
@@ -671,6 +673,56 @@ class TestProjectMutation(TestCase):
         ], content
 
         # Creating a project and discarding it so that we can create same project again
+
+    def test_project_aoi_asset_invalid_geometry(self):
+        project = ProjectFactory.create(
+            **self.user_resource_kwargs,
+            requesting_organization=self.organization,
+        )
+        self.force_login(self.user)
+
+        def _upload_aoi(geometry: dict) -> dict:  # type: ignore[reportMissingTypeArgument]
+            geojson = {
+                "type": "FeatureCollection",
+                "features": [{"type": "Feature", "properties": {}, "geometry": geometry}],
+            }
+            geo_file = BytesIO(json.dumps(geojson).encode())
+            geo_file.name = "aoi.geojson"
+            content = self.query_check(
+                Mutation.CREATE_PROJECT_ASSET,
+                variables={
+                    "data": {
+                        "clientId": str(ULID()),
+                        "project": str(project.pk),
+                        "inputType": self.genum(ProjectAssetInputTypeEnum.AOI_GEOMETRY),
+                    },
+                },
+                files={"geoFile": geo_file},
+                map={"geoFile": ["variables.data.file"]},
+            )
+            return content["data"]["createProjectAsset"]
+
+        invalid_geometries = [
+            # MultiPolygon with overlapping parts
+            {
+                "type": "MultiPolygon",
+                "coordinates": [
+                    [[[85.300, 27.700], [85.310, 27.700], [85.310, 27.710], [85.300, 27.710], [85.300, 27.700]]],
+                    [[[85.305, 27.705], [85.315, 27.705], [85.315, 27.715], [85.305, 27.715], [85.305, 27.705]]],
+                ],
+            },
+            # Polygon whose ring crosses itself (bow-tie)
+            {
+                "type": "Polygon",
+                "coordinates": [[[85.300, 27.700], [85.310, 27.710], [85.310, 27.700], [85.300, 27.710], [85.300, 27.700]]],
+            },
+        ]
+        for geometry in invalid_geometries:
+            resp_data = _upload_aoi(geometry)
+            assert resp_data["ok"] is False, resp_data
+            assert "AOI geometry is invalid: Self-intersection" in str(resp_data["errors"]), resp_data
+
+        assert not ProjectAsset.objects.filter(project=project).exists()
 
     def test_project_create_uniqueness(self):
         proj = ProjectFactory.create(

@@ -1,4 +1,5 @@
 import json
+import typing
 from typing import Any
 from warnings import deprecated
 
@@ -102,6 +103,30 @@ def convert_json_dict_to_geometry_collection(geojson_dict: dict):  # type: ignor
     geometry_collection.srid = 4326
 
     return filtered_features, geometry_collection
+
+
+class InvalidAoiGeometryError(ValueError):
+    """Raised when an AOI geometry is not valid (e.g. self-intersection, overlapping parts)."""
+
+
+def validate_aoi_geometries(geometries: typing.Iterable[GEOSGeometry]) -> None:
+    """Check that each AOI geometry is valid as per OGC Simple Features.
+
+    NOTE: Each geometry is checked individually, as geometries of different
+    features are allowed to overlap each other. Parts of a single MultiPolygon
+    are not allowed to overlap.
+    """
+    for geometry in geometries:
+        if not geometry.valid:
+            raise InvalidAoiGeometryError(geometry.valid_reason)
+
+
+def get_invalid_aoi_geometry_message(error: InvalidAoiGeometryError) -> str:
+    return (
+        f"AOI geometry is invalid: {error}. "
+        "Please make sure the polygons do not cross themselves and the parts of a multipolygon do not overlap, "
+        "then upload it again."
+    )
 
 
 def convert_json_dict_to_aoi_geometry(geojson_dict: dict) -> dict:  # type: ignore[reportMissingTypeArgument]
