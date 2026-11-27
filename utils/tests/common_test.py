@@ -20,6 +20,7 @@ from utils.common import (
 from utils.fields import (
     _validate_raster_tile_url,  # type: ignore[reportPrivateUsage]
     _validate_url,  # type: ignore[reportPrivateUsage]
+    _validate_url_unchanged,  # type: ignore[reportPrivateUsage]
     _validate_vector_tile_url,  # type: ignore[reportPrivateUsage]
     validate_percentage,
 )
@@ -214,6 +215,15 @@ class TestUtils(TestCase):
         encoded_url = "https://test.com/tiles/{x}/{y}/{z}.png"
         expected_url = "https://test.com/tiles/{x}/{y}/{z}.png"
         assert _validate_url(encoded_url) == expected_url
+
+    def test_validate_url_unchanged(self):
+        presigned_url = "https://bucket.s3.amazonaws.com/a.geojson?X-Amz-Signature=ab%2Bcd%3D%3D"
+        assert _validate_url_unchanged(presigned_url) == presigned_url
+        assert _validate_url_unchanged(f"  {presigned_url}\n") == presigned_url
+
+        for invalid_url in ("example.com/a.geojson", "ftp://example.com/a.geojson"):
+            with pytest.raises(PydanticValidationError):
+                _validate_url_unchanged(invalid_url)
 
     def test_validate_raster_tile_url(self):
         # test with valid url

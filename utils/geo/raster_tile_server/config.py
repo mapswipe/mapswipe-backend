@@ -74,7 +74,7 @@ class RasterConfig:
                     "api_key": api_key,
                     "credits": "© 2019 Microsoft Corporation, Earthstar Geographics SIO",
                     "min_zoom": 1,
-                    "max_zoom": 21,
+                    "max_zoom": 19,
                     "disabled": False,
                 }
             case RasterTileServerNameEnum.MAPBOX:
@@ -135,7 +135,7 @@ class RasterConfig:
                     "api_key": "",
                     "credits": "© 2019 ESRI",
                     "min_zoom": 0,
-                    "max_zoom": 21,
+                    "max_zoom": 17,
                     "disabled": False,
                 }
             case RasterTileServerNameEnum.ESRI_BETA:
@@ -147,6 +147,6 @@ class RasterConfig:
                     "api_key": "",
                     "credits": "© 2019 ESRI",
                     "min_zoom": 0,
-                    "max_zoom": 21,
+                    "max_zoom": 17,
                     "disabled": False,
                 }

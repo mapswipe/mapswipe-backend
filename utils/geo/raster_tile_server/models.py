@@ -8,14 +8,24 @@ from utils.geo.tile_functions import tile_coords_and_zoom_to_quad_key
 from .config import RasterConfig, RasterTileServerNameEnum, RasterTileServerNormConfig
 
 
-class RasterTileServerCustomConfig(BaseModel):
+class RasterTileServerZoomRange(BaseModel):
+    # NOTE: No upper bound as drone imagery can go beyond zoom 22
+    min_zoom: custom_fields.PydanticStrictNonNegativeInt | None = None
+    max_zoom: custom_fields.PydanticStrictNonNegativeInt | None = None
+
+    @model_validator(mode="after")
+    def check_zoom_range(self) -> typing.Self:
+        if self.min_zoom is not None and self.max_zoom is not None and self.min_zoom > self.max_zoom:
+            raise ValueError("min zoom must not be greater than max zoom")
+        return self
+
+
+class RasterTileServerCustomConfig(RasterTileServerZoomRange):
     url: custom_fields.PydanticRasterTileServerUrl
     credits: custom_fields.PydanticLongText
-    min_zoom: int | None = None
-    max_zoom: int | None = None
 
 
-class RasterTileServerCommonConfig(BaseModel):
+class RasterTileServerCommonConfig(RasterTileServerZoomRange):
     credits: custom_fields.PydanticLongText
 
 
@@ -42,7 +52,26 @@ class RasterTileServerConfig(BaseModel):
                 "max_zoom": self.custom.max_zoom,
                 "disabled": False,
             }
-        return RasterConfig.get_config(self.name)
+        match self.name:
+            case RasterTileServerNameEnum.BING:
+                preset = self.bing
+            case RasterTileServerNameEnum.MAPBOX:
+                preset = self.mapbox
+            case RasterTileServerNameEnum.MAXAR_STANDARD:
+                preset = self.maxar_standard
+            case RasterTileServerNameEnum.MAXAR_PREMIUM:
+                preset = self.maxar_premium
+            case RasterTileServerNameEnum.ESRI:
+                preset = self.esri
+            case RasterTileServerNameEnum.ESRI_BETA:
+                preset = self.esri_beta
+        assert preset is not None
+        return {
+            **RasterConfig.get_config(self.name),
+            # NOTE: The zoom range of RasterConfig only prefills the form
+            "min_zoom": preset.min_zoom,
+            "max_zoom": preset.max_zoom,
+        }
 
     def generate_url(self, tile_x: int, tile_y: int, tile_z: int) -> str:
         url = self.get_config()["url"]

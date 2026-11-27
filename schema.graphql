@@ -1014,6 +1014,8 @@ type Mutation {
   deleteTutorial: DeleteTutorialPayload! @isAuthenticated
   login(username: String!, password: String!): UserMeType!
   logout: Boolean!
+  testObjectGeojsonUrl(projectId: ID!, objectGeojsonUrl: String!): TestObjectGeojsonUrlPayload! @isAuthenticated
+  testTaskingManagerProject(projectId: ID!, hotTmId: String!, ohsomeFilter: String!): TestTaskingManagerProjectPayload! @isAuthenticated
   updateContributorUserGroup(data: ContributorUserGroupUpdateInput!, pk: ID!): UpdateContributorUserGroupPayload! @isAuthenticated
   updateOrganization(data: OrganizationUpdateInput!, pk: ID!): UpdateOrganizationPayload! @isAuthenticated
   updateProcessedProject(data: ProcessedProjectUpdateInput!, pk: ID!): UpdateProcessedProjectPayload! @isAuthenticated
@@ -1698,6 +1700,8 @@ input ProjectProgressStatusEnumFilterLookup {
 
 type ProjectRasterTileServerCommonConfig {
   credits: String!
+  maxZoom: Int
+  minZoom: Int
 }
 
 type ProjectRasterTileServerConfig {
@@ -2106,7 +2110,6 @@ type Query {
   publicProject(id: ID!): ProjectType!
   publicProjects(filters: ProjectFilter, order: ProjectOrder, pagination: OffsetPaginationInput): ProjectTypeOffsetPaginated!
   testAoiObjects(projectId: ID!, assetId: ID!, ohsomeFilter: String!): TestValidateAoiObjectsResponse! @isAuthenticated
-  testTaskingManagerProject(hotTmId: String!, ohsomeFilter: String!): TestValidateTaskingManagerProjectResponse! @isAuthenticated
   tileServers: RasterTileServersType! @isAuthenticated
   tutorial(id: ID!): TutorialType! @isAuthenticated
   tutorialAsset(id: ID!): TutorialAssetType! @isAuthenticated
@@ -2117,6 +2120,8 @@ type Query {
 
 input RasterTileServerCommonConfigInput {
   credits: String!
+  maxZoom: Int = null
+  minZoom: Int = null
 }
 
 input RasterTileServerCustomConfigInput {
@@ -2299,6 +2304,10 @@ enum SubGridSizeEnum {
   SIZE_8X8
 }
 
+union TestObjectGeojsonUrlPayload = OperationInfo | TestValidateObjectGeojsonUrlResponse
+
+union TestTaskingManagerProjectPayload = OperationInfo | TestValidateTaskingManagerProjectResponse
+
 type TestValidateAoiObjectsResponse {
   assetId: ID
   error: String
@@ -2308,12 +2317,23 @@ type TestValidateAoiObjectsResponse {
   projectId: ID
 }
 
+type TestValidateObjectGeojsonUrlResponse {
+  aoiGeometryAsset: ProjectAssetType
+  error: String
+  objectCount: Int
+  objectGeojsonUrl: String
+  ok: Boolean!
+  projectId: ID
+}
+
 type TestValidateTaskingManagerProjectResponse {
+  aoiGeometryAsset: ProjectAssetType
   error: String
   hotTmId: String
   objectCount: Int
   ohsomeFilter: String
   ok: Boolean!
+  projectId: ID
 }
 
 """Model representing assets for a tutorial."""
@@ -2907,13 +2927,17 @@ enum ValidateObjectSourceTypeEnum {
 
 input ValidateProjectPropertyInput {
   customOptions: [CustomOptionInput!] = null
+  hasPreImagery: Boolean! = false
   objectSource: ValidateObjectSourceConfigInput!
+  preEventTileServerProperty: ProjectRasterTileServerConfigInput = null
   tileServerProperty: ProjectRasterTileServerConfigInput!
 }
 
 type ValidateProjectPropertyType {
   customOptions: [ProjectCustomOption!]
+  hasPreImagery: Boolean!
   objectSource: ValidateObjectSourceConfig!
+  preEventTileServerProperty: ProjectRasterTileServerConfig
   tileServerProperty: ProjectRasterTileServerConfig!
 }
 
