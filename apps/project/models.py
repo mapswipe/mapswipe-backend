@@ -395,7 +395,7 @@ class Project(UserResource, FirebasePushResource):
 
     aoi_geometry = models.OneToOneField[Geometry | None, Geometry | None](
         Geometry,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="+",
@@ -482,6 +482,7 @@ class Project(UserResource, FirebasePushResource):
     image_id: int | None
     team_id: int | None
     project_type_specific_output_id: int | None
+    aoi_geometry_id: int | None
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         constraints = [
