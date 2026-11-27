@@ -25,7 +25,7 @@ from project_types.validate.api_calls import (
 )
 
 # NOTE: Carries every column the API sends, so the tests also cover ignoring the rest.
-# https://docs.ohsome.org/ohsome-api/v2-rc/reference/data_model.html
+# https://docs.ohsome.org/ohsome-api/v2/reference/data_model.html
 EXTRACTION_SCHEMA = pa.schema(
     [
         ("osm_type", pa.string()),
