@@ -378,6 +378,13 @@ type CompletenessTutorialTaskPropertyType {
   tileZ: Int!
 }
 
+type ContributorCountStatType {
+  taskDate: Date!
+
+  """number of distinct contributors active on the date"""
+  totalContributors: Int!
+}
+
 type ContributorSwipeStatType {
   taskDate: Date!
   totalSwipes: Int!
@@ -511,6 +518,9 @@ input ContributorUserGroupFilter {
 
 type ContributorUserGroupFilteredStats implements ContributorUserUserGroupBaseFilterStatsQuery {
   areaSwipedByProjectType: [ProjectTypeAreaStatsType!]!
+
+  """Number of distinct contributors active per day"""
+  contributorsByDate: [ContributorCountStatType!]!
   swipeByDate: [ContributorSwipeStatType!]!
   swipeByOrganizationName: [OrganizationSwipeStatsType!]!
   swipeByProjectGeo: [MapContributionStatsType!]!

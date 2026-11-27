@@ -302,6 +302,62 @@ class TestCommunityDashboardQuery(TestCase):
             for index, contributor_user_group in enumerate(self.contributor_user_groups)
         } == resp_map
 
+    def test_user_group_contributors_by_date(self):
+        query = """
+            query MyQuery($userGroupId: ID!, $fromDate: Date!, $toDate: Date!) {
+              communityUserGroupStats(userGroupId: {id: $userGroupId}) {
+                filteredStats(dateRange: {fromDate: $fromDate, toDate: $toDate}) {
+                  contributorsByDate {
+                    taskDate
+                    totalContributors
+                  }
+                }
+              }
+            }
+        """
+
+        projects = ProjectFactory.create_batch(2, **self.pr_kwargs, project_type=ProjectTypeEnum.FIND)
+        contributor_user_group = ContributorUserGroupFactory.create(**self.ur_kwargs)
+        other_user_group = ContributorUserGroupFactory.create(**self.ur_kwargs)
+        users = ContributorUserFactory.create_batch(4)
+
+        agg_kwargs = dict(total_time=10, task_count=10, swipes=10, area_swiped=0)
+        for user, project, user_group, date in [
+            # 2020-01-01: users[0] on two projects (counted once) + users[1]
+            (users[0], projects[0], contributor_user_group, "2020-01-01"),
+            (users[0], projects[1], contributor_user_group, "2020-01-01"),
+            (users[1], projects[0], contributor_user_group, "2020-01-01"),
+            # 2020-01-02: users[0] again + users[2]
+            (users[0], projects[0], contributor_user_group, "2020-01-02"),
+            (users[2], projects[0], contributor_user_group, "2020-01-02"),
+            # Outside date range
+            (users[3], projects[0], contributor_user_group, "2020-02-01"),
+            # Other user group
+            (users[3], projects[0], other_user_group, "2020-01-01"),
+        ]:
+            AggregatedUserGroupStatDataFactory.create(
+                project=project,
+                user=user,
+                user_group=user_group,
+                timestamp_date=date,
+                **agg_kwargs,
+            )
+
+        resp = self.query_check(
+            query,
+            variables=dict(
+                userGroupId=contributor_user_group.pk,
+                fromDate="2020-01-01",
+                toDate="2020-01-31",
+            ),
+        )
+        assert resp["data"]["communityUserGroupStats"]["filteredStats"] == {
+            "contributorsByDate": [
+                {"taskDate": "2020-01-01", "totalContributors": 2},
+                {"taskDate": "2020-01-02", "totalContributors": 2},
+            ],
+        }
+
     # TODO(thenav56): Add filters and aggregations as well
     def test_user_group_query(self):
         query = """
