@@ -109,7 +109,7 @@ class BaseProject[
                     else firebase_models.FbEnumProjectStatus.PRIVATE_INACTIVE
                 )
 
-    def get_aoi_geometry_asset(self) -> ProjectAsset | None:
+    def get_aoi_geometry_asset(self, *, include_marked_as_deleted: bool = False) -> ProjectAsset | None:
         return None
 
     def analyze_groups(self):

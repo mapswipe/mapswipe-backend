@@ -414,7 +414,8 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
         if proj.project_type_specifics:
             project_handler = get_project_type_handler(proj.project_type_enum)(proj)
 
-            aoi_geom_asset = project_handler.get_aoi_geometry_asset()
+            # NOTE: Includes the AOI stored by an object source test, which is marked as deleted until a save uses it
+            aoi_geom_asset = project_handler.get_aoi_geometry_asset(include_marked_as_deleted=True)
 
             proj.aoi_geometry_input_asset = aoi_geom_asset
 
@@ -423,6 +424,11 @@ class ProjectUpdateSerializer(UserResourceSerializer[Project]):
             centroid = None
 
             if aoi_geom_asset:
+                # NOTE: An AOI stored by an object source test stays marked as deleted until a save uses it
+                if aoi_geom_asset.marked_as_deleted:
+                    aoi_geom_asset.marked_as_deleted = False
+                    aoi_geom_asset.save(update_fields=["marked_as_deleted"])
+
                 asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_geom_asset.asset_type_specifics)
 
                 lng, lat = asset_specific_data.center
@@ -883,6 +889,7 @@ class ProjectStatusUpdateSerializer(UserResourceSerializer[Project]):
                     % (new_status.label),
                 },
             )
+
         if new_status == Project.Status.READY_TO_PUBLISH and not self.instance.tutorial:
             raise serializers.ValidationError(
                 {

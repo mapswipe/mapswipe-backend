@@ -16,7 +16,6 @@ from apps.common.models import (
     AssetTypeEnum,
 )
 from apps.project.models import (
-    Geometry,
     Project,
     ProjectAsset,
     ProjectAssetInputTypeEnum,
@@ -44,7 +43,6 @@ from utils.geo.transform import (
     convert_json_dict_to_features,
     convert_json_dict_to_geometry_collection,
     get_area_of_geometry,
-    get_polygon_of_extent,
 )
 
 logger = logging.getLogger(__name__)
@@ -76,7 +74,7 @@ class ValidateObjectSourceConfig(BaseModel):
     tasking_manager_project_id: custom_fields.PydanticId | None = None
     aoi_geometry: custom_fields.PydanticId | None = None
     ohsome_filter: custom_fields.PydanticLongText | None = None
-    object_geojson_url: custom_fields.PydanticUrl | None = None
+    object_geojson_url: custom_fields.PydanticUnchangedUrl | None = None
 
     @field_validator("source_type", mode="before")
     def ensure_source_type_enum(cls, value: str | ValidateObjectSourceTypeEnum | None):
@@ -202,7 +200,7 @@ class ValidateProject(
         super().__init__(project)
 
     @staticmethod
-    def _validate_geojson_aoi_area(area_km2: float) -> float:
+    def validate_geojson_aoi_area(area_km2: float) -> float:
         # NOTE: This value was previously 20sqkm. We are increasing this to 2500 to accommodate
         # projects like https://tasks.hotosm.org/projects/4757
         MAX_AOI_AREA = 2500
@@ -273,7 +271,7 @@ class ValidateProject(
             raise base_project.ValidationException("Could not find AOI geometry asset")
 
         asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_asset.asset_type_specifics)
-        ValidateProject._validate_geojson_aoi_area(asset_specific_data.area)
+        ValidateProject.validate_geojson_aoi_area(asset_specific_data.area)
 
         with aoi_asset.file.open() as aoi_file:
             aoi_geojson = json.loads(aoi_file.read())
@@ -350,7 +348,7 @@ class ValidateProject(
             ) from e
 
         area_km2 = get_area_of_geometry(geometry_collection)
-        ValidateProject._validate_geojson_aoi_area(area_km2)
+        ValidateProject.validate_geojson_aoi_area(area_km2)
 
         try:
             aoi_geometry = convert_json_dict_to_aoi_geometry(aoi_geojson)
@@ -376,14 +374,16 @@ class ValidateProject(
         )
 
     @typing.override
-    def get_aoi_geometry_asset(self) -> ProjectAsset | None:
-        if self.project_type_specifics.object_source.source_type != ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
-            return None
-        if not self.project_type_specifics.object_source.aoi_geometry:
+    def get_aoi_geometry_asset(self, *, include_marked_as_deleted: bool = False) -> ProjectAsset | None:
+        # NOTE: For every source type, the AOI is the asset referenced by the saved object source:
+        # the uploaded AOI file, or the AOI stored by testTaskingManagerProject or testObjectGeojsonUrl.
+        aoi_geometry = self.project_type_specifics.object_source.aoi_geometry
+        if not aoi_geometry:
             return None
 
-        return ProjectAsset.usable_objects().get(
-            id=int(self.project_type_specifics.object_source.aoi_geometry),
+        assets = ProjectAsset.objects if include_marked_as_deleted else ProjectAsset.usable_objects()
+        return assets.get(
+            id=int(aoi_geometry),
             type=ProjectAsset.Type.INPUT,
             input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,
             project_id=self.project.pk,
@@ -428,21 +428,22 @@ class ValidateProject(
                 "OHSOME did not respond with a valid feature collection of polygon or multi-polygon",
             ) from e
 
-    def _validate_aoi_geojson_file(self):
-        aoi_geometry_ref = self.project_type_specifics.object_source.aoi_geometry
+    def _get_saved_aoi_asset(self) -> ProjectAsset:
         aoi_geometry_asset = self.project.aoi_geometry_input_asset
-        ohsome_filter = self.project_type_specifics.object_source.ohsome_filter
-
-        if aoi_geometry_ref is None or aoi_geometry_asset is None:
+        if aoi_geometry_asset is None:
             raise base_project.ValidationException("AOI Geometry is missing")
+        return aoi_geometry_asset
+
+    def _validate_aoi_with_ohsome(self):
+        """Get the objects inside the saved AOI from ohsome, for AOI GeoJSON file and Tasking Manager sources."""
+        aoi_geometry_asset = self._get_saved_aoi_asset()
+        ohsome_filter = self.project_type_specifics.object_source.ohsome_filter
 
         if ohsome_filter is None:
             raise base_project.ValidationException("OHSOME filter is missing")
 
-        _, aoi_geojson = ValidateProject.test_ohsome_objects_from_aoi_asset(
-            self.project.aoi_geometry_input_asset,
-            ohsome_filter,
-        )
+        # NOTE: Checks the area and the object count before the objects are downloaded
+        _, aoi_geojson = ValidateProject.test_ohsome_objects_from_aoi_asset(aoi_geometry_asset, ohsome_filter)
 
         # TODO(tnagorra): Store intermediate geometries?
 
@@ -453,97 +454,28 @@ class ValidateProject(
         if url is None:
             raise base_project.ValidationException("Object Geojson URL is missing")
 
-        _, features, geometry_collection = ValidateProject.test_geojson_url_project(url)
+        # NOTE: The project area is the convex hull stored by the test, copied to the project on save
+        aoi_geometry_asset = self._get_saved_aoi_asset()
+        asset_specific_data = AoiGeometryAssetProperty.model_validate(aoi_geometry_asset.asset_type_specifics)
+        ValidateProject.validate_geojson_aoi_area(asset_specific_data.area)
 
-        # TODO(tnagorra): Also store intermediate geometries?
-        # TODO(tnagorra): Also create a input geometry?
-        hull = geometry_collection.convex_hull
-        hull_extent = hull.extent
-        hull_bbox = get_polygon_of_extent(hull_extent)
-        hull_center = hull.centroid
-        area_km2 = get_area_of_geometry(geometry_collection)
-
-        proj_aoi_geometry = self.project.aoi_geometry
-        if not proj_aoi_geometry:
-            aoi_geometry = Geometry(
-                bbox=hull_bbox,
-                centroid=hull_center,
-                geometry=hull,
-                total_area=area_km2,
-            )
-            aoi_geometry.save()
-            self.project.aoi_geometry = aoi_geometry
-        else:
-            proj_aoi_geometry.bbox = hull_bbox
-            proj_aoi_geometry.centroid = hull_center
-            proj_aoi_geometry.geometry = hull
-            proj_aoi_geometry.total_area = area_km2
-            proj_aoi_geometry.save()
-
-        self.project.total_area = area_km2
-        self.project.bbox = hull_bbox
-        self.project.centroid = hull_center
-        self.project.save(update_fields=["aoi_geometry", "total_area", "bbox", "centroid"])
+        # NOTE: The object count can only be checked once the objects are downloaded
+        _, features, _ = ValidateProject.test_geojson_url_project(url)
 
         return features
-
-    def _validate_tasking_manager(self):
-        hot_tm_id = self.project_type_specifics.object_source.tasking_manager_project_id
-        ohsome_filter = self.project_type_specifics.object_source.ohsome_filter
-
-        if hot_tm_id is None:
-            raise base_project.ValidationException("HOT Tasking Manager Project ID is missing")
-
-        if ohsome_filter is None:
-            raise base_project.ValidationException("OHSOME filter is missing")
-
-        _, aoi_geojson, aoi_result = ValidateProject.test_tasking_manager_project(hot_tm_id, ohsome_filter)
-
-        # TODO(tnagorra): Also create a input geometry?
-        # TODO(tnagorra): Also store intermediate geometries?
-        geometry = GEOSGeometry(aoi_result.text, srid=4326)
-        geometry_extent = geometry.extent
-        geometry_bbox = get_polygon_of_extent(geometry_extent)
-        geometry_center = geometry.centroid
-        area_km2 = get_area_of_geometry(geometry)
-
-        proj_aoi_geometry = self.project.aoi_geometry
-        if not proj_aoi_geometry:
-            aoi_geometry = Geometry(
-                bbox=geometry_bbox,
-                centroid=geometry_center,
-                geometry=geometry,
-                total_area=area_km2,
-            )
-            aoi_geometry.save()
-            self.project.aoi_geometry = aoi_geometry
-        else:
-            proj_aoi_geometry.bbox = geometry_bbox
-            proj_aoi_geometry.centroid = geometry_center
-            proj_aoi_geometry.geometry = geometry
-            proj_aoi_geometry.total_area = area_km2
-            proj_aoi_geometry.save()
-
-        self.project.total_area = area_km2
-        self.project.bbox = geometry_bbox
-        self.project.centroid = geometry_center
-        self.project.save(update_fields=["aoi_geometry", "total_area", "bbox", "centroid"])
-
-        return self._get_object_geometry_from_ohsome(aoi_geojson, ohsome_filter)
 
     @typing.override
     def validate(self) -> list[AoiFeature]:
         """Validate project before creating groups."""
         self.project.update_processing_status(Project.ProcessingStatus.VALIDATING_GEOMETRY, True)
 
-        if self.project_type_specifics.object_source.source_type == ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE:
-            return self._validate_aoi_geojson_file()
+        source_type = self.project_type_specifics.object_source.source_type
 
-        if self.project_type_specifics.object_source.source_type == ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL:
+        if source_type in (ValidateObjectSourceTypeEnum.AOI_GEOJSON_FILE, ValidateObjectSourceTypeEnum.TASKING_MANAGER):
+            return self._validate_aoi_with_ohsome()
+
+        if source_type == ValidateObjectSourceTypeEnum.OBJECT_GEOJSON_URL:
             return self._validate_object_geojson_url()
-
-        if self.project_type_specifics.object_source.source_type == ValidateObjectSourceTypeEnum.TASKING_MANAGER:
-            return self._validate_tasking_manager()
 
         raise Exception("Invalid object source type")
 

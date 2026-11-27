@@ -62,8 +62,9 @@ class StreetProject(
             assert project.project_type == ProjectTypeEnum.STREET, f"{type(self)} is defined for STREET"
 
     @typing.override
-    def get_aoi_geometry_asset(self) -> ProjectAsset | None:
-        return ProjectAsset.usable_objects().get(
+    def get_aoi_geometry_asset(self, *, include_marked_as_deleted: bool = False) -> ProjectAsset | None:
+        assets = ProjectAsset.objects if include_marked_as_deleted else ProjectAsset.usable_objects()
+        return assets.get(
             id=int(self.project_type_specifics.aoi_geometry),
             type=ProjectAsset.Type.INPUT,
             input_type=ProjectAssetInputTypeEnum.AOI_GEOMETRY,

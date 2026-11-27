@@ -32,8 +32,18 @@ def _validate_vector_tile_url(value: typing.Any):
     return url
 
 
+def _validate_url_unchanged(value: typing.Any):
+    http_url_adapter.validate_python(value)
+    # NOTE: Returns the URL as given, only without surrounding whitespace. Decoding it would break
+    # pre-signed URLs, e.g. %2B in an S3 signature would turn into + (a space)
+    return value.strip() if isinstance(value, str) else value
+
+
 # Ref: https://github.com/pydantic/pydantic/discussions/6395#discussioncomment-7361416
 PydanticUrl = typing.Annotated[str, BeforeValidator(_validate_url)]
+
+# NOTE: Use for URLs that are fetched as given, like pre-signed URLs
+PydanticUnchangedUrl = typing.Annotated[str, BeforeValidator(_validate_url_unchanged)]
 
 PydanticRasterTileServerUrl = typing.Annotated[str, BeforeValidator(_validate_raster_tile_url)]
 
