@@ -17,6 +17,7 @@ class ContributorUserFilter:
 @strawberry_django.filters.filter(ContributorUserGroup, lookups=True)
 class ContributorUserGroupFilter:
     id: strawberry.auto
+    firebase_id: strawberry.auto
     is_archived: strawberry.auto
 
     name = unaccented_filter("name")
@@ -57,6 +58,7 @@ class ContributorUserGroupMembershipFilter:
 @strawberry_django.filters.filter(ContributorTeam, lookups=True)
 class ContributorTeamFilter:
     id: strawberry.auto
+    firebase_id: strawberry.auto
     is_archived: strawberry.auto
 
     name = unaccented_filter("name")
