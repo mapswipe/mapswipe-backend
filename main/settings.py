@@ -113,7 +113,6 @@ env = environ.Env(
     MAP_IMAGE_MAXAR_PREMIUM_API_KEY=str,
     MAP_IMAGE_ESRI_API_KEY=str,
     MAP_IMAGE_ESRI_BETA_API_KEY=str,
-    OSMCHA_API_KEY=str,  # os.environ["OSMCHA_API_KEY"]
     # Ohsome
     # NOTE: v2 requires an API key on every request. Get one at https://account.heigit.org/signup
     OHSOME_API_KEY=str,  # os.environ["OHSOME_API_KEY"]
@@ -579,8 +578,6 @@ MAP_IMAGE_MAXAR_PREMIUM_API_KEY = env("MAP_IMAGE_MAXAR_PREMIUM_API_KEY")
 MAP_IMAGE_ESRI_API_KEY = env("MAP_IMAGE_ESRI_API_KEY")
 MAP_IMAGE_ESRI_BETA_API_KEY = env("MAP_IMAGE_ESRI_BETA_API_KEY")
 # MAP_IMAGE_DIGITAL_GLOBE_API_KEY = env("MAP_IMAGE_DIGITAL_GLOBE_API_KEY")
-
-OSMCHA_API_KEY = env("OSMCHA_API_KEY")
 
 # Ohsome
 OHSOME_API_KEY = env("OHSOME_API_KEY")
